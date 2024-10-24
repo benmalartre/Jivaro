@@ -19,26 +19,26 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 struct ManipXformVectors {
-  pxr::GfVec3d translation;
-  pxr::GfVec3f rotation;
-  pxr::GfVec3f scale;
-  pxr::GfVec3f pivot;
-  pxr::UsdGeomXformCommonAPI::RotationOrder rotOrder;
+  GfVec3d translation;
+  GfVec3f rotation;
+  GfVec3f scale;
+  GfVec3f pivot;
+  UsdGeomXformCommonAPI::RotationOrder rotOrder;
 };
 
 struct ManipTargetDesc {
-  pxr::SdfPath path;
-  pxr::GfMatrix4f base;
-  pxr::GfMatrix4f offset;
-  pxr::GfMatrix4f parent;
+  SdfPath path;
+  GfMatrix4f base;
+  GfMatrix4f offset;
+  GfMatrix4f parent;
   ManipXformVectors previous;
   ManipXformVectors current;
 };
 
 typedef std::vector<ManipTargetDesc> ManipTargetDescList;
 
-void _GetManipTargetXformVectors(pxr::UsdGeomXformCommonAPI& xformApi,
-  ManipXformVectors& vectors, pxr::UsdTimeCode& time);
+void _GetManipTargetXformVectors(UsdGeomXformCommonAPI& xformApi,
+  ManipXformVectors& vectors, UsdTimeCode& time);
 
 template<typename T>
 static inline double ComputeDistanceSquared(const T& a, const T& b)
@@ -52,90 +52,90 @@ static inline double ComputeDistance(const T& a, const T& b)
   return (b - a).GetLength();
 }
 
-static inline double ComputeCircumRadius(const pxr::GfVec3d& a, 
-  const pxr::GfVec3d& b, const pxr::GfVec3d& c) 
+static inline double ComputeCircumRadius(const GfVec3d& a, 
+  const GfVec3d& b, const GfVec3d& c) 
 {
-    const pxr::GfVec3d ab(b - a);
-    const pxr::GfVec3d ac(c - a);
-    const pxr::GfVec3d n(ab ^ ac);
+    const GfVec3d ab(b - a);
+    const GfVec3d ac(c - a);
+    const GfVec3d n(ab ^ ac);
 
     // this is the from a to circumsphere center
-    pxr::GfVec3d delta = (
+    GfVec3d delta = (
       (n ^ ab) * ac.GetLengthSq() + 
       (ac ^ n) * ab.GetLengthSq()
     ) / (2.f * n.GetLengthSq());
     return delta.GetLength();
 }
 
-static inline pxr::GfVec3d ComputeCircumCenter(const pxr::GfVec3d& a, 
-  const pxr::GfVec3d& b, const pxr::GfVec3d& c)
+static inline GfVec3d ComputeCircumCenter(const GfVec3d& a, 
+  const GfVec3d& b, const GfVec3d& c)
 {
-    const pxr::GfVec3d ab(b - a);
-    const pxr::GfVec3d ac(c - a);
-    const pxr::GfVec3d n(ab ^ ac);
+    const GfVec3d ab(b - a);
+    const GfVec3d ac(c - a);
+    const GfVec3d n(ab ^ ac);
 
     // this is the from a to circumsphere center
-    pxr::GfVec3d delta = (
+    GfVec3d delta = (
       (n ^ ab) * ac.GetLengthSq() + 
       (ac ^ n) * ab.GetLengthSq()
     ) / (2.f * n.GetLengthSq());
     return a + delta;
 }
 
-static inline bool CheckPointInSphere(const pxr::GfVec3d& center, float radius, const pxr::GfVec3d& point)
+static inline bool CheckPointInSphere(const GfVec3d& center, float radius, const GfVec3d& point)
 {
   return (point - center).GetLengthSq() < (radius * radius);
 }
 
 template<typename T>
 inline bool CheckPointsEquals(const T& a, const T& b, float eps=std::numeric_limits<float>::epsilon()) {
-  return pxr::GfIsClose(a, b, eps);
+  return GfIsClose(a, b, eps);
 };
 
 /// Barycentric coordinates
-void GetBarycenter(const pxr::GfVec3f& p, const pxr::GfVec3f& a, const pxr::GfVec3f& b, 
-  const pxr::GfVec3f& c, float* u, float* v, float* w);
+void GetBarycenter(const GfVec3f& p, const GfVec3f& a, const GfVec3f& b, 
+  const GfVec3f& c, float* u, float* v, float* w);
 
 /// Make circle
 void
-MakeCircle(std::vector<pxr::GfVec3f>* points, float radius, const pxr::GfMatrix4f& m, size_t n);
+MakeCircle(std::vector<GfVec3f>* points, float radius, const GfMatrix4f& m, size_t n);
 
 /// Make arc (circle part)
 void
-MakeArc(std::vector<pxr::GfVec3f>* points, float radius, const pxr::GfMatrix4f& m, size_t n, float startAngle, float endAngle);
+MakeArc(std::vector<GfVec3f>* points, float radius, const GfMatrix4f& m, size_t n, float startAngle, float endAngle);
 
 /// Triangulate a polygonal mesh
 int 
-TriangulateMesh(const pxr::VtArray<int>& counts, 
-                const pxr::VtArray<int>& indices, 
-                pxr::VtArray<Triangle>& triangles);
+TriangulateMesh(const VtArray<int>& counts, 
+                const VtArray<int>& indices, 
+                VtArray<Triangle>& triangles);
 
 void
-UpdateTriangles(pxr::VtArray<Triangle>& triangles, size_t removeVertexIdx);
+UpdateTriangles(VtArray<Triangle>& triangles, size_t removeVertexIdx);
 
 
 /// Compute smooth vertex normals on a triangulated polymesh
 void 
-ComputeVertexNormals(const pxr::VtArray<pxr::GfVec3f>& positions,
-                     const pxr::VtArray<int>& counts,
-                     const pxr::VtArray<int>& indices,
-                     const pxr::VtArray<Triangle>& triangles,
-                     pxr::VtArray<pxr::GfVec3f>& normals);
+ComputeVertexNormals(const VtArray<GfVec3f>& positions,
+                     const VtArray<int>& counts,
+                     const VtArray<int>& indices,
+                     const VtArray<Triangle>& triangles,
+                     VtArray<GfVec3f>& normals);
 
 /// Compute triangle normals
 void 
-ComputeTriangleNormals( const pxr::VtArray<pxr::GfVec3f>& positions,
-                        const pxr::VtArray<Triangle>& triangles,
-                        pxr::VtArray<pxr::GfVec3f>& normals);
+ComputeTriangleNormals( const VtArray<GfVec3f>& positions,
+                        const VtArray<Triangle>& triangles,
+                        VtArray<GfVec3f>& normals);
                           
 /// Triangulate data
 /// No checks are made on data type or array bounds
 /// 
 template<typename T>
 void
-TriangulateDatas( const pxr::VtArray<Triangle>& triangles,
-                  const pxr::VtArray<T>& datas,
-                  pxr::VtArray<T>& result)
+TriangulateDatas( const VtArray<Triangle>& triangles,
+                  const VtArray<T>& datas,
+                  VtArray<T>& result)
 {
   size_t numTriangles = triangles.size();
   result.resize(numTriangles * 3);
@@ -149,57 +149,57 @@ TriangulateDatas( const pxr::VtArray<Triangle>& triangles,
 
 /// Compute line tangents
 void
-ComputeLineTangents(const pxr::VtArray<pxr::GfVec3f>& points,
-                    const pxr::VtArray<pxr::GfVec3f>& ups,
-                    pxr::VtArray<pxr::GfVec3f>& tangents);
+ComputeLineTangents(const VtArray<GfVec3f>& points,
+                    const VtArray<GfVec3f>& ups,
+                    VtArray<GfVec3f>& tangents);
 
 /// Compute best plane from points
-pxr::GfPlane 
-ComputePlaneFromPoints(const pxr::VtArray<pxr::GfVec3f>& points);
+GfPlane 
+ComputePlaneFromPoints(const VtArray<GfVec3f>& points);
 
-pxr::GfPlane 
-ComputePlaneFromPoints(const pxr::VtArray<int>& indices, const pxr::GfVec3f *positions);
+GfPlane 
+ComputePlaneFromPoints(const VtArray<int>& indices, const GfVec3f *positions);
 
 /// Compute best line from points
-pxr::GfLine
-ComputeLineFromPoints(const pxr::VtArray<pxr::GfVec3f> &points);
+GfLine
+ComputeLineFromPoints(const VtArray<GfVec3f> &points);
 
-pxr::GfLine
-ComputeLineFromPoints(const pxr::VtArray<int>& indices, const pxr::GfVec3f *positions);
+GfLine
+ComputeLineFromPoints(const VtArray<int>& indices, const GfVec3f *positions);
 
 /// Compute covariance matrix
-pxr::GfMatrix4f
-ComputeCovarianceMatrix(const pxr::VtArray<pxr::GfVec3f>& points);
+GfMatrix4f
+ComputeCovarianceMatrix(const VtArray<GfVec3f>& points);
 
-pxr::GfMatrix4f
-ComputeCovarianceMatrix(const pxr::VtArray<int>& indices, const pxr::GfVec3f *positions);
+GfMatrix4f
+ComputeCovarianceMatrix(const VtArray<int>& indices, const GfVec3f *positions);
 
-static const pxr::GfVec3f 
-OrthogonalVector(const pxr::GfVec3f &v)
+static const GfVec3f 
+OrthogonalVector(const GfVec3f &v)
 {
-  float x = pxr::GfAbs(v[0]);
-  float y = pxr::GfAbs(v[1]);
-  float z = pxr::GfAbs(v[2]);
+  float x = GfAbs(v[0]);
+  float y = GfAbs(v[1]);
+  float z = GfAbs(v[2]);
 
-  pxr::GfVec3f other = x < y ? (x < z ? pxr::GfVec3f::XAxis() : pxr::GfVec3f::ZAxis()) : 
-    (y < z ? pxr::GfVec3f::YAxis() : pxr::GfVec3f::ZAxis());
-  return pxr::GfCross(v, other);
+  GfVec3f other = x < y ? (x < z ? GfVec3f::XAxis() : GfVec3f::ZAxis()) : 
+    (y < z ? GfVec3f::YAxis() : GfVec3f::ZAxis());
+  return GfCross(v, other);
 }
 
-static pxr::GfQuatf 
-GetRotationBetweenVectors(const pxr::GfVec3f &u, const pxr::GfVec3f &v)
+static GfQuatf 
+GetRotationBetweenVectors(const GfVec3f &u, const GfVec3f &v)
 {
-  const pxr::GfVec3f nu = u.GetNormalized();
-  const pxr::GfVec3f nv = v.GetNormalized();
+  const GfVec3f nu = u.GetNormalized();
+  const GfVec3f nv = v.GetNormalized();
   if (nu == -nv)
-    return pxr::GfQuatf(0, OrthogonalVector(nu).GetNormalized());
+    return GfQuatf(0, OrthogonalVector(nu).GetNormalized());
   
-  pxr::GfVec3f half = (nu + nv).GetNormalized();
-  return pxr::GfQuatf(pxr::GfDot(nu, half), pxr::GfCross(nu, half));
+  GfVec3f half = (nu + nv).GetNormalized();
+  return GfQuatf(GfDot(nu, half), GfCross(nu, half));
 }
 
 
-static pxr::GfQuatf 
+static GfQuatf 
 RandomQuaternion() {
   float x,y,z, u,v,w, s;
   do { 
@@ -215,7 +215,7 @@ RandomQuaternion() {
   } while (w > 1);
 
   s = sqrt((1-z) / w);
-  return pxr::GfQuatf(x, y, s*u, s*v).GetNormalized();
+  return GfQuatf(x, y, s*u, s*v).GetNormalized();
 }
 
 

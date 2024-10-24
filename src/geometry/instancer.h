@@ -12,37 +12,37 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 class Instancer : public Deformable {
 public:
-  Instancer(const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
-  Instancer(const pxr::UsdPrim& instancer, const pxr::GfMatrix4d& world);
+  Instancer(const GfMatrix4d& xfo=GfMatrix4d(1.0));
+  Instancer(const UsdPrim& instancer, const GfMatrix4d& world);
   virtual ~Instancer() {};
 
-  void Set(const pxr::VtArray<pxr::GfVec3f>&  positions, 
-           const pxr::VtArray<int>*           protoIndices=nullptr,
-           const pxr::VtArray<int64_t>*       indices=nullptr,
-           const pxr::VtArray<pxr::GfVec3f>*  scales=nullptr,
-           const pxr::VtArray<pxr::GfQuath>*  rotations=nullptr,
-           const pxr::VtArray<pxr::GfVec3f>*  colors=nullptr);
+  void Set(const VtArray<GfVec3f>&  positions, 
+           const VtArray<int>*           protoIndices=nullptr,
+           const VtArray<int64_t>*       indices=nullptr,
+           const VtArray<GfVec3f>*  scales=nullptr,
+           const VtArray<GfQuath>*  rotations=nullptr,
+           const VtArray<GfVec3f>*  colors=nullptr);
 
   bool HaveIndices(){return _indices.size() > 0 && _positions.size() == _indices.size();};
-  const pxr::VtArray<int>& GetProtoIndices() const {return _protoIndices;};
-  const pxr::VtArray<int64_t>& GetIndices() const {return _indices;};
-  const pxr::VtArray<pxr::GfVec3f>& GetScales() const {return _scales;};
-  const pxr::VtArray<pxr::GfQuath>& GetRotations() const {return _rotations;};
-  const pxr::VtArray<pxr::SdfPath>& GetPrototypes() const {return _prototypes;};
+  const VtArray<int>& GetProtoIndices() const {return _protoIndices;};
+  const VtArray<int64_t>& GetIndices() const {return _indices;};
+  const VtArray<GfVec3f>& GetScales() const {return _scales;};
+  const VtArray<GfQuath>& GetRotations() const {return _rotations;};
+  const VtArray<SdfPath>& GetPrototypes() const {return _prototypes;};
 
-  void AddPrototype(pxr::SdfPath& path);
-  void RemovePrototype(pxr::SdfPath& path);
+  void AddPrototype(SdfPath& path);
+  void RemovePrototype(SdfPath& path);
 
 protected:
-  void _Inject(const pxr::GfMatrix4d& parent,
-    const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override;
+  void _Inject(const GfMatrix4d& parent,
+    const UsdTimeCode& code=UsdTimeCode::Default()) override;
 
 private:
-  pxr::VtArray<pxr::GfVec3f>      _scales;
-  pxr::VtArray<int64_t>           _indices;
-  pxr::VtArray<int>               _protoIndices;
-  pxr::VtArray<pxr::GfQuath>      _rotations;
-  pxr::VtArray<pxr::SdfPath>      _prototypes;
+  VtArray<GfVec3f>      _scales;
+  VtArray<int64_t>           _indices;
+  VtArray<int>               _protoIndices;
+  VtArray<GfQuath>      _rotations;
+  VtArray<SdfPath>      _prototypes;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

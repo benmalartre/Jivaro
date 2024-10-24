@@ -8,23 +8,23 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-Points::Points(const pxr::GfMatrix4d& m)
+Points::Points(const GfMatrix4d& m)
   : Deformable(Geometry::POINT, m)
 {
 }
 
-Points::Points(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& world)
+Points::Points(const UsdPrim& prim, const GfMatrix4d& world)
   : Deformable(prim, world)
 {
 }
 
 Geometry::DirtyState 
-Points::_Sync(const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
+Points::_Sync(const GfMatrix4d& matrix, const UsdTimeCode& time)
 {
-  if(_prim.IsValid() && _prim.IsA<pxr::UsdGeomPoints>())
+  if(_prim.IsValid() && _prim.IsA<UsdGeomPoints>())
   {
     _previous = _positions;
-    pxr::UsdGeomPoints usdPoints(_prim);
+    UsdGeomPoints usdPoints(_prim);
     const size_t nbPositions = _positions.size();
     usdPoints.GetPointsAttr().Get(&_positions, time);
   }
@@ -32,14 +32,14 @@ Points::_Sync(const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
 }
 
 void 
-Points::_Inject(const pxr::GfMatrix4d& parent,
-    const pxr::UsdTimeCode& time)
+Points::_Inject(const GfMatrix4d& parent,
+    const UsdTimeCode& time)
 {
-  if(_prim.IsA<pxr::UsdGeomPoints>()) {
-    pxr::UsdGeomPoints usdPoints(_prim);
+  if(_prim.IsA<UsdGeomPoints>()) {
+    UsdGeomPoints usdPoints(_prim);
     usdPoints.CreatePointsAttr().Set(GetPositions(), time);
     usdPoints.CreateWidthsAttr().Set(GetWidths(), time);
-    usdPoints.SetWidthsInterpolation(pxr::UsdGeomTokens->varying);
+    usdPoints.SetWidthsInterpolation(UsdGeomTokens->varying);
   }
 }
 

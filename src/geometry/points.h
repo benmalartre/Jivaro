@@ -10,15 +10,15 @@ JVR_NAMESPACE_OPEN_SCOPE
 class Voxels;
 class Points : public Deformable {
 public:
-  Points(const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
-  Points(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& world);
+  Points(const GfMatrix4d& xfo=GfMatrix4d(1.0));
+  Points(const UsdPrim& prim, const GfMatrix4d& world);
   virtual ~Points() {};
 
 protected:
-  DirtyState _Sync(const pxr::GfMatrix4d& matrix, 
-    const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override;
-  void _Inject(const pxr::GfMatrix4d& parent,
-    const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override;
+  DirtyState _Sync(const GfMatrix4d& matrix, 
+    const UsdTimeCode& code=UsdTimeCode::Default()) override;
+  void _Inject(const GfMatrix4d& parent,
+    const UsdTimeCode& code=UsdTimeCode::Default()) override;
     
 };
 

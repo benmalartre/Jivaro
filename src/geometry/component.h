@@ -37,11 +37,11 @@ struct Component {
   Component(int index) : id(index) {};
   int GetIndex()const {return id;};
 
-  virtual bool Touch(const pxr::GfVec3f* points, const pxr::GfVec3f& center, const pxr::GfVec3f& halfSize) const = 0;
-  virtual bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit) const = 0;
-  virtual bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit) const = 0;
+  virtual bool Touch(const GfVec3f* points, const GfVec3f& center, const GfVec3f& halfSize) const = 0;
+  virtual bool Raycast(const GfVec3f* points, const GfRay& ray, Location* hit) const = 0;
+  virtual bool Closest(const GfVec3f* points, const GfVec3f& point, Location* hit) const = 0;
 
-  virtual pxr::GfRange3f GetBoundingBox(const pxr::GfVec3f* positions, const pxr::GfMatrix4d& m) const = 0;
+  virtual GfRange3f GetBoundingBox(const GfVec3f* positions, const GfMatrix4d& m) const = 0;
   virtual short GetType() const = 0;
 
 };

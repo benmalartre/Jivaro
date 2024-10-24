@@ -16,28 +16,28 @@ struct UsdEmbreeMaster  : public UsdEmbreePrim {
 
 struct UsdEmbreeInstance  : public UsdEmbreePrim {
   UsdEmbreeMaster*                  _master;
-  pxr::GfMatrix4d                   _xform;
+  GfMatrix4d                   _xform;
 };
 
 void RecurseMaster(
   UsdEmbreeContext* ctxt, 
   UsdEmbreeMaster* master, 
-  const pxr::UsdPrim& usdPrim,
-  pxr::UsdGeomXformCache* xformCache,
+  const UsdPrim& usdPrim,
+  UsdGeomXformCache* xformCache,
   RTCScene scene
 );
 
 UsdEmbreeMaster* TranslateMaster( 
   UsdEmbreeContext* ctxt, 
-  const pxr::UsdPrim& usdPrim,
-  pxr::UsdGeomXformCache* xformCache,
+  const UsdPrim& usdPrim,
+  UsdGeomXformCache* xformCache,
   RTCScene scene
 );
 
 UsdEmbreeInstance* TranslateInstance( 
   UsdEmbreeContext* ctxt, 
   UsdEmbreeMaster* master,
-  const pxr::GfMatrix4d& worldMatrix,
+  const GfMatrix4d& worldMatrix,
   RTCScene scene
 );
 

@@ -17,54 +17,54 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 class KabschSolver{
 private:
-  pxr::GfMatrix4d             _solved;
-  pxr::GfMatrix4d             _basis;
-  pxr::GfMatrix4d             _covariance;
-  pxr::GfQuatd                _rotation;
+  GfMatrix4d             _solved;
+  GfMatrix4d             _basis;
+  GfMatrix4d             _covariance;
+  GfQuatd                _rotation;
   float                       _scale;
 
   int                         _numPoints;
-  pxr::VtArray<pxr::GfVec3f>  _points;
-  pxr::VtArray<pxr::GfVec3f>  _binds;
+  VtArray<GfVec3f>  _points;
+  VtArray<GfVec3f>  _binds;
 
-  pxr::GfVec3f                _pntCentroid;
-  pxr::GfVec3f                _bndCentroid;
+  GfVec3f                _pntCentroid;
+  GfVec3f                _bndCentroid;
 
 public:
   // setup bind points (init)
-  void Bind(const pxr::VtArray<pxr::GfVec3f>& positions, const pxr::GfMatrix4d& matrix, 
-    const pxr::VtArray<int>& indices);
+  void Bind(const VtArray<GfVec3f>& positions, const GfMatrix4d& matrix, 
+    const VtArray<int>& indices);
 
   // update deform points (update)
-  void Update(const pxr::VtArray<pxr::GfVec3f>& positions, const pxr::GfMatrix4d& matrix, 
-    const pxr::VtArray<int>& indices);
+  void Update(const VtArray<GfVec3f>& positions, const GfMatrix4d& matrix, 
+    const VtArray<int>& indices);
 
   // solve the the kabsch covariant transform
-  const pxr::GfMatrix4d& Solve(bool solveRotation=true, bool solveScale=false, bool firstSolve=false);
+  const GfMatrix4d& Solve(bool solveRotation=true, bool solveScale=false, bool firstSolve=false);
 
 private:
   //https://animation.rwth-aachen.de/media/papers/2016-MIG-StableRotation.pdf
   //Iteratively apply torque to the basis using Cross products (in place of SVD)
-  void _ExtractRotation(const pxr::GfMatrix4d& matrix,  pxr::GfQuatd* rotation, size_t iterations);
+  void _ExtractRotation(const GfMatrix4d& matrix,  GfQuatd* rotation, size_t iterations);
 
   // calculate Covariance Matrix
-  const pxr::GfMatrix4d& _ComputeCovarianceMatrix(const pxr::VtArray<pxr::GfVec3f>& vec1,
-                                                  const pxr::VtArray<pxr::GfVec3f>& vec2,
-                                                  const pxr::GfVec3f& centroid1,
-                                                  const pxr::GfVec3f& centroid2);
+  const GfMatrix4d& _ComputeCovarianceMatrix(const VtArray<GfVec3f>& vec1,
+                                                  const VtArray<GfVec3f>& vec2,
+                                                  const GfVec3f& centroid1,
+                                                  const GfVec3f& centroid2);
 
   //Build Matrix from Quaternion
-  void _BuildMatrixFromQuaternion(const pxr::GfQuatd& quat, pxr::GfMatrix4d* matrix);
+  void _BuildMatrixFromQuaternion(const GfQuatd& quat, GfMatrix4d* matrix);
 
 };
 
 struct KabschData {
   KabschSolver        solver;
-  pxr::GfMatrix4d     matrix;
-  pxr::GfMatrix4d     bindMatrix;
-  pxr::GfMatrix4d     deformMatrix;
-  pxr::VtArray<int>   indices;
-  pxr::VtArray<float> weights;
+  GfMatrix4d     matrix;
+  GfMatrix4d     bindMatrix;
+  GfMatrix4d     deformMatrix;
+  VtArray<int>   indices;
+  VtArray<float> weights;
   int                 flags;
 };
 

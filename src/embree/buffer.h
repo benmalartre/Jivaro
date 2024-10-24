@@ -14,17 +14,17 @@ class UsdEmbreeContext;
 struct UsdEmbreeCube  : public UsdEmbreePrim {
   float                       _radius;
   int                         _resolution;
-  pxr::VtArray<pxr::GfVec3f>  _vertices;
-  pxr::VtArray<int>           _triangles;
-  pxr::VtArray<int>           _samples;
-  pxr::VtArray<pxr::GfVec3f>  _normals;
-  pxr::VtArray<pxr::GfVec2f>  _uvs;
+  VtArray<GfVec3f>  _vertices;
+  VtArray<int>           _triangles;
+  VtArray<int>           _samples;
+  VtArray<GfVec3f>  _normals;
+  VtArray<GfVec2f>  _uvs;
 };
 
 UsdEmbreeSphere* 
 TranslateSphere(UsdEmbreeContext* ctxt,
-                const pxr::UsdGeomSphere& usdSphere,
-                const pxr::GfMatrix4d& worldMatrix,
+                const UsdGeomSphere& usdSphere,
+                const GfMatrix4d& worldMatrix,
                 RTCScene scene);
 
 void 
@@ -33,15 +33,15 @@ DeleteSphere(RTCScene scene, UsdEmbreeSphere* sphere);
 void 
 BuildPoints(int num_lats, 
             int num_longs, 
-            pxr::VtArray<pxr::GfVec3f>& positions,
-            pxr::VtArray<pxr::GfVec3f>& normals,
-            pxr::VtArray<pxr::GfVec2f>& uvs, 
+            VtArray<GfVec3f>& positions,
+            VtArray<GfVec3f>& normals,
+            VtArray<GfVec2f>& uvs, 
             float radius,
             float* worldMatrix);
 
 void 
 BuildTriangles(int num_lats,
               int num_longs,
-              pxr::VtArray<int>& triangles);
+              VtArray<int>& triangles);
 
 JVR_NAMESPACE_CLOSE_SCOPE

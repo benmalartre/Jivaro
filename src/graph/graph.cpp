@@ -31,7 +31,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 // Node constructor
 //------------------------------------------------------------------------------
-Graph::Node::Node(pxr::UsdPrim& prim)
+Graph::Node::Node(UsdPrim& prim)
   : _prim(prim)
 {
   if (_prim.IsValid())
@@ -50,7 +50,7 @@ Graph::Node::~Node()
 // Get node
 //------------------------------------------------------------------------------
 const Graph::Node*
-Graph::GetNode(const pxr::UsdPrim& prim) const
+Graph::GetNode(const UsdPrim& prim) const
 {
   for (const Graph::Node* node : _nodes) {
     if(node->GetPrim().GetPath() == prim.GetPath())return node;
@@ -59,7 +59,7 @@ Graph::GetNode(const pxr::UsdPrim& prim) const
 }
 
 Graph::Node* 
-Graph::Graph::GetNode(const pxr::UsdPrim& prim)
+Graph::Graph::GetNode(const UsdPrim& prim)
 {
   for (Graph::Node* node : _nodes) {
     if (node->GetPrim().GetPath() == prim.GetPath())return node;
@@ -70,7 +70,7 @@ Graph::Graph::GetNode(const pxr::UsdPrim& prim)
 // Node add input
 //------------------------------------------------------------------------------
 void 
-Graph::Node::AddInput(pxr::UsdAttribute& attribute, const pxr::TfToken& name, size_t flags)
+Graph::Node::AddInput(UsdAttribute& attribute, const TfToken& name, size_t flags)
 {
   Graph::Port port(this, flags, name, attribute);
   _ports.push_back(port);
@@ -80,7 +80,7 @@ Graph::Node::AddInput(pxr::UsdAttribute& attribute, const pxr::TfToken& name, si
 // Node add output
 //------------------------------------------------------------------------------
 void 
-Graph::Node::AddOutput(pxr::UsdAttribute& attribute, const pxr::TfToken& name, size_t flags)
+Graph::Node::AddOutput(UsdAttribute& attribute, const TfToken& name, size_t flags)
 {
   Graph::Port port(this, flags, name, attribute);
   _ports.push_back(port);
@@ -89,7 +89,7 @@ Graph::Node::AddOutput(pxr::UsdAttribute& attribute, const pxr::TfToken& name, s
 // Node add io port
 //------------------------------------------------------------------------------
 void
-Graph::Node::AddPort(pxr::UsdAttribute& attribute, const pxr::TfToken& name, size_t flags)
+Graph::Node::AddPort(UsdAttribute& attribute, const TfToken& name, size_t flags)
 {
   Graph::Port port(this, flags, name, attribute);
   _ports.push_back(port);
@@ -99,7 +99,7 @@ Graph::Node::AddPort(pxr::UsdAttribute& attribute, const pxr::TfToken& name, siz
 // Node get port
 //------------------------------------------------------------------------------
 Graph::Port* 
-Graph::Node::GetPort(const pxr::TfToken& name)
+Graph::Node::GetPort(const TfToken& name)
 {
   for (auto& port : _ports) {
     if (port.GetName() == name) return &port;
@@ -110,7 +110,7 @@ Graph::Node::GetPort(const pxr::TfToken& name)
 // Node check authored values
 //------------------------------------------------------------------------------
 bool
-Graph::Node::HasPort(const pxr::TfToken& name)
+Graph::Node::HasPort(const TfToken& name)
 {
   for (auto& port : _ports) {
     if (port.GetName() == name) return true;
@@ -122,18 +122,18 @@ Graph::Node::HasPort(const pxr::TfToken& name)
 // Port
 //------------------------------------------------------------------------------
 Graph::Port::Port(Graph::Node* node, size_t flags, 
-  const pxr::TfToken& label, pxr::UsdAttribute& attr)
+  const TfToken& label, UsdAttribute& attr)
   : _node(node), _flags(flags), _label(label), _attr(attr)
 {
 }
 
 Graph::Port::Port(Graph::Node* node, size_t flags,
-  const pxr::TfToken& label)
+  const TfToken& label)
   : _node(node), _flags(flags), _label(label)
 {
 }
 
-pxr::SdfPath
+SdfPath
 Graph::Port::GetPath()
 {
   return _node->GetPrim().GetPath().AppendProperty(GetName());
@@ -154,7 +154,7 @@ Graph::Port::IsConnected(Graph* graph, Graph::Connexion* foundConnexion)
 
 // Graph constructor
 //------------------------------------------------------------------------------
-Graph::Graph(const pxr::UsdPrim& prim)
+Graph::Graph(const UsdPrim& prim)
   : _prim(prim)
 {
 }
@@ -170,7 +170,7 @@ Graph::~Graph()
 
 // Graph populate
 //------------------------------------------------------------------------------
-void Graph::Populate(const pxr::UsdPrim& prim)
+void Graph::Populate(const UsdPrim& prim)
 {
   Clear();
   _prim = prim;
@@ -222,14 +222,14 @@ Graph::RemoveConnexion(Graph::Connexion* connexion)
 
 /*
 void 
-Graph::_DiscoverNodes(pxr::UsdPrim& prim)
+Graph::_DiscoverNodes(UsdPrim& prim)
 {
   
   if (!prim.IsValid())return;
  
-  for (pxr::UsdPrim child : prim.GetChildren()) {
+  for (UsdPrim child : prim.GetChildren()) {
     Graph::Node* node = new Graph::Node(child);
-    //node->SetBackgroundColor(pxr::GfVec3f(0.5f, 0.65f, 0.55f));
+    //node->SetBackgroundColor(GfVec3f(0.5f, 0.65f, 0.55f));
     AddNode(node);
   }
  
@@ -237,15 +237,15 @@ Graph::_DiscoverNodes(pxr::UsdPrim& prim)
 
 
 void
-Graph::_DiscoverConnexions(pxr::UsdPrim& prim)
+Graph::_DiscoverConnexions(UsdPrim& prim)
 {
   
-  for (pxr::UsdPrim child : prim.GetChildren()) {
-    if (child.IsA<pxr::UsdShadeShader>()) {
-      pxr::UsdShadeShader shader(child);
-      for (pxr::UsdShadeInput& input : shader.GetInputs()) {
-        if (input.GetConnectability() != pxr::UsdShadeTokens->full) continue;
-        pxr::UsdShadeInput::SourceInfoVector connexions = input.GetConnectedSources();
+  for (UsdPrim child : prim.GetChildren()) {
+    if (child.IsA<UsdShadeShader>()) {
+      UsdShadeShader shader(child);
+      for (UsdShadeInput& input : shader.GetInputs()) {
+        if (input.GetConnectability() != UsdShadeTokens->full) continue;
+        UsdShadeInput::SourceInfoVector connexions = input.GetConnectedSources();
         for (auto& connexion : connexions) {
           Graph::Node* source = GetNode(connexion.source.GetPrim());
           Graph::Node* destination = GetNode(child);
@@ -259,11 +259,11 @@ Graph::_DiscoverConnexions(pxr::UsdPrim& prim)
           }
         }
       }
-    } else if (child.IsA<pxr::UsdExecNode>()) {
-      pxr::UsdExecNode node(child);
-      for (pxr::UsdExecInput& input : node.GetInputs()) {
-        if (input.GetConnectability() != pxr::UsdShadeTokens->full) continue;
-        pxr::UsdExecInput::SourceInfoVector connexions = input.GetConnectedSources();
+    } else if (child.IsA<UsdExecNode>()) {
+      UsdExecNode node(child);
+      for (UsdExecInput& input : node.GetInputs()) {
+        if (input.GetConnectability() != UsdShadeTokens->full) continue;
+        UsdExecInput::SourceInfoVector connexions = input.GetConnectedSources();
         for (auto& connexion : connexions) {
           Graph::Node* source = GetNode(connexion.source.GetPrim());
           Graph::Node* destination = GetNode(child);
@@ -285,7 +285,7 @@ Graph::_DiscoverConnexions(pxr::UsdPrim& prim)
 */
 
 static bool 
-_ConnexionPossible(const pxr::SdfValueTypeName& lhs, const pxr::SdfValueTypeName& rhs)
+_ConnexionPossible(const SdfValueTypeName& lhs, const SdfValueTypeName& rhs)
 {
   if (lhs.GetDimensions() == rhs.GetDimensions())return true;
   return false;
@@ -296,29 +296,29 @@ bool
 Graph::ConnexionPossible(const Graph::Port* lhs, const Graph::Port* rhs)
 {
   const Graph::Node* lhsNode = lhs->GetNode();
-  const pxr::UsdPrim& lhsPrim = lhsNode->GetPrim();
+  const UsdPrim& lhsPrim = lhsNode->GetPrim();
   const Graph::Node* rhsNode = rhs->GetNode();
-  const pxr::UsdPrim& rhsPrim = rhsNode->GetPrim();
+  const UsdPrim& rhsPrim = rhsNode->GetPrim();
 
-  if (lhsPrim.IsA<pxr::UsdShadeShader>()) {
-    pxr::UsdShadeShader lhsShader(lhsPrim);
-    pxr::UsdShadeOutput output = lhsShader.GetOutput(lhs->GetName());
+  if (lhsPrim.IsA<UsdShadeShader>()) {
+    UsdShadeShader lhsShader(lhsPrim);
+    UsdShadeOutput output = lhsShader.GetOutput(lhs->GetName());
 
-    pxr::UsdShadeShader rhsShader(rhsPrim);
-    pxr::UsdShadeInput input = rhsShader.GetInput(lhs->GetName());
+    UsdShadeShader rhsShader(rhsPrim);
+    UsdShadeInput input = rhsShader.GetInput(lhs->GetName());
 
     if (!output.IsDefined() || !input.IsDefined()) {
       return false;
     }
-    return pxr::UsdShadeConnectableAPI::CanConnect(output, input);
-  } /*else if (lhsPrim.IsA<pxr::UsdExecNode>()) {
-    pxr::UsdExecNode lhsExec(lhsPrim);
-    pxr::UsdExecOutput output = lhsExec.GetOutput(lhs->GetName());
+    return UsdShadeConnectableAPI::CanConnect(output, input);
+  } /*else if (lhsPrim.IsA<UsdExecNode>()) {
+    UsdExecNode lhsExec(lhsPrim);
+    UsdExecOutput output = lhsExec.GetOutput(lhs->GetName());
 
-    pxr::UsdExecNode rhsExec(rhsPrim);
-    pxr::UsdExecInput input = rhsExec.GetInput(rhs->GetName());
+    UsdExecNode rhsExec(rhsPrim);
+    UsdExecInput input = rhsExec.GetInput(rhs->GetName());
 
-    return pxr::UsdExecConnectableAPI::CanConnect(output, input);
+    return UsdExecConnectableAPI::CanConnect(output, input);
   }*/
 
   return false;

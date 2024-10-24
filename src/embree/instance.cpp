@@ -9,8 +9,8 @@ JVR_NAMESPACE_OPEN_SCOPE
 void RecurseMaster(
   UsdEmbreeContext* ctxt, 
   UsdEmbreeMaster* master, 
-  const pxr::UsdPrim& usdPrim,
-  pxr::UsdGeomXformCache* xformCache,
+  const UsdPrim& usdPrim,
+  UsdGeomXformCache* xformCache,
   RTCScene scene
 )
 {
@@ -29,15 +29,15 @@ void RecurseMaster(
     }
     else
     {
-      if(child.IsA<pxr::UsdGeomMesh>())
+      if(child.IsA<UsdGeomMesh>())
       {
-        pxr::GfMatrix4d worldMatrix = 
+        GfMatrix4d worldMatrix = 
           xformCache->GetLocalToWorldTransform(child);
 
         UsdEmbreeSubdiv* mesh = 
           TranslateSubdiv(
             ctxt, 
-            pxr::UsdGeomMesh(child), 
+            UsdGeomMesh(child), 
             worldMatrix, 
             scene
           );
@@ -54,8 +54,8 @@ void RecurseMaster(
 UsdEmbreeMaster* 
 TranslateMaster(
   UsdEmbreeContext* ctxt, 
-  const pxr::UsdPrim& usdPrim,
-  pxr::UsdGeomXformCache* xformCache,
+  const UsdPrim& usdPrim,
+  UsdGeomXformCache* xformCache,
   RTCScene scene
 )
 {
@@ -74,13 +74,13 @@ TranslateMaster(
 UsdEmbreeInstance* TranslateInstance( 
   UsdEmbreeContext* ctxt, 
   UsdEmbreeMaster* master,
-  const pxr::GfMatrix4d& worldMatrix,
+  const GfMatrix4d& worldMatrix,
   RTCScene scene
 )
 {
   UsdEmbreeInstance* result = new UsdEmbreeInstance();
   result->_geom = rtcNewGeometry (ctxt->_device, RTC_GEOMETRY_TYPE_INSTANCE);
-  result->_color = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+  result->_color = GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
 
   rtcSetGeometryInstancedScene(result->_geom, master->_scene);
   rtcSetGeometryTimeStepCount(result->_geom, 1);
@@ -93,12 +93,12 @@ UsdEmbreeInstance* TranslateInstance(
     result->_geom,
     0,
     RTC_FORMAT_FLOAT4X4_COLUMN_MAJOR,
-    pxr::GfMatrix4f(worldMatrix).GetArray()
+    GfMatrix4f(worldMatrix).GetArray()
   );
 
   rtcCommitGeometry(result->_geom);
 /*
-  pxr::UsdPrim masterPrim = usdPrim.GetMaster();
+  UsdPrim masterPrim = usdPrim.GetMaster();
   _PrimCacheMap::const_iterator it = ctxt->_primCacheMap.find(masterPrim.GetPath());
   if (it != ctxt->_primCacheMap.end()) 
   {
@@ -111,7 +111,7 @@ UsdEmbreeInstance* TranslateInstance(
     rtcAttachGeometry(scene,result->_geom);
     rtcReleaseGeometry(result->_geom);
 
-    UsdEmbreeSetTransform(result, pxr::GfMatrix4d()).SetTranslate(pxr::GfVec3d(0,12,0)));
+    UsdEmbreeSetTransform(result, GfMatrix4d()).SetTranslate(GfVec3d(0,12,0)));
     rtcCommitGeometry(result->_geom);
   }
   else

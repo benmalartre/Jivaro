@@ -54,7 +54,7 @@ static ImGuiWindowFlags JVR_BACKGROUND_FLAGS =
 
 // width/height window constructor
 //----------------------------------------------------------------------------
-Window::Window(const std::string& name, const pxr::GfVec4i& dimension, bool fullscreen, Window* parent) :
+Window::Window(const std::string& name, const GfVec4i& dimension, bool fullscreen, Window* parent) :
   _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), _hoveredView(NULL),
   _splitter(NULL), _dragSplitter(false), _fontSize(16.f), _name(name), _forceRedraw(3), _idle(false), 
   _fbo(0), _tex(0), _layout(std::numeric_limits<int>::max()), _needUpdateLayout(true)
@@ -116,8 +116,8 @@ Window::Init()
     GetContextVersionInfos();
     // load opengl functions
     GarchGLApiLoad();
-    pxr::GlfContextCaps::InitInstance();
-    pxr::GlfContextCaps const& caps = pxr::GlfContextCaps::GetInstance();
+    GlfContextCaps::InitInstance();
+    GlfContextCaps const& caps = GlfContextCaps::GetInstance();
     CreateFontAtlas();
     InitializeIcons();
   }
@@ -133,7 +133,7 @@ Window::Init()
   glfwSetInputMode(_window, GLFW_STICKY_KEYS, GLFW_TRUE);
 
   // create main splittable view
-  _mainView = new View(NULL, pxr::GfVec2f(0,0), pxr::GfVec2f(_width, _height));
+  _mainView = new View(NULL, GfVec2f(0,0), GfVec2f(_width, _height));
   _mainView->SetWindow(this);
   _splitter = new SplitterUI(this);
     
@@ -170,13 +170,13 @@ Window::~Window()
 Window* 
 Window::CreateFullScreenWindow(const std::string& name)
 {
-  return new Window("Jivaro", pxr::GfVec4i(), true);
+  return new Window("Jivaro", GfVec4i(), true);
 }
 
 // create standard window
 //----------------------------------------------------------------------------
 Window*
-Window::CreateStandardWindow(const std::string& name, const pxr::GfVec4i& dimension)
+Window::CreateStandardWindow(const std::string& name, const GfVec4i& dimension)
 {
   return new Window(name, dimension, false);
 }
@@ -184,7 +184,7 @@ Window::CreateStandardWindow(const std::string& name, const pxr::GfVec4i& dimens
 // child window
 //----------------------------------------------------------------------------
 Window*
-Window::CreateChildWindow(const std::string& name, const pxr::GfVec4i& dimension, Window* parent)
+Window::CreateChildWindow(const std::string& name, const GfVec4i& dimension, Window* parent)
 {
   return new Window(name, dimension, false, parent);
 }
@@ -632,7 +632,7 @@ Window::GetViewUnderMouse(int x, int y)
 }
 
 void 
-Window::DirtyViewsUnderBox(const pxr::GfVec2f& min, const pxr::GfVec2f& size)
+Window::DirtyViewsUnderBox(const GfVec2f& min, const GfVec2f& size)
 {
   for (auto leaf : _leaves) {
     if (leaf->Intersect(min, size)) {
@@ -642,7 +642,7 @@ Window::DirtyViewsUnderBox(const pxr::GfVec2f& min, const pxr::GfVec2f& size)
 }
 
 void
-Window::DiscardMouseEventsUnderBox(const pxr::GfVec2f& min, const pxr::GfVec2f& size)
+Window::DiscardMouseEventsUnderBox(const GfVec2f& min, const GfVec2f& size)
 {
   for (auto leaf : _leaves) {
     if (leaf->Intersect(min, size)) {
@@ -724,7 +724,7 @@ Window::Draw()
 
   // draw views
   if (_mainView)_mainView->Draw(_forceRedraw > 0);
-  _forceRedraw = pxr::GfMax(0, _forceRedraw - 1);
+  _forceRedraw = GfMax(0, _forceRedraw - 1);
 
   // draw splitters
   _splitter->Draw();
@@ -833,7 +833,7 @@ Window::SetupImgui()
   SetStyle(&ImGui::GetStyle());
 
   // setup platform/renderer bindings
-  pxr::GlfContextCaps const& caps = pxr::GlfContextCaps::GetInstance();
+  GlfContextCaps const& caps = GlfContextCaps::GetInstance();
   ImGui_ImplGlfw_InitForOpenGL(_window, false);
   if (caps.glVersion < 330) {
     ImGui_ImplOpenGL3_Init("#version 120 ");

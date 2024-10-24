@@ -34,7 +34,7 @@ public:
     FOCUS               = 1 << 14
   };
 
-  View(View* parent, const pxr::GfVec2f& min, const pxr::GfVec2f& max, 
+  View(View* parent, const GfVec2f& min, const GfVec2f& max, 
     unsigned flags=HORIZONTAL|DIRTY|LEAF|TAB);
   View(View* parent, int x, int y, int w, int h, 
     unsigned flags= HORIZONTAL|DIRTY|LEAF|TAB);
@@ -44,11 +44,11 @@ public:
   View* GetSibling();
   const float GetX(){return _min[0];};
   const float GetY(){return _min[1];};
-  const pxr::GfVec2f GetMin(){return _min;};
-  const pxr::GfVec2f GetMax(){return _max;};
+  const GfVec2f GetMin(){return _min;};
+  const GfVec2f GetMax(){return _max;};
   float GetWidth(){return (_max[0] - _min[0]);};
   float GetHeight(){return (_max[1] - _min[1]);};
-  const pxr::GfVec2f GetSize(){return (_max - _min);};
+  const GfVec2f GetSize(){return (_max - _min);};
   bool IsFixed(){return (_fixedPixels > 0);};
   bool IsActive();
   bool IsHovered();
@@ -57,13 +57,13 @@ public:
   void SetPerc(double perc);
   void GetPercFromMousePosition(int x, int y);
   void ComputeNumPixels(bool postFix=false);
-  void RescaleNumPixels( pxr::GfVec2f ratio);
+  void RescaleNumPixels( GfVec2f ratio);
   void RescaleLeft();
   void RescaleRight();
 
-  void GetChildMinMax(bool , pxr::GfVec2f& , pxr::GfVec2f&);
+  void GetChildMinMax(bool , GfVec2f& , GfVec2f&);
   void Split(double perc, bool horizontal, int fixed=false, int numPixels=-1);
-  void GetSplitInfos(pxr::GfVec2f& sMin, pxr::GfVec2f& sMax, 
+  void GetSplitInfos(GfVec2f& sMin, GfVec2f& sMax, 
     const int width, const int height);
 
   void SetLeft(View* view){_left = view; if(view)view->_parent=this;};
@@ -99,9 +99,9 @@ public:
   void SetCurrent(BaseUI* ui) { _current = ui; };
 
   // cursor
-  pxr::GfVec2f GetRelativeMousePosition(const int inX, const int inY);
+  GfVec2f GetRelativeMousePosition(const int inX, const int inY);
   bool Contains(int x, int y);
-  bool Intersect(const pxr::GfVec2f& min, const pxr::GfVec2f& size);
+  bool Intersect(const GfVec2f& min, const GfVec2f& size);
   
   // callbacks
   bool DrawTab();
@@ -128,8 +128,8 @@ public:
   bool IsInteracting();
 
 private:
-  pxr::GfVec2f          _min;
-  pxr::GfVec2f          _max;
+  GfVec2f          _min;
+  GfVec2f          _max;
   unsigned              _flags;
   double                _perc;
   double                _lastPerc;

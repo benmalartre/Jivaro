@@ -20,7 +20,7 @@ class BVH : public Intersector
 public:
   static const size_t INVALID_INDEX = std::numeric_limits<size_t>::max();
 
-  class Cell : public pxr::GfRange3d
+  class Cell : public GfRange3d
   {
   public:
     enum Type {
@@ -32,7 +32,7 @@ public:
     // constructor
     Cell();
     Cell(size_t lhs, BVH::Cell* left, size_t rhs, BVH::Cell* right);
-    Cell(Component* component, const pxr::GfRange3d& range);
+    Cell(Component* component, const GfRange3d& range);
 
     bool IsLeaf() const { return _type == BVH::Cell::LEAF; };
     bool IsRoot() const { return _type == BVH::Cell::ROOT; };
@@ -66,13 +66,13 @@ public:
   const Cell* GetCell(size_t index) const { return &_cells[index]; };
 
   size_t AddCell(BVH::Cell* left, BVH::Cell* right);
-  size_t AddCell(Component* component, const pxr::GfRange3d& range);
+  size_t AddCell(Component* component, const GfRange3d& range);
 
   const Geometry* GetGeometryFromCell(const BVH::Cell* cell) const;
   size_t GetGeometryIndexFromCell(const BVH::Cell* cell) const;
 
   Morton SortCells();
-  pxr::GfRange3f UpdateCells();
+  GfRange3f UpdateCells();
 
   // infos
   size_t GetNumComponents(){return _numComponents;};
@@ -80,37 +80,37 @@ public:
   size_t GetNumCells(){return _cells.size();};
 
    // visual debug
-  void GetCells(pxr::VtArray<pxr::GfVec3f>& positions, pxr::VtArray<pxr::GfVec3f>& sizes, 
-    pxr::VtArray<pxr::GfVec3f>& colors, bool branchOrLeaf) override;
+  void GetCells(VtArray<GfVec3f>& positions, VtArray<GfVec3f>& sizes, 
+    VtArray<GfVec3f>& colors, bool branchOrLeaf) override;
 
-  pxr::GfVec3f GetMortonColor(const pxr::GfVec3f &point);
+  GfVec3f GetMortonColor(const GfVec3f &point);
 
   virtual void Init(const std::vector<Geometry*>& geometries) override;
   virtual void Update() override;
 
-  virtual bool Raycast(const pxr::GfRay& ray, Location* hit,
+  virtual bool Raycast(const GfRay& ray, Location* hit,
     double maxDistance = DBL_MAX, double* minDistance = NULL) const override;
-  virtual bool Closest(const pxr::GfVec3f& point, Location* hit,
+  virtual bool Closest(const GfVec3f& point, Location* hit,
     double maxDistance) const override;
 
   void GetLeaves(const BVH::Cell* cell, std::vector<const Cell*>& leaves) const;
   void GetBranches(const BVH::Cell* cell, std::vector<const Cell*>& branches) const;
   
 protected:
-  pxr::GfVec3f _ComputeHitPoint(Location* hit) const;
-  uint64_t _ComputeCode(const pxr::GfVec3d& point) const;
-  pxr::GfVec3d _ComputeCodeAsColor(const pxr::GfVec3d& point) const;
+  GfVec3f _ComputeHitPoint(Location* hit) const;
+  uint64_t _ComputeCode(const GfVec3d& point) const;
+  GfVec3d _ComputeCodeAsColor(const GfVec3d& point) const;
   const Morton& _CellToMorton(size_t  cellIdx) const;
 
   size_t _GetIndex(const BVH::Cell* cell) const;
   BVH::Cell* _GetCell(size_t index);
   const BVH::Cell* _GetCell(size_t index) const;
   size_t _RecurseSortCells(size_t first, size_t last);
-  pxr::GfRange3f _RecurseUpdateCells(BVH::Cell* cell);
+  GfRange3f _RecurseUpdateCells(BVH::Cell* cell);
 
-  bool _Raycast(const BVH::Cell* cell, const pxr::GfRay& ray, Location* hit,
+  bool _Raycast(const BVH::Cell* cell, const GfRay& ray, Location* hit,
     double maxDistance = DBL_MAX, double* minDistance = NULL) const;
-  bool _Closest(const BVH::Cell* cell, const pxr::GfVec3f& point, Location* hit,
+  bool _Closest(const BVH::Cell* cell, const GfVec3f& point, Location* hit,
     double maxDistanceSq = DBL_MAX) const;
 
 private:

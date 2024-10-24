@@ -12,17 +12,17 @@ class TestInstancer : public Execution {
 public:
   friend class Scene;
   TestInstancer() : Execution(){};
-  void InitExec(pxr::UsdStageRefPtr& stage) override;
-  void UpdateExec(pxr::UsdStageRefPtr& stage, float time) override;
-  void TerminateExec(pxr::UsdStageRefPtr& stage) override;
+  void InitExec(UsdStageRefPtr& stage) override;
+  void UpdateExec(UsdStageRefPtr& stage, float time) override;
+  void TerminateExec(UsdStageRefPtr& stage) override;
 
 private:
   std::vector<Mesh*>        _protos;
   Mesh*                     _ground;
   Instancer*                _instancer;
-  std::vector<pxr::SdfPath> _protosId;
-  pxr::SdfPath              _groundId;
-  pxr::SdfPath              _instancerId;
+  std::vector<SdfPath> _protosId;
+  SdfPath              _groundId;
+  SdfPath              _instancerId;
 
 };
 

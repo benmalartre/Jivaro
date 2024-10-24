@@ -45,15 +45,15 @@ private:
 
   // Interpolator Kernels
   static float _MultiQuadricKernel(float r, float eps) {
-    return pxr::GfSqrt(pxr::GfPow(r / eps, 2) + 1);
+    return GfSqrt(GfPow(r / eps, 2) + 1);
   }
 
   static float _InverseKernel(float r, float eps) {
-    return 1.0 / pxr::GfSqrt(pxr::GfPow(r / eps, 2) + 1);
+    return 1.0 / GfSqrt(GfPow(r / eps, 2) + 1);
   }
 
   static float _GaussianKernel(float r, float eps) {
-    return pxr::GfExp(-pxr::GfPow(r / eps, 2));
+    return GfExp(-GfPow(r / eps, 2));
   }
 
   static float _LinearKernel(float r) {
@@ -61,15 +61,15 @@ private:
   }
 
   static float _CubicKernel(float r) {
-    return pxr::GfPow(r, 3);
+    return GfPow(r, 3);
   }
 
   static float _QuinticKernel(float r) {
-    return pxr::GfPow(r, 5);
+    return GfPow(r, 5);
   }
 
   static float _ThinPlateKernel(float r) {
-    return (pxr::GfPow(r, 2) * pxr::GfLog(r)) * (r > 0);
+    return (GfPow(r, 2) * GfLog(r)) * (r > 0);
   }
 };
 

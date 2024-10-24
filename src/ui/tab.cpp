@@ -54,8 +54,8 @@ bool
 ViewTabUI::Draw()
 {
   ImGuiStyle& style = ImGui::GetStyle();
-  const pxr::GfVec2f min(_parent->GetMin());
-  const pxr::GfVec2f size(_parent->GetWidth(), GetHeight());
+  const GfVec2f min(_parent->GetMin());
+  const GfVec2f size(_parent->GetWidth(), GetHeight());
   
   ImGui::SetNextWindowPos(min);
   ImGui::SetNextWindowSize(size);
@@ -76,9 +76,9 @@ ViewTabUI::Draw()
   
   if (_parent->IsActive()) {
     drawList->AddRectFilled(
-      min + pxr::GfVec2f(0, size[1] - 4),
+      min + GfVec2f(0, size[1] - 4),
       min + size,
-      ImColor(pxr::GfVec4f(1.f, 1.f, 1.f, 0.25f))
+      ImColor(GfVec4f(1.f, 1.f, 1.f, 0.25f))
     );
   }
   
@@ -90,7 +90,7 @@ ViewTabUI::Draw()
   if (ImGui::BeginTabBar(_ComputeName(_id, "TabBar").c_str(), tabBarFlags))
   {
     if (ImGui::TabItemButton(ICON_FA_CARET_DOWN, ImGuiTabItemFlags_Leading | ImGuiTabItemFlags_NoTooltip)) {
-      ImGui::SetNextWindowPos(min + pxr::GfVec2i(12, 12));
+      ImGui::SetNextWindowPos(min + GfVec2i(12, 12));
       ImGui::OpenPopup(_ComputeName(_id, "Uis").c_str());
       _invade = true;
     }
@@ -139,7 +139,7 @@ ViewTabUI::Draw()
       ));
 
     if (ImGui::Button(ICON_FA_BARS, BUTTON_MINI_SIZE)) {
-      ImGui::SetNextWindowPos(min + pxr::GfVec2i(12, 12));
+      ImGui::SetNextWindowPos(min + GfVec2i(12, 12));
       ImGui::OpenPopup(_ComputeName(_id, "View").c_str());
       _invade = true;
     }

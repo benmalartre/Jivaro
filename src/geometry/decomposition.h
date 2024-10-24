@@ -24,9 +24,9 @@ class Matrix3Decomposition
             return;
 
         float d = (A[p][p] - A[q][q]) / (2.0f*A[p][q]);
-        float t = 1.0f / (pxr::GfAbs(d) + (float)pxr::GfSqrt(d*d + 1.0f));
+        float t = 1.0f / (GfAbs(d) + (float)GfSqrt(d*d + 1.0f));
         if (d < 0.0f) t = -t;
-        float c = 1.0f / (float)pxr::GfSqrt(t*t + 1);
+        float c = 1.0f / (float)GfSqrt(t*t + 1);
         float s = t*c;
 
         A[p][p] += t*A[p][q];
@@ -73,11 +73,11 @@ class Matrix3Decomposition
             // find off diagonal element with maximum modulus
             int p, q;
             float a, max;
-            max = pxr::GfAbs(D[0][1]);
+            max = GfAbs(D[0][1]);
             p = 0; q = 1;
-            a = pxr::GfAbs(D[0][2]);
+            a = GfAbs(D[0][2]);
             if (a > max) { p = 0; q = 2; max = a; }
-            a = pxr::GfAbs(D[1][2]);
+            a = GfAbs(D[1][2]);
             if (a > max) { p = 1; q = 2; max = a; }
             // all small enough -> done
             if (max < epsilon) break;
@@ -117,9 +117,9 @@ class Matrix3Decomposition
         Vector eigenVals;
         EigenDecomposition(AAT, U, eigenVals);
 
-        float d0 = (float)pxr::GfSqrt(eigenVals[0]);
-        float d1 = (float)pxr::GfSqrt(eigenVals[1]);
-        float d2 = (float)pxr::GfSqrt(eigenVals[2]);
+        float d0 = (float)GfSqrt(eigenVals[0]);
+        float d1 = (float)GfSqrt(eigenVals[1]);
+        float d2 = (float)GfSqrt(eigenVals[2]);
 
         D = Matrix();
         D[0][0] = d0;
@@ -170,9 +170,9 @@ class Matrix3Decomposition
     /// </summary>
     static T OneNorm(const Matrix& A)
     {
-        T sum1 = pxr::GfAbs(A[0][0]) + pxr::GfAbs(A[1][0]) + pxr::GfAbs(A[2][0]);
-        T sum2 = pxr::GfAbs(A[0][1]) + pxr::GfAbs(A[1][1]) + pxr::GfAbs(A[2][1]);
-        T sum3 = pxr::GfAbs(A[0][2]) + pxr::GfAbs(A[1][2]) + pxr::GfAbs(A[2][2]);
+        T sum1 = GfAbs(A[0][0]) + GfAbs(A[1][0]) + GfAbs(A[2][0]);
+        T sum2 = GfAbs(A[0][1]) + GfAbs(A[1][1]) + GfAbs(A[2][1]);
+        T sum3 = GfAbs(A[0][2]) + GfAbs(A[1][2]) + GfAbs(A[2][2]);
 
         T maxSum = sum1;
 
@@ -189,9 +189,9 @@ class Matrix3Decomposition
     /// </summary>
     static T InfNorm(const Matrix& A)
     {
-        T sum1 = pxr::GfAbs(A[0][0]) + pxr::GfAbs(A[0][1]) + pxr::GfAbs(A[0][2]);
-        T sum2 = pxr::GfAbs(A[1][0]) + pxr::GfAbs(A[1][1]) + pxr::GfAbs(A[1][2]);
-        T sum3 = pxr::GfAbs(A[2][0]) + pxr::GfAbs(A[2][1]) + pxr::GfAbs(A[2][2]);
+        T sum1 = GfAbs(A[0][0]) + GfAbs(A[0][1]) + GfAbs(A[0][2]);
+        T sum2 = GfAbs(A[1][0]) + GfAbs(A[1][1]) + GfAbs(A[1][2]);
+        T sum3 = GfAbs(A[2][0]) + GfAbs(A[2][1]) + GfAbs(A[2][2]);
 
         T maxSum = sum1;
 

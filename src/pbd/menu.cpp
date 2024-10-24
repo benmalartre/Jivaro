@@ -56,9 +56,9 @@ void CreateSolverCallback()
 
   UndoBlock block;
   if(selection->GetNumSelectedItems())
-    pxr::UsdPbdSolver::Define(app->GetStage(), (*selection)[0].path.AppendChild(pxr::TfToken("Solver")));
+    UsdPbdSolver::Define(app->GetStage(), (*selection)[0].path.AppendChild(TfToken("Solver")));
   else
-    pxr::UsdPbdSolver::Define(app->GetStage(), pxr::SdfPath(pxr::TfToken("/Solver")));
+    UsdPbdSolver::Define(app->GetStage(), SdfPath(TfToken("/Solver")));
   
 }
 
@@ -66,10 +66,10 @@ void AddClothCallback()
 {
   static const float spacing = 0.01f;
   Application* app = Application::Get();
-  pxr::UsdStageRefPtr stage = app->GetStage();
+  UsdStageRefPtr stage = app->GetStage();
 
   UndoBlock editBlock;
-  pxr::UsdPrim prim;
+  UsdPrim prim;
 
   Selection* selection = app->GetSelection();
   if(!selection->GetNumSelectedItems()) {
@@ -79,37 +79,37 @@ void AddClothCallback()
     //mesh.Randomize(0.1f);
 
     // get root prim
-    pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
+    UsdPrim rootPrim = stage->GetDefaultPrim();
     if(!rootPrim.IsValid()) {
-      pxr::UsdGeomXform root = pxr::UsdGeomXform::Define(stage, pxr::SdfPath("/Root"));
+      UsdGeomXform root = UsdGeomXform::Define(stage, SdfPath("/Root"));
       rootPrim = root.GetPrim();
       stage->SetDefaultPrim(rootPrim);
     }
     
-    pxr::SdfPath path = rootPrim.GetPath().AppendChild(pxr::TfToken("Cloth"+RandomString(6)));
-    pxr::UsdGeomMesh usdMesh = pxr::UsdGeomMesh::Define(stage, path);
+    SdfPath path = rootPrim.GetPath().AppendChild(TfToken("Cloth"+RandomString(6)));
+    UsdGeomMesh usdMesh = UsdGeomMesh::Define(stage, path);
 
-    usdMesh.CreatePointsAttr().Set(mesh.GetPositions(), pxr::UsdTimeCode::Default());
-    usdMesh.CreateFaceVertexCountsAttr().Set(mesh.GetFaceCounts(), pxr::UsdTimeCode::Default());
-    usdMesh.CreateFaceVertexIndicesAttr().Set(mesh.GetFaceConnects(), pxr::UsdTimeCode::Default());
+    usdMesh.CreatePointsAttr().Set(mesh.GetPositions(), UsdTimeCode::Default());
+    usdMesh.CreateFaceVertexCountsAttr().Set(mesh.GetFaceCounts(), UsdTimeCode::Default());
+    usdMesh.CreateFaceVertexIndicesAttr().Set(mesh.GetFaceConnects(), UsdTimeCode::Default());
 
-    pxr::UsdPrim prim = usdMesh.GetPrim();
+    UsdPrim prim = usdMesh.GetPrim();
     mesh.SetPrim(prim);
-    pxr::UsdPbdBodyAPI::Apply(prim);
-    pxr::UsdPbdConstraintAPI::Apply(prim, pxr::TfToken("attach"));
-    pxr::UsdPbdConstraintAPI::Apply(prim, pxr::TfToken("stretch"));
-    pxr::UsdPbdConstraintAPI::Apply(prim, pxr::TfToken("shear"));
-    pxr::UsdPbdConstraintAPI::Apply(prim, pxr::TfToken("bend"));
+    UsdPbdBodyAPI::Apply(prim);
+    UsdPbdConstraintAPI::Apply(prim, TfToken("attach"));
+    UsdPbdConstraintAPI::Apply(prim, TfToken("stretch"));
+    UsdPbdConstraintAPI::Apply(prim, TfToken("shear"));
+    UsdPbdConstraintAPI::Apply(prim, TfToken("bend"));
 
   }
   else {
     for(size_t s = 0; s < selection->GetNumSelectedItems(); ++s) {
       prim = stage->GetPrimAtPath((*selection)[0].path);
-      pxr::UsdPbdBodyAPI::Apply(prim);
-      pxr::UsdPbdConstraintAPI::Apply(prim, pxr::TfToken("attach"));
-      pxr::UsdPbdConstraintAPI::Apply(prim, pxr::TfToken("stretch"));
-      pxr::UsdPbdConstraintAPI::Apply(prim, pxr::TfToken("shear"));
-      pxr::UsdPbdConstraintAPI::Apply(prim, pxr::TfToken("bend"));
+      UsdPbdBodyAPI::Apply(prim);
+      UsdPbdConstraintAPI::Apply(prim, TfToken("attach"));
+      UsdPbdConstraintAPI::Apply(prim, TfToken("stretch"));
+      UsdPbdConstraintAPI::Apply(prim, TfToken("shear"));
+      UsdPbdConstraintAPI::Apply(prim, TfToken("bend"));
     }
     
   }
@@ -118,9 +118,9 @@ void AddClothCallback()
 void AddBodyAPICallback()
 {
   Application* app = Application::Get();
-  pxr::UsdStageRefPtr stage = app->GetStage();
+  UsdStageRefPtr stage = app->GetStage();
 
-  pxr::UsdPrim prim;
+  UsdPrim prim;
 
   Selection* selection = app->GetSelection();
   size_t numSelected = selection->GetNumSelectedItems();
@@ -132,7 +132,7 @@ void AddBodyAPICallback()
   for(size_t n = 0; n < numSelected; ++n) {
     prim = stage->GetPrimAtPath(selection->GetItem(n).path);
     if(!prim.IsValid())continue;
-    pxr::UsdPbdBodyAPI::Apply(prim);
+    UsdPbdBodyAPI::Apply(prim);
   }
 
 }
@@ -140,9 +140,9 @@ void AddBodyAPICallback()
 void AddCollisionAPICallback()
 {
   Application* app = Application::Get();
-  pxr::UsdStageRefPtr stage = app->GetStage();
+  UsdStageRefPtr stage = app->GetStage();
 
-  pxr::UsdPrim prim;
+  UsdPrim prim;
 
   Selection* selection = app->GetSelection();
   size_t numSelected = selection->GetNumSelectedItems();
@@ -154,36 +154,36 @@ void AddCollisionAPICallback()
   for(size_t n = 0; n < numSelected; ++n) {
     prim = stage->GetPrimAtPath(selection->GetItem(n).path);
     if(!prim.IsValid())continue;
-    pxr::UsdPbdCollisionAPI::Apply(prim);
+    UsdPbdCollisionAPI::Apply(prim);
   }
 }
 
 void RemoveClothCallback()
 {
   Application* app = Application::Get();
-  pxr::UsdStageRefPtr stage = app->GetStage();
+  UsdStageRefPtr stage = app->GetStage();
 
   UndoBlock editBlock;
-  pxr::UsdPrim prim;
+  UsdPrim prim;
 
   Selection* selection = app->GetSelection();
 
   for(size_t s = 0; s < selection->GetNumSelectedItems(); ++s) {
     prim = stage->GetPrimAtPath((*selection)[0].path);
-    if(prim.HasAPI<pxr::UsdPbdBodyAPI>())
-      prim.RemoveAPI(pxr::UsdPbdTokens->PbdBodyAPI);
+    if(prim.HasAPI<UsdPbdBodyAPI>())
+      prim.RemoveAPI(UsdPbdTokens->PbdBodyAPI);
     
-    if(prim.HasAPI<pxr::UsdPbdConstraintAPI>())
-      prim.RemoveAPI(pxr::UsdPbdTokens->PbdConstraintAPI, pxr::TfToken("attach"));
+    if(prim.HasAPI<UsdPbdConstraintAPI>())
+      prim.RemoveAPI(UsdPbdTokens->PbdConstraintAPI, TfToken("attach"));
     
-    if(prim.HasAPI<pxr::UsdPbdConstraintAPI>())
-      prim.RemoveAPI(pxr::UsdPbdTokens->PbdConstraintAPI, pxr::TfToken("stretch"));
+    if(prim.HasAPI<UsdPbdConstraintAPI>())
+      prim.RemoveAPI(UsdPbdTokens->PbdConstraintAPI, TfToken("stretch"));
     
-    if(prim.HasAPI<pxr::UsdPbdConstraintAPI>())
-      prim.RemoveAPI(pxr::UsdPbdTokens->PbdConstraintAPI, pxr::TfToken("shear"));
+    if(prim.HasAPI<UsdPbdConstraintAPI>())
+      prim.RemoveAPI(UsdPbdTokens->PbdConstraintAPI, TfToken("shear"));
     
-    if(prim.HasAPI<pxr::UsdPbdConstraintAPI>())
-      prim.RemoveAPI(pxr::UsdPbdTokens->PbdConstraintAPI, pxr::TfToken("bend"));
+    if(prim.HasAPI<UsdPbdConstraintAPI>())
+      prim.RemoveAPI(UsdPbdTokens->PbdConstraintAPI, TfToken("bend"));
   }
 }
 

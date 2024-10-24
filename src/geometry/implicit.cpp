@@ -20,58 +20,58 @@ JVR_NAMESPACE_OPEN_SCOPE
 //-------------------------------------------------------------------------------------------------
 // Null Implicit Geometry
 //-------------------------------------------------------------------------------------------------
-Xform::Xform(const pxr::GfMatrix4d& xfo)
+Xform::Xform(const GfMatrix4d& xfo)
   : Geometry(Geometry::XFORM, xfo)
 {
 }
 
-Xform::Xform(const pxr::UsdGeomXform& xform, const pxr::GfMatrix4d& world)
+Xform::Xform(const UsdGeomXform& xform, const GfMatrix4d& world)
   : Geometry(xform.GetPrim(), world)
 {
-  _Sync(world, pxr::UsdTimeCode::Default().GetValue());
+  _Sync(world, UsdTimeCode::Default().GetValue());
 }
 
 //-------------------------------------------------------------------------------------------------
 // Plane Implicit Geometry
 //-------------------------------------------------------------------------------------------------
-Plane::Plane(const pxr::GfMatrix4d& xfo)
+Plane::Plane(const GfMatrix4d& xfo)
   : Geometry(Geometry::PLANE, xfo)
 {
-  _axis = pxr::UsdGeomTokens->y;
-  _normal = pxr::GfVec3f(0.f, 1.f, 0.f);
+  _axis = UsdGeomTokens->y;
+  _normal = GfVec3f(0.f, 1.f, 0.f);
   _width = 100.f;
   _length = 100.f;
   _doubleSided = false;
 }
 
-Plane::Plane(const pxr::UsdGeomPlane& plane, const pxr::GfMatrix4d& world)
+Plane::Plane(const UsdGeomPlane& plane, const GfMatrix4d& world)
   : Geometry(plane.GetPrim(), world)
 {
-  _Sync(world, pxr::UsdTimeCode::Default().GetValue());
+  _Sync(world, UsdTimeCode::Default().GetValue());
 }
 
-pxr::GfVec3f Plane::GetNormal() 
+GfVec3f Plane::GetNormal() 
 {
   return _matrix.TransformDir(_normal);
 };
 
-pxr::GfVec3f Plane::GetOrigin() 
+GfVec3f Plane::GetOrigin() 
 {
-  return pxr::GfVec3f(_matrix.GetRow3(3));
+  return GfVec3f(_matrix.GetRow3(3));
 };
 
-pxr::GfPlane Plane::Get()
+GfPlane Plane::Get()
 {
-  return pxr::GfPlane(GetNormal(), GetOrigin());
+  return GfPlane(GetNormal(), GetOrigin());
 }
 
 bool 
-Plane::Raycast(const pxr::GfRay& ray, Location* hit,
+Plane::Raycast(const GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 { 
 
-  pxr::GfRay invRay(ray);
-  pxr::GfPlane plane(_normal, 0.f);
+  GfRay invRay(ray);
+  GfPlane plane(_normal, 0.f);
   invRay.Transform(GetInverseMatrix());
   double distance;
   bool frontFacing;
@@ -79,8 +79,8 @@ Plane::Raycast(const pxr::GfRay& ray, Location* hit,
   const float hl = _length * 0.5f;
 
   if(ray.Intersect(plane, &distance, &frontFacing)) {
-    const pxr::GfVec3f intersection(ray.GetPoint(distance));
-    if(pxr::GfAbs(intersection[0]) < hw && pxr::GfAbs(intersection[2]) < hl)   {
+    const GfVec3f intersection(ray.GetPoint(distance));
+    if(GfAbs(intersection[0]) < hw && GfAbs(intersection[2]) < hl)   {
       *minDistance = distance;
       hit->SetCoordinates(intersection);
       return true;
@@ -90,57 +90,57 @@ Plane::Raycast(const pxr::GfRay& ray, Location* hit,
   return false;
 }
 
-bool Plane::Closest(const pxr::GfVec3f& point, Location* hit,
+bool Plane::Closest(const GfVec3f& point, Location* hit,
   double maxDistance, double* minDistance) const
 {
   /*
-  pxr::GfVec3f local = GetInverseMatrix().Transform(point).GetNormalized() * _radius;
-  pxr::GfVec3f closest = GetMatrix().Transform(local);  
+  GfVec3f local = GetInverseMatrix().Transform(point).GetNormalized() * _radius;
+  GfVec3f closest = GetMatrix().Transform(local);  
   float distance = (point - closest).GetLength();
   if(distance < maxDistance && distance < *minDistance) {
     *minDistance = distance;
     // store spherical coordinates
     float polar = (-std::acosf(local[2]/_radius)) * RADIANS_TO_DEGREES;
     float azimuth = (std::atanf(local[0]/local[2])) * RADIANS_TO_DEGREES;
-    hit->SetCoordinates(pxr::GfVec3f(_radius, polar, azimuth));
+    hit->SetCoordinates(GfVec3f(_radius, polar, azimuth));
     return true;
   }
   */
   return false;
 }
 
-float Plane::SignedDistance(const pxr::GfVec3f& point) const
+float Plane::SignedDistance(const GfVec3f& point) const
 {
-  return pxr::GfDot(_normal, point - pxr::GfVec3f(_matrix.ExtractTranslation())) ;
+  return GfDot(_normal, point - GfVec3f(_matrix.ExtractTranslation())) ;
 }
 
 Geometry::DirtyState 
-Plane::_Sync(const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
+Plane::_Sync(const GfMatrix4d& matrix, const UsdTimeCode& time)
 {
 
-  size_t state  = GetAttributeValue<pxr::TfToken>(pxr::UsdGeomTokens->axis, time, &_axis);
+  size_t state  = GetAttributeValue<TfToken>(UsdGeomTokens->axis, time, &_axis);
 
   if(state = Geometry::DirtyState::ATTRIBUTE) {
-    if (_axis == pxr::UsdGeomTokens->x)
-      _normal = pxr::GfVec3f(1.f, 0.f, 0.f);
-    else if (_axis == pxr::UsdGeomTokens->y)
-      _normal = pxr::GfVec3f(0.f, 1.f, 0.f);
+    if (_axis == UsdGeomTokens->x)
+      _normal = GfVec3f(1.f, 0.f, 0.f);
+    else if (_axis == UsdGeomTokens->y)
+      _normal = GfVec3f(0.f, 1.f, 0.f);
     else
-      _normal = pxr::GfVec3f(0.f, 0.f, 1.f);
+      _normal = GfVec3f(0.f, 0.f, 1.f);
   }
 
-  state |= GetAttributeValue<double>(pxr::UsdGeomTokens->width, time, &_width);
-  state |= GetAttributeValue<double>(pxr::UsdGeomTokens->length, time, &_length);
-  state |= GetAttributeValue<bool>(pxr::UsdGeomTokens->doubleSided, time, &_doubleSided);
+  state |= GetAttributeValue<double>(UsdGeomTokens->width, time, &_width);
+  state |= GetAttributeValue<double>(UsdGeomTokens->length, time, &_length);
+  state |= GetAttributeValue<bool>(UsdGeomTokens->doubleSided, time, &_doubleSided);
 
   return (Geometry::DirtyState)state;
 }
 
 void 
-Plane::_Inject(const pxr::GfMatrix4d& parent,
-  const pxr::UsdTimeCode& time)
+Plane::_Inject(const GfMatrix4d& parent,
+  const UsdTimeCode& time)
 {
-  pxr::UsdGeomPlane usdPlane(_prim);
+  UsdGeomPlane usdPlane(_prim);
   usdPlane.CreateWidthAttr().Set(_width, time);
   usdPlane.CreateLengthAttr().Set(_length, time);
   usdPlane.CreateAxisAttr().Set(_axis);
@@ -150,75 +150,75 @@ Plane::_Inject(const pxr::GfMatrix4d& parent,
 //-------------------------------------------------------------------------------------------------
 // Sphere Implicit Geometry
 //-------------------------------------------------------------------------------------------------
-Sphere::Sphere(const pxr::GfMatrix4d& xfo)
+Sphere::Sphere(const GfMatrix4d& xfo)
   : Geometry(Geometry::SPHERE, xfo)
 {
   _radius = 1.f;
 }
 
-Sphere::Sphere(const pxr::UsdGeomSphere& sphere, const pxr::GfMatrix4d& world)
+Sphere::Sphere(const UsdGeomSphere& sphere, const GfMatrix4d& world)
   : Geometry(sphere.GetPrim(), world)
 {
-  pxr::UsdAttribute radiusAttr = sphere.GetRadiusAttr();
-  radiusAttr.Get(&_radius, pxr::UsdTimeCode::Default());
+  UsdAttribute radiusAttr = sphere.GetRadiusAttr();
+  radiusAttr.Get(&_radius, UsdTimeCode::Default());
 }
 
 bool 
-Sphere::Raycast(const pxr::GfRay& ray, Location* hit,
+Sphere::Raycast(const GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 { 
-  pxr::GfRay invRay(ray);
+  GfRay invRay(ray);
   invRay.Transform(GetInverseMatrix());
   double enterDistance, exitDistance;
-  if(ray.Intersect(pxr::GfVec3d(0.0), _radius, &enterDistance, &exitDistance)) {
-    pxr::GfVec3f local(ray.GetPoint(enterDistance));
-    pxr::GfVec3f world(GetMatrix().Transform(local));
+  if(ray.Intersect(GfVec3d(0.0), _radius, &enterDistance, &exitDistance)) {
+    GfVec3f local(ray.GetPoint(enterDistance));
+    GfVec3f world(GetMatrix().Transform(local));
     float distance = (ray.GetStartPoint() - world).GetLength();
     if(distance < maxDistance && distance < *minDistance) {
       *minDistance = distance;
       // store spherical coordinates
       float polar = (-std::acosf(local[2]/_radius)) * RADIANS_TO_DEGREES;
       float azimuth = (std::atanf(local[0]/local[2])) * RADIANS_TO_DEGREES;
-      hit->SetCoordinates(pxr::GfVec3f(_radius, polar, azimuth));
+      hit->SetCoordinates(GfVec3f(_radius, polar, azimuth));
       return true;
     }
   }
   return false;
 }
 
-bool Sphere::Closest(const pxr::GfVec3f& point, Location* hit,
+bool Sphere::Closest(const GfVec3f& point, Location* hit,
   double maxDistance, double* minDistance) const
 {
-  pxr::GfVec3f local = GetInverseMatrix().Transform(point).GetNormalized() * _radius;
-  pxr::GfVec3f closest = GetMatrix().Transform(local);  
+  GfVec3f local = GetInverseMatrix().Transform(point).GetNormalized() * _radius;
+  GfVec3f closest = GetMatrix().Transform(local);  
   float distance = (point - closest).GetLength();
   if(distance < maxDistance && distance < *minDistance) {
     *minDistance = distance;
     // store spherical coordinates
     float polar = (-std::acosf(local[2]/_radius)) * RADIANS_TO_DEGREES;
     float azimuth = (std::atanf(local[0]/local[2])) * RADIANS_TO_DEGREES;
-    hit->SetCoordinates(pxr::GfVec3f(_radius, polar, azimuth));
+    hit->SetCoordinates(GfVec3f(_radius, polar, azimuth));
     return true;
   }
   return false;
 }
 
-float Sphere::SignedDistance(const pxr::GfVec3f& point) const
+float Sphere::SignedDistance(const GfVec3f& point) const
 {
-  pxr::GfVec3f local = _invMatrix.Transform(point);
+  GfVec3f local = _invMatrix.Transform(point);
   return local.GetLength() - _radius;
 }
 
 Geometry::DirtyState 
-Sphere::_Sync(const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
+Sphere::_Sync(const GfMatrix4d& matrix, const UsdTimeCode& time)
 {
-  return GetAttributeValue<double>(pxr::UsdGeomTokens->radius, time, &_radius);
+  return GetAttributeValue<double>(UsdGeomTokens->radius, time, &_radius);
 }
 
 void 
-Sphere::_Inject(const pxr::GfMatrix4d& parent, const pxr::UsdTimeCode& time)
+Sphere::_Inject(const GfMatrix4d& parent, const UsdTimeCode& time)
 {
-  pxr::UsdGeomSphere usdPlane(_prim);
+  UsdGeomSphere usdPlane(_prim);
   usdPlane.CreateRadiusAttr().Set(_radius, time);
 }
 
@@ -226,17 +226,17 @@ Sphere::_Inject(const pxr::GfMatrix4d& parent, const pxr::UsdTimeCode& time)
 //-------------------------------------------------------------------------------------------------
 // Cube Implicit Geometry
 //-------------------------------------------------------------------------------------------------
-Cube::Cube(const pxr::GfMatrix4d& xfo)
+Cube::Cube(const GfMatrix4d& xfo)
   : Geometry(Geometry::CUBE, xfo)
 {
   _size = 1.f;
 }
 
-Cube::Cube(const pxr::UsdGeomCube& cube, const pxr::GfMatrix4d& world)
+Cube::Cube(const UsdGeomCube& cube, const GfMatrix4d& world)
   : Geometry(cube.GetPrim(), world)
 {
-  pxr::UsdAttribute sizeAttr = cube.GetSizeAttr();
-  sizeAttr.Get(&_size, pxr::UsdTimeCode::Default());
+  UsdAttribute sizeAttr = cube.GetSizeAttr();
+  sizeAttr.Get(&_size, UsdTimeCode::Default());
 }
 
 // return cube face index for intersection point
@@ -246,30 +246,30 @@ Cube::Cube(const pxr::UsdGeomCube& cube, const pxr::GfMatrix4d& world)
 //  Y = 3
 // -Z = 4
 //  Z = 5
-size_t _IntersectionToCubeFaceIndex(const pxr::GfVec3f& intersection, float size)
+size_t _IntersectionToCubeFaceIndex(const GfVec3f& intersection, float size)
 {
-  if(pxr::GfIsClose(intersection[0], -size, 0.0000001f))return 0;
-  else if(pxr::GfIsClose(intersection[1], size, 0.0000001f))return 1;
-  if(pxr::GfIsClose(intersection[2], -size, 0.0000001f))return 2;
-  else if(pxr::GfIsClose(intersection[3], size, 0.0000001f))return 3;
-  if(pxr::GfIsClose(intersection[4], -size, 0.0000001f))return 4;
+  if(GfIsClose(intersection[0], -size, 0.0000001f))return 0;
+  else if(GfIsClose(intersection[1], size, 0.0000001f))return 1;
+  if(GfIsClose(intersection[2], -size, 0.0000001f))return 2;
+  else if(GfIsClose(intersection[3], size, 0.0000001f))return 3;
+  if(GfIsClose(intersection[4], -size, 0.0000001f))return 4;
   else return 5;
 }
 
 bool 
-Cube::Raycast(const pxr::GfRay& ray, Location* hit,
+Cube::Raycast(const GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 { 
-  pxr::GfRay invRay(ray);
+  GfRay invRay(ray);
   invRay.Transform(GetInverseMatrix());
   double distance;
   float latitude, longitude;
 
 
-  if(invRay.Intersect(pxr::GfRange3d(pxr::GfVec3f(-_size*0.5f), pxr::GfVec3f(_size*0.5)), &distance, NULL)) {
-    const pxr::GfVec3f intersection(ray.GetPoint(distance));
-    const pxr::GfVec3f world = GetMatrix().Transform(intersection);
-    distance = (world - pxr::GfVec3f(ray.GetStartPoint())).GetLength();
+  if(invRay.Intersect(GfRange3d(GfVec3f(-_size*0.5f), GfVec3f(_size*0.5)), &distance, NULL)) {
+    const GfVec3f intersection(ray.GetPoint(distance));
+    const GfVec3f world = GetMatrix().Transform(intersection);
+    distance = (world - GfVec3f(ray.GetStartPoint())).GetLength();
     if(distance < maxDistance && distance < *minDistance) {
       *minDistance = distance;
       hit->SetCoordinates(world);
@@ -279,25 +279,25 @@ Cube::Raycast(const pxr::GfRay& ray, Location* hit,
   return false;
 }
 
-float Cube::SignedDistance(const pxr::GfVec3f& point) const
+float Cube::SignedDistance(const GfVec3f& point) const
 {
-  pxr::GfVec3f local = _invMatrix.Transform(point);
+  GfVec3f local = _invMatrix.Transform(point);
 
-  pxr::GfVec3f q(
-    pxr::GfAbs(local[0]) - _size * 0.5f,
-    pxr::GfAbs(local[1]) - _size * 0.5f,
-    pxr::GfAbs(local[2]) - _size * 0.5f
+  GfVec3f q(
+    GfAbs(local[0]) - _size * 0.5f,
+    GfAbs(local[1]) - _size * 0.5f,
+    GfAbs(local[2]) - _size * 0.5f
   );
-  pxr::GfVec3f r(
-    pxr::GfMax(q[0], 0.f),
-    pxr::GfMax(q[1], 0.f),
-    pxr::GfMax(q[2], 0.f)
+  GfVec3f r(
+    GfMax(q[0], 0.f),
+    GfMax(q[1], 0.f),
+    GfMax(q[2], 0.f)
   );
-  return r.GetLength() + pxr::GfMin(pxr::GfMax(q[0], pxr::GfMax(q[1], q[2])), 0.f);
+  return r.GetLength() + GfMin(GfMax(q[0], GfMax(q[1], q[2])), 0.f);
 }
 
 
-bool _PointInsideCube(const pxr::GfVec3f& point, const pxr::GfRange3d& box) 
+bool _PointInsideCube(const GfVec3f& point, const GfRange3d& box) 
 {
   return (
     point[0] > box.GetMin()[0] && point[0] < box.GetMax()[0] &&
@@ -313,37 +313,37 @@ float _PointDistanceToRange1D(float p, float lower, float upper)
   else return 0.f;
 }
 
-pxr::GfVec3f _PointToBox(const pxr::GfVec3f& point, const pxr::GfRange3d& box)
+GfVec3f _PointToBox(const GfVec3f& point, const GfRange3d& box)
 {
   float dx = _PointDistanceToRange1D(point[0], box.GetMin()[0], box.GetMax()[0]);
   float dy = _PointDistanceToRange1D(point[1], box.GetMin()[1], box.GetMax()[1]);
   float dz = _PointDistanceToRange1D(point[2], box.GetMin()[2], box.GetMax()[2]);
 
-  return point - pxr::GfVec3f(dx, dy, dz);
+  return point - GfVec3f(dx, dy, dz);
 }
 
 bool 
-Cube::Closest(const pxr::GfVec3f& point, Location* hit,
+Cube::Closest(const GfVec3f& point, Location* hit,
   double maxDistance, double* minDistance) const
 {
-  const pxr::GfVec3f relative = GetInverseMatrix().Transform(point);
-  const pxr::GfRange3d range(pxr::GfVec3f(-_size*0.5), pxr::GfVec3f(_size*0.5));
-  const pxr::GfVec3f closest = _PointToBox(relative, range);
+  const GfVec3f relative = GetInverseMatrix().Transform(point);
+  const GfRange3d range(GfVec3f(-_size*0.5), GfVec3f(_size*0.5));
+  const GfVec3f closest = _PointToBox(relative, range);
  
   return false;
 }
 
 Geometry::DirtyState 
-Cube::_Sync(const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
+Cube::_Sync(const GfMatrix4d& matrix, const UsdTimeCode& time)
 {
-  return GetAttributeValue<double>(pxr::UsdGeomTokens->size, time, &_size);
+  return GetAttributeValue<double>(UsdGeomTokens->size, time, &_size);
 
 }
 
 void 
-Cube::_Inject(const pxr::GfMatrix4d& parent, const pxr::UsdTimeCode& time)
+Cube::_Inject(const GfMatrix4d& parent, const UsdTimeCode& time)
 {
-  pxr::UsdGeomCube usdCube(_prim);
+  UsdGeomCube usdCube(_prim);
   usdCube.CreateSizeAttr().Set(_size, time);
 }
 
@@ -351,45 +351,45 @@ Cube::_Inject(const pxr::GfMatrix4d& parent, const pxr::UsdTimeCode& time)
 //-------------------------------------------------------------------------------------------------
 // Cone Implicit Geometry
 //-------------------------------------------------------------------------------------------------
-Cone::Cone(const pxr::GfMatrix4d& xfo)
+Cone::Cone(const GfMatrix4d& xfo)
   : Geometry(Geometry::CONE, xfo)
   , _radius(0.5f)
   , _height(1.f)
-  , _axis(pxr::UsdGeomTokens->y)
+  , _axis(UsdGeomTokens->y)
 {
 }
 
-Cone::Cone(const pxr::UsdGeomCone& cone, const pxr::GfMatrix4d& world)
+Cone::Cone(const UsdGeomCone& cone, const GfMatrix4d& world)
   : Geometry(cone.GetPrim(), world)
 {
-  pxr::UsdAttribute radiusAttr = cone.GetRadiusAttr();
-  radiusAttr.Get(&_radius, pxr::UsdTimeCode::Default());
+  UsdAttribute radiusAttr = cone.GetRadiusAttr();
+  radiusAttr.Get(&_radius, UsdTimeCode::Default());
 
-  pxr::UsdAttribute heightAttr = cone.GetHeightAttr();
-  heightAttr.Get(&_height, pxr::UsdTimeCode::Default());
+  UsdAttribute heightAttr = cone.GetHeightAttr();
+  heightAttr.Get(&_height, UsdTimeCode::Default());
 
-  pxr::UsdAttribute axisAttr = cone.GetAxisAttr();
-  axisAttr.Get(&_axis, pxr::UsdTimeCode::Default());
+  UsdAttribute axisAttr = cone.GetAxisAttr();
+  axisAttr.Get(&_axis, UsdTimeCode::Default());
 
 }
 
 bool 
-Cone::Raycast(const pxr::GfRay& ray, Location* hit,
+Cone::Raycast(const GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 { 
-  pxr::GfRay invRay(ray);
+  GfRay invRay(ray);
   invRay.Transform(GetInverseMatrix());
   double enterDistance, exitDistance;
-  if(ray.Intersect(pxr::GfVec3d(0.0), _radius, &enterDistance, &exitDistance)) {
-    pxr::GfVec3f local(ray.GetPoint(enterDistance));
-    pxr::GfVec3f world(GetMatrix().Transform(local));
+  if(ray.Intersect(GfVec3d(0.0), _radius, &enterDistance, &exitDistance)) {
+    GfVec3f local(ray.GetPoint(enterDistance));
+    GfVec3f world(GetMatrix().Transform(local));
     float distance = (ray.GetStartPoint() - world).GetLength();
     if(distance < maxDistance && distance < *minDistance) {
       *minDistance = distance;
       // store spherical coordinates
       float polar = (-std::acosf(local[2]/_radius)) * RADIANS_TO_DEGREES;
       float azimuth = (std::atanf(local[0]/local[2])) * RADIANS_TO_DEGREES;
-      hit->SetCoordinates(pxr::GfVec3f(_radius, polar, azimuth));
+      hit->SetCoordinates(GfVec3f(_radius, polar, azimuth));
       return true;
     }
   }
@@ -397,34 +397,34 @@ Cone::Raycast(const pxr::GfRay& ray, Location* hit,
 }
 
 bool 
-Cone::Closest(const pxr::GfVec3f& point, Location* hit,
+Cone::Closest(const GfVec3f& point, Location* hit,
   double maxDistance, double* minDistance) const
 {
-  pxr::GfVec3f local = GetInverseMatrix().Transform(point).GetNormalized() * _radius;
-  pxr::GfVec3f closest = GetMatrix().Transform(local);  
+  GfVec3f local = GetInverseMatrix().Transform(point).GetNormalized() * _radius;
+  GfVec3f closest = GetMatrix().Transform(local);  
   float distance = (point - closest).GetLength();
   if(distance < maxDistance && distance < *minDistance) {
     *minDistance = distance;
     // store spherical coordinates
     float polar = (-std::acosf(local[2]/_radius)) * RADIANS_TO_DEGREES;
     float azimuth = (std::atanf(local[0]/local[2])) * RADIANS_TO_DEGREES;
-    hit->SetCoordinates(pxr::GfVec3f(_radius, polar, azimuth));
+    hit->SetCoordinates(GfVec3f(_radius, polar, azimuth));
     return true;
   }
   return false;
 }
 
 Geometry::DirtyState 
-Cone::_Sync(const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
+Cone::_Sync(const GfMatrix4d& matrix, const UsdTimeCode& time)
 {
-  short radiusDirty  = GetAttributeValue<double>(pxr::UsdGeomTokens->radius, time, &_radius);
+  short radiusDirty  = GetAttributeValue<double>(UsdGeomTokens->radius, time, &_radius);
   return Geometry::DirtyState::CLEAN;
 }
 
 void 
-Cone::_Inject(const pxr::GfMatrix4d& parent, const pxr::UsdTimeCode& time)
+Cone::_Inject(const GfMatrix4d& parent, const UsdTimeCode& time)
 {
-  pxr::UsdGeomCone usdCone(_prim);
+  UsdGeomCone usdCone(_prim);
   usdCone.CreateHeightAttr().Set(_height, time);
   usdCone.CreateRadiusAttr().Set(_radius, time);
   usdCone.CreateAxisAttr().Set(_axis, time);
@@ -433,45 +433,45 @@ Cone::_Inject(const pxr::GfMatrix4d& parent, const pxr::UsdTimeCode& time)
 //-------------------------------------------------------------------------------------------------
 // Cylinder Implicit Geometry
 //-------------------------------------------------------------------------------------------------
-Cylinder::Cylinder(const pxr::GfMatrix4d& xfo)
+Cylinder::Cylinder(const GfMatrix4d& xfo)
   : Geometry(Geometry::CYLINDER, xfo)
   , _radius(0.5f)
   , _height(1.f)
-  , _axis(pxr::UsdGeomTokens->y)
+  , _axis(UsdGeomTokens->y)
 {
 }
 
-Cylinder::Cylinder(const pxr::UsdGeomCylinder& cylinder, const pxr::GfMatrix4d& world)
+Cylinder::Cylinder(const UsdGeomCylinder& cylinder, const GfMatrix4d& world)
   : Geometry(cylinder.GetPrim(), world)
 {
-  pxr::UsdAttribute radiusAttr = cylinder.GetRadiusAttr();
-  radiusAttr.Get(&_radius, pxr::UsdTimeCode::Default());
+  UsdAttribute radiusAttr = cylinder.GetRadiusAttr();
+  radiusAttr.Get(&_radius, UsdTimeCode::Default());
 
-  pxr::UsdAttribute heightAttr = cylinder.GetHeightAttr();
-  heightAttr.Get(&_height, pxr::UsdTimeCode::Default());
+  UsdAttribute heightAttr = cylinder.GetHeightAttr();
+  heightAttr.Get(&_height, UsdTimeCode::Default());
 
-  pxr::UsdAttribute axisAttr = cylinder.GetAxisAttr();
-  axisAttr.Get(&_axis, pxr::UsdTimeCode::Default());
+  UsdAttribute axisAttr = cylinder.GetAxisAttr();
+  axisAttr.Get(&_axis, UsdTimeCode::Default());
 
 }
 
 bool 
-Cylinder::Raycast(const pxr::GfRay& ray, Location* hit,
+Cylinder::Raycast(const GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 { 
-  pxr::GfRay invRay(ray);
+  GfRay invRay(ray);
   invRay.Transform(GetInverseMatrix());
   double enterDistance, exitDistance;
-  if(ray.Intersect(pxr::GfVec3d(0.0), _radius, &enterDistance, &exitDistance)) {
-    pxr::GfVec3f local(ray.GetPoint(enterDistance));
-    pxr::GfVec3f world(GetMatrix().Transform(local));
+  if(ray.Intersect(GfVec3d(0.0), _radius, &enterDistance, &exitDistance)) {
+    GfVec3f local(ray.GetPoint(enterDistance));
+    GfVec3f world(GetMatrix().Transform(local));
     float distance = (ray.GetStartPoint() - world).GetLength();
     if(distance < maxDistance && distance < *minDistance) {
       *minDistance = distance;
       // store spherical coordinates
       float polar = (-std::acosf(local[2]/_radius)) * RADIANS_TO_DEGREES;
       float azimuth = (std::atanf(local[0]/local[2])) * RADIANS_TO_DEGREES;
-      hit->SetCoordinates(pxr::GfVec3f(_radius, polar, azimuth));
+      hit->SetCoordinates(GfVec3f(_radius, polar, azimuth));
       return true;
     }
   }
@@ -479,33 +479,33 @@ Cylinder::Raycast(const pxr::GfRay& ray, Location* hit,
 }
 
 bool 
-Cylinder::Closest(const pxr::GfVec3f& point, Location* hit,
+Cylinder::Closest(const GfVec3f& point, Location* hit,
   double maxDistance, double* minDistance) const
 {
-  pxr::GfVec3f local = GetInverseMatrix().Transform(point).GetNormalized() * _radius;
-  pxr::GfVec3f closest = GetMatrix().Transform(local);  
+  GfVec3f local = GetInverseMatrix().Transform(point).GetNormalized() * _radius;
+  GfVec3f closest = GetMatrix().Transform(local);  
   float distance = (point - closest).GetLength();
   if(distance < maxDistance && distance < *minDistance) {
     *minDistance = distance;
     // store spherical coordinates
     float polar = (-std::acosf(local[2]/_radius)) * RADIANS_TO_DEGREES;
     float azimuth = (std::atanf(local[0]/local[2])) * RADIANS_TO_DEGREES;
-    hit->SetCoordinates(pxr::GfVec3f(_radius, polar, azimuth));
+    hit->SetCoordinates(GfVec3f(_radius, polar, azimuth));
     return true;
   }
   return false;
 }
 
 Geometry::DirtyState 
-Cylinder::_Sync(const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
+Cylinder::_Sync(const GfMatrix4d& matrix, const UsdTimeCode& time)
 {
   return Geometry::DirtyState::CLEAN;
 }
 
 void 
-Cylinder::_Inject(const pxr::GfMatrix4d& parent, const pxr::UsdTimeCode& time)
+Cylinder::_Inject(const GfMatrix4d& parent, const UsdTimeCode& time)
 {
-  pxr::UsdGeomCylinder usdCylinder(_prim);
+  UsdGeomCylinder usdCylinder(_prim);
   usdCylinder.CreateHeightAttr().Set(_height, time);
   usdCylinder.CreateRadiusAttr().Set(_radius, time);
   usdCylinder.CreateAxisAttr().Set(_axis, time);
@@ -514,35 +514,35 @@ Cylinder::_Inject(const pxr::GfMatrix4d& parent, const pxr::UsdTimeCode& time)
 //-------------------------------------------------------------------------------------------------
 // Capsule Implicit Geometry
 //-------------------------------------------------------------------------------------------------
-Capsule::Capsule(const pxr::GfMatrix4d& xfo)
+Capsule::Capsule(const GfMatrix4d& xfo)
   : Geometry(Geometry::CAPSULE, xfo)
   , _radius(0.1f)
   , _height(1.f)
-  , _axis(pxr::UsdGeomTokens->y)
+  , _axis(UsdGeomTokens->y)
 {
 }
 
-Capsule::Capsule(const pxr::UsdGeomCapsule& capsule, const pxr::GfMatrix4d& world)
+Capsule::Capsule(const UsdGeomCapsule& capsule, const GfMatrix4d& world)
   : Geometry(capsule.GetPrim(), world)
 {
-  pxr::UsdAttribute radiusAttr = capsule.GetRadiusAttr();
-  radiusAttr.Get(&_radius, pxr::UsdTimeCode::Default());
+  UsdAttribute radiusAttr = capsule.GetRadiusAttr();
+  radiusAttr.Get(&_radius, UsdTimeCode::Default());
 
-  pxr::UsdAttribute heightAttr = capsule.GetHeightAttr();
-  heightAttr.Get(&_height, pxr::UsdTimeCode::Default());
+  UsdAttribute heightAttr = capsule.GetHeightAttr();
+  heightAttr.Get(&_height, UsdTimeCode::Default());
 
-  pxr::UsdAttribute axisAttr = capsule.GetAxisAttr();
-  axisAttr.Get(&_axis, pxr::UsdTimeCode::Default());
+  UsdAttribute axisAttr = capsule.GetAxisAttr();
+  axisAttr.Get(&_axis, UsdTimeCode::Default());
 
 }
 
-bool Capsule::Raycast(const pxr::GfRay& ray, Location* hit,
+bool Capsule::Raycast(const GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 { 
   return false;
 }
 
-bool Capsule::Closest(const pxr::GfVec3f& point, Location* hit,
+bool Capsule::Closest(const GfVec3f& point, Location* hit,
   double maxDistance, double* minDistance) const
 {
   return false;
@@ -550,47 +550,47 @@ bool Capsule::Closest(const pxr::GfVec3f& point, Location* hit,
 
 
 Geometry::DirtyState 
-Capsule::_Sync(const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
+Capsule::_Sync(const GfMatrix4d& matrix, const UsdTimeCode& time)
 {
-  size_t state = GetAttributeValue<pxr::TfToken>(pxr::UsdGeomTokens->axis, time, &_axis);
-  state |= GetAttributeValue<double>(pxr::UsdGeomTokens->radius, time, &_radius);
-  state |= GetAttributeValue<double>(pxr::UsdGeomTokens->height, time, &_height);
-  state |= GetAttributeValue<pxr::TfToken>(pxr::UsdGeomTokens->axis, time, &_axis);
+  size_t state = GetAttributeValue<TfToken>(UsdGeomTokens->axis, time, &_axis);
+  state |= GetAttributeValue<double>(UsdGeomTokens->radius, time, &_radius);
+  state |= GetAttributeValue<double>(UsdGeomTokens->height, time, &_height);
+  state |= GetAttributeValue<TfToken>(UsdGeomTokens->axis, time, &_axis);
 
   return (Geometry::DirtyState)state;
 }
 
 void 
-Capsule::_Inject(const pxr::GfMatrix4d& parent,
-  const pxr::UsdTimeCode& time)
+Capsule::_Inject(const GfMatrix4d& parent,
+  const UsdTimeCode& time)
 {
-  pxr::UsdGeomCapsule usdCapsule(_prim);
+  UsdGeomCapsule usdCapsule(_prim);
   usdCapsule.CreateHeightAttr().Set(_height, time);
   usdCapsule.CreateRadiusAttr().Set(_radius, time);
   usdCapsule.CreateAxisAttr().Set(_axis, time);
 }
 
 float 
-Capsule::SignedDistance(const pxr::GfVec3f& point) const
+Capsule::SignedDistance(const GfVec3f& point) const
 {
-  pxr::GfVec3f a, b, p;
+  GfVec3f a, b, p;
   p = _invMatrix.Transform(point);
-  if (_axis == pxr::UsdGeomTokens->x) {
-    a = pxr::GfVec3f(-_height * 0.5f, 0.f, 0.f);
-    b = pxr::GfVec3f(_height * 0.5f, 0.f, 0.f);
+  if (_axis == UsdGeomTokens->x) {
+    a = GfVec3f(-_height * 0.5f, 0.f, 0.f);
+    b = GfVec3f(_height * 0.5f, 0.f, 0.f);
   }
-  else if (_axis == pxr::UsdGeomTokens->y) {
-    a = pxr::GfVec3f(0.f, -_height * 0.5f, 0.f);
-    b = pxr::GfVec3f(0.f, _height * 0.5f, 0.f);
+  else if (_axis == UsdGeomTokens->y) {
+    a = GfVec3f(0.f, -_height * 0.5f, 0.f);
+    b = GfVec3f(0.f, _height * 0.5f, 0.f);
   }
-  else if (_axis == pxr::UsdGeomTokens->z) {
-    a = pxr::GfVec3f(0.f, 0.f, -_height * 0.5f);
-    b = pxr::GfVec3f(0.f, 0.f, _height * 0.5f);
+  else if (_axis == UsdGeomTokens->z) {
+    a = GfVec3f(0.f, 0.f, -_height * 0.5f);
+    b = GfVec3f(0.f, 0.f, _height * 0.5f);
   }
     
-  pxr::GfVec3f pa = p - a;
-  pxr::GfVec3f ba = b - a;
-  float h = pxr::GfClamp( pxr::GfDot(pa, ba)/pxr::GfDot(ba, ba), 0.f, 1.f );
+  GfVec3f pa = p - a;
+  GfVec3f ba = b - a;
+  float h = GfClamp( GfDot(pa, ba)/GfDot(ba, ba), 0.f, 1.f );
 
   return (pa - ba * h).GetLength() - _radius;
 }

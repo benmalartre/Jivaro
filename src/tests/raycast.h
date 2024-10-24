@@ -16,17 +16,17 @@ class TestRaycast : public Execution {
 public:
   friend class Scene;
   TestRaycast() : Execution(){};
-  void InitExec(pxr::UsdStageRefPtr& stage) override;
-  void UpdateExec(pxr::UsdStageRefPtr& stage, float time) override;
-  void TerminateExec(pxr::UsdStageRefPtr& stage) override;
+  void InitExec(UsdStageRefPtr& stage) override;
+  void UpdateExec(UsdStageRefPtr& stage, float time) override;
+  void TerminateExec(UsdStageRefPtr& stage) override;
 
 protected:
   void _UpdateRays() ;
-  void _FindHits(size_t begin, size_t end, const pxr::GfVec3f* positions, 
-    pxr::GfVec3f* results, bool* hits);
+  void _FindHits(size_t begin, size_t end, const GfVec3f* positions, 
+    GfVec3f* results, bool* hits);
   void _UpdateHits();
-  void _TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage);
-  void _AddAnimationSamples(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path);
+  void _TraverseStageFindingMeshes(UsdStageRefPtr& stage);
+  void _AddAnimationSamples(UsdStageRefPtr& stage, SdfPath& path);
 
 private:
   std::vector<Geometry*>    _subjects; 
@@ -35,11 +35,11 @@ private:
   Points*                   _hits;
   BVH                       _bvh;
 
-  std::vector<pxr::SdfPath> _subjectsId;
-  pxr::SdfPath              _meshId;
-  pxr::SdfPath              _raysId;
-  pxr::SdfPath              _hitsId;
-  pxr::SdfPath              _bvhId;
+  std::vector<SdfPath> _subjectsId;
+  SdfPath              _meshId;
+  SdfPath              _raysId;
+  SdfPath              _hitsId;
+  SdfPath              _bvhId;
   
 
 };

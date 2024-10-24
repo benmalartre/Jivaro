@@ -19,8 +19,8 @@ template <typename T>
 struct SparseMatrixInfos 
 {
   typedef typename std::pair<int, int> Key;
-  pxr::VtArray<Key>  keys;
-  pxr::VtArray<T>    values;
+  VtArray<Key>  keys;
+  VtArray<T>    values;
 
   SparseMatrixInfos(size_t size) {
     keys.resize(size);
@@ -606,14 +606,14 @@ Matrix<T> Matrix<T>::LUDecomposition()
       lu._matrix[row * _columns + column] = sum;
 
       // maintain best permutation choice
-      if (pxr::GfAbs(sum) > largest) {
-        largest = pxr::GfAbs(sum);
+      if (GfAbs(sum) > largest) {
+        largest = GfAbs(sum);
         perm = row;
       }
     }
 
     // singularity check
-    if (pxr::GfAbs(lu._matrix[perm * _columns + column]) < singularityThreshold) {
+    if (GfAbs(lu._matrix[perm * _columns + column]) < singularityThreshold) {
       _singular = true;
       std::cerr << "matrix is singular !" << std::endl;
       return lu;

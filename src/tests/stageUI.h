@@ -24,14 +24,14 @@ JVR_NAMESPACE_OPEN_SCOPE
 void
 TestStageUI(
   GraphEditorUI* ui, 
-  const std::vector<pxr::UsdStageRefPtr>& stages
+  const std::vector<UsdStageRefPtr>& stages
 );
 
 void 
 RecurseStagePrim(
   GraphEditorUI* ui, 
   NodeUI* parent,
-  const pxr::UsdPrim& prim, 
+  const UsdPrim& prim, 
   int stageIndex, 
   int& nodeIndex
 );

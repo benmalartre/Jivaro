@@ -37,9 +37,9 @@ class Solver : public Xform {
 public:
   const static size_t INVALID_INDEX = std::numeric_limits<size_t>::max();
 
-  typedef std::map<Element*, std::pair<pxr::SdfPath, Geometry*>> _ElementMap;
+  typedef std::map<Element*, std::pair<SdfPath, Geometry*>> _ElementMap;
 
-  explicit Solver(Scene* scene, const pxr::UsdGeomXform& xform, const pxr::GfMatrix4d& world);
+  explicit Solver(Scene* scene, const UsdGeomXform& xform, const GfMatrix4d& world);
   ~Solver();
   
   void CreateConstraints(Body* body, short type, float stiffness=10000.f, float damping=0.1f);
@@ -59,7 +59,7 @@ public:
   // bodies
   std::vector<Body*> GetBodies(){return _bodies;};
   const std::vector<Body*> GetBodies() const {return _bodies;};
-  Body* CreateBody(Geometry* geom, const pxr::GfMatrix4d& m, 
+  Body* CreateBody(Geometry* geom, const GfMatrix4d& m, 
     float mass, float radius, float damping, bool attach);
   void AddBody(Body* body);
   void RemoveBody(Geometry* geom);
@@ -67,7 +67,7 @@ public:
   Body* GetBody(Geometry* geom);
   size_t GetBodyIndex(Geometry* geom);
 
-  void SetBodyVelocity(Body* body, const pxr::GfVec3f& velocity);
+  void SetBodyVelocity(Body* body, const GfVec3f& velocity);
 
   // forces
   void AddForce(Force* force) { _forces.push_back(force); };
@@ -94,31 +94,31 @@ public:
 
   // particles
   Particles* GetParticles() { return &_particles; };
-  void LockPoints(Body* body, pxr::VtArray<int>& elements);
-  void AttachPoints(Body* body, pxr::VtArray<int>& elements);
-  void PinPoints(Body* body, Geometry* target, pxr::VtArray<int>& elements);
+  void LockPoints(Body* body, VtArray<int>& elements);
+  void AttachPoints(Body* body, VtArray<int>& elements);
+  void PinPoints(Body* body, Geometry* target, VtArray<int>& elements);
 
   void UpdatePoints();
   void ClearPoints();
   void WeightBoundaries(Body* body);
   Points* GetPoints(){return _points;};
-  pxr::SdfPath GetPointsId(){return _pointsId;};
+  SdfPath GetPointsId(){return _pointsId;};
   
   // solver 
-  void Update(pxr::UsdStageRefPtr& stage, float time);
-  void UpdateInputs(pxr::UsdStageRefPtr& stage, float time);
-  void UpdateParameters(pxr::UsdStageRefPtr& stage, float time);
-  void UpdateCollisions(pxr::UsdStageRefPtr& stage, float time);
+  void Update(UsdStageRefPtr& stage, float time);
+  void UpdateInputs(UsdStageRefPtr& stage, float time);
+  void UpdateParameters(UsdStageRefPtr& stage, float time);
+  void UpdateCollisions(UsdStageRefPtr& stage, float time);
   void UpdateGeometries();
   void Reset();
   void Step();
 
   // elements
-  void AddElement(Element* element, Geometry* geom, const pxr::SdfPath& path);
+  void AddElement(Element* element, Geometry* geom, const SdfPath& path);
   void RemoveElement(Element* element);
-  pxr::SdfPath GetElementPath(Element* element);
+  SdfPath GetElementPath(Element* element);
   Geometry* GetElementGeometry(Element* element);
-  Element* GetElement(const pxr::SdfPath& path);
+  Element* GetElement(const SdfPath& path);
   const _ElementMap& GetElements(){return _elements;};
 
 private:
@@ -155,9 +155,9 @@ private:
   Scene*                              _scene;
   Points*                             _points;
   Curve*                              _curves;
-  pxr::SdfPath                        _pointsId;
-  pxr::SdfPath                        _curvesId;
-  pxr::SdfPath                        _solverId;
+  SdfPath                        _pointsId;
+  SdfPath                        _curvesId;
+  SdfPath                        _solverId;
 
   // display
   bool                                _showPoints;

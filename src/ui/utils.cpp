@@ -97,16 +97,16 @@ UIUtils::HelpMarker(const char* desc)
   }
 }
 
-pxr::VtValue 
-UIUtils::AddTokenWidget(const UsdAttribute& attribute, const pxr::UsdTimeCode& timeCode)
+VtValue 
+UIUtils::AddTokenWidget(const UsdAttribute& attribute, const UsdTimeCode& timeCode)
 {
   VtValue allowedTokens;
   attribute.GetMetadata(TfToken("allowedTokens"), &allowedTokens);
-  pxr::TfToken token;
-  attribute.Get<pxr::TfToken>(&token, timeCode);
-  pxr::VtValue newToken;
-  if (!allowedTokens.IsEmpty() && allowedTokens.IsHolding<pxr::VtArray<pxr::TfToken>>()) {
-    pxr::VtArray<pxr::TfToken> tokensArray = allowedTokens.Get<pxr::VtArray<pxr::TfToken>>();
+  TfToken token;
+  attribute.Get<TfToken>(&token, timeCode);
+  VtValue newToken;
+  if (!allowedTokens.IsEmpty() && allowedTokens.IsHolding<VtArray<TfToken>>()) {
+    VtArray<TfToken> tokensArray = allowedTokens.Get<VtArray<TfToken>>();
     if (ImGui::BeginCombo(attribute.GetName().GetText(), token.GetText())) {
       for (auto token : tokensArray) {
         if (ImGui::Selectable(token.GetString().c_str(), false)) {
@@ -127,51 +127,51 @@ UIUtils::AddTokenWidget(const UsdAttribute& attribute, const pxr::UsdTimeCode& t
   return newToken;
 }
 
-pxr::VtValue 
-UIUtils::AddAttributeWidget(const pxr::UsdAttribute& attribute, const pxr::UsdTimeCode& timeCode) 
+VtValue 
+UIUtils::AddAttributeWidget(const UsdAttribute& attribute, const UsdTimeCode& timeCode) 
 {
-  pxr::VtValue value;
+  VtValue value;
   attribute.Get(&value, timeCode);
-  if (value.IsHolding<pxr::GfVec3f>()) {
-    return AddVectorWidget<pxr::GfVec3f, ImGuiDataType_Float, 3>(attribute, timeCode);
-  } else if (value.IsHolding<pxr::GfVec2f>()) {
-    return AddVectorWidget<pxr::GfVec2f, ImGuiDataType_Float, 2>(attribute, timeCode);
-  } else if (value.IsHolding<pxr::GfVec4f>()) {
-    return AddVectorWidget<pxr::GfVec4f, ImGuiDataType_Float, 4>(attribute, timeCode);
-  } else if (value.IsHolding<pxr::GfVec3d>()) {
-    return AddVectorWidget<pxr::GfVec3d, ImGuiDataType_Double, 3>(attribute, timeCode);
-  } else if (value.IsHolding<pxr::GfVec2d>()) {
-    return AddVectorWidget<pxr::GfVec2d, ImGuiDataType_Double, 2>(attribute, timeCode);
-  } else if (value.IsHolding<pxr::GfVec4d>()) {
-    return AddVectorWidget<pxr::GfVec4d, ImGuiDataType_Double, 4>(attribute, timeCode);
-  } else if (value.IsHolding<pxr::GfVec4i>()) {
-    return AddVectorWidget<pxr::GfVec4i, ImGuiDataType_S32, 4>(attribute, timeCode);
-  } else if (value.IsHolding<pxr::GfVec3i>()) {
-    return AddVectorWidget<pxr::GfVec3i, ImGuiDataType_S32, 3>(attribute, timeCode);
-  } else if (value.IsHolding<pxr::GfVec2i>()) {
-    return AddVectorWidget<pxr::GfVec2i, ImGuiDataType_S32, 2>(attribute, timeCode);
+  if (value.IsHolding<GfVec3f>()) {
+    return AddVectorWidget<GfVec3f, ImGuiDataType_Float, 3>(attribute, timeCode);
+  } else if (value.IsHolding<GfVec2f>()) {
+    return AddVectorWidget<GfVec2f, ImGuiDataType_Float, 2>(attribute, timeCode);
+  } else if (value.IsHolding<GfVec4f>()) {
+    return AddVectorWidget<GfVec4f, ImGuiDataType_Float, 4>(attribute, timeCode);
+  } else if (value.IsHolding<GfVec3d>()) {
+    return AddVectorWidget<GfVec3d, ImGuiDataType_Double, 3>(attribute, timeCode);
+  } else if (value.IsHolding<GfVec2d>()) {
+    return AddVectorWidget<GfVec2d, ImGuiDataType_Double, 2>(attribute, timeCode);
+  } else if (value.IsHolding<GfVec4d>()) {
+    return AddVectorWidget<GfVec4d, ImGuiDataType_Double, 4>(attribute, timeCode);
+  } else if (value.IsHolding<GfVec4i>()) {
+    return AddVectorWidget<GfVec4i, ImGuiDataType_S32, 4>(attribute, timeCode);
+  } else if (value.IsHolding<GfVec3i>()) {
+    return AddVectorWidget<GfVec3i, ImGuiDataType_S32, 3>(attribute, timeCode);
+  } else if (value.IsHolding<GfVec2i>()) {
+    return AddVectorWidget<GfVec2i, ImGuiDataType_S32, 2>(attribute, timeCode);
   } else if (value.IsHolding<bool>()) {
     bool isOn = value.Get<bool>();
     if (ImGui::Checkbox(attribute.GetName().GetText(), &isOn)) {
-      return pxr::VtValue(isOn);
+      return VtValue(isOn);
     }
   } else if (value.IsHolding<double>()) {
     double dblValue = value.Get<double>();
     ImGui::InputDouble(attribute.GetName().GetText(), &dblValue);
     if (ImGui::IsItemDeactivatedAfterEdit()) {
-      return pxr::VtValue(dblValue);
+      return VtValue(dblValue);
     }
   } else if (value.IsHolding<float>()) {
     float fltValue = value.Get<float>();
     ImGui::InputFloat(attribute.GetName().GetText(), &fltValue);
     if (ImGui::IsItemDeactivatedAfterEdit()) {
-      return pxr::VtValue(fltValue);
+      return VtValue(fltValue);
     }
   } else if (value.IsHolding<int>()) {
     int intValue = value.Get<int>();
     ImGui::InputInt(attribute.GetName().GetText(), &intValue);
     if (ImGui::IsItemDeactivatedAfterEdit()) {
-      return pxr::VtValue(intValue);
+      return VtValue(intValue);
     }
   } else if (value.IsHolding<TfToken>()) {
     return AddTokenWidget(attribute, timeCode);
@@ -181,36 +181,36 @@ UIUtils::AddAttributeWidget(const pxr::UsdAttribute& attribute, const pxr::UsdTi
     strcpy(&buf[0], stringValue.c_str());
     ImGui::InputText(attribute.GetName().GetText(), &buf[0], 255);
     if (ImGui::IsItemDeactivatedAfterEdit()) {
-      return pxr::VtValue(std::string(buf));
+      return VtValue(std::string(buf));
     }
   } else if (value.IsHolding<SdfAssetPath>()) {
-    pxr::SdfAssetPath sdfAssetPath = value.Get<pxr::SdfAssetPath>();
+    SdfAssetPath sdfAssetPath = value.Get<SdfAssetPath>();
     std::string assetPath = sdfAssetPath.GetAssetPath();
     static char buf[255];
     strcpy(&buf[0], assetPath.c_str());
     ImGui::InputText(attribute.GetName().GetText(), &buf[0], 255);
     if (ImGui::IsItemDeactivatedAfterEdit()) {
-      return pxr::VtValue(std::string(buf));
+      return VtValue(std::string(buf));
     }
-  } else if (value.IsHolding<pxr::GfMatrix4d>()) {
-    return AddMatrixWidget<pxr::GfMatrix4d, ImGuiDataType_Double, 4, 4>(attribute, timeCode);
-  } else if (value.IsHolding<pxr::GfMatrix4f>()) {
-    return AddMatrixWidget<pxr::GfMatrix4f, ImGuiDataType_Float, 4, 4>(attribute, timeCode);
-  } else if (value.IsHolding<pxr::GfMatrix3d>()) {
-    return AddMatrixWidget<pxr::GfMatrix3d, ImGuiDataType_Double, 3, 3>(attribute, timeCode);
-  } else if (value.IsHolding<pxr::GfMatrix3f>()) {
-    return AddMatrixWidget<pxr::GfMatrix3f, ImGuiDataType_Float, 3, 3>(attribute, timeCode);
-  } else if (value.IsHolding<pxr::GfMatrix2d>()) {
-    return AddMatrixWidget<pxr::GfMatrix2d, ImGuiDataType_Double, 2, 2>(attribute, timeCode);
-  } else if (value.IsHolding<pxr::GfMatrix2f>()) {
-    return AddMatrixWidget<pxr::GfMatrix2f, ImGuiDataType_Float, 2, 2>(attribute, timeCode);
+  } else if (value.IsHolding<GfMatrix4d>()) {
+    return AddMatrixWidget<GfMatrix4d, ImGuiDataType_Double, 4, 4>(attribute, timeCode);
+  } else if (value.IsHolding<GfMatrix4f>()) {
+    return AddMatrixWidget<GfMatrix4f, ImGuiDataType_Float, 4, 4>(attribute, timeCode);
+  } else if (value.IsHolding<GfMatrix3d>()) {
+    return AddMatrixWidget<GfMatrix3d, ImGuiDataType_Double, 3, 3>(attribute, timeCode);
+  } else if (value.IsHolding<GfMatrix3f>()) {
+    return AddMatrixWidget<GfMatrix3f, ImGuiDataType_Float, 3, 3>(attribute, timeCode);
+  } else if (value.IsHolding<GfMatrix2d>()) {
+    return AddMatrixWidget<GfMatrix2d, ImGuiDataType_Double, 2, 2>(attribute, timeCode);
+  } else if (value.IsHolding<GfMatrix2f>()) {
+    return AddMatrixWidget<GfMatrix2f, ImGuiDataType_Float, 2, 2>(attribute, timeCode);
   } else if (value.IsArrayValued() && value.GetArraySize() == 1 && value.IsHolding<VtArray<float>>()) {
-    pxr::VtArray<float> fltArray = value.Get<VtArray<float>>();
+    VtArray<float> fltArray = value.Get<VtArray<float>>();
     float fltValue = fltArray[0];
     ImGui::InputFloat(attribute.GetName().GetText(), &fltValue);
     if (ImGui::IsItemDeactivatedAfterEdit()) {
       fltArray[0] = fltValue;
-      return pxr::VtValue(fltArray);
+      return VtValue(fltArray);
     }
   } else if (value.IsArrayValued() && value.GetArraySize() > 5) {
     ImGui::Text("%s with %zu values", value.GetTypeName().c_str(), value.GetArraySize());
@@ -219,26 +219,26 @@ UIUtils::AddAttributeWidget(const pxr::UsdAttribute& attribute, const pxr::UsdTi
     ss << value;
     ImGui::Text("%s", ss.str().c_str());
   }
-  return pxr::VtValue();
+  return VtValue();
 }
 
-pxr::VtValue 
-UIUtils::AddColorWidget(const UsdAttribute& attribute, const pxr::UsdTimeCode& timeCode)
+VtValue 
+UIUtils::AddColorWidget(const UsdAttribute& attribute, const UsdTimeCode& timeCode)
 {
-  pxr::GfVec3f buffer;
+  GfVec3f buffer;
   bool isArrayValued = false;
-  pxr::VtValue value;
+  VtValue value;
   attribute.Get(&value, timeCode);
-  if (value.IsHolding<pxr::GfVec3f>()) {
-    buffer = pxr::GfVec3f(value.Get<pxr::GfVec3f>());
+  if (value.IsHolding<GfVec3f>()) {
+    buffer = GfVec3f(value.Get<GfVec3f>());
   } else if (value.IsArrayValued() && 
     value.GetArraySize() == 1 && 
-    value.IsHolding<pxr::VtArray<pxr::GfVec3f>>()) {
-    pxr::VtArray<pxr::GfVec3f> array = value.Get<pxr::VtArray<pxr::GfVec3f>>();
+    value.IsHolding<VtArray<GfVec3f>>()) {
+    VtArray<GfVec3f> array = value.Get<VtArray<GfVec3f>>();
     buffer = array[0];
     isArrayValued = true;
   } else {
-    return pxr::VtValue();
+    return VtValue();
   }
   ImVec4 color(buffer[0], buffer[1], buffer[2], 1.0);
   ImGui::PushStyleColor(ImGuiCol_Button, color);
@@ -259,7 +259,7 @@ UIUtils::AddColorWidget(const UsdAttribute& attribute, const pxr::UsdTimeCode& t
       std::bind(&Application::SetPopup, Application::Get(), popup)
     );
     ImGui::PopStyleColor(3);
-    return pxr::VtValue();
+    return VtValue();
   }
   ImGui::PopStyleColor(3);
   ImGui::SameLine();
@@ -267,12 +267,12 @@ UIUtils::AddColorWidget(const UsdAttribute& attribute, const pxr::UsdTimeCode& t
     NULL, NULL, DecimalPrecision, ImGuiInputTextFlags());
   if (ImGui::IsItemDeactivatedAfterEdit()) {
     if (isArrayValued) {
-      return pxr::VtValue(pxr::VtArray<pxr::GfVec3f>({ buffer }));
+      return VtValue(VtArray<GfVec3f>({ buffer }));
     } else {
-      return pxr::VtValue(buffer);
+      return VtValue(buffer);
     }
   }
-  return pxr::VtValue();
+  return VtValue();
 }
 
 // TODO Share code as we want to share the style of the button, but not necessarily the behaviour
@@ -517,42 +517,42 @@ struct CreateSpecializeModalDialog : public CreateSdfPathModalDialog {
     void OnOkCallBack() override { ExecuteAfterDraw<PrimCreateSpecialize>(_primSpec, _operation, SdfPath(_primPath)); }
 };
 */
-void AddPrimCreateReference(const pxr::SdfPrimSpecHandle &primSpec) 
+void AddPrimCreateReference(const SdfPrimSpecHandle &primSpec) 
 { 
   //DrawModalDialog<CreateReferenceModalDialog>(primSpec); 
 }
 
-void AddPrimCreatePayload(const pxr::SdfPrimSpecHandle &primSpec) 
+void AddPrimCreatePayload(const SdfPrimSpecHandle &primSpec) 
 { 
   //DrawModalDialog<CreatePayloadModalDialog>(primSpec); 
 }
 
-void AddPrimCreateInherit(const pxr::SdfPrimSpecHandle &primSpec) 
+void AddPrimCreateInherit(const SdfPrimSpecHandle &primSpec) 
 { 
   //DrawModalDialog<CreateInheritModalDialog>(primSpec); 
 }
-void AddPrimCreateSpecialize(const pxr::SdfPrimSpecHandle &primSpec) 
+void AddPrimCreateSpecialize(const SdfPrimSpecHandle &primSpec) 
 { 
   //DrawModalDialog<CreateSpecializeModalDialog>(primSpec); 
   }
 
 /// Remove a Asset Path from a primspec
-inline void RemoveAssetPathFromList(pxr::SdfPrimSpecHandle primSpec, 
-  const pxr::SdfReference &item) 
+inline void RemoveAssetPathFromList(SdfPrimSpecHandle primSpec, 
+  const SdfReference &item) 
 {
     primSpec->GetReferenceList().RemoveItemEdits(item);
 }
 
-inline void RemoveAssetPathFromList(pxr::SdfPrimSpecHandle primSpec, 
-  const pxr::SdfPayload &item) 
+inline void RemoveAssetPathFromList(SdfPrimSpecHandle primSpec, 
+  const SdfPayload &item) 
   {
     primSpec->GetPayloadList().RemoveItemEdits(item);
 }
 
 /////////////// Summaries used in the layer scene editor
 template <typename ArcT>
-inline void AddSdfPathSummary(std::string &&header, pxr::SdfListOpType operation, const pxr::SdfPath &path,
-                               const pxr::SdfPrimSpecHandle &primSpec, int &menuItemId) 
+inline void AddSdfPathSummary(std::string &&header, SdfListOpType operation, const SdfPath &path,
+                               const SdfPrimSpecHandle &primSpec, int &menuItemId) 
 {
   ImGui::PushStyleColor(ImGuiCol_Button, 0);
   ImGui::PushID(menuItemId++);
@@ -574,7 +574,7 @@ inline void AddSdfPathSummary(std::string &&header, pxr::SdfListOpType operation
 
 template <typename AssetPathT>
 inline void AddAssetPathSummary(std::string &&header, SdfListOpType operation, const AssetPathT &assetPath,
-                                 const pxr::SdfPrimSpecHandle &primSpec, int &menuItemId) 
+                                 const SdfPrimSpecHandle &primSpec, int &menuItemId) 
 {
   ImGui::PushStyleColor(ImGuiCol_Button, 0);
   ImGui::PushID(menuItemId++);
@@ -599,33 +599,33 @@ inline void AddAssetPathSummary(std::string &&header, SdfListOpType operation, c
   ImGui::PopStyleColor();
 }
 
-void AddReferenceSummary(pxr::SdfListOpType operation, const pxr::SdfReference &assetPath, 
-  const pxr::SdfPrimSpecHandle &primSpec, int &menuItemId) 
+void AddReferenceSummary(SdfListOpType operation, const SdfReference &assetPath, 
+  const SdfPrimSpecHandle &primSpec, int &menuItemId) 
 {
   AddAssetPathSummary("References", operation, assetPath, primSpec, menuItemId);
 }
 
-void AddPayloadSummary(pxr::SdfListOpType operation, const pxr::SdfPayload &assetPath, 
-  const pxr::SdfPrimSpecHandle &primSpec, int &menuItemId) 
+void AddPayloadSummary(SdfListOpType operation, const SdfPayload &assetPath, 
+  const SdfPrimSpecHandle &primSpec, int &menuItemId) 
 {
   AddAssetPathSummary("Payloads", operation, assetPath, primSpec, menuItemId);
 }
 
-void AddInheritPathSummary(pxr::SdfListOpType operation, const pxr::SdfPath &path, 
-  const pxr::SdfPrimSpecHandle &primSpec, int &menuItemId) 
+void AddInheritPathSummary(SdfListOpType operation, const SdfPath &path, 
+  const SdfPrimSpecHandle &primSpec, int &menuItemId) 
 {
   AddSdfPathSummary<SdfInherit>("Inherits", operation, path, primSpec, menuItemId);
 }
 
-void AddSpecializesSummary(pxr::SdfListOpType operation, const pxr::SdfPath &path, 
-  const pxr::SdfPrimSpecHandle &primSpec, int &menuItemId) 
+void AddSpecializesSummary(SdfListOpType operation, const SdfPath &path, 
+  const SdfPrimSpecHandle &primSpec, int &menuItemId) 
 {
-  AddSdfPathSummary<pxr::SdfSpecialize>("Specializes", operation, path, primSpec, menuItemId);
+  AddSdfPathSummary<SdfSpecialize>("Specializes", operation, path, primSpec, menuItemId);
 }
 
 
 void 
-AddPrimCompositionSummary(const pxr::SdfPrimSpecHandle &primSpec) {
+AddPrimCompositionSummary(const SdfPrimSpecHandle &primSpec) {
   if (!primSpec || !HasComposition(primSpec))
     return;
   ImGui::PushStyleColor(ImGuiCol_Button, 0);
@@ -646,10 +646,10 @@ AddPrimCompositionSummary(const pxr::SdfPrimSpecHandle &primSpec) {
   // - another thought ... replace the common prefix by an ellipsis ? (only for asset paths)
   int itemId = 0;
 
-  IterateListEditorItems(primSpec->GetReferenceList(), AddPathInRow<pxr::SdfReference>, primSpec, &itemId);
-  IterateListEditorItems(primSpec->GetPayloadList(), AddPathInRow<pxr::SdfPayload>, primSpec, &itemId);
-  IterateListEditorItems(primSpec->GetInheritPathList(), AddPathInRow<pxr::SdfInherit>, primSpec, &itemId);
-  IterateListEditorItems(primSpec->GetSpecializesList(), AddPathInRow<pxr::SdfSpecialize>, primSpec, &itemId);
+  IterateListEditorItems(primSpec->GetReferenceList(), AddPathInRow<SdfReference>, primSpec, &itemId);
+  IterateListEditorItems(primSpec->GetPayloadList(), AddPathInRow<SdfPayload>, primSpec, &itemId);
+  IterateListEditorItems(primSpec->GetInheritPathList(), AddPathInRow<SdfInherit>, primSpec, &itemId);
+  IterateListEditorItems(primSpec->GetSpecializesList(), AddPathInRow<SdfSpecialize>, primSpec, &itemId);
 
   ImGui::PopStyleVar();
   ImGui::PopStyleColor();

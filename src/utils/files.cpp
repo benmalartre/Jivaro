@@ -206,7 +206,7 @@ size_t GetFilesInDirectory(const char* path, std::vector<std::string>& filenames
 
 std::string GetInstallationFolder()
 {
-  std::string exePath = pxr::ArchGetExecutablePath();
+  std::string exePath = ArchGetExecutablePath();
   std::vector<std::string> tokens = SplitString(exePath, SEPARATOR);
   tokens.pop_back();
   return JoinString(tokens, SEPARATOR);

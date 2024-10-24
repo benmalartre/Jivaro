@@ -125,39 +125,39 @@ MenuUI::~MenuUI()
   for(auto & item: _items)delete item;
 }
 
-pxr::GfVec2f
+GfVec2f
 MenuUI::_ComputeSize(const MenuUI::Item* item)
 {
-  pxr::GfVec2f size(0, 0);
+  GfVec2f size(0, 0);
   ImGuiStyle& style = ImGui::GetStyle();
   for (const auto& subItem : item->items) {
-    pxr::GfVec2f labelSize = ImGui::CalcTextSize(subItem->label.c_str());
-    pxr::GfVec2f cur(labelSize + pxr::GfVec2f(style.ItemSpacing.x , ImGui::GetTextLineHeightWithSpacing()));
+    GfVec2f labelSize = ImGui::CalcTextSize(subItem->label.c_str());
+    GfVec2f cur(labelSize + GfVec2f(style.ItemSpacing.x , ImGui::GetTextLineHeightWithSpacing()));
     if (cur[0] > size[0])size[0] = cur[0];
     size[1] += cur[1];
   }
-  return pxr::GfVec2f(size[0], size[1]);
+  return GfVec2f(size[0], size[1]);
 }
 
-pxr::GfVec2f
+GfVec2f
 MenuUI::_ComputePos(const MenuUI::Item* item)
 {
   ImGuiStyle& style = ImGui::GetStyle();
   View* view = item->ui->GetView();
-  pxr::GfVec2f pos(0.f);
+  GfVec2f pos(0.f);
   if (item->parent) {
     pos[0] += _ComputeSize(item->parent)[0];
     for (auto& subItem : item->parent->items) {
       if (item->label == subItem->label) break;
-      pxr::GfVec2f cur = ImGui::CalcTextSize(subItem->label.c_str());
+      GfVec2f cur = ImGui::CalcTextSize(subItem->label.c_str());
       pos[1] += cur[1] + style.ItemSpacing[1];
     }
   }
   else {
-    pos += pxr::GfVec2f(view->GetX() + style.WindowPadding[0], view->GetY());
+    pos += GfVec2f(view->GetX() + style.WindowPadding[0], view->GetY());
     for (auto& subItem : item->ui->_items) {
       if (item->label == subItem->label.c_str()) break;
-      pxr::GfVec2f cur = ImGui::CalcTextSize(subItem->label.c_str()) + pxr::GfVec2f(0, ImGui::GetTextLineHeightWithSpacing());
+      GfVec2f cur = ImGui::CalcTextSize(subItem->label.c_str()) + GfVec2f(0, ImGui::GetTextLineHeightWithSpacing());
       pos[0] += cur[0] + style.ItemSpacing[0];
     }
   }
@@ -180,8 +180,8 @@ MenuUI::DirtyViewsBehind()
 
   if (_opened.size()) {
     MenuUI::Item* current = _items[_opened[0]];
-    pxr::GfVec2f pos = _ComputePos(current);
-    pxr::GfVec2f size = _ComputeSize(current);
+    GfVec2f pos = _ComputePos(current);
+    GfVec2f size = _ComputeSize(current);
     drawList->AddRect(pos, pos + size, ImColor(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1, 1.f), 2.f);
     GetWindow()->DirtyViewsUnderBox(pos, size);
 
@@ -197,8 +197,8 @@ MenuUI::DirtyViewsBehind()
   }
   else {
     const ImGuiStyle& style = ImGui::GetStyle();
-    pxr::GfVec2f pos = pxr::GfVec2f(0, 0);
-    pxr::GfVec2f size = pxr::GfVec2f(GetWidth(), ImGui::GetTextLineHeightWithSpacing() + 2 * style.FramePadding.y);
+    GfVec2f pos = GfVec2f(0, 0);
+    GfVec2f size = GfVec2f(GetWidth(), ImGui::GetTextLineHeightWithSpacing() + 2 * style.FramePadding.y);
 
     drawList->AddRect(pos, pos + size, ImColor(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1, 1.f), 2.f);
     _parent->GetWindow()->DirtyViewsUnderBox(pos, size);
@@ -286,7 +286,7 @@ static void OpenChildWindowCallback()
 {
   Application* app = Application::Get();
   Window* mainWindow = app->GetMainWindow();
-  Window* childWindow = Application::CreateChildWindow("Child Window", pxr::GfVec4i(200, 200, 400, 400), mainWindow);
+  Window* childWindow = Application::CreateChildWindow("Child Window", GfVec4i(200, 200, 400, 400), mainWindow);
   app->AddWindow(childWindow);
 
   childWindow->SetDesiredLayout(1);
@@ -302,16 +302,16 @@ static void SetLayoutCallback(Window* window, short layout)
 static void CreatePrimCallback(short type)
 {
   Application* app = Application::Get();
-  pxr::UsdStageRefPtr stage = app->GetStage();
-  const pxr::UsdPrim root = stage->GetPseudoRoot();
-  pxr::SdfLayerHandle layer = stage->GetSessionLayer();
+  UsdStageRefPtr stage = app->GetStage();
+  const UsdPrim root = stage->GetPseudoRoot();
+  SdfLayerHandle layer = stage->GetSessionLayer();
 
-  pxr::SdfPath name(RandomString(6));
+  SdfPath name(RandomString(6));
 
   Selection* selection = app->GetSelection();
 
   if(selection->GetNumSelectedItems()) {
-    pxr::SdfPrimSpecHandle spec = app->GetStage()->GetEditTarget().GetLayer()->GetPrimAtPath((*selection)[0].path);
+    SdfPrimSpecHandle spec = app->GetStage()->GetEditTarget().GetLayer()->GetPrimAtPath((*selection)[0].path);
     ADD_COMMAND(CreatePrimCommand, spec, name, type);
   } else {
     ADD_COMMAND(CreatePrimCommand, layer, name, type);
@@ -322,19 +322,19 @@ static void CreatePrimCallback(short type)
 static void TriangulateCallback()
 {
   Application* app = Application::Get();
-  const pxr::UsdStageRefPtr& stage = app->GetWorkStage();
+  const UsdStageRefPtr& stage = app->GetWorkStage();
   Selection* selection = app->GetSelection();
   for (size_t i = 0; i < selection->GetNumSelectedItems(); ++i) {
     Selection::Item& item = selection->GetItem(i);
-    pxr::UsdPrim prim = stage->GetPrimAtPath(item.path);
+    UsdPrim prim = stage->GetPrimAtPath(item.path);
     /*
-    if (prim.IsValid() && prim.IsA<pxr::UsdGeomMesh>()) {
-      pxr::UsdGeomMesh mesh(prim);
+    if (prim.IsValid() && prim.IsA<UsdGeomMesh>()) {
+      UsdGeomMesh mesh(prim);
       Mesh triangulated(mesh);
       triangulated.UpdateTopologyFromHalfEdges();
-      mesh.GetPointsAttr().Set(pxr::VtValue(triangulated.GetPositions()));
-      mesh.GetFaceVertexCountsAttr().Set(pxr::VtValue(triangulated.GetFaceCounts()));
-      mesh.GetFaceVertexIndicesAttr().Set(pxr::VtValue(triangulated.GetFaceConnects()));
+      mesh.GetPointsAttr().Set(VtValue(triangulated.GetPositions()));
+      mesh.GetFaceVertexCountsAttr().Set(VtValue(triangulated.GetFaceCounts()));
+      mesh.GetFaceVertexIndicesAttr().Set(VtValue(triangulated.GetFaceConnects()));
     }
     */
     std::cout << "triangulate : " << prim.GetPath() << std::endl;
@@ -344,35 +344,35 @@ static void TriangulateCallback()
 static void FlattenGeometryCallback()
 {
   Application* app = Application::Get();
-  const pxr::UsdStageRefPtr& stage = app->GetWorkStage();
+  const UsdStageRefPtr& stage = app->GetWorkStage();
   Selection* selection = app->GetSelection();
   for (size_t i = 0; i < selection->GetNumSelectedItems(); ++i) {
     Selection::Item& item = selection->GetItem(i);
-    pxr::UsdPrim prim = stage->GetPrimAtPath(item.path);
-    if (prim.IsValid() && prim.IsA<pxr::UsdGeomMesh>()) {
-      pxr::UsdGeomMesh mesh(prim);
-      pxr::TfToken uvToken("st");
+    UsdPrim prim = stage->GetPrimAtPath(item.path);
+    if (prim.IsValid() && prim.IsA<UsdGeomMesh>()) {
+      UsdGeomMesh mesh(prim);
+      TfToken uvToken("st");
       /*
       if (mesh.HasPrimvar(uvToken)) {
         std::cout << "WE FOUND UVS :)" << std::endl;
-        pxr::UsdGeomPrimvar uvPrimvar = mesh.GetPrimvar(uvToken);
-        pxr::TfToken interpolation = uvPrimvar.GetInterpolation();
-        if (interpolation == pxr::UsdGeomTokens->vertex) {
+        UsdGeomPrimvar uvPrimvar = mesh.GetPrimvar(uvToken);
+        TfToken interpolation = uvPrimvar.GetInterpolation();
+        if (interpolation == UsdGeomTokens->vertex) {
           std::cout << "UV INTERPOLATION VERTEX !" << std::endl;
-          pxr::VtArray<pxr::GfVec2d> uvs;
+          VtArray<GfVec2d> uvs;
           uvPrimvar.Get(&uvs);
           std::cout << "UVS COUNT : " << uvs.size() << std::endl;
         }
-        else if (interpolation == pxr::UsdGeomTokens->faceVarying) {
+        else if (interpolation == UsdGeomTokens->faceVarying) {
           std::cout << "UV INTERPOLATION FACE VARYING !" << std::endl;
-          pxr::VtArray<pxr::GfVec2d> uvs;
+          VtArray<GfVec2d> uvs;
           uvPrimvar.Get(&uvs);
 
           std::cout << "UVS COUNT : " << uvs.size() << std::endl;
-          // pxr::UsdGeomMesh usdFlattened = pxr::UsdGeomMesh::Define(stage, pxr::SdfPath(item.path.GetString() + "_flattened"));
+          // UsdGeomMesh usdFlattened = UsdGeomMesh::Define(stage, SdfPath(item.path.GetString() + "_flattened"));
           Mesh flattened(mesh);
           std::cout << flattened.GetNumPoints() << std::endl;
-          pxr::VtArray<int> cuts;
+          VtArray<int> cuts;
           flattened.GetCutEdgesFromUVs(uvs, &cuts);
 
           //cuts.clear();
@@ -381,11 +381,11 @@ static void FlattenGeometryCallback()
           flattened.DisconnectEdges(cuts);
           flattened.Flatten(uvs, interpolation);
 
-          mesh.GetPointsAttr().Set(pxr::VtValue(flattened.GetPositions()));
-          mesh.GetFaceVertexCountsAttr().Set(pxr::VtValue(flattened.GetFaceCounts()));
-          mesh.GetFaceVertexIndicesAttr().Set(pxr::VtValue(flattened.GetFaceConnects()));
+          mesh.GetPointsAttr().Set(VtValue(flattened.GetPositions()));
+          mesh.GetFaceVertexCountsAttr().Set(VtValue(flattened.GetFaceCounts()));
+          mesh.GetFaceVertexIndicesAttr().Set(VtValue(flattened.GetFaceConnects()));
 
-          //pxr::VtArray<pxr::GfVec2d> uvs = uvPrimvar.Get< pxr::VtArray<pxr::GfVec2d>>()
+          //VtArray<GfVec2d> uvs = uvPrimvar.Get< VtArray<GfVec2d>>()
         }
       }
       */

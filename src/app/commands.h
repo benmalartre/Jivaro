@@ -43,7 +43,7 @@ public:
 //==================================================================================
 class SaveLayerCommand : public Command {
 public:
-  SaveLayerCommand(pxr::SdfLayerHandle layer);
+  SaveLayerCommand(SdfLayerHandle layer);
   ~SaveLayerCommand() {};
   void Do() override {};
 };
@@ -53,7 +53,7 @@ public:
 //==================================================================================
 class SaveLayerAsCommand : public Command {
 public:
-  SaveLayerAsCommand(pxr::SdfLayerHandle layer, const std::string& path);
+  SaveLayerAsCommand(SdfLayerHandle layer, const std::string& path);
   ~SaveLayerAsCommand() {};
   void Do() override {};
 };
@@ -63,11 +63,11 @@ public:
 //==================================================================================
 class ReloadLayerCommand : public Command {
 public:
-  ReloadLayerCommand(pxr::SdfLayerHandle layer);
+  ReloadLayerCommand(SdfLayerHandle layer);
   ~ReloadLayerCommand() {};
   void Do() override {};
 private:
-  pxr::SdfLayerRefPtr _layer;
+  SdfLayerRefPtr _layer;
 };
 
 //==================================================================================
@@ -75,11 +75,11 @@ private:
 //==================================================================================
 class LayerTextEditCommand : public Command {
 public:
-  LayerTextEditCommand(pxr::SdfLayerRefPtr layer, const std::string& newText);
+  LayerTextEditCommand(SdfLayerRefPtr layer, const std::string& newText);
   ~LayerTextEditCommand() {};
   void Do() override;
 private:
-  pxr::SdfLayerRefPtr _layer;
+  SdfLayerRefPtr _layer;
   std::string         _oldText;
   std::string         _newText;
 };
@@ -90,9 +90,9 @@ private:
 class Geometry;
 class CreatePrimCommand : public Command {
 public:
-  CreatePrimCommand(pxr::SdfLayerRefPtr layer, const pxr::SdfPath& name, short type, 
+  CreatePrimCommand(SdfLayerRefPtr layer, const SdfPath& name, short type, 
     bool asDefault=false, Geometry* geometry=NULL);
-  CreatePrimCommand(pxr::SdfPrimSpecHandle spec, const pxr::SdfPath& name, short type, 
+  CreatePrimCommand(SdfPrimSpecHandle spec, const SdfPath& name, short type, 
     bool asDefault=false, Geometry* geometry=NULL);
   ~CreatePrimCommand() {};
   void Do() override;
@@ -104,7 +104,7 @@ public:
 //==================================================================================
 class DuplicatePrimCommand : public Command {
 public:
-  DuplicatePrimCommand(pxr::UsdStageRefPtr stage, const pxr::SdfPath& path);
+  DuplicatePrimCommand(UsdStageRefPtr stage, const SdfPath& path);
   ~DuplicatePrimCommand() {};
   void Do() override;
 
@@ -116,7 +116,7 @@ public:
 class DeletePrimCommand : public Command {
 public:
   DeletePrimCommand(){};
-  DeletePrimCommand(pxr::UsdStageRefPtr stage, const pxr::SdfPathVector& path);
+  DeletePrimCommand(UsdStageRefPtr stage, const SdfPathVector& path);
   ~DeletePrimCommand() {};
   void Do() override;
 
@@ -137,12 +137,12 @@ public:
     REMOVE,
     TOGGLE
   };
-  SelectCommand(short type, const pxr::SdfPathVector& paths, int mode);
+  SelectCommand(short type, const SdfPathVector& paths, int mode);
   ~SelectCommand() {};
   void Do() override;
 
 private:
-  std::vector<pxr::SdfPath> _previous;
+  std::vector<SdfPath> _previous;
 };
 
 //==================================================================================
@@ -150,8 +150,8 @@ private:
 //==================================================================================
 class TranslateCommand : public Command {
 public:
-  TranslateCommand(pxr::UsdStageRefPtr stage, const ManipTargetDescList& targets,
-    const pxr::UsdTimeCode& timeCode=pxr::UsdTimeCode::Default());
+  TranslateCommand(UsdStageRefPtr stage, const ManipTargetDescList& targets,
+    const UsdTimeCode& timeCode=UsdTimeCode::Default());
   ~TranslateCommand() {};
   void Do() override;
 };
@@ -161,8 +161,8 @@ public:
 //==================================================================================
 class RotateCommand : public Command {
 public:
-  RotateCommand(pxr::UsdStageRefPtr stage, const ManipTargetDescList& targets,
-    const pxr::UsdTimeCode& timeCode = pxr::UsdTimeCode::Default());
+  RotateCommand(UsdStageRefPtr stage, const ManipTargetDescList& targets,
+    const UsdTimeCode& timeCode = UsdTimeCode::Default());
   ~RotateCommand() {};
   void Do() override;
 };
@@ -172,8 +172,8 @@ public:
 //==================================================================================
 class ScaleCommand : public Command {
 public:
-  ScaleCommand(pxr::UsdStageRefPtr stage, const ManipTargetDescList& targets, 
-    const pxr::UsdTimeCode& timeCode = pxr::UsdTimeCode::Default());
+  ScaleCommand(UsdStageRefPtr stage, const ManipTargetDescList& targets, 
+    const UsdTimeCode& timeCode = UsdTimeCode::Default());
   ~ScaleCommand() {};
   void Do() override;
 };
@@ -183,8 +183,8 @@ public:
 //==================================================================================
 class PivotCommand : public Command {
 public:
-  PivotCommand(pxr::UsdStageRefPtr stage, const ManipTargetDescList& targets,
-    const pxr::UsdTimeCode& timeCode = pxr::UsdTimeCode::Default());
+  PivotCommand(UsdStageRefPtr stage, const ManipTargetDescList& targets,
+    const UsdTimeCode& timeCode = UsdTimeCode::Default());
   ~PivotCommand() {};
   void Do() override;
 
@@ -201,7 +201,7 @@ public:
     TOGGLE
   };
 
-  ShowHideCommand(pxr::SdfPathVector& paths, Mode mode);
+  ShowHideCommand(SdfPathVector& paths, Mode mode);
   ~ShowHideCommand() {};
   void Do() override;
 
@@ -218,7 +218,7 @@ public:
     TOGGLE
   };
 
-  ActivateCommand(pxr::SdfPathVector& paths, Mode mode);
+  ActivateCommand(SdfPathVector& paths, Mode mode);
   ~ActivateCommand() {};
   void Do() override;
 };
@@ -228,9 +228,9 @@ public:
 //==================================================================================
 class SetAttributeCommand : public Command {
 public:
-  SetAttributeCommand(pxr::UsdAttributeVector& paths, 
-    const pxr::VtValue& value, const pxr::VtValue& previous, 
-    const pxr::UsdTimeCode& timeCode);
+  SetAttributeCommand(UsdAttributeVector& paths, 
+    const VtValue& value, const VtValue& previous, 
+    const UsdTimeCode& timeCode);
   ~SetAttributeCommand() {};
   void Do() override;
 };
@@ -250,12 +250,12 @@ public:
 //==================================================================================
 class CreateNodeCommand : public Command {
 public:
-  CreateNodeCommand(const std::string& name, const pxr::SdfPath& path);
+  CreateNodeCommand(const std::string& name, const SdfPath& path);
   ~CreateNodeCommand() {};
   void Do() override;
 private:
   std::string   _name;
-  pxr::SdfPath  _path;
+  SdfPath  _path;
 };
 
 //==================================================================================
@@ -263,12 +263,12 @@ private:
 //==================================================================================
 class MoveNodeCommand : public Command {
 public:
-  MoveNodeCommand(const pxr::SdfPathVector& paths, const pxr::GfVec2f& offset);
+  MoveNodeCommand(const SdfPathVector& paths, const GfVec2f& offset);
   ~MoveNodeCommand() {};
   void Do() override;
 private:
-  pxr::SdfPathVector                _nodes;
-  pxr::GfVec2f                      _offset;
+  SdfPathVector                _nodes;
+  GfVec2f                      _offset;
 };
 
 //==================================================================================
@@ -276,11 +276,11 @@ private:
 //==================================================================================
 class ExpendNodeCommand : public Command {
 public:
-  ExpendNodeCommand(const pxr::SdfPathVector& nodes, const pxr::TfToken& state);
+  ExpendNodeCommand(const SdfPathVector& nodes, const TfToken& state);
   ~ExpendNodeCommand() {};
   void Do() override;
 private:
-  pxr::SdfPathVector                _nodes;
+  SdfPathVector                _nodes;
 };
 
 //==================================================================================
@@ -288,12 +288,12 @@ private:
 //==================================================================================
 class ConnectNodeCommand : public Command {
 public:
-  ConnectNodeCommand(const pxr::SdfPath& source, const pxr::SdfPath& destination);
+  ConnectNodeCommand(const SdfPath& source, const SdfPath& destination);
   ~ConnectNodeCommand() {};
   void Do() override;
 private:
-  pxr::SdfPath   _source;
-  pxr::SdfPath   _destination;
+  SdfPath   _source;
+  SdfPath   _destination;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

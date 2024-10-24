@@ -20,7 +20,7 @@ class ExplorerUI : public BaseUI
 {
 public:
   struct Item {
-    pxr::SdfPath    path;
+    SdfPath    path;
     size_t          id;
     bool            selected;
   };
@@ -36,24 +36,24 @@ public:
 
   void DrawItemBackground(ImDrawList* drawList, bool selected, bool& flip);
   void DrawBackground();
-  void DrawPrim(const pxr::UsdPrim& prim, Selection* selection);
-  void DrawVisibility(const pxr::UsdPrim& prim, bool visible, bool selected);
-  void DrawType(const pxr::UsdPrim& prim, bool selected);
-  void DrawActive(const pxr::UsdPrim& prim, bool selected);
+  void DrawPrim(const UsdPrim& prim, Selection* selection);
+  void DrawVisibility(const UsdPrim& prim, bool visible, bool selected);
+  void DrawType(const UsdPrim& prim, bool selected);
+  void DrawActive(const UsdPrim& prim, bool selected);
 
 protected:
-  Item* _GetItemUnderMouse(const pxr::GfVec2f& relative);
+  Item* _GetItemUnderMouse(const GfVec2f& relative);
 
 private:
   bool                          _locked;
   bool                          _flip;
-  pxr::SdfPath                  _current;
+  SdfPath                  _current;
   size_t                        _selectionHash;
   std::vector<Item>             _items;
   size_t                        _mapping;
   bool                          _drag;
-  std::vector<pxr::SdfPath>     _dragItems;
-  pxr::GfVec2f                  _scroll;
+  std::vector<SdfPath>     _dragItems;
+  GfVec2f                  _scroll;
 
   static ImGuiWindowFlags       _flags;
   static ImGuiTreeNodeFlags     _treeFlags;

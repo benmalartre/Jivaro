@@ -8,8 +8,8 @@ JVR_NAMESPACE_OPEN_SCOPE
 UsdEmbreeSphere* 
 TranslateSphere(
   UsdEmbreeContext* ctxt, 
-  const pxr::UsdGeomSphere& usdSphere,
-  const pxr::GfMatrix4d& worldMatrix,
+  const UsdGeomSphere& usdSphere,
+  const GfMatrix4d& worldMatrix,
   RTCScene scene)
 {
   
@@ -25,7 +25,7 @@ TranslateSphere(
   size_t num_vertices = (num_longs - 2) * num_lats + 2;
   size_t num_triangles = (num_vertices - 2 + num_lats) * 2;
 
-  pxr::UsdAttribute radiusAttr = usdSphere.GetRadiusAttr();
+  UsdAttribute radiusAttr = usdSphere.GetRadiusAttr();
   if(radiusAttr && radiusAttr.HasAuthoredValue())
   {
     radiusAttr.Get(&result->_radius , ctxt->_time);
@@ -38,7 +38,7 @@ TranslateSphere(
               result->_normals,
               result->_uvs, 
               result->_radius,
-              pxr::GfMatrix4f(worldMatrix)[0]);
+              GfMatrix4f(worldMatrix)[0]);
 
   rtcSetSharedGeometryBuffer(result->_geom,             // RTCGeometry
                             RTC_BUFFER_TYPE_VERTEX,     // RTCBufferType
@@ -46,7 +46,7 @@ TranslateSphere(
                             RTC_FORMAT_FLOAT3,          // RTCFormat
                             result->_vertices.cdata(),  // Datas Ptr
                             0,                          // Offset
-                            sizeof(pxr::GfVec3f),       // Stride
+                            sizeof(GfVec3f),       // Stride
                             num_vertices);              // Num Elements*/
 
   BuildTriangles(num_lats, num_longs, result->_triangles);
@@ -68,9 +68,9 @@ void DeleteSphere(RTCScene scene, UsdEmbreeSphere* sphere)
 void 
 BuildPoints(int num_lats, 
             int num_longs, 
-            pxr::VtArray<pxr::GfVec3f>& positions,
-            pxr::VtArray<pxr::GfVec3f>& normals, 
-            pxr::VtArray<pxr::GfVec2f>& uvs,  
+            VtArray<GfVec3f>& positions,
+            VtArray<GfVec3f>& normals, 
+            VtArray<GfVec2f>& uvs,  
             float radius,
             float* worldMatrix)
 { 
@@ -86,16 +86,16 @@ BuildPoints(int num_lats,
     float yr = radius * cos(lng);
     if(i == 0)
     {
-      positions[0] = pxr::GfVec3f(0, -radius, 0);
-      normals[0] = pxr::GfVec3f(0, -1, 0);
-      uvs[0] = pxr::GfVec2f(0.5, 0);
+      positions[0] = GfVec3f(0, -radius, 0);
+      normals[0] = GfVec3f(0, -1, 0);
+      uvs[0] = GfVec2f(0.5, 0);
 
     }
     else if(i == num_longs-1)
     {
-      positions[num_vertices-1] = pxr::GfVec3f(0, radius, 0);
-      normals[num_vertices-1] = pxr::GfVec3f(0, 1, 0);
-      uvs[num_vertices-1] = pxr::GfVec2f(0.5, 1.0);
+      positions[num_vertices-1] = GfVec3f(0, radius, 0);
+      normals[num_vertices-1] = GfVec3f(0, 1, 0);
+      uvs[num_vertices-1] = GfVec2f(0.5, 1.0);
     }
     else
     {
@@ -106,9 +106,9 @@ BuildPoints(int num_lats,
         float z = sin(lat);
         
         k = (i-1) * num_lats + j + 1;
-        positions[k] = pxr::GfVec3f(x*yr, y, z*yr);
+        positions[k] = GfVec3f(x*yr, y, z*yr);
         normals[k] = positions[k].GetNormalized();
-        uvs[k] = pxr::GfVec2f(x, y);
+        uvs[k] = GfVec2f(x, y);
       }
     }
   }
@@ -116,7 +116,7 @@ BuildPoints(int num_lats,
 
 void BuildTriangles(int num_lats,
                     int num_longs,
-                    pxr::VtArray<int>& triangles)
+                    VtArray<int>& triangles)
 { 
   size_t num_vertices = (num_longs - 2) * num_lats + 2;
   size_t num_triangles = (num_longs-3) * num_lats * 4 + num_lats * 2;

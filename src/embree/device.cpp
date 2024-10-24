@@ -57,11 +57,11 @@ void CommitScene ()
 Vec3fa _GetMeshNormal(Ray& ray)
 {
   UsdEmbreePrim* prim = EMBREE_CTXT->_prims[ray.geomID];
-  pxr::GfVec3f normal(0.f, 1.f, 0.f);
+  GfVec3f normal(0.f, 1.f, 0.f);
   if(prim->_type == RTC_GEOMETRY_TYPE_TRIANGLE)
   {
     UsdEmbreeMesh* mesh = (UsdEmbreeMesh*)prim;
-    pxr::VtArray<pxr::GfVec3f>& normals = mesh->_normals;
+    VtArray<GfVec3f>& normals = mesh->_normals;
     JVR_INTERPOLATION_TYPE interpType = mesh->_normalsInterpolationType;
     if(interpType == VERTEX){
       normal = 
@@ -81,17 +81,17 @@ Vec3fa _GetMeshNormal(Ray& ray)
   return Vec3fa(normal[0], normal[1], normal[2]);
 }
 
-pxr::GfVec3f _GetMeshColor(Ray& ray)
+GfVec3f _GetMeshColor(Ray& ray)
 {
   UsdEmbreePrim* prim = EMBREE_CTXT->_prims[ray.geomID];
-  pxr::GfVec3f color(1.f, 1.f, 1.f);
+  GfVec3f color(1.f, 1.f, 1.f);
   if(prim->_type == RTC_GEOMETRY_TYPE_TRIANGLE)
   {
     UsdEmbreeMesh* mesh = (UsdEmbreeMesh*)prim;
-    pxr::VtArray<pxr::GfVec3f>& colors = mesh->_colors;
+    VtArray<GfVec3f>& colors = mesh->_colors;
     JVR_INTERPOLATION_TYPE interpType = mesh->_colorsInterpolationType;
     if(interpType == CONSTANT) {
-      if(!colors.size())color = pxr::GfVec3f(1,0,0);
+      if(!colors.size())color = GfVec3f(1,0,0);
       else color = colors[0];
     }
     else if(interpType == VERTEX) {
@@ -129,19 +129,19 @@ Vec3fa _GetSubdivNormal(Ray& ray)
   ray.Ng = normalize(cross(dPdu,dPdv));
 }
 
-pxr::GfVec3f _GetSubdivColor(Ray& ray)
+GfVec3f _GetSubdivColor(Ray& ray)
 {
   Vec3fa C;
   UsdEmbreePrim* prim = EMBREE_CTXT->_prims[ray.geomID];
 
-  pxr::GfVec3f color(1.f, 1.f, 1.f);
+  GfVec3f color(1.f, 1.f, 1.f);
   if(prim->_type == RTC_GEOMETRY_TYPE_SUBDIVISION)
   {
     UsdEmbreeSubdiv* mesh = (UsdEmbreeSubdiv*)prim;
-    pxr::VtArray<pxr::GfVec3f>& colors = mesh->_colors;
+    VtArray<GfVec3f>& colors = mesh->_colors;
     JVR_INTERPOLATION_TYPE interpType = mesh->_colorsInterpolationType;
     if(interpType == CONSTANT) {
-      if(!colors.size())color = pxr::GfVec3f(1,0,0);
+      if(!colors.size())color = GfVec3f(1,0,0);
       else color = colors[0];
     }
     else if(interpType == VERTEX){
@@ -151,10 +151,10 @@ pxr::GfVec3f _GetSubdivColor(Ray& ray)
         colors[ray.primID*3+1] * ray.u + 
         colors[ray.primID*3+2] * ray.v;
     
-     color = pxr::GfVec3f(1.f,0.7f, 0.3f);
+     color = GfVec3f(1.f,0.7f, 0.3f);
     }
     else if(interpType == FACE_VARYING){
-      color = pxr::GfVec3f(1.f,0.7f, 0.3f);
+      color = GfVec3f(1.f,0.7f, 0.3f);
       
       color = 
         colors[ray.primID*3] * (1 - ray.u - ray.v) + 
@@ -174,7 +174,7 @@ Vec3fa RenderPixelStandard(float x, float y, const Camera* camera)
   rtcInitIntersectContext(&context);
   
   // initialize ray
-  pxr::GfRay gfRay = camera->ComputeRay(pxr::GfVec2d(x, y));
+  GfRay gfRay = camera->ComputeRay(GfVec2d(x, y));
 
   Ray ray(
     pxr2embree(gfRay.GetStartPoint()),
@@ -192,7 +192,7 @@ Vec3fa RenderPixelStandard(float x, float y, const Camera* camera)
   {
 
     UsdEmbreePrim* prim = EMBREE_CTXT->_prims[ray.geomID];
-    pxr::GfVec3f rColor(
+    GfVec3f rColor(
       (float)prim->_color[0],
       (float)prim->_color[1],
       (float)prim->_color[2]
@@ -253,7 +253,7 @@ void RenderTileStandard(int taskIndex,
   const unsigned int y0 = tileY * TILE_SIZE_Y;
   const unsigned int y1 = min(y0+TILE_SIZE_Y,height);
 
-  pxr::GfVec2f ratio = _GetDeviceRatio(width, height);
+  GfVec2f ratio = _GetDeviceRatio(width, height);
 
   for (unsigned int y=y0; y<y1; y++) for (unsigned int x=x0; x<x1; x++)
   {
@@ -276,7 +276,7 @@ void RenderTileStandard(int taskIndex,
 Vec3fa RenderPixelAmbientOcclusion(float x, float y, const Camera* camera)
 {
   // initialize ray
-  pxr::GfRay gfRay= camera->ComputeRay(pxr::GfVec2d(x, y));
+  GfRay gfRay= camera->ComputeRay(GfVec2d(x, y));
   Ray ray;
   ray.org = pxr2embree(gfRay.GetStartPoint());
   ray.dir = pxr2embree(gfRay.GetDirection());
@@ -360,7 +360,7 @@ void RenderTileAmbientOcclusion(int taskIndex,
   const unsigned int y0 = tileY * TILE_SIZE_Y;
   const unsigned int y1 = min(y0+TILE_SIZE_Y,height);
 
-  pxr::GfVec2f ratio = _GetDeviceRatio(width, height);
+  GfVec2f ratio = _GetDeviceRatio(width, height);
 
   for (unsigned int y=y0; y<y1; y++) for (unsigned int x=x0; x<x1; x++)
   {
@@ -383,7 +383,7 @@ void RenderTileAmbientOcclusion(int taskIndex,
 Vec3fa RenderPixelNormal( float x, float y, const Camera* camera)
 {
   // initialize ray
-  pxr::GfRay gfRay = camera->ComputeRay(pxr::GfVec2d(x, y));
+  GfRay gfRay = camera->ComputeRay(GfVec2d(x, y));
   Ray ray;
   ray.org = pxr2embree(gfRay.GetStartPoint());
   ray.dir = pxr2embree(gfRay.GetDirection());
@@ -429,7 +429,7 @@ void RenderTileNormal(int taskIndex,
   const unsigned int y0 = tileY * TILE_SIZE_Y;
   const unsigned int y1 = min(y0+TILE_SIZE_Y,height);
 
-  pxr::GfVec2f ratio = _GetDeviceRatio(width, height);
+  GfVec2f ratio = _GetDeviceRatio(width, height);
 
   for (unsigned int y=y0; y<y1; y++) for (unsigned int x=x0; x<x1; x++)
   {

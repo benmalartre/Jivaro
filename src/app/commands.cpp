@@ -41,9 +41,9 @@ OpenSceneCommand::OpenSceneCommand(const std::string& filename)
   if (strlen(filename.c_str()) > 0) {
      std::vector<std::string> tokens = SplitString(GetFileName(filename), ".");
     std::string name = tokens.front();
-    pxr::SdfPath path("/" + name);
+    SdfPath path("/" + name);
     UndoBlock editBlock;
-    pxr::UsdStageRefPtr stage = pxr::UsdStage::Open(filename);
+    UsdStageRefPtr stage = UsdStage::Open(filename);
     app->SetStage(stage);
     UndoRouter::Get().TrackLayer(stage->GetRootLayer());
   }
@@ -61,10 +61,10 @@ NewSceneCommand::NewSceneCommand(const std::string& filename)
   : Command(false)
 {
   Application* app = Application::Get();
-  pxr::SdfFileFormatConstPtr usdaFormat = pxr::SdfFileFormat::FindByExtension("usda");
-  pxr::SdfLayerRefPtr layer = pxr::SdfLayer::New(usdaFormat, filename);
+  SdfFileFormatConstPtr usdaFormat = SdfFileFormat::FindByExtension("usda");
+  SdfLayerRefPtr layer = SdfLayer::New(usdaFormat, filename);
   if (layer) {
-    pxr::UsdStageRefPtr stage = pxr::UsdStage::Open(layer);
+    UsdStageRefPtr stage = UsdStage::Open(layer);
     if (stage) {
       app->SetStage(stage);
       UndoRouter::Get().TrackLayer(stage->GetRootLayer());
@@ -79,7 +79,7 @@ NewSceneCommand::NewSceneCommand(const std::string& filename)
 //==================================================================================
 // Save Layer 
 //==================================================================================
-SaveLayerCommand::SaveLayerCommand(pxr::SdfLayerHandle layer)
+SaveLayerCommand::SaveLayerCommand(SdfLayerHandle layer)
   : Command(false)
 {
   layer->Save(true);
@@ -90,10 +90,10 @@ SaveLayerCommand::SaveLayerCommand(pxr::SdfLayerHandle layer)
 //==================================================================================
 // Save Layer As
 //==================================================================================
-SaveLayerAsCommand::SaveLayerAsCommand(pxr::SdfLayerHandle layer, const std::string& path)
+SaveLayerAsCommand::SaveLayerAsCommand(SdfLayerHandle layer, const std::string& path)
   : Command(false)
 {
-  auto newLayer = pxr::SdfLayer::CreateNew(path);
+  auto newLayer = SdfLayer::CreateNew(path);
   if (newLayer && layer) {
     newLayer->TransferContent(layer);
     newLayer->Save();
@@ -105,7 +105,7 @@ SaveLayerAsCommand::SaveLayerAsCommand(pxr::SdfLayerHandle layer, const std::str
 //==================================================================================
 // Reload Layer 
 //==================================================================================
-ReloadLayerCommand::ReloadLayerCommand(pxr::SdfLayerHandle layer)
+ReloadLayerCommand::ReloadLayerCommand(SdfLayerHandle layer)
   : Command(false)
   , _layer(layer)
 {
@@ -117,7 +117,7 @@ ReloadLayerCommand::ReloadLayerCommand(pxr::SdfLayerHandle layer)
 //==================================================================================
 // Layer Text Edit
 //==================================================================================
-LayerTextEditCommand::LayerTextEditCommand(pxr::SdfLayerRefPtr layer, const std::string& newText)
+LayerTextEditCommand::LayerTextEditCommand(SdfLayerRefPtr layer, const std::string& newText)
   : Command(true)
   , _layer(layer)
   , _newText(newText)
@@ -138,49 +138,49 @@ void LayerTextEditCommand::Do() {
 }
 
 
-static void _SetTypeNameFromType(pxr::SdfPrimSpecHandle& primSpec, short type)
+static void _SetTypeNameFromType(SdfPrimSpecHandle& primSpec, short type)
 {
   switch (type) {
   case Geometry::XFORM:
-    primSpec->SetTypeName(pxr::TfToken("Xform"));
+    primSpec->SetTypeName(TfToken("Xform"));
     break;
 
   case Geometry::CUBE:
-    primSpec->SetTypeName(pxr::TfToken("Cube"));
+    primSpec->SetTypeName(TfToken("Cube"));
     break;
 
   case Geometry::SPHERE:
-    primSpec->SetTypeName(pxr::TfToken("Sphere"));
+    primSpec->SetTypeName(TfToken("Sphere"));
     break;
 
   case Geometry::CAPSULE:
-    primSpec->SetTypeName(pxr::TfToken("Capsule"));
+    primSpec->SetTypeName(TfToken("Capsule"));
     break;
 
   case Geometry::CYLINDER:
-    primSpec->SetTypeName(pxr::TfToken("Cylinder"));
+    primSpec->SetTypeName(TfToken("Cylinder"));
     break;
 
   case Geometry::CONE:
-    primSpec->SetTypeName(pxr::TfToken("Cone"));
+    primSpec->SetTypeName(TfToken("Cone"));
     break;
 
   case Geometry::POINT:
-    primSpec->SetTypeName(pxr::TfToken("Points"));
+    primSpec->SetTypeName(TfToken("Points"));
     break;
 
   case Geometry::MESH:
-    primSpec->SetTypeName(pxr::TfToken("Mesh"));
+    primSpec->SetTypeName(TfToken("Mesh"));
     break;
 
   case Geometry::SOLVER:
-    primSpec->SetTypeName(pxr::TfToken("PbdSolver"));
+    primSpec->SetTypeName(TfToken("PbdSolver"));
     break;
 
   }
 }
 
-static void _SetSpecsFromGeometry(pxr::SdfPrimSpecHandle& primSpec, Geometry* geometry )
+static void _SetSpecsFromGeometry(SdfPrimSpecHandle& primSpec, Geometry* geometry )
 {
   switch(geometry->GetType()) {
     case Geometry::CUBE:
@@ -195,15 +195,15 @@ static void _SetSpecsFromGeometry(pxr::SdfPrimSpecHandle& primSpec, Geometry* ge
 //==================================================================================
 // Create Prim
 //==================================================================================
-CreatePrimCommand::CreatePrimCommand(pxr::SdfLayerRefPtr layer, const pxr::SdfPath& name, short type, 
+CreatePrimCommand::CreatePrimCommand(SdfLayerRefPtr layer, const SdfPath& name, short type, 
   bool asDefault, Geometry* geometry) 
   : Command(true)
 {
   if (!layer) 
     return;
 
-  pxr::SdfPrimSpecHandle primSpec =
-    pxr::SdfPrimSpec::New(layer, name.GetString(), pxr::SdfSpecifier::SdfSpecifierDef);
+  SdfPrimSpecHandle primSpec =
+    SdfPrimSpec::New(layer, name.GetString(), SdfSpecifier::SdfSpecifierDef);
   _SetTypeNameFromType(primSpec,  type);
 
   if(asDefault)
@@ -216,7 +216,7 @@ CreatePrimCommand::CreatePrimCommand(pxr::SdfLayerRefPtr layer, const pxr::SdfPa
   SceneChangedNotice().Send();
 }
 
-CreatePrimCommand::CreatePrimCommand(pxr::SdfPrimSpecHandle spec, const pxr::SdfPath& name, short type, 
+CreatePrimCommand::CreatePrimCommand(SdfPrimSpecHandle spec, const SdfPath& name, short type, 
   bool asDefault, Geometry* geometry)
   : Command(true)
 {
@@ -225,7 +225,7 @@ CreatePrimCommand::CreatePrimCommand(pxr::SdfPrimSpecHandle spec, const pxr::Sdf
 
   UndoRouter::Get().TransferEdits(&_inverse);
 
-  pxr::SdfPrimSpecHandle primSpec =
+  SdfPrimSpecHandle primSpec =
     SdfPrimSpec::New(spec, name.GetString(), SdfSpecifier::SdfSpecifierDef);
   _SetTypeNameFromType(primSpec,  type);
 
@@ -247,23 +247,23 @@ void CreatePrimCommand::Do() {
 //==================================================================================
 // Duplicate
 //==================================================================================
-DuplicatePrimCommand::DuplicatePrimCommand(pxr::UsdStageRefPtr stage, const pxr::SdfPath& path)
+DuplicatePrimCommand::DuplicatePrimCommand(UsdStageRefPtr stage, const SdfPath& path)
   : Command(true)
 {
-  pxr::SdfPath destinationPath = pxr::SdfPath(path.GetString() + "_duplicate");
-  pxr::UsdPrim sourcePrim = stage->GetPrimAtPath(path);
-  pxr::SdfPrimSpecHandleVector stack = sourcePrim.GetPrimStack();
+  SdfPath destinationPath = SdfPath(path.GetString() + "_duplicate");
+  UsdPrim sourcePrim = stage->GetPrimAtPath(path);
+  SdfPrimSpecHandleVector stack = sourcePrim.GetPrimStack();
 
-  pxr::UsdStagePopulationMask populationMask({ path });
-  pxr::UsdStageRefPtr tmpStage =
-    pxr::UsdStage::OpenMasked(stage->GetRootLayer(),
-      populationMask, pxr::UsdStage::InitialLoadSet::LoadAll);
+  UsdStagePopulationMask populationMask({ path });
+  UsdStageRefPtr tmpStage =
+    UsdStage::OpenMasked(stage->GetRootLayer(),
+      populationMask, UsdStage::InitialLoadSet::LoadAll);
 
-  pxr::SdfLayerRefPtr sourceLayer = tmpStage->Flatten();
-  pxr::SdfLayerHandle destinationLayer = stage->GetEditTarget().GetLayer();
-  pxr::SdfPrimSpecHandle destinationPrimSpec =
+  SdfLayerRefPtr sourceLayer = tmpStage->Flatten();
+  SdfLayerHandle destinationLayer = stage->GetEditTarget().GetLayer();
+  SdfPrimSpecHandle destinationPrimSpec =
     SdfCreatePrimInLayer(destinationLayer, destinationPath);
-  pxr::SdfCopySpec(pxr::SdfLayerHandle(sourceLayer),
+  SdfCopySpec(SdfLayerHandle(sourceLayer),
     path, destinationLayer, destinationPath);
   UndoRouter::Get().TransferEdits(&_inverse);
   SceneChangedNotice().Send();
@@ -277,7 +277,7 @@ void DuplicatePrimCommand::Do() {
 //==================================================================================
 // Delete
 //==================================================================================
-DeletePrimCommand::DeletePrimCommand(pxr::UsdStageRefPtr stage, const pxr::SdfPathVector& paths)
+DeletePrimCommand::DeletePrimCommand(UsdStageRefPtr stage, const SdfPathVector& paths)
   : Command(true)
 {
   for (auto& path : paths) {
@@ -296,7 +296,7 @@ void DeletePrimCommand::Do() {
 // Selection
 //==================================================================================
 SelectCommand::SelectCommand(short type, 
-  const pxr::SdfPathVector& paths, int mode)
+  const SdfPathVector& paths, int mode)
   : Command(true)
 {
   Selection* selection = Application::Get()->GetSelection();
@@ -331,17 +331,17 @@ void SelectCommand::Do()
 //==================================================================================
 // Show Hide
 //==================================================================================
-ShowHideCommand::ShowHideCommand(pxr::SdfPathVector& paths, Mode mode)
+ShowHideCommand::ShowHideCommand(SdfPathVector& paths, Mode mode)
   : Command(true)
 {
   Application* app = Application::Get();
-  pxr::UsdStageRefPtr stage = app->GetWorkStage();
+  UsdStageRefPtr stage = app->GetWorkStage();
   switch (mode) {
   case SHOW:
     for (auto& path : paths) {
-      pxr::UsdPrim prim = stage->GetPrimAtPath(path);
-      if (prim.IsValid() && prim.IsA<pxr::UsdGeomImageable>()) {
-        pxr::UsdGeomImageable imageable(prim);
+      UsdPrim prim = stage->GetPrimAtPath(path);
+      if (prim.IsValid() && prim.IsA<UsdGeomImageable>()) {
+        UsdGeomImageable imageable(prim);
         imageable.MakeVisible();
       }
     }
@@ -349,9 +349,9 @@ ShowHideCommand::ShowHideCommand(pxr::SdfPathVector& paths, Mode mode)
 
   case HIDE:
     for (auto& path : paths) {
-      pxr::UsdPrim prim = stage->GetPrimAtPath(path);
-      if (prim.IsValid() && prim.IsA<pxr::UsdGeomImageable>()) {
-        pxr::UsdGeomImageable imageable(prim);
+      UsdPrim prim = stage->GetPrimAtPath(path);
+      if (prim.IsValid() && prim.IsA<UsdGeomImageable>()) {
+        UsdGeomImageable imageable(prim);
         imageable.MakeInvisible();
       }
     }
@@ -359,12 +359,12 @@ ShowHideCommand::ShowHideCommand(pxr::SdfPathVector& paths, Mode mode)
 
   case TOGGLE:
     for (auto& path : paths) {
-      pxr::UsdPrim prim = stage->GetPrimAtPath(path);
-      if (prim.IsValid() && prim.IsA<pxr::UsdGeomImageable>()) {
-        pxr::UsdGeomImageable imageable(prim);
-        pxr::TfToken visibility;
-        imageable.GetVisibilityAttr().Get<pxr::TfToken>(&visibility);
-        if (visibility == pxr::UsdGeomTokens->inherited) {
+      UsdPrim prim = stage->GetPrimAtPath(path);
+      if (prim.IsValid() && prim.IsA<UsdGeomImageable>()) {
+        UsdGeomImageable imageable(prim);
+        TfToken visibility;
+        imageable.GetVisibilityAttr().Get<TfToken>(&visibility);
+        if (visibility == UsdGeomTokens->inherited) {
           imageable.MakeInvisible();
         }
         else {
@@ -386,29 +386,29 @@ void ShowHideCommand::Do() {
 //==================================================================================
 // Activate Deactivate
 //==================================================================================
-ActivateCommand::ActivateCommand(pxr::SdfPathVector& paths, Mode mode)
+ActivateCommand::ActivateCommand(SdfPathVector& paths, Mode mode)
   : Command(true)
 {
   Application* app = Application::Get();
-  pxr::UsdStageRefPtr stage = app->GetWorkStage();
+  UsdStageRefPtr stage = app->GetWorkStage();
   switch (mode) {
   case ACTIVATE:
     for (auto& path : paths) {
-      pxr::UsdPrim prim = stage->GetPrimAtPath(path);
+      UsdPrim prim = stage->GetPrimAtPath(path);
       prim.SetActive(true);
     }
     break;
 
   case DEACTIVATE:
     for (auto& path : paths) {
-      pxr::UsdPrim prim = stage->GetPrimAtPath(path);
+      UsdPrim prim = stage->GetPrimAtPath(path);
       prim.SetActive(false);
     }
     break;
 
   case TOGGLE:
     for (auto& path : paths) {
-      pxr::UsdPrim prim = stage->GetPrimAtPath(path);
+      UsdPrim prim = stage->GetPrimAtPath(path);
       prim.SetActive(!prim.IsActive());
     }
     break;
@@ -425,13 +425,13 @@ void ActivateCommand::Do() {
 //==================================================================================
 // Translate
 //==================================================================================
-TranslateCommand::TranslateCommand(pxr::UsdStageRefPtr stage, 
-  const ManipTargetDescList& targets, const pxr::UsdTimeCode& timeCode)
+TranslateCommand::TranslateCommand(UsdStageRefPtr stage, 
+  const ManipTargetDescList& targets, const UsdTimeCode& timeCode)
   : Command(true)
 {
   for (auto& target : targets) {
-    pxr::UsdPrim prim = stage->GetPrimAtPath(target.path);
-    pxr::UsdGeomXformCommonAPI xformApi(prim);
+    UsdPrim prim = stage->GetPrimAtPath(target.path);
+    UsdGeomXformCommonAPI xformApi(prim);
     if (!xformApi) {
       _EnsureXformCommonAPI(prim, timeCode);
     }
@@ -440,7 +440,7 @@ TranslateCommand::TranslateCommand(pxr::UsdStageRefPtr stage,
   UndoRouter::Get().TransferEdits(&_inverse);
 
   for (auto& target : targets) {
-    pxr::UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
+    UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
     xformApi.SetTranslate(target.current.translation, timeCode);
   }
   UndoRouter::Get().TransferEdits(&_inverse);
@@ -456,13 +456,13 @@ void TranslateCommand::Do()
 //==================================================================================
 // Rotate
 //==================================================================================
-RotateCommand::RotateCommand(pxr::UsdStageRefPtr stage, 
-  const ManipTargetDescList& targets, const pxr::UsdTimeCode& timeCode)
+RotateCommand::RotateCommand(UsdStageRefPtr stage, 
+  const ManipTargetDescList& targets, const UsdTimeCode& timeCode)
   : Command(true)
 {
   for (auto& target: targets) {
-    pxr::UsdPrim prim = stage->GetPrimAtPath(target.path);
-    pxr::UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
+    UsdPrim prim = stage->GetPrimAtPath(target.path);
+    UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
     if (!xformApi) {
       _EnsureXformCommonAPI(prim, timeCode);
     }
@@ -471,7 +471,7 @@ RotateCommand::RotateCommand(pxr::UsdStageRefPtr stage,
   UndoRouter::Get().TransferEdits(&_inverse);
 
   for (auto& target : targets) {
-    pxr::UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
+    UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
     xformApi.SetRotate(target.current.rotation, target.current.rotOrder, timeCode);
   }
   UndoRouter::Get().TransferEdits(&_inverse);
@@ -488,14 +488,14 @@ void RotateCommand::Do()
 //==================================================================================
 // Scale
 //==================================================================================
-ScaleCommand::ScaleCommand(pxr::UsdStageRefPtr stage, 
-  const ManipTargetDescList& targets, const pxr::UsdTimeCode& timeCode)
+ScaleCommand::ScaleCommand(UsdStageRefPtr stage, 
+  const ManipTargetDescList& targets, const UsdTimeCode& timeCode)
   : Command(true)
 {
-  pxr::UsdGeomXformCache xformCache(timeCode);
+  UsdGeomXformCache xformCache(timeCode);
   for (auto& target : targets) {
-    pxr::UsdPrim prim = stage->GetPrimAtPath(target.path);
-    pxr::UsdGeomXformCommonAPI xformApi(prim);
+    UsdPrim prim = stage->GetPrimAtPath(target.path);
+    UsdGeomXformCommonAPI xformApi(prim);
     if (!xformApi) {
       _EnsureXformCommonAPI(prim, timeCode);
     }
@@ -504,7 +504,7 @@ ScaleCommand::ScaleCommand(pxr::UsdStageRefPtr stage,
   UndoRouter::Get().TransferEdits(&_inverse);
 
   for (auto& target : targets) {
-    pxr::UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
+    UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
     xformApi.SetScale(target.current.scale, timeCode);
   }
 
@@ -521,14 +521,14 @@ void ScaleCommand::Do() {
 //==================================================================================
 // Pivot
 //==================================================================================
-PivotCommand::PivotCommand(pxr::UsdStageRefPtr stage, 
-  const ManipTargetDescList& targets, const pxr::UsdTimeCode& timeCode)
+PivotCommand::PivotCommand(UsdStageRefPtr stage, 
+  const ManipTargetDescList& targets, const UsdTimeCode& timeCode)
   : Command(true)
 {
-  pxr::UsdGeomXformCache xformCache(timeCode);
+  UsdGeomXformCache xformCache(timeCode);
   for (auto& target : targets) {
-    pxr::UsdPrim prim = stage->GetPrimAtPath(target.path);
-    pxr::UsdGeomXformCommonAPI xformApi(prim);
+    UsdPrim prim = stage->GetPrimAtPath(target.path);
+    UsdGeomXformCommonAPI xformApi(prim);
     if (!xformApi) {
       _EnsureXformCommonAPI(prim, timeCode);
     }
@@ -537,7 +537,7 @@ PivotCommand::PivotCommand(pxr::UsdStageRefPtr stage,
   UndoRouter::Get().TransferEdits(&_inverse);
 
   for (auto& target : targets) {
-    pxr::UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
+    UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
     xformApi.SetPivot(target.current.pivot, timeCode);
   }
 
@@ -554,8 +554,8 @@ void PivotCommand::Do() {
 //==================================================================================
 // Set Attribute
 //==================================================================================
-SetAttributeCommand::SetAttributeCommand(pxr::UsdAttributeVector& attributes,
-  const pxr::VtValue& value, const pxr::VtValue& previous, const pxr::UsdTimeCode& timeCode)
+SetAttributeCommand::SetAttributeCommand(UsdAttributeVector& attributes,
+  const VtValue& value, const VtValue& previous, const UsdTimeCode& timeCode)
   : Command(true)
 {
   for (auto& attribute : attributes) {
@@ -595,7 +595,7 @@ void UsdGenericCommand::Do()
 //==================================================================================
 // Create Node
 //==================================================================================
-CreateNodeCommand::CreateNodeCommand(const std::string& name, const pxr::SdfPath& path)
+CreateNodeCommand::CreateNodeCommand(const std::string& name, const SdfPath& path)
   : Command(true)
   , _name(name)
   , _path(path)
@@ -614,29 +614,29 @@ void CreateNodeCommand::Do()
 // Move Node
 //==================================================================================
 MoveNodeCommand::MoveNodeCommand(
-  const pxr::SdfPathVector& nodes, const pxr::GfVec2f& offset)
+  const SdfPathVector& nodes, const GfVec2f& offset)
   : Command(true)
   , _nodes(nodes)
   , _offset(offset)
 {
   Application* app = Application::Get();
-  pxr::UsdStageRefPtr stage = app->GetWorkStage();
+  UsdStageRefPtr stage = app->GetWorkStage();
   for (auto& node : nodes) {
-    pxr::UsdPrim prim = stage->GetPrimAtPath(node);
+    UsdPrim prim = stage->GetPrimAtPath(node);
     if (!prim.IsValid()) {
       continue;
     }
 
-    pxr::UsdUINodeGraphNodeAPI api(prim);
-    pxr::GfVec2f pos;
+    UsdUINodeGraphNodeAPI api(prim);
+    GfVec2f pos;
    
-    pxr::UsdAttribute posAttr = api.GetPosAttr();
+    UsdAttribute posAttr = api.GetPosAttr();
     if (posAttr.IsValid()) {
       posAttr.Get(&pos);
       pos += offset;
       posAttr.Set(pos);
     } else {
-      posAttr = api.CreatePosAttr(pxr::VtValue(offset));
+      posAttr = api.CreatePosAttr(VtValue(offset));
     }
   }
   UndoRouter::Get().TransferEdits(&_inverse);
@@ -658,17 +658,17 @@ void MoveNodeCommand::Do()
 // 'minimized' = should take the least space possible
 //==================================================================================
 ExpendNodeCommand::ExpendNodeCommand(
-  const pxr::SdfPathVector& nodes, const pxr::TfToken& state)
+  const SdfPathVector& nodes, const TfToken& state)
   : Command(true)
   , _nodes(nodes)
 {
   Application* app = Application::Get();
-  pxr::UsdStageRefPtr stage = app->GetWorkStage();
+  UsdStageRefPtr stage = app->GetWorkStage();
   for (auto& node : nodes) {
-    pxr::UsdUINodeGraphNodeAPI api(stage->GetPrimAtPath(node));
-    pxr::UsdAttribute expandAttr = api.CreateExpansionStateAttr();
+    UsdUINodeGraphNodeAPI api(stage->GetPrimAtPath(node));
+    UsdAttribute expandAttr = api.CreateExpansionStateAttr();
     if (!expandAttr.IsValid()) {
-     expandAttr = api.CreatePosAttr(pxr::VtValue(pxr::UsdUITokens->closed));
+     expandAttr = api.CreatePosAttr(VtValue(UsdUITokens->closed));
     }
     expandAttr.Set(state);
   }
@@ -685,32 +685,32 @@ void ExpendNodeCommand::Do()
 //==================================================================================
 // Connect Node
 //==================================================================================
-ConnectNodeCommand::ConnectNodeCommand(const pxr::SdfPath& source, const pxr::SdfPath& destination)
+ConnectNodeCommand::ConnectNodeCommand(const SdfPath& source, const SdfPath& destination)
   : Command(true)
   , _source(source)
   , _destination(destination)
 {
-  pxr::UsdStageRefPtr stage = Application::Get()->GetWorkStage();
-  pxr::UsdPrim lhsPrim = stage->GetPrimAtPath(source.GetPrimPath());
-  pxr::UsdPrim rhsPrim = stage->GetPrimAtPath(destination.GetPrimPath());
+  UsdStageRefPtr stage = Application::Get()->GetWorkStage();
+  UsdPrim lhsPrim = stage->GetPrimAtPath(source.GetPrimPath());
+  UsdPrim rhsPrim = stage->GetPrimAtPath(destination.GetPrimPath());
   if (!lhsPrim.IsValid() || !rhsPrim.IsValid()) {
     TF_WARN("[ConnectNodeCommand] Invalid attributes path provided!");
     return;
   }
-  if (lhsPrim.IsA<pxr::UsdShadeShader>()) {
-    pxr::UsdShadeShader lhs(lhsPrim);
-    pxr::UsdShadeShader rhs(rhsPrim);
+  if (lhsPrim.IsA<UsdShadeShader>()) {
+    UsdShadeShader lhs(lhsPrim);
+    UsdShadeShader rhs(rhsPrim);
 
-    pxr::UsdShadeOutput output = lhs.GetOutput(source.GetNameToken());
-    pxr::UsdShadeInput input = rhs.GetInput(destination.GetNameToken());
+    UsdShadeOutput output = lhs.GetOutput(source.GetNameToken());
+    UsdShadeInput input = rhs.GetInput(destination.GetNameToken());
 
     input.ConnectToSource(output);
-  } /*else if (lhsPrim.IsA<pxr::UsdExecNode>()) {
-    pxr::UsdExecNode lhs(lhsPrim);
-    pxr::UsdExecNode rhs(rhsPrim);
+  } /*else if (lhsPrim.IsA<UsdExecNode>()) {
+    UsdExecNode lhs(lhsPrim);
+    UsdExecNode rhs(rhsPrim);
 
-    pxr::UsdExecOutput output = lhs.GetOutput(source.GetNameToken());
-    pxr::UsdExecInput input = rhs.GetInput(destination.GetNameToken());
+    UsdExecOutput output = lhs.GetOutput(source.GetNameToken());
+    UsdExecInput input = rhs.GetInput(destination.GetNameToken());
 
     input.ConnectToSource(output);
   }*/

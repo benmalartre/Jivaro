@@ -74,7 +74,7 @@ class Window
 {
 public:
   // constructor
-  Window(const std::string& name, const pxr::GfVec4i& dimension,
+  Window(const std::string& name, const GfVec4i& dimension,
     bool fullscreen=false, Window* parent=NULL);
 
   //destructor
@@ -108,7 +108,7 @@ public:
   // size
   int GetWidth(){return _width;};
   int GetHeight(){return _height;};
-  pxr::GfVec2i GetResolution() { return pxr::GfVec2i(_width, _height); };
+  GfVec2i GetResolution() { return GfVec2i(_width, _height); };
   void SetWidth(int width){_width = width;};
   void SetHeight(int height){_height = height;};
   void Resize(unsigned width, unsigned height);
@@ -127,8 +127,8 @@ public:
   void CollectLeaves();
   const std::vector<View*>& GetLeaves();
   const std::vector<View*>& GetViews();
-  void DirtyViewsUnderBox(const pxr::GfVec2f& min, const pxr::GfVec2f& size);
-  void DiscardMouseEventsUnderBox(const pxr::GfVec2f& min, const pxr::GfVec2f& size);
+  void DirtyViewsUnderBox(const GfVec2f& min, const GfVec2f& size);
+  void DiscardMouseEventsUnderBox(const GfVec2f& min, const GfVec2f& size);
   void DiscardKeyboardEvents();
   void InvalidateViews();
   void ClearViews();
@@ -228,8 +228,8 @@ public:
   // static constructor
   //----------------------------------------------------------------------------
   static Window* CreateFullScreenWindow(const std::string& name);
-  static Window* CreateStandardWindow(const std::string& name, const pxr::GfVec4i& dimension);
-  static Window* CreateChildWindow(const std::string& name, const pxr::GfVec4i& dimension, Window* parent);
+  static Window* CreateStandardWindow(const std::string& name, const GfVec4i& dimension);
+  static Window* CreateChildWindow(const std::string& name, const GfVec4i& dimension, Window* parent);
 };
 
 // fonts

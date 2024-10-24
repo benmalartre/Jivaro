@@ -18,7 +18,7 @@ float Point::GetWidth(Deformable* geom)
 //-------------------------------------------------------
 // Point Position
 //-------------------------------------------------------
-pxr::GfVec3f Point::GetPosition(Deformable* geom)
+GfVec3f Point::GetPosition(Deformable* geom)
 {
   return geom->GetPosition(id);
 }
@@ -26,16 +26,16 @@ pxr::GfVec3f Point::GetPosition(Deformable* geom)
 //-------------------------------------------------------
 // Point Normal
 //-------------------------------------------------------
-pxr::GfVec3f Point::GetNormal(Deformable* geom)
+GfVec3f Point::GetNormal(Deformable* geom)
 {
-  pxr::GfVec3f normal = pxr::GfVec3f(0.f, 1.f, 0.f);
+  GfVec3f normal = GfVec3f(0.f, 1.f, 0.f);
   switch(geom->GetType()) {
     case Geometry::MESH:
     {
       Mesh* mesh = (Mesh*)geom;
       // get triangle edges
-      pxr::GfVec3f AB = mesh->GetPosition(1) - mesh->GetPosition((size_t)0);
-      pxr::GfVec3f AC = mesh->GetPosition(2) - mesh->GetPosition((size_t)0);
+      GfVec3f AB = mesh->GetPosition(1) - mesh->GetPosition((size_t)0);
+      GfVec3f AC = mesh->GetPosition(2) - mesh->GetPosition((size_t)0);
   
       // cross product
       normal = AB ^ AC;
@@ -53,30 +53,30 @@ pxr::GfVec3f Point::GetNormal(Deformable* geom)
 }
 
 bool 
-Point::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit) const
+Point::Raycast(const GfVec3f* points, const GfRay& ray, Location* hit) const
 {
   return false;
 }
 
 bool 
-Point::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit) const
+Point::Closest(const GfVec3f* points, const GfVec3f& point, Location* hit) const
 {
   return false;
 }
 
 bool
-Point::Touch(const pxr::GfVec3f* points, const pxr::GfVec3f& center, const pxr::GfVec3f& halfSize) const
+Point::Touch(const GfVec3f* points, const GfVec3f& center, const GfVec3f& halfSize) const
 {
 
   return false;
 }
 
-pxr::GfRange3f 
-Point::GetBoundingBox(const pxr::GfVec3f* positions, const pxr::GfMatrix4d& m) const
+GfRange3f 
+Point::GetBoundingBox(const GfVec3f* positions, const GfMatrix4d& m) const
 {
-  const pxr::GfVec3f extent(0.05f);
+  const GfVec3f extent(0.05f);
 
-  pxr::GfRange3f range;
+  GfRange3f range;
   range.UnionWith(m.Transform(positions[id])-extent);
   range.UnionWith(m.Transform(positions[id])+extent);
   return range;

@@ -93,7 +93,7 @@ struct ViewEventData {
 };
 
 
-class BaseUI : public pxr::TfWeakBase
+class BaseUI : public TfWeakBase
 {
 public:
   BaseUI(View* parent, short type, bool popup=false);
@@ -118,10 +118,10 @@ public:
     float& outX, float& outY);
 
   // get the (x,y) position in window space (left top corner)
-  virtual pxr::GfVec2f GetPosition();
+  virtual GfVec2f GetPosition();
 
   // get the (x,y) size in window space (left top corner)
-  virtual pxr::GfVec2f GetSize();
+  virtual GfVec2f GetSize();
 
   // get the x position in window space (x-coordinate of left top corner)
   virtual int GetX();
@@ -136,7 +136,7 @@ public:
   virtual int GetHeight();
 
   // discard events if mouse cursor inside relative bbox
-  void DiscardEventsIfMouseInsideBox(const pxr::GfVec2f& min, const pxr::GfVec2f& max);
+  void DiscardEventsIfMouseInsideBox(const GfVec2f& min, const GfVec2f& max);
 
   // attach tooltip
   void AttachTooltip(const char* tooltip);
@@ -164,7 +164,7 @@ public:
   virtual void OnSceneChangedNotice(const SceneChangedNotice& n);
   virtual void OnSelectionChangedNotice(const SelectionChangedNotice& n);
   virtual void OnAttributeChangedNotice(const AttributeChangedNotice& n);
-  virtual void OnAllNotices(const pxr::TfNotice& n);
+  virtual void OnAllNotices(const TfNotice& n);
   
 protected:
   // execution event

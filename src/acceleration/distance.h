@@ -22,7 +22,7 @@ class DistanceMeasure {
 public:
   DistanceMeasure(const std::vector<double>* weights = NULL);
   virtual ~DistanceMeasure();
-  virtual double Compute(const pxr::GfVec3f& lhs, const pxr::GfVec3f& rhs) = 0;
+  virtual double Compute(const GfVec3f& lhs, const GfVec3f& rhs) = 0;
   virtual double Compute1D(double x, double y, size_t dim) = 0;
 
 protected:
@@ -33,7 +33,7 @@ protected:
 //
 class DistanceChebyshev : virtual public DistanceMeasure {
 public:
-  double Compute(const pxr::GfVec3f& lhs, const pxr::GfVec3f& rhs) override;
+  double Compute(const GfVec3f& lhs, const GfVec3f& rhs) override;
   double Compute1D(double x, double y, size_t dim) override;
     
 };
@@ -42,7 +42,7 @@ public:
 //
 class DistanceManhattan : virtual public DistanceMeasure {
 public:
-  double Compute(const pxr::GfVec3f& lhs, const pxr::GfVec3f& rhs) override;
+  double Compute(const GfVec3f& lhs, const GfVec3f& rhs) override;
   double Compute1D(double x, double y, size_t dim) override;
 };
 
@@ -50,7 +50,7 @@ public:
 //
 class DistanceEuclidean : virtual public DistanceMeasure {
 public:
-  double Compute(const pxr::GfVec3f& lhs, const pxr::GfVec3f& rhs) override;
+  double Compute(const GfVec3f& lhs, const GfVec3f& rhs) override;
   double Compute1D(double x, double y, size_t dim) override;
 };
 

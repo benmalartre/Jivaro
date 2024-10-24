@@ -47,8 +47,8 @@ void PopupUI::GetRelativeMousePosition(const float inX, const float inY,
 }
 
 
-static double _TouchEdge(const pxr::GfVec2f& p, const pxr::GfVec2f& min, 
-  const pxr::GfVec2f& max, double eps=2.0)
+static double _TouchEdge(const GfVec2f& p, const GfVec2f& min, 
+  const GfVec2f& max, double eps=2.0)
 {
   const double l = p[0] - min[0];
   const double r = max[0] - p[0];
@@ -96,14 +96,14 @@ bool
 PopupUI::Draw()
 {
 
-  ImGui::SetNextWindowSize(pxr::GfVec2f(_width, _height));
-  ImGui::SetNextWindowPos(pxr::GfVec2f(_x, _y));
+  ImGui::SetNextWindowSize(GfVec2f(_width, _height));
+  ImGui::SetNextWindowPos(GfVec2f(_x, _y));
 
   ImGui::Begin(_name.c_str(), NULL, _flags);
 
   
 
-  pxr::GfVec4f color(
+  GfVec4f color(
     RANDOM_0_1,
     RANDOM_0_1,
     RANDOM_0_1, 
@@ -127,22 +127,22 @@ PopupUI::Draw()
 // ColorPopupUI
 //===========================================================================================
 ColorPopupUI::ColorPopupUI(int x, int y, int width, int height, 
-  const pxr::UsdAttribute& attribute, const pxr::UsdTimeCode& timeCode)
+  const UsdAttribute& attribute, const UsdTimeCode& timeCode)
   : PopupUI(x, y, width, height)
   , _attribute(attribute)
   , _time(timeCode)
   , _isArray(false)
 {
   _sync = true;
-  pxr::VtValue value;
+  VtValue value;
   attribute.Get(&value, timeCode);
-  if (value.IsHolding<pxr::GfVec3f>()) {
-    _color = _original = pxr::GfVec3f(value.Get<pxr::GfVec3f>());
+  if (value.IsHolding<GfVec3f>()) {
+    _color = _original = GfVec3f(value.Get<GfVec3f>());
   }
   else if (value.IsArrayValued() &&
     value.GetArraySize() == 1 &&
-    value.IsHolding<pxr::VtArray<pxr::GfVec3f>>()) {
-    pxr::VtArray<pxr::GfVec3f> array = value.Get<pxr::VtArray<pxr::GfVec3f>>();
+    value.IsHolding<VtArray<GfVec3f>>()) {
+    VtArray<GfVec3f> array = value.Get<VtArray<GfVec3f>>();
     _color = _original = array[0];
     _isArray = true;
   }
@@ -156,25 +156,25 @@ bool ColorPopupUI::Terminate()
 {
   if (_done) {
     if (_isArray) {
-      pxr::VtArray<pxr::GfVec3f> value = { _color };
-      pxr::VtArray<pxr::GfVec3f> previous = { _original };
-      pxr::UsdAttributeVector attributes = { _attribute };
+      VtArray<GfVec3f> value = { _color };
+      VtArray<GfVec3f> previous = { _original };
+      UsdAttributeVector attributes = { _attribute };
       ADD_COMMAND(SetAttributeCommand, attributes, 
-        pxr::VtValue(value), pxr::VtValue(previous), pxr::UsdTimeCode::Default());
+        VtValue(value), VtValue(previous), UsdTimeCode::Default());
     }
     else {
-      pxr::UsdAttributeVector attributes = { _attribute };
+      UsdAttributeVector attributes = { _attribute };
        ADD_COMMAND(SetAttributeCommand, attributes,
-         pxr::VtValue(_color), pxr::VtValue(_original), pxr::UsdTimeCode::Default());
+         VtValue(_color), VtValue(_original), UsdTimeCode::Default());
     }
   }
   else {
     if (_isArray) {
-      _attribute.Set(pxr::VtArray<pxr::GfVec3f>({ _color }), 
-        pxr::UsdTimeCode::Default());
+      _attribute.Set(VtArray<GfVec3f>({ _color }), 
+        UsdTimeCode::Default());
     }
     else {
-      _attribute.Set(_color, pxr::UsdTimeCode::Default());
+      _attribute.Set(_color, UsdTimeCode::Default());
     }
     AttributeChangedNotice().Send();
   }
@@ -199,8 +199,8 @@ ColorPopupUI::Draw()
   bool opened;
   const ImGuiStyle& style = ImGui::GetStyle();
 
-  ImGui::SetNextWindowSize(pxr::GfVec2f(_width, _height));
-  ImGui::SetNextWindowPos(pxr::GfVec2f(_x, _y));
+  ImGui::SetNextWindowSize(GfVec2f(_width, _height));
+  ImGui::SetNextWindowPos(GfVec2f(_x, _y));
 
   ImGui::Begin(_name.c_str(), &opened, _flags);
 
@@ -262,8 +262,8 @@ NamePopupUI::Draw()
 {
   static bool initialized = false;
 
-  ImGui::SetNextWindowSize(pxr::GfVec2f(_width, _height));
-  ImGui::SetNextWindowPos(pxr::GfVec2f(_x, _y));
+  ImGui::SetNextWindowSize(GfVec2f(_width, _height));
+  ImGui::SetNextWindowPos(GfVec2f(_x, _y));
 
   ImGui::Begin(_name.c_str(), NULL, _flags);
 
@@ -398,8 +398,8 @@ GraphPopupUI::_FilterNodes()
 bool
 GraphPopupUI::Draw()
 {
-  ImGui::SetNextWindowPos(pxr::GfVec2f(_x, _y));
-  ImGui::SetNextWindowSize(pxr::GfVec2f(_width, _height));
+  ImGui::SetNextWindowPos(GfVec2f(_x, _y));
+  ImGui::SetNextWindowSize(GfVec2f(_width, _height));
 
   ImGui::Begin(_name.c_str(), NULL, _flags);
 
@@ -451,7 +451,7 @@ GraphPopupUI::Draw()
 // SdfPathPopupUI
 //===========================================================================================
 SdfPathPopupUI::SdfPathPopupUI(int x, int y, int width, int height,
-  const pxr::SdfPrimSpecHandle& primSpec)
+  const SdfPrimSpecHandle& primSpec)
   : PopupUI(x, y, width, height)
   , _primSpec(primSpec)
 {
@@ -467,8 +467,8 @@ SdfPathPopupUI::Draw()
 {
   bool opened;
 
-  ImGui::SetNextWindowSize(pxr::GfVec2f(_width, _height));
-  ImGui::SetNextWindowPos(pxr::GfVec2f(_x, _y));
+  ImGui::SetNextWindowSize(GfVec2f(_width, _height));
+  ImGui::SetNextWindowPos(GfVec2f(_x, _y));
 
   ImGui::Begin(_name.c_str(), &opened, _flags);
 

@@ -20,7 +20,7 @@ Geodesic::Geodesic(Mesh* mesh) : _mesh(mesh)
   int n = 0;
   HalfEdgeGraph::ItUniqueEdge it(*mesh->GetEdgesGraph());
   HalfEdge* edge = it.Next();
-  const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
+  const GfVec3f* positions = mesh->GetPositionsCPtr();
   while(edge) {
     double d = (positions[edge->vertex] - positions[mesh->GetEdge(edge->next)->vertex]).GetLength();
     sum += d;

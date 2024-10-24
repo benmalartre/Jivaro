@@ -13,18 +13,18 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 class Voronoi2D {
   struct Site_t {
-    pxr::GfVec3f seed;
+    GfVec3f seed;
     int id;
     std::set<Site_t*> neighbors;
   };
 
-  void Build(pxr::UsdStageRefPtr& stage, const pxr::VtArray<pxr::GfVec3f>& seeds);
+  void Build(UsdStageRefPtr& stage, const VtArray<GfVec3f>& seeds);
   int GetNumSurroundingSites(size_t x, size_t y);
 private:
-  pxr::VtArray<Site_t>          _sites;
-  pxr::VtArray<pxr::GfVec3f>    _points;
-  pxr::VtArray<int>             _faceVertexCounts;
-  pxr::VtArray<int>             _faceVertexIndices;
+  VtArray<Site_t>          _sites;
+  VtArray<GfVec3f>    _points;
+  VtArray<int>             _faceVertexCounts;
+  VtArray<int>             _faceVertexIndices;
 
   std::vector<int>              _cells;
   size_t                        _resolutionX;

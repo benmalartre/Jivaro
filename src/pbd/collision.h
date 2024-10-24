@@ -39,7 +39,7 @@ public:
     SELF
   };
 
-  Collision(Geometry* collider, const pxr::SdfPath& path, 
+  Collision(Geometry* collider, const SdfPath& path, 
     float restitution=0.5f, float friction=0.5f) 
     : Mask(Element::COLLISION)
     , _collider(collider)
@@ -54,7 +54,7 @@ public:
   virtual size_t GetTypeId() const override = 0; // pure virtual
 
   virtual void Init(size_t numParticles);
-  virtual void Update(const pxr::UsdPrim& prim, double time);
+  virtual void Update(const UsdPrim& prim, double time);
   virtual void FindContacts(Particles* particles, const std::vector<Body*>& bodies,
     std::vector<Constraint*>& constraints, float ft);
   virtual void StoreContactsLocation(Particles* particles, int* elements, size_t n, float ft);
@@ -66,9 +66,9 @@ public:
   virtual Geometry* GetGeometry(){return _collider;};
 
   virtual size_t GetContactComponent(size_t index, size_t c=0) const;
-  virtual pxr::GfVec3f GetContactPosition(size_t index, size_t c=0) const;
-  virtual pxr::GfVec3f GetContactNormal(size_t index, size_t c=0) const;
-  virtual pxr::GfVec3f GetContactVelocity(size_t index, size_t c=0) const;
+  virtual GfVec3f GetContactPosition(size_t index, size_t c=0) const;
+  virtual GfVec3f GetContactNormal(size_t index, size_t c=0) const;
+  virtual GfVec3f GetContactVelocity(size_t index, size_t c=0) const;
   virtual float GetContactDepth(size_t index, size_t c=0) const;
   virtual float GetContactInitDepth(size_t index, size_t c=0) const;
   virtual float GetMaxSeparationVelocity() const {return _maxSeparationVelocity;};
@@ -82,8 +82,8 @@ public:
   const std::vector<int>& GetC2P(){return _c2p;};
 
   virtual float GetValue(Particles* particles, size_t index) = 0;
-  virtual pxr::GfVec3f GetGradient(Particles* particles, size_t index) = 0; // pure virtual
-  virtual pxr::GfVec3f GetVelocity(Particles* particles, size_t index);
+  virtual GfVec3f GetGradient(Particles* particles, size_t index) = 0; // pure virtual
+  virtual GfVec3f GetVelocity(Particles* particles, size_t index);
 
   inline bool CheckHit(size_t index) {
     return BIT_CHECK(_hits[index/Mask::INT_BITS], index%Mask::INT_BITS);
@@ -102,18 +102,18 @@ public:
   void Reset();
 
   // for visual debugging
-  virtual void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& points,
-    pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors);
-  virtual void GetNormals(Particles* particles, pxr::VtArray<pxr::GfVec3f>& points,
-    pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors, pxr::VtArray<int>& counts);
-  virtual void GetVelocities(Particles* particles, pxr::VtArray<pxr::GfVec3f>& points,
-    pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors, pxr::VtArray<int>& counts);
+  virtual void GetPoints(Particles* particles, VtArray<GfVec3f>& points,
+    VtArray<float>& radius, VtArray<GfVec3f>& colors);
+  virtual void GetNormals(Particles* particles, VtArray<GfVec3f>& points,
+    VtArray<float>& radius, VtArray<GfVec3f>& colors, VtArray<int>& counts);
+  virtual void GetVelocities(Particles* particles, VtArray<GfVec3f>& points,
+    VtArray<float>& radius, VtArray<GfVec3f>& colors, VtArray<int>& counts);
 
 protected:
 
   static const size_t PACKET_SIZE;
 
-  virtual void _UpdateParameters(const pxr::UsdPrim& prim, double time);
+  virtual void _UpdateParameters(const UsdPrim& prim, double time);
   virtual void _ResetContacts(Particles* particles);
   virtual void _BuildContacts(Particles* particles, const std::vector<Body*>& bodies,
     std::vector<Constraint*>& constraints, float dt);
@@ -124,7 +124,7 @@ protected:
   virtual void _StoreContactLocation(Particles* particles, int elem, Contact* contact, float ft){};
 
   // hits encode vertex hit in the int list bits
-  pxr::VtArray<int>                 _hits;
+  VtArray<int>                 _hits;
   std::vector<int>                  _c2p;
   size_t                            _numParticles;
   Contacts                          _contacts;
@@ -137,20 +137,20 @@ protected:
   float                             _margin;
   float                             _maxSeparationVelocity;
   Geometry*                         _collider;
-  pxr::TfToken                      _key;
+  TfToken                      _key;
 
 };
 
 class PlaneCollision : public Collision
 {
 public:
-  PlaneCollision(Geometry* collider, const pxr::SdfPath& path, 
+  PlaneCollision(Geometry* collider, const SdfPath& path, 
     float restitution=0.5f, float friction= 0.5f);
   size_t GetTypeId() const override { return TYPE_ID; };
 
   float GetValue(Particles* particles, size_t index) override;
-  pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;
-  void Update(const pxr::UsdPrim& prim, double time) override;
+  GfVec3f GetGradient(Particles* particles, size_t index) override;
+  void Update(const UsdPrim& prim, double time) override;
 
   //void UpdateContacts(Particles* particles) override;
 
@@ -161,21 +161,21 @@ protected:
 
 private:
   static size_t                 TYPE_ID;
-  pxr::GfVec3f                  _position;
-  pxr::GfVec3f                  _normal;
+  GfVec3f                  _position;
+  GfVec3f                  _normal;
 
 };
 
 class BoxCollision : public Collision
 {
 public:
-  BoxCollision(Geometry* collider, const pxr::SdfPath& path, 
+  BoxCollision(Geometry* collider, const SdfPath& path, 
     float restitution=0.5f, float friction= 0.5f);
   size_t GetTypeId() const override { return TYPE_ID; };
 
   float GetValue(Particles* particles, size_t index) override;
-  pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;
-  void Update(const pxr::UsdPrim& prim, double time) override;
+  GfVec3f GetGradient(Particles* particles, size_t index) override;
+  void Update(const UsdPrim& prim, double time) override;
   
 protected:
   void _UpdateSize();
@@ -192,13 +192,13 @@ private:
 class SphereCollision : public Collision
 {
 public:
-  SphereCollision(Geometry* collider, const pxr::SdfPath& path, 
+  SphereCollision(Geometry* collider, const SdfPath& path, 
     float restitution=0.5f, float friction= 0.5f);
   size_t GetTypeId() const override { return TYPE_ID; };
 
   float GetValue(Particles* particles, size_t index) override;
-  pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;
-  void Update(const pxr::UsdPrim& prim, double time) override;
+  GfVec3f GetGradient(Particles* particles, size_t index) override;
+  void Update(const UsdPrim& prim, double time) override;
   
 protected:
   void _UpdateCenterAndRadius();
@@ -208,20 +208,20 @@ protected:
 
 private:
   static size_t                 TYPE_ID;
-  pxr::GfVec3f                  _center;
+  GfVec3f                  _center;
   float                         _radius;
 };
 
 class CapsuleCollision : public Collision
 {
 public:
-  CapsuleCollision(Geometry* collider, const pxr::SdfPath& path, 
+  CapsuleCollision(Geometry* collider, const SdfPath& path, 
     float restitution=0.5f, float friction= 0.5f);
   size_t GetTypeId() const override { return TYPE_ID; };
 
   float GetValue(Particles* particles, size_t index) override;
-  pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;
-  void Update(const pxr::UsdPrim& prim, double time) override;
+  GfVec3f GetGradient(Particles* particles, size_t index) override;
+  void Update(const UsdPrim& prim, double time) override;
   
 protected:
   void _UpdateRadiusAndHeight();
@@ -231,7 +231,7 @@ protected:
 
 private:
   static size_t                 TYPE_ID;
-  pxr::GfVec3f                  _center;
+  GfVec3f                  _center;
   float                         _radius;
   float                         _height;
 };
@@ -240,7 +240,7 @@ private:
 class MeshCollision : public Collision
 {
 public:
-  MeshCollision(Geometry* collider, const pxr::SdfPath& path, 
+  MeshCollision(Geometry* collider, const SdfPath& path, 
     float restitution=0.5f, float friction= 0.5f);
   ~MeshCollision();
   size_t GetTypeId() const override { return TYPE_ID; };
@@ -249,17 +249,17 @@ public:
   const Location* GetQuery(size_t index){return &_query[index];};
 
   float GetValue(Particles* particles, size_t index) override;
-  pxr::GfVec3f GetGradient(Particles* particles, size_t index) override;
-  pxr::GfVec3f GetVelocity(Particles* particles, size_t index) override;
-  void Update(const pxr::UsdPrim& prim, double time) override;
+  GfVec3f GetGradient(Particles* particles, size_t index) override;
+  GfVec3f GetVelocity(Particles* particles, size_t index) override;
+  void Update(const UsdPrim& prim, double time) override;
 
   // for visual debugging
-  void GetPoints(Particles* particles, pxr::VtArray<pxr::GfVec3f>& points,
-    pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors) override;
-  void GetNormals(Particles* particles, pxr::VtArray<pxr::GfVec3f>& points,
-    pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors, pxr::VtArray<int>& counts) override;
-  void GetVelocities(Particles* particles, pxr::VtArray<pxr::GfVec3f>& points,
-    pxr::VtArray<float>& radius, pxr::VtArray<pxr::GfVec3f>& colors, pxr::VtArray<int>& counts) override;
+  void GetPoints(Particles* particles, VtArray<GfVec3f>& points,
+    VtArray<float>& radius, VtArray<GfVec3f>& colors) override;
+  void GetNormals(Particles* particles, VtArray<GfVec3f>& points,
+    VtArray<float>& radius, VtArray<GfVec3f>& colors, VtArray<int>& counts) override;
+  void GetVelocities(Particles* particles, VtArray<GfVec3f>& points,
+    VtArray<float>& radius, VtArray<GfVec3f>& colors, VtArray<int>& counts) override;
 
 protected:
   void _CreateAccelerationStructure();
@@ -280,26 +280,26 @@ class SelfCollision : public Collision
 
 public:
 
-  SelfCollision(Particles* particles, const pxr::SdfPath& path,  
+  SelfCollision(Particles* particles, const SdfPath& path,  
     float restitution=0.5f, float friction= 0.5f);
   ~SelfCollision();
   size_t GetTypeId() const override { return TYPE_ID; };
 
   float GetValue(Particles* particles, size_t index) override{return 0.f;};
-  pxr::GfVec3f GetGradient(Particles* particles, size_t index) override{return pxr::GfVec3f(0.f);};
+  GfVec3f GetGradient(Particles* particles, size_t index) override{return GfVec3f(0.f);};
   float GetValue(Particles* particles, size_t index, size_t other);;
-  pxr::GfVec3f GetGradient(Particles* particles, size_t index, size_t other);
-  pxr::GfVec3f GetVelocity(Particles* particles, size_t index, size_t other);
+  GfVec3f GetGradient(Particles* particles, size_t index, size_t other);
+  GfVec3f GetVelocity(Particles* particles, size_t index, size_t other);
 
   void UpdateContacts(Particles* particles) override;
 
-  void Update(const pxr::UsdPrim& prim, double time) override;
+  void Update(const UsdPrim& prim, double time) override;
 
   void FindContacts(Particles* particles, const std::vector<Body*>& bodies, 
     std::vector<Constraint*>& constraints, float ft)override;
 
 protected:
-  void _UpdateParameters( const pxr::UsdPrim& prim, double time) override;
+  void _UpdateParameters( const UsdPrim& prim, double time) override;
   void _ComputeNeighbors(const std::vector<Body*>& bodies);
   void _UpdateAccelerationStructure();
   void _ResetContacts(Particles* particles) override;

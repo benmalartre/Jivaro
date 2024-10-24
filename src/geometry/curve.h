@@ -14,30 +14,30 @@ class  Location;
 
 class Curve : public Deformable {
 public:
-  Curve(const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
-  Curve(const pxr::UsdGeomBasisCurves& curve, const pxr::GfMatrix4d& world);
+  Curve(const GfMatrix4d& xfo=GfMatrix4d(1.0));
+  Curve(const UsdGeomBasisCurves& curve, const GfMatrix4d& world);
   virtual ~Curve() {};
 
   void SetCurveWidth(size_t curveIdx, size_t cvIdx, float width);
   void SetCurveWidths(size_t curveIdx, float width);
-  void SetCurveWidths(size_t curveIdx, const pxr::VtArray<float>& widths);
+  void SetCurveWidths(size_t curveIdx, const VtArray<float>& widths);
 
   void SetTopology(
-    const pxr::VtArray<pxr::GfVec3f>& positions,
-    const pxr::VtArray<int>& cvCounts
+    const VtArray<GfVec3f>& positions,
+    const VtArray<int>& cvCounts
   );
 
   void SetTopology(
-    const pxr::VtArray<pxr::GfVec3f>& positions,
-    const pxr::VtArray<float>& widths,
-    const pxr::VtArray<int>& cvCounts
+    const VtArray<GfVec3f>& positions,
+    const VtArray<float>& widths,
+    const VtArray<int>& cvCounts
   );
 
   void RemoveCurve(size_t index);
   void RemoveAllCurves();
 
-  const pxr::VtArray<int>& GetCvCounts() const { return _cvCounts;};
-  pxr::VtArray<int>& GetCvCounts() { return _cvCounts;};
+  const VtArray<int>& GetCvCounts() const { return _cvCounts;};
+  VtArray<int>& GetCvCounts() { return _cvCounts;};
 
   size_t GetNumCurves() const { return _cvCounts.size(); };
   size_t GetNumCVs(uint32_t curveIndex)const;
@@ -51,26 +51,26 @@ public:
   Edge* GetEdge(size_t index) {return &_edges[index];};
 
   void Set(
-    const pxr::VtArray<pxr::GfVec3f>& positions, 
-    const pxr::VtArray<int>& counts);
+    const VtArray<GfVec3f>& positions, 
+    const VtArray<int>& counts);
 
-  bool ClosestIntersection(const pxr::GfVec3f& origin, 
-    const pxr::GfVec3f& direction, Location& location, float maxDistance);
+  bool ClosestIntersection(const GfVec3f& origin, 
+    const GfVec3f& direction, Location& location, float maxDistance);
 
-  bool Closest(const pxr::GfVec3f& point, 
+  bool Closest(const GfVec3f& point, 
     Location& location, float maxDistance);
 
   // query 3d position on geometry (unaccelarated)
-  bool Raycast(const pxr::GfRay& ray, Location* hit,
+  bool Raycast(const GfRay& ray, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;
-  bool Closest(const pxr::GfVec3f& point, Location* hit,
+  bool Closest(const GfVec3f& point, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;
 
 protected:
-  DirtyState _Sync(const pxr::GfMatrix4d& matrix, 
-    const pxr::UsdTimeCode& time=pxr::UsdTimeCode::Default()) override;
-  void _Inject(const pxr::GfMatrix4d& parent,
-    const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override;
+  DirtyState _Sync(const GfMatrix4d& matrix, 
+    const UsdTimeCode& time=UsdTimeCode::Default()) override;
+  void _Inject(const GfMatrix4d& parent,
+    const UsdTimeCode& code=UsdTimeCode::Default()) override;
 
   void _ComputeEdges();
 
@@ -78,8 +78,8 @@ private:
   size_t                              _PointIndex(size_t curveIdx, size_t cvIdx);
 
   // curves description
-  pxr::VtArray<int>                   _cvCounts;
-  pxr::VtArray<Edge>                  _edges;
+  VtArray<int>                   _cvCounts;
+  VtArray<Edge>                  _edges;
 
 };
 

@@ -38,18 +38,18 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 namespace {
 struct AggregatedHit {
-  AggregatedHit(pxr::HdxPickHit const& h) : hit(h) {}
+  AggregatedHit(HdxPickHit const& h) : hit(h) {}
 
-  pxr::HdxPickHit const& hit;
+  HdxPickHit const& hit;
   std::set<int> elementIndices;
   std::set<int> edgeIndices;
   std::set<int> pointIndices;
 };
 
 static size_t
-_GetPartialHitHash(pxr::HdxPickHit const& hit)
+_GetPartialHitHash(HdxPickHit const& hit)
 {
-  return pxr::TfHash::Combine(
+  return TfHash::Combine(
     hit.delegateId.GetHash(),
     hit.objectId.GetHash(),
     hit.instancerId.GetHash(),
@@ -60,7 +60,7 @@ typedef std::unordered_map<size_t, AggregatedHit> AggregatedHits;
 
 // aggregates subprimitive hits to the same prim/instance
 static AggregatedHits
-_AggregateHits(pxr::HdxPickHitVector const& allHits)
+_AggregateHits(HdxPickHitVector const& allHits)
 {
     AggregatedHits aggrHits;
 
@@ -97,16 +97,16 @@ _AggregateHits(pxr::HdxPickHitVector const& allHits)
 
 static void
 _ProcessHit(AggregatedHit const& aHit,
-            pxr::TfToken const& pickTarget,
-            pxr::HdSelection::HighlightMode highlightMode,
-            /*out*/pxr::HdSelectionSharedPtr selection)
+            TfToken const& pickTarget,
+            HdSelection::HighlightMode highlightMode,
+            /*out*/HdSelectionSharedPtr selection)
 {
-    pxr::HdxPickHit const& hit = aHit.hit;
+    HdxPickHit const& hit = aHit.hit;
 
-    if (pickTarget == pxr::HdxPickTokens->pickPrimsAndInstances) {
+    if (pickTarget == HdxPickTokens->pickPrimsAndInstances) {
         if (!hit.instancerId.IsEmpty()) {
             // XXX :this doesn't work for nested instancing.
-            pxr::VtIntArray instanceIndex;
+            VtIntArray instanceIndex;
             instanceIndex.push_back(hit.instanceIndex);
             selection->AddInstance(highlightMode, hit.objectId,
                                    instanceIndex);
@@ -118,8 +118,8 @@ _ProcessHit(AggregatedHit const& aHit,
 
             std::cout << "Picked rprim " << hit.objectId << std::endl;
         }
-    } else if (pickTarget == pxr::HdxPickTokens->pickFaces) {
-        pxr::VtIntArray elements(aHit.elementIndices.size());
+    } else if (pickTarget == HdxPickTokens->pickFaces) {
+        VtIntArray elements(aHit.elementIndices.size());
         elements.assign(aHit.elementIndices.begin(),
                         aHit.elementIndices.end());
         selection->AddElements(highlightMode, hit.objectId, elements);
@@ -129,9 +129,9 @@ _ProcessHit(AggregatedHit const& aHit,
             std::cout << element << ", ";
         }
         std::cout << " of prim " << hit.objectId << std::endl;
-    } else if (pickTarget == pxr::HdxPickTokens->pickEdges) {
+    } else if (pickTarget == HdxPickTokens->pickEdges) {
         if (!aHit.edgeIndices.empty()) {
-            pxr::VtIntArray edges(aHit.edgeIndices.size());
+            VtIntArray edges(aHit.edgeIndices.size());
             edges.assign(aHit.edgeIndices.begin(), aHit.edgeIndices.end());
             selection->AddEdges(highlightMode, hit.objectId, edges);
 
@@ -141,9 +141,9 @@ _ProcessHit(AggregatedHit const& aHit,
             }
             std::cout << " of prim " << hit.objectId << std::endl;
         }
-    } else if (pickTarget == pxr::HdxPickTokens->pickPoints) {
+    } else if (pickTarget == HdxPickTokens->pickPoints) {
         if (!aHit.pointIndices.empty()) {
-            pxr::VtIntArray points(aHit.pointIndices.size());
+            VtIntArray points(aHit.pointIndices.size());
             points.assign(aHit.pointIndices.begin(), aHit.pointIndices.end());
             selection->AddPoints(highlightMode, hit.objectId, points);
 
@@ -162,13 +162,13 @@ _ProcessHit(AggregatedHit const& aHit,
 
 namespace Picking {
 
-pxr::HdSelectionSharedPtr
+HdSelectionSharedPtr
 TranslateHitsToSelection(
-    pxr::TfToken const& pickTarget,
-    pxr::HdSelection::HighlightMode highlightMode,
-    pxr::HdxPickHitVector const& allHits)
+    TfToken const& pickTarget,
+    HdSelection::HighlightMode highlightMode,
+    HdxPickHitVector const& allHits)
 {
-    pxr::HdSelectionSharedPtr selection(new pxr::HdSelection);
+    HdSelectionSharedPtr selection(new HdSelection);
 
     AggregatedHits aggrHits = _AggregateHits(allHits);
     for(const auto& pair : aggrHits) {
@@ -178,32 +178,32 @@ TranslateHitsToSelection(
     return selection;
 }
 
-pxr::GfVec2i
+GfVec2i
 CalculatePickResolution(
-        pxr::GfVec2i const& start, pxr::GfVec2i const& end, pxr::GfVec2i const& pickRadius)
+        GfVec2i const& start, GfVec2i const& end, GfVec2i const& pickRadius)
 {
     int fwidth  = std::max(pickRadius[0], std::abs(start[0] - end[0]));
     int fheight = std::max(pickRadius[1], std::abs(start[1] - end[1]));
 
-    return pxr::GfVec2i(fwidth, fheight);
+    return GfVec2i(fwidth, fheight);
 }
 
-pxr::GfMatrix4d
+GfMatrix4d
 ComputePickingProjectionMatrix(
-    pxr::GfVec2i const& start, pxr::GfVec2i const& end, pxr::GfVec2i const& screen,
-    pxr::GfFrustum const& viewFrustum)
+    GfVec2i const& start, GfVec2i const& end, GfVec2i const& screen,
+    GfFrustum const& viewFrustum)
 {
-    pxr::GfVec2d min(2*start[0]/float(screen[0])-1, 1-2*start[1]/float(screen[1]));
-    pxr::GfVec2d max(2*(end[0]+1)/float(screen[0])-1, 1-2*(end[1]+1)/float(screen[1]));
+    GfVec2d min(2*start[0]/float(screen[0])-1, 1-2*start[1]/float(screen[1]));
+    GfVec2d max(2*(end[0]+1)/float(screen[0])-1, 1-2*(end[1]+1)/float(screen[1]));
     // scale window
-    pxr::GfVec2d origin = viewFrustum.GetWindow().GetMin();
-    pxr::GfVec2d scale = viewFrustum.GetWindow().GetMax() -
+    GfVec2d origin = viewFrustum.GetWindow().GetMin();
+    GfVec2d scale = viewFrustum.GetWindow().GetMax() -
                     viewFrustum.GetWindow().GetMin();
-    min = origin + pxr::GfCompMult(scale, 0.5 * (pxr::GfVec2d(1.0, 1.0) + min));
-    max = origin + pxr::GfCompMult(scale, 0.5 * (pxr::GfVec2d(1.0, 1.0) + max));
+    min = origin + GfCompMult(scale, 0.5 * (GfVec2d(1.0, 1.0) + min));
+    max = origin + GfCompMult(scale, 0.5 * (GfVec2d(1.0, 1.0) + max));
     
-    pxr::GfFrustum pickFrustum(viewFrustum);
-    pickFrustum.SetWindow(pxr::GfRange2d(min, max));
+    GfFrustum pickFrustum(viewFrustum);
+    pickFrustum.SetWindow(GfRange2d(min, max));
 
     return pickFrustum.ComputeProjectionMatrix();
 }
@@ -266,14 +266,14 @@ Marquee::DestroyGLResources()
 
 void
 Marquee::Draw(float width, float height, 
-              pxr::GfVec2f const& startPos, pxr::GfVec2f const& endPos)
+              GfVec2f const& startPos, GfVec2f const& endPos)
 {
     glDisable(GL_DEPTH_TEST);
     glUseProgram(_program);
 
-    pxr::GfVec2f s(2*startPos[0]/width-1,
+    GfVec2f s(2*startPos[0]/width-1,
               1-2*startPos[1]/height);
-    pxr::GfVec2f e(2*endPos[0]/width-1,
+    GfVec2f e(2*endPos[0]/width-1,
               1-2*endPos[1]/height);
     float pos[] = { s[0], s[1], e[0], s[1],
                     e[0], e[1], s[0], e[1],

@@ -13,19 +13,19 @@ class TestVelocity : public Execution {
 public:
   TestVelocity() : Execution(){};
   ~TestVelocity(){};
-  void InitExec(pxr::UsdStageRefPtr& stage) override;
-  void UpdateExec(pxr::UsdStageRefPtr& stage, float time) override;
-  void TerminateExec(pxr::UsdStageRefPtr& stage) override;
+  void InitExec(UsdStageRefPtr& stage) override;
+  void UpdateExec(UsdStageRefPtr& stage, float time) override;
+  void TerminateExec(UsdStageRefPtr& stage) override;
   
 private:
   Solver*        _solver;
-  pxr::SdfPath   _solverId;
+  SdfPath   _solverId;
   Plane*         _ground;
-  pxr::SdfPath   _groundId;
+  SdfPath   _groundId;
   Points*        _points0;
-  pxr::SdfPath   _points0Id;
+  SdfPath   _points0Id;
   Points*        _points1;
-  pxr::SdfPath   _points1Id;
+  SdfPath   _points1Id;
   
 };
 

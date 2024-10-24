@@ -7,8 +7,8 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-pxr::GfVec3f 
-Sample::GetPosition(const pxr::GfVec3f* positions) const
+GfVec3f 
+Sample::GetPosition(const GfVec3f* positions) const
 {
   return 
     positions[elemIdx[0]] * baryWeights[0] +
@@ -16,8 +16,8 @@ Sample::GetPosition(const pxr::GfVec3f* positions) const
     positions[elemIdx[2]] * baryWeights[2];
 }
 
-pxr::GfVec3f
-Sample::GetNormal(const pxr::GfVec3f* normals) const
+GfVec3f
+Sample::GetNormal(const GfVec3f* normals) const
 {
   return(
     normals[elemIdx[0]] * baryWeights[0] +
@@ -26,34 +26,34 @@ Sample::GetNormal(const pxr::GfVec3f* normals) const
     );// .GetNormalized();
 }
 
-pxr::GfVec3f
-Sample::GetTangent(const pxr::GfVec3f* positions, const pxr::GfVec3f* normals) const
+GfVec3f
+Sample::GetTangent(const GfVec3f* positions, const GfVec3f* normals) const
 {
   /*
-  pxr::GfVec3f normal(normals[elemIdx[0]] * baryWeights[0] +
+  GfVec3f normal(normals[elemIdx[0]] * baryWeights[0] +
     normals[elemIdx[1]] * baryWeights[1] +
     normals[elemIdx[2]] * baryWeights[2]);
   normal.Normalize();
 
-  pxr::GfVec3f side(0, 0, 1);
-  if ((1.f - pxr::GfAbs(normal * side)) < 0.0)
+  GfVec3f side(0, 0, 1);
+  if ((1.f - GfAbs(normal * side)) < 0.0)
   {
-    side = pxr::GfVec3f(0, 1, 0);
-    if ((1.f - pxr::GfAbs(normal * side)) < DOT_EPSILON)
+    side = GfVec3f(0, 1, 0);
+    if ((1.f - GfAbs(normal * side)) < DOT_EPSILON)
     {
-      side = pxr::GfVec3f(1, 0, 0);
+      side = GfVec3f(1, 0, 0);
     }
   }
   
   return (normal ^ side).GetNormalized();
   */
-  return GetNormal(normals) ^ pxr::GfVec3f(0, 1, 0);
+  return GetNormal(normals) ^ GfVec3f(0, 1, 0);
 
 
   /*
-  const pxr::GfVec3f e0 = positions[elemIdx[1]] - positions[elemIdx[0]];
-  const pxr::GfVec3f e1 = positions[elemIdx[2]] - positions[elemIdx[1]];
-  const pxr::GfVec3f e2 = positions[elemIdx[0]] - positions[elemIdx[2]];
+  const GfVec3f e0 = positions[elemIdx[1]] - positions[elemIdx[0]];
+  const GfVec3f e1 = positions[elemIdx[2]] - positions[elemIdx[1]];
+  const GfVec3f e2 = positions[elemIdx[0]] - positions[elemIdx[2]];
 
   return(
     (e1 ^ normals[elemIdx[0]]).GetNormalized() * baryWeights[0] +
@@ -87,13 +87,13 @@ Sample::GetTangent(const pxr::GfVec3f* positions, const pxr::GfVec3f* normals) c
 // See c95-f95_199-a16-paperfinal-v5 "3.2 Sampling with Geodesic Distance".  This estimation
 // assumes that we have a smooth gradient between the two points, since it doesn't have any
 // information about complex surface changes between the points.
-float _ApproximateGeodesicDistance(const pxr::GfVec3f& p1, const pxr::GfVec3f& p2, 
-  const pxr::GfVec3f& n1, const pxr::GfVec3f& n2)
+float _ApproximateGeodesicDistance(const GfVec3f& p1, const GfVec3f& p2, 
+  const GfVec3f& n1, const GfVec3f& n2)
 {
 #if 0
     return (p1 - p2).GetLengthSq();
 #else
-    pxr::GfVec3f v = p2-p1;
+    GfVec3f v = p2-p1;
     v.Normalize();
 
     float c1 = n1 * v;
@@ -106,22 +106,22 @@ float _ApproximateGeodesicDistance(const pxr::GfVec3f& p1, const pxr::GfVec3f& p
 #endif
 }
 
-float _TriangleArea(const pxr::GfVec3f &a, const pxr::GfVec3f &b, const pxr::GfVec3f &c)
+float _TriangleArea(const GfVec3f &a, const GfVec3f &b, const GfVec3f &c)
 {
   float ab = (a - b).GetLength();
   float bc = (b - c).GetLength();
   float ca = (c - a).GetLength();
   float p = (ab + bc + ca) / 2;
-  return pxr::GfSqrt(p * (p - ab) * (p - bc) * (p - ca));
+  return GfSqrt(p * (p - ab) * (p - bc) * (p - ca));
 }
 
 
 // Do a simple random sampling of the triangles.  Return the total surface area of the triangles.
 float _CreateRawSamples(int numSamples,
-                        const pxr::VtArray<pxr::GfVec3f>& points,
-                        const pxr::VtArray<pxr::GfVec3f>& normals,
-                        const pxr::VtArray<int>& triangles,
-                        pxr::VtArray<Sample> &samples)
+                        const VtArray<GfVec3f>& points,
+                        const VtArray<GfVec3f>& normals,
+                        const VtArray<int>& triangles,
+                        VtArray<Sample> &samples)
 {
   // Calculate the area of each triangle.  We'll use this to randomly select triangles with probability proportional
   // to their area.
@@ -160,28 +160,28 @@ float _CreateRawSamples(int numSamples,
 
     samples.emplace_back();
     Sample& sample = samples.back();
-    sample.elemIdx = pxr::GfVec3i(
+    sample.elemIdx = GfVec3i(
       triangles[triIdx * 3 + 0],
       triangles[triIdx * 3 + 1], 
       triangles[triIdx * 3 + 2]);
     sample.baryWeights = 
-      pxr::GfVec3f(1 - sqrt(u), sqrt(u) * (1 - v), v * sqrt(u));
+      GfVec3f(1 - sqrt(u), sqrt(u) * (1 - v), v * sqrt(u));
   }
 
   return maxAreaSum;
 }
 
-static pxr::GfVec3i
-_GetGridCoords(const pxr::GfRange3d& range, const pxr::GfVec3d& point, const pxr::GfVec3i dimensions)
+static GfVec3i
+_GetGridCoords(const GfRange3d& range, const GfVec3d& point, const GfVec3i dimensions)
 {
-  const pxr::GfVec3d& min = range.GetMin();
-  const pxr::GfVec3d& size = range.GetSize();
-  const pxr::GfVec3d scale = pxr::GfVec3d(
+  const GfVec3d& min = range.GetMin();
+  const GfVec3d& size = range.GetSize();
+  const GfVec3d scale = GfVec3d(
     size[0]/dimensions[0], 
     size[1]/dimensions[1], 
     size[2]/dimensions[2]
   );
-  return pxr::GfVec3i(
+  return GfVec3i(
     (int)((point[0] - min[0]) * 1.f / scale[0]),
     (int)((point[1] - min[1]) * 1.f / scale[1]),
     (int)((point[2] - min[2]) * 1.f / scale[2])
@@ -189,35 +189,35 @@ _GetGridCoords(const pxr::GfRange3d& range, const pxr::GfVec3d& point, const pxr
 }
 
 static uint32_t
-_GetGridIndex(const pxr::GfVec3i& coords, const pxr::GfVec3i& dimensions)
+_GetGridIndex(const GfVec3i& coords, const GfVec3i& dimensions)
 {
   return coords[2] * dimensions[0] * dimensions[1] + coords[1] * dimensions[0] + coords[0];
 }
 
-void _PoissonDiskFromSamples(const pxr::GfVec3f* positions,
-                            const pxr::GfVec3f* normals,
+void _PoissonDiskFromSamples(const GfVec3f* positions,
+                            const GfVec3f* normals,
                             float radius,
-                            pxr::VtArray<Sample>& seeds,
-                            pxr::VtArray<Sample>& samples)
+                            VtArray<Sample>& seeds,
+                            VtArray<Sample>& samples)
 {
   // Get the bounding box of the samples.
-  pxr::GfRange3d bbox;
+  GfRange3d bbox;
   for (auto& seed : seeds) {
     bbox.Union(seed.GetPosition(positions));
   }
-  const pxr::GfVec3f bboxSize(bbox.GetSize());
+  const GfVec3f bboxSize(bbox.GetSize());
 
   const float radiusSq = radius * radius;
-  pxr::GfVec3f gridSize = bboxSize / radius;
-  pxr::GfVec3i gridSizeI(pxr::GfFloor(gridSize[0]), pxr::GfFloor(gridSize[1]), pxr::GfFloor(gridSize[2]));
-  gridSizeI[0] = pxr::GfMax(gridSizeI[0], 1);
-  gridSizeI[1] = pxr::GfMax(gridSizeI[1], 1);
-  gridSizeI[2] = pxr::GfMax(gridSizeI[2], 1);
+  GfVec3f gridSize = bboxSize / radius;
+  GfVec3i gridSizeI(GfFloor(gridSize[0]), GfFloor(gridSize[1]), GfFloor(gridSize[2]));
+  gridSizeI[0] = GfMax(gridSizeI[0], 1);
+  gridSizeI[1] = GfMax(gridSizeI[1], 1);
+  gridSizeI[2] = GfMax(gridSizeI[2], 1);
 
   // Assign a cell ID to each seed.
   for(auto &seed: seeds)
   {
-    pxr::GfVec3i coords = _GetGridCoords(bbox, seed.GetPosition(positions), gridSizeI);
+    GfVec3i coords = _GetGridCoords(bbox, seed.GetPosition(positions), gridSizeI);
     seed.cellIdx = _GetGridIndex(coords, gridSizeI);
   }
 
@@ -262,7 +262,7 @@ void _PoissonDiskFromSamples(const pxr::GfVec3f* positions,
       {
         for(int z = -1; z <= +1; ++z)
         {
-          neighborCellOffsets.push_back(_GetGridIndex(pxr::GfVec3i(x, y, z), gridSizeI));
+          neighborCellOffsets.push_back(_GetGridIndex(GfVec3i(x, y, z), gridSizeI));
         }
       }
     }
@@ -338,10 +338,10 @@ void _PoissonDiskFromSamples(const pxr::GfVec3f* positions,
 
 void
 StochasticSampling(int nbSamples,
-  const pxr::VtArray<pxr::GfVec3f>& points,
-  const pxr::VtArray<pxr::GfVec3f>& normals,
-  const pxr::VtArray<Triangle>& triangles,
-  pxr::VtArray<Sample>& samples)
+  const VtArray<GfVec3f>& points,
+  const VtArray<GfVec3f>& normals,
+  const VtArray<Triangle>& triangles,
+  VtArray<Sample>& samples)
 {
   size_t nbTriangles = triangles.size();
   std::vector<float>triangleAreas(nbTriangles);
@@ -368,7 +368,7 @@ StochasticSampling(int nbSamples,
       samples[sampleIdx++] = { 
         triangles[t].vertices, 
         0, 
-        pxr::GfVec3f(u, v, 1.f - (u+v))
+        GfVec3f(u, v, 1.f - (u+v))
       };
     }
   }
@@ -377,10 +377,10 @@ StochasticSampling(int nbSamples,
 
 void
 GridSampling(int nbSamples,
-  const pxr::VtArray<pxr::GfVec3f>& points,
-  const pxr::VtArray<pxr::GfVec3f>& normals,
-  const pxr::VtArray<Triangle>& triangles,
-  pxr::VtArray<Sample>& samples)
+  const VtArray<GfVec3f>& points,
+  const VtArray<GfVec3f>& normals,
+  const VtArray<Triangle>& triangles,
+  VtArray<Sample>& samples)
 {
   size_t nbTriangles = triangles.size();
   std::vector<float>triangleAreas(nbTriangles);
@@ -407,7 +407,7 @@ GridSampling(int nbSamples,
       samples[sampleIdx++] = { 
         triangles[t].vertices, 
         0, 
-        pxr::GfVec3f(u, v, 1.f - (u+v))
+        GfVec3f(u, v, 1.f - (u+v))
       };
     }
   }
@@ -415,16 +415,16 @@ GridSampling(int nbSamples,
 
 void
   PoissonSampling(float radius, int nbSamples,
-    const pxr::VtArray<pxr::GfVec3f>& points,
-    const pxr::VtArray<pxr::GfVec3f>& normals,
-    const pxr::VtArray<Triangle>& triangles,
-    pxr::VtArray<Sample>& samples)
+    const VtArray<GfVec3f>& points,
+    const VtArray<GfVec3f>& normals,
+    const VtArray<Triangle>& triangles,
+    VtArray<Sample>& samples)
 {
   
-  pxr::VtArray<Sample> seeds;
-  pxr::VtArray<int> indices(triangles.size() * 3);
+  VtArray<Sample> seeds;
+  VtArray<int> indices(triangles.size() * 3);
   for (size_t triIdx = 0; triIdx < triangles.size(); ++triIdx) {
-    memcpy(&indices[triIdx * 3], &triangles[triIdx].vertices, sizeof(pxr::GfVec3i));
+    memcpy(&indices[triIdx * 3], &triangles[triIdx].vertices, sizeof(GfVec3i));
   }
   float surfaceArea = _CreateRawSamples(nbSamples, points, normals, indices, seeds);
 

@@ -12,16 +12,16 @@ class TestPush : public Execution {
 public:
   TestPush(){};
   ~TestPush(){};
-  void InitExec(pxr::UsdStageRefPtr& stage) override;
-  void UpdateExec(pxr::UsdStageRefPtr& stage, float time) override;
-  void TerminateExec(pxr::UsdStageRefPtr& stage) override;
+  void InitExec(UsdStageRefPtr& stage) override;
+  void UpdateExec(UsdStageRefPtr& stage, float time) override;
+  void TerminateExec(UsdStageRefPtr& stage) override;
 
 protected:
-  void _TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage);
+  void _TraverseStageFindingMeshes(UsdStageRefPtr& stage);
 
 private:
   
-  std::vector<pxr::SdfPath>    _meshesId;
+  std::vector<SdfPath>    _meshesId;
   std::vector<Mesh*>           _meshes;
   
 };

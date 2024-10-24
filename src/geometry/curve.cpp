@@ -7,23 +7,23 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-Curve::Curve(const pxr::GfMatrix4d& xfo)
+Curve::Curve(const GfMatrix4d& xfo)
   : Deformable(Geometry::CURVE, xfo)
 {
 }
 
-Curve::Curve(const pxr::UsdGeomBasisCurves& curve, const pxr::GfMatrix4d& world)
+Curve::Curve(const UsdGeomBasisCurves& curve, const GfMatrix4d& world)
   : Deformable(curve.GetPrim(), world)
 {
-  pxr::UsdAttribute pointsAttr = curve.GetPointsAttr();
-  pointsAttr.Get(&_positions, pxr::UsdTimeCode::Default());
+  UsdAttribute pointsAttr = curve.GetPointsAttr();
+  pointsAttr.Get(&_positions, UsdTimeCode::Default());
 
-  pxr::UsdAttribute vertexCountsAttr = curve.GetCurveVertexCountsAttr();
-  vertexCountsAttr.Get(&_cvCounts, pxr::UsdTimeCode::Default());
+  UsdAttribute vertexCountsAttr = curve.GetCurveVertexCountsAttr();
+  vertexCountsAttr.Get(&_cvCounts, UsdTimeCode::Default());
 
-  pxr::UsdAttribute normalsAttr = curve.GetNormalsAttr();
+  UsdAttribute normalsAttr = curve.GetNormalsAttr();
   if(normalsAttr.IsDefined() && normalsAttr.HasAuthoredValue())
-    normalsAttr.Get(&_normals, pxr::UsdTimeCode::Default());
+    normalsAttr.Get(&_normals, UsdTimeCode::Default());
 }
 
 size_t 
@@ -77,36 +77,36 @@ Curve::GetSegmentLength(uint32_t curveIndex, uint32_t segmentIndex)
 
 void 
 Curve::Set(
-  const pxr::VtArray<pxr::GfVec3f>& positions, 
-  const pxr::VtArray<int>& counts)
+  const VtArray<GfVec3f>& positions, 
+  const VtArray<int>& counts)
 {
   _cvCounts = counts;
   SetPositions(positions);
 }
 
 bool 
-Curve::ClosestIntersection(const pxr::GfVec3f& origin, 
-  const pxr::GfVec3f& direction, Location& location, float maxDistance)
+Curve::ClosestIntersection(const GfVec3f& origin, 
+  const GfVec3f& direction, Location& location, float maxDistance)
 {
   return false;
 }
 
 bool 
-Curve::Closest(const pxr::GfVec3f& point, 
+Curve::Closest(const GfVec3f& point, 
   Location& location, float maxDistance)
 {
   return false;
 }
 
 bool 
-Curve::Raycast(const pxr::GfRay& ray, Location* hit,
+Curve::Raycast(const GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 {
   return false;
 };
 
 bool 
-Curve::Closest(const pxr::GfVec3f& point, Location* hit,
+Curve::Closest(const GfVec3f& point, Location* hit,
   double maxDistance, double* minDistance) const
 {
   return false;
@@ -124,7 +124,7 @@ Curve::_ComputeEdges()
     size_t start = offset;
     for(size_t c = 1; c < cvCount; ++c) {
       size_t end = offset + c;
-      _edges.push_back(Edge(index++, pxr::GfVec2i(start, end), 0.1f));
+      _edges.push_back(Edge(index++, GfVec2i(start, end), 0.1f));
       start = end;
     }
     offset += cvCount;
@@ -143,8 +143,8 @@ Curve::_PointIndex(size_t curveIdx, size_t cvIdx)
 
 void 
 Curve::SetTopology(
-  const pxr::VtArray<pxr::GfVec3f>& positions,
-  const pxr::VtArray<int>& cvCounts)
+  const VtArray<GfVec3f>& positions,
+  const VtArray<int>& cvCounts)
 {
   SetPositions(positions);
   _haveWidths = false;
@@ -157,9 +157,9 @@ Curve::SetTopology(
 
 void 
 Curve::SetTopology(
-  const pxr::VtArray<pxr::GfVec3f>& positions,
-  const pxr::VtArray<float>& widths,
-  const pxr::VtArray<int>& cvCounts)
+  const VtArray<GfVec3f>& positions,
+  const VtArray<float>& widths,
+  const VtArray<int>& cvCounts)
 {
   SetPositions(positions);
   SetWidths(widths);
@@ -208,7 +208,7 @@ Curve::SetCurveWidths(size_t curveIdx, float width)
 }
 
 void
-Curve::SetCurveWidths(size_t curveIdx, const pxr::VtArray<float>& widths)
+Curve::SetCurveWidths(size_t curveIdx, const VtArray<float>& widths)
 {
   size_t numCVs = _cvCounts[curveIdx];
 
@@ -221,12 +221,12 @@ Curve::SetCurveWidths(size_t curveIdx, const pxr::VtArray<float>& widths)
 }
 
 Geometry::DirtyState 
-Curve::_Sync( const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
+Curve::_Sync( const GfMatrix4d& matrix, const UsdTimeCode& time)
 {
-  if(_prim.IsValid() && _prim.IsA<pxr::UsdGeomCurves>())
+  if(_prim.IsValid() && _prim.IsA<UsdGeomCurves>())
   {
     _previous = _positions;
-    pxr::UsdGeomBasisCurves usdCurve(_prim);
+    UsdGeomBasisCurves usdCurve(_prim);
     const size_t nbPositions = _positions.size();
     usdCurve.GetPointsAttr().Get(&_positions, time);
   }
@@ -234,10 +234,10 @@ Curve::_Sync( const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
 }
 
 void 
-Curve::_Inject(const pxr::GfMatrix4d& parent, const pxr::UsdTimeCode& time)
+Curve::_Inject(const GfMatrix4d& parent, const UsdTimeCode& time)
 {
-  if(_prim.IsA<pxr::UsdGeomCurves>()) {
-    pxr::UsdGeomCurves usdCurve(_prim);
+  if(_prim.IsA<UsdGeomCurves>()) {
+    UsdGeomCurves usdCurve(_prim);
 
     usdCurve.CreatePointsAttr().Set(GetPositions(), time);
     usdCurve.CreateCurveVertexCountsAttr().Set(GetCvCounts(), time);

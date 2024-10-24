@@ -31,14 +31,14 @@ void TestRaycast::_UpdateRays()
   const double time = Time::Get()->GetActiveTime();
   const size_t numRays = _mesh->GetNumPoints();
 
-  const pxr::GfVec3f* positions = _mesh->GetPositionsCPtr();
-  const pxr::GfVec3f* normals = _mesh->GetNormalsCPtr();
-  const pxr::GfMatrix4d matrix = _mesh->GetMatrix();
+  const GfVec3f* positions = _mesh->GetPositionsCPtr();
+  const GfVec3f* normals = _mesh->GetNormalsCPtr();
+  const GfMatrix4d matrix = _mesh->GetMatrix();
 
-  pxr::VtArray<pxr::GfVec3f> points;
-  pxr::VtArray<float> radiis;
-  pxr::VtArray<int> counts;
-  pxr::VtArray<pxr::GfVec3f> colors;
+  VtArray<GfVec3f> points;
+  VtArray<float> radiis;
+  VtArray<int> counts;
+  VtArray<GfVec3f> colors;
 
   points.resize(numRays * 2);
   radiis.resize(numRays * 2);
@@ -51,8 +51,8 @@ void TestRaycast::_UpdateRays()
     radiis[r*2+1]   = 0.01f;
     points[r*2]   = matrix.Transform(positions[r]);
     points[r*2+1] = matrix.Transform(positions[r] + normals[r] * 0.2f);
-    colors[r*2]   = pxr::GfVec3f(0.25f);
-    colors[r*2+1] = pxr::GfVec3f(0.25f);
+    colors[r*2]   = GfVec3f(0.25f);
+    colors[r*2+1] = GfVec3f(0.25f);
   }
 
   _rays->SetTopology(points, radiis, counts); 
@@ -60,11 +60,11 @@ void TestRaycast::_UpdateRays()
 }
 
 // thread task
-void TestRaycast::_FindHits(size_t begin, size_t end, const pxr::GfVec3f* positions, 
-  pxr::GfVec3f* results, bool* hits)
+void TestRaycast::_FindHits(size_t begin, size_t end, const GfVec3f* positions, 
+  GfVec3f* results, bool* hits)
 {
   for (size_t index = begin; index < end; ++index) {
-    pxr::GfRay ray(positions[index*2], positions[index*2+1] - positions[index*2]);
+    GfRay ray(positions[index*2], positions[index*2+1] - positions[index*2]);
     double minDistance = DBL_MAX;
     Location hit;
     Deformable* deformable;
@@ -73,7 +73,7 @@ void TestRaycast::_FindHits(size_t begin, size_t end, const pxr::GfVec3f* positi
     if (_bvh.Raycast(ray, &hit, DBL_MAX, &minDistance)) {
 
       const Geometry* collided = _bvh.GetGeometry(hit.GetGeometryIndex());
-      const pxr::GfMatrix4d& matrix = collided->GetMatrix();
+      const GfMatrix4d& matrix = collided->GetMatrix();
       switch (collided->GetType()) {
         case Geometry::MESH:
         {
@@ -102,20 +102,20 @@ void TestRaycast::_FindHits(size_t begin, size_t end, const pxr::GfVec3f* positi
 // parallelize raycast
 void TestRaycast::_UpdateHits()
 {
-  const pxr::GfVec3f* positions = _rays->GetPositionsCPtr();
+  const GfVec3f* positions = _rays->GetPositionsCPtr();
   size_t numRays = _rays->GetNumPoints() >> 1;
 
-  pxr::VtArray<pxr::GfVec3f> points(numRays);
-  pxr::VtArray<bool> hits(numRays, false);
+  VtArray<GfVec3f> points(numRays);
+  VtArray<bool> hits(numRays, false);
 
   hits.resize(numRays, false);
 
-  pxr::WorkParallelForN(_rays->GetNumCurves(),
+  WorkParallelForN(_rays->GetNumCurves(),
     std::bind(&TestRaycast::_FindHits, this, std::placeholders::_1, 
       std::placeholders::_2, positions, &points[0], &hits[0]), 32);
 
   // need accumulate result
-  pxr::VtArray<pxr::GfVec3f> result;
+  VtArray<GfVec3f> result;
   result.reserve(numRays);
   for(size_t r = 0; r < numRays; ++r) {
     if(hits[r])result.push_back(points[r]);
@@ -123,47 +123,47 @@ void TestRaycast::_UpdateHits()
 
   _hits->SetPositions(result);
   
-  pxr::VtArray<float> widths(result.size(), 0.2f);
+  VtArray<float> widths(result.size(), 0.2f);
   _hits->SetWidths(widths);
 
-  pxr::VtArray<pxr::GfVec3f> colors(result.size(), pxr::GfVec3f(1.f, 0.5f, 0.0f));
+  VtArray<GfVec3f> colors(result.size(), GfVec3f(1.f, 0.5f, 0.0f));
   _hits->SetColors(colors);
 
 }
 
-void TestRaycast::_TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage)
+void TestRaycast::_TraverseStageFindingMeshes(UsdStageRefPtr& stage)
 {
-  pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
-  for (pxr::UsdPrim prim : stage->TraverseAll())
-    if (prim.IsA<pxr::UsdGeomMesh>()) {
-      _subjects.push_back(new Mesh(pxr::UsdGeomMesh(prim), xformCache.GetLocalToWorldTransform(prim)));
+  UsdGeomXformCache xformCache(UsdTimeCode::Default());
+  for (UsdPrim prim : stage->TraverseAll())
+    if (prim.IsA<UsdGeomMesh>()) {
+      _subjects.push_back(new Mesh(UsdGeomMesh(prim), xformCache.GetLocalToWorldTransform(prim)));
       _subjectsId.push_back(prim.GetPath());
       //_subjects.back()->SetInputOnly();
     } 
 }
 
-void TestRaycast::_AddAnimationSamples(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path)
+void TestRaycast::_AddAnimationSamples(UsdStageRefPtr& stage, SdfPath& path)
 {
-  pxr::UsdPrim prim = stage->GetPrimAtPath(path);
+  UsdPrim prim = stage->GetPrimAtPath(path);
   if(prim.IsValid()) {
-    pxr::UsdGeomXformable xformable(prim);
-    pxr::GfRotation rotation(pxr::GfVec3f(0.f, 0.f, 1.f), 0.f);
-    pxr::GfMatrix4d scale = pxr::GfMatrix4d().SetScale(pxr::GfVec3f(10.f, 10.f, 10.f));
-    pxr::GfMatrix4d rotate = pxr::GfMatrix4d().SetRotate(rotation);
-    pxr::GfMatrix4d translate1 = pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, 0.f, -10.f));
-    pxr::GfMatrix4d translate2 = pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, 0.f, 10.f));
+    UsdGeomXformable xformable(prim);
+    GfRotation rotation(GfVec3f(0.f, 0.f, 1.f), 0.f);
+    GfMatrix4d scale = GfMatrix4d().SetScale(GfVec3f(10.f, 10.f, 10.f));
+    GfMatrix4d rotate = GfMatrix4d().SetRotate(rotation);
+    GfMatrix4d translate1 = GfMatrix4d().SetTranslate(GfVec3f(0.f, 0.f, -10.f));
+    GfMatrix4d translate2 = GfMatrix4d().SetTranslate(GfVec3f(0.f, 0.f, 10.f));
     auto op = xformable.GetTransformOp();
     op.Set(scale * rotate * translate1, 1);
     op.Set(scale * rotate * translate2, 101);
   }
 }
 
-void TestRaycast::InitExec(pxr::UsdStageRefPtr& stage)
+void TestRaycast::InitExec(UsdStageRefPtr& stage)
 {
   if (!stage) return;
 
-  pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
-  const pxr::SdfPath  rootId = rootPrim.GetPath();
+  UsdPrim rootPrim = stage->GetDefaultPrim();
+  const SdfPath  rootId = rootPrim.GetPath();
 
   // find meshes in the scene
   _TraverseStageFindingMeshes(stage);
@@ -179,49 +179,49 @@ void TestRaycast::InitExec(pxr::UsdStageRefPtr& stage)
   }
   
   // create mesh that will be source of rays
-  pxr::GfRotation rotation(pxr::GfVec3f(0.f, 0.f, 1.f), 0.f);
+  GfRotation rotation(GfVec3f(0.f, 0.f, 1.f), 0.f);
 
-  pxr::GfMatrix4d scale = pxr::GfMatrix4d().SetScale(pxr::GfVec3f(10.f, 10.f, 10.f));
-  pxr::GfMatrix4d rotate = pxr::GfMatrix4d().SetRotate(rotation);
-  pxr::GfMatrix4d translate = pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, 0.f, 0.f));
+  GfMatrix4d scale = GfMatrix4d().SetScale(GfVec3f(10.f, 10.f, 10.f));
+  GfMatrix4d rotate = GfMatrix4d().SetRotate(rotation);
+  GfMatrix4d translate = GfMatrix4d().SetTranslate(GfVec3f(0.f, 0.f, 0.f));
 
   const size_t n = 1024;
-  _meshId = rootId.AppendChild(pxr::TfToken("emitter"));
+  _meshId = rootId.AppendChild(TfToken("emitter"));
   _mesh = _CreateMeshGrid(stage, _meshId, n, scale * rotate * translate);
   _scene.AddGeometry(_meshId, _mesh);
 
   _AddAnimationSamples(stage, _meshId);
 
   // create rays
-  _raysId = rootId.AppendChild(pxr::TfToken("rays"));
-  _rays = (Curve*)_scene.AddGeometry(_raysId, Geometry::CURVE, pxr::GfMatrix4d(1.0));
+  _raysId = rootId.AppendChild(TfToken("rays"));
+  _rays = (Curve*)_scene.AddGeometry(_raysId, Geometry::CURVE, GfMatrix4d(1.0));
 
   _UpdateRays();
-  _scene.MarkPrimDirty(_raysId, pxr::HdChangeTracker ::AllDirty);
+  _scene.MarkPrimDirty(_raysId, HdChangeTracker ::AllDirty);
 
   // create hits
-  _hitsId = rootId.AppendChild(pxr::TfToken("hits"));
-  _hits = (Points*)_scene.AddGeometry(_hitsId, Geometry::POINT, pxr::GfMatrix4d(1.0));
+  _hitsId = rootId.AppendChild(TfToken("hits"));
+  _hits = (Points*)_scene.AddGeometry(_hitsId, Geometry::POINT, GfMatrix4d(1.0));
 
   _UpdateHits();
   UpdateExec(stage, Time::Get()->GetActiveTime());
 
 }
 
-void TestRaycast::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
+void TestRaycast::UpdateExec(UsdStageRefPtr& stage, float time)
 {
   _scene.Sync(stage, time);
   _bvh.Update();
   _UpdateRays();
-  _scene.MarkPrimDirty(_raysId, pxr::HdChangeTracker::DirtyPoints);
-  _scene.MarkPrimDirty(_meshId, pxr::HdChangeTracker::AllDirty);
+  _scene.MarkPrimDirty(_raysId, HdChangeTracker::DirtyPoints);
+  _scene.MarkPrimDirty(_meshId, HdChangeTracker::AllDirty);
 
   _UpdateHits();
-  _scene.MarkPrimDirty(_hitsId, pxr::HdChangeTracker::AllDirty);
+  _scene.MarkPrimDirty(_hitsId, HdChangeTracker::AllDirty);
 
 }
 
-void TestRaycast::TerminateExec(pxr::UsdStageRefPtr& stage)
+void TestRaycast::TerminateExec(UsdStageRefPtr& stage)
 {
   if (!stage) return;
 

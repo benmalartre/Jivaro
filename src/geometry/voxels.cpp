@@ -17,7 +17,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 // constructor
 //--------------------------------------------------------------------------------
 Voxels::Voxels()
-  : Deformable(Geometry::VOXEL, pxr::GfMatrix4d(1.0))
+  : Deformable(Geometry::VOXEL, GfMatrix4d(1.0))
   , _geometry(NULL)
   , _radius(1.f)
 {
@@ -58,11 +58,11 @@ void Voxels::Init(Deformable* geometry, float radius)
   _radius = radius;
   _geometry = geometry;
   if (_radius < 0.0001) _radius = 0.0001;
-  const pxr::GfVec3f size(geometry->GetBoundingBox(true).GetRange().GetSize());
-  _resolution = pxr::GfVec3i(
-    pxr::GfClamp(size[0] / _radius, 1, std::numeric_limits<int>::max()),
-    pxr::GfClamp(size[1] / _radius, 1, std::numeric_limits<int>::max()),
-    pxr::GfClamp(size[2] / _radius, 1, std::numeric_limits<int>::max())
+  const GfVec3f size(geometry->GetBoundingBox(true).GetRange().GetSize());
+  _resolution = GfVec3i(
+    GfClamp(size[0] / _radius, 1, std::numeric_limits<int>::max()),
+    GfClamp(size[1] / _radius, 1, std::numeric_limits<int>::max()),
+    GfClamp(size[2] / _radius, 1, std::numeric_limits<int>::max())
   );
   size_t numVoxels = GetNumCells();
   _data.resize(numVoxels);
@@ -75,10 +75,10 @@ void Voxels::Init(Deformable* geometry, float radius)
 //--------------------------------------------------------------------------------
 void Voxels::_TraceWork(const size_t begin, const size_t end, short axis)
 {
-  pxr::GfBBox3d bbox = _geometry->GetBoundingBox(true);
-  const pxr::GfRange3d range(bbox.GetRange());
-  const pxr::GfVec3f size(range.GetSize());
-  const pxr::GfVec3f minExtents(range.GetMin());
+  GfBBox3d bbox = _geometry->GetBoundingBox(true);
+  const GfRange3d range(bbox.GetRange());
+  const GfVec3f size(range.GetSize());
+  const GfVec3f minExtents(range.GetMin());
 
   // this is the bias we apply to step 'off' a triangle we hit, not very robust
   const float eps = 0.000001f * size[axis];
@@ -88,10 +88,10 @@ void Voxels::_TraceWork(const size_t begin, const size_t end, short axis)
   {
     bool inside = false;
 
-    pxr::GfVec3f rayDir(0.f);
+    GfVec3f rayDir(0.f);
     rayDir[axis] = 1.f;
 
-    pxr::GfVec3f rayStart = minExtents;
+    GfVec3f rayStart = minExtents;
     rayStart[(axis + 1) % 3] += (x + 0.5f) * _radius;
     rayStart[(axis + 2) % 3] += (y + 0.5f) * _radius;
 
@@ -100,7 +100,7 @@ void Voxels::_TraceWork(const size_t begin, const size_t end, short axis)
       // calculate ray start
       Location hit;
       double minDistance = DBL_MAX;
-      if (_bvh.Raycast(pxr::GfRay(rayStart, rayDir), &hit, DBL_MAX, &minDistance))
+      if (_bvh.Raycast(GfRay(rayStart, rayDir), &hit, DBL_MAX, &minDistance))
       {
         // calculate cell in which intersection occurred
         const float zpos = rayStart[axis] + hit.GetDistance() * rayDir[axis];
@@ -130,7 +130,7 @@ void Voxels::_TraceWork(const size_t begin, const size_t end, short axis)
 
 void Voxels::Trace(short axis)
 {
-  pxr::WorkParallelForN(
+  WorkParallelForN(
     _resolution[(axis + 1) % 3], std::bind(
       &Voxels::_TraceWork, 
       this, 
@@ -144,11 +144,11 @@ void Voxels::Trace(short axis)
 //--------------------------------------------------------------------------------
 void Voxels::_ProximityWork(size_t begin, size_t end)
 {
-  const pxr::GfVec3f* points = _geometry->GetPositionsCPtr();
+  const GfVec3f* points = _geometry->GetPositionsCPtr();
   const float threshold = 0.5f * _radius;
 
   for (size_t cell = begin; cell < end; ++cell) {
-    const pxr::GfVec3f point = GetCellPosition(cell);
+    const GfVec3f point = GetCellPosition(cell);
     Location hit;
     if(_bvh.Closest(point, &hit, threshold))
       _data[cell] += 3;
@@ -157,7 +157,7 @@ void Voxels::_ProximityWork(size_t begin, size_t end)
 
 void Voxels::Proximity()
 {
-  pxr::WorkParallelForN(GetNumCells(), std::bind(
+  WorkParallelForN(GetNumCells(), std::bind(
     &Voxels::_ProximityWork, 
     this,
     std::placeholders::_1,     // begin
@@ -165,14 +165,14 @@ void Voxels::Proximity()
   ), 32);
 }
 
-pxr::GfVec3f Voxels::GetCellPosition(size_t cellIdx)
+GfVec3f Voxels::GetCellPosition(size_t cellIdx)
 {
-  const pxr::GfRange3d range(_geometry->GetBoundingBox(true).GetRange());
+  const GfRange3d range(_geometry->GetBoundingBox(true).GetRange());
   size_t x = cellIdx % _resolution[0];
   size_t y = (cellIdx / _resolution[0]) % _resolution[1];
   size_t z = cellIdx / (_resolution[0] * _resolution[1]);
 
-  return pxr::GfVec3f(range.GetMin()) + pxr::GfVec3f((x + 0.5f) * _radius, (y + 0.5f) * _radius, (z + 0.5f) * _radius);
+  return GfVec3f(range.GetMin()) + GfVec3f((x + 0.5f) * _radius, (y + 0.5f) * _radius, (z + 0.5f) * _radius);
 }
 
 void Voxels::Build(float randomize)
@@ -182,7 +182,7 @@ void Voxels::Build(float randomize)
   size_t numHits = 0;
   for (size_t cellIdx = 0; cellIdx < numCells; ++cellIdx) {
     if (_data[cellIdx] > 1) {
-      const pxr::GfVec3f offset(
+      const GfVec3f offset(
         RANDOM_0_1 * randomize * _radius,
         RANDOM_0_1 * randomize * _radius,
         RANDOM_0_1 * randomize * _radius);
@@ -194,12 +194,12 @@ void Voxels::Build(float randomize)
 }
 
 Geometry::DirtyState 
-Voxels::_Sync(const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
+Voxels::_Sync(const GfMatrix4d& matrix, const UsdTimeCode& time)
 {
-  if(_prim.IsValid() && _prim.IsA<pxr::UsdGeomPoints>())
+  if(_prim.IsValid() && _prim.IsA<UsdGeomPoints>())
   {
     _previous = _positions;
-    pxr::UsdGeomPoints usdPoints(_prim);
+    UsdGeomPoints usdPoints(_prim);
     const size_t nbPositions = _positions.size();
     usdPoints.GetPointsAttr().Get(&_positions, time);
   }
@@ -207,11 +207,11 @@ Voxels::_Sync(const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
 }
 
 void 
-Voxels::_Inject(const pxr::GfMatrix4d& parent,
-    const pxr::UsdTimeCode& time)
+Voxels::_Inject(const GfMatrix4d& parent,
+    const UsdTimeCode& time)
 {
-  if(_prim.IsA<pxr::UsdGeomPoints>()) {
-    pxr::UsdGeomPoints usdPoints(_prim);
+  if(_prim.IsA<UsdGeomPoints>()) {
+    UsdGeomPoints usdPoints(_prim);
     usdPoints.CreatePointsAttr().Set(GetPositions(), time);
   }
 }

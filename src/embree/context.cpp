@@ -34,15 +34,15 @@ UsdEmbreeContext::~UsdEmbreeContext()
 
 // traverse all prim range
 //----------------------------------------------------------------------------
-void UsdEmbreeContext::GetNumPrims(const pxr::UsdPrim& prim)
+void UsdEmbreeContext::GetNumPrims(const UsdPrim& prim)
 {
-  pxr::TfToken visibility;
+  TfToken visibility;
   for(auto child : prim.GetAllChildren())
   {
-    if(prim.IsA<pxr::UsdGeomImageable>())
+    if(prim.IsA<UsdGeomImageable>())
     {
-      pxr::UsdGeomImageable(prim).GetVisibilityAttr().Get(&visibility);
-      if(visibility != pxr::UsdGeomTokens->invisible)
+      UsdGeomImageable(prim).GetVisibilityAttr().Get(&visibility);
+      if(visibility != UsdGeomTokens->invisible)
       {
         _numPrims++;
         GetNumPrims(child);
@@ -53,7 +53,7 @@ void UsdEmbreeContext::GetNumPrims(const pxr::UsdPrim& prim)
 
 // recurse collect prim
 //----------------------------------------------------------------------------
-void UsdEmbreeContext::CollectPrims( const pxr::UsdPrim& prim)
+void UsdEmbreeContext::CollectPrims( const UsdPrim& prim)
 {
   bool flip = false;
   std::string path = prim.GetPath().GetString();
@@ -62,7 +62,7 @@ void UsdEmbreeContext::CollectPrims( const pxr::UsdPrim& prim)
   
   if(path == search)
   {
-    pxr::GfMatrix4d worldMatrix = 
+    GfMatrix4d worldMatrix = 
         _xformCache->GetLocalToWorldTransform(prim);
     UsdEmbreeMaster* master = 
       TranslateMaster(this, prim, _xformCache, _scene);
@@ -78,8 +78,8 @@ void UsdEmbreeContext::CollectPrims( const pxr::UsdPrim& prim)
       TranslateInstance(
         this, 
         master, 
-        pxr::GfMatrix4d().SetTranslate(
-          pxr::GfVec3d(sin(ta) * radius, 6, -cos(ta) * radius)
+        GfMatrix4d().SetTranslate(
+          GfVec3d(sin(ta) * radius, 6, -cos(ta) * radius)
         ),
         _scene
       );
@@ -92,25 +92,25 @@ void UsdEmbreeContext::CollectPrims( const pxr::UsdPrim& prim)
   for(auto child : prim.GetAllChildren())
   {
     std::cout << child.GetPrimPath() << std::endl;
-    if(child.IsA<pxr::UsdGeomXform>())
+    if(child.IsA<UsdGeomXform>())
     {
       std::cout << "XFORM" << std::endl;
     }
-    else if(child.IsA<pxr::UsdGeomMesh>())
+    else if(child.IsA<UsdGeomMesh>())
     {
-      pxr::GfMatrix4d worldMatrix = 
+      GfMatrix4d worldMatrix = 
         _xformCache->GetLocalToWorldTransform(child);
       
       if(flip)
       {
         UsdEmbreeSubdiv* subdiv = 
-        TranslateSubdiv(this, pxr::UsdGeomMesh(child), worldMatrix, _scene);
+        TranslateSubdiv(this, UsdGeomMesh(child), worldMatrix, _scene);
         _prims.push_back(subdiv);
       }
       else
       {
         UsdEmbreeMesh* mesh = 
-        TranslateMesh(this, pxr::UsdGeomMesh(child), worldMatrix, _scene);
+        TranslateMesh(this, UsdGeomMesh(child), worldMatrix, _scene);
         _prims.push_back(mesh);
       }
     }
@@ -125,29 +125,29 @@ void UsdEmbreeContext::CollectPrims( const pxr::UsdPrim& prim)
 void UsdEmbreeContext::TraverseStage()
 {
   _numPrims = 0;
-  pxr::UsdStageRefPtr _stage = 
-      pxr::UsdStage::Open(_files[0], pxr::UsdStage::LoadAll);
+  UsdStageRefPtr _stage = 
+      UsdStage::Open(_files[0], UsdStage::LoadAll);
   
-  _axis = pxr::UsdGeomGetStageUpAxis (_stage );
-  if(_axis == pxr::UsdGeomTokens->y) 
+  _axis = UsdGeomGetStageUpAxis (_stage );
+  if(_axis == UsdGeomTokens->y) 
     std::cerr << "### UP AXIS : Y " << std::endl;
-  else if(_axis == pxr::UsdGeomTokens->z) 
+  else if(_axis == UsdGeomTokens->z) 
     std::cerr << "### UP AXIS : Z " << std::endl;
   
-  _time = pxr::UsdTimeCode::EarliestTime();
+  _time = UsdTimeCode::EarliestTime();
 
-  pxr::UsdGeomXformCache xformCache(_time);
+  UsdGeomXformCache xformCache(_time);
   _xformCache = &xformCache;
-  pxr::TfTokenVector includedPurposes = {pxr::UsdGeomTokens->default_,
-                                        pxr::UsdGeomTokens->render};
-  pxr::UsdGeomBBoxCache bboxCache(_time, includedPurposes);
+  TfTokenVector includedPurposes = {UsdGeomTokens->default_,
+                                        UsdGeomTokens->render};
+  UsdGeomBBoxCache bboxCache(_time, includedPurposes);
   _bboxCache = &bboxCache;
 
   /*
-  _xformCache = new pxr::UsdGeomXformCache(_time);
-  pxr::TfTokenVector includedPurposes = {pxr::UsdGeomTokens->default_,
-                                        pxr::UsdGeomTokens->render};
-  _bboxCache = new pxr::UsdGeomBBoxCache(_time, includedPurposes);
+  _xformCache = new UsdGeomXformCache(_time);
+  TfTokenVector includedPurposes = {UsdGeomTokens->default_,
+                                        UsdGeomTokens->render};
+  _bboxCache = new UsdGeomBBoxCache(_time, includedPurposes);
   */
   GetNumPrims(_stage->GetPseudoRoot());
   _prims.reserve(_numPrims);

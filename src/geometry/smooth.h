@@ -15,7 +15,7 @@ template <typename T>
 class Smooth
 {
   public:
-    Smooth(size_t numPoints, pxr::VtArray<float>& weights);
+    Smooth(size_t numPoints, VtArray<float>& weights);
     ~Smooth();
     size_t GetNumPoints(){return _points.size();};
     void SetNeighbors(size_t pointIndex, size_t numNeighbors, const int* neighbors);
@@ -46,7 +46,7 @@ Smooth<T>::~Smooth()
 }
 
 template <typename T>
-Smooth<T>::Smooth(size_t numPoints, pxr::VtArray<float>& weights)
+Smooth<T>::Smooth(size_t numPoints, VtArray<float>& weights)
 {
 
   _weights.resize(numPoints);

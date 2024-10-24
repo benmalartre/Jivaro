@@ -20,7 +20,7 @@ enum JVR_INTERPOLATION_TYPE{
 template<typename T>
 struct UsdEmbreePrimVarDatas{
   JVR_INTERPOLATION_TYPE      _interpolationType;
-  pxr::VtArray<T>             _datas;
+  VtArray<T>             _datas;
 };
 
 struct UsdEmbreePrim {
@@ -29,7 +29,7 @@ struct UsdEmbreePrim {
   RTCGeometry                 _geom;
   std::string                 _name;
   std::vector<int>            _instanceIDs;
-  pxr::GfVec3f                _color;
+  GfVec3f                _color;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

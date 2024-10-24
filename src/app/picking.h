@@ -44,20 +44,20 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 namespace Picking
 {
-    pxr::HdSelectionSharedPtr TranslateHitsToSelection(
-        pxr::TfToken const& pickTarget,
-        pxr::HdSelection::HighlightMode highlightMode,
-        pxr::HdxPickHitVector const& allHits);
+    HdSelectionSharedPtr TranslateHitsToSelection(
+        TfToken const& pickTarget,
+        HdSelection::HighlightMode highlightMode,
+        HdxPickHitVector const& allHits);
 
     // For a drag-select from start to end, with given pick radius, what size
     // ID buffer should we ask for?
-    pxr::GfVec2i CalculatePickResolution(
-        pxr::GfVec2i const& start, pxr::GfVec2i const& end, 
-		pxr::GfVec2i const& pickRadius);
+    GfVec2i CalculatePickResolution(
+        GfVec2i const& start, GfVec2i const& end, 
+		GfVec2i const& pickRadius);
 
-    pxr::GfMatrix4d ComputePickingProjectionMatrix(
-        pxr::GfVec2i const& start, pxr::GfVec2i const& end, 
-		pxr::GfVec2i const& screen, pxr::GfFrustum const& viewFrustum);
+    GfMatrix4d ComputePickingProjectionMatrix(
+        GfVec2i const& start, GfVec2i const& end, 
+		GfVec2i const& screen, GfFrustum const& viewFrustum);
 
     class Marquee {
     public:
@@ -67,7 +67,7 @@ namespace Picking
         void InitGLResources();
         void DestroyGLResources();
         void Draw(float width, float height, 
-                  pxr::GfVec2f const& startPos, pxr::GfVec2f const& endPos);
+                  GfVec2f const& startPos, GfVec2f const& endPos);
 
     private:
         GLuint _vbo;

@@ -31,7 +31,7 @@ class Grid3D : public Intersector {
   };
 
   typedef bool (Grid3D::*IntersectFunc)(
-    Geometry* geometry, const pxr::GfRay &ray, Location* hit, 
+    Geometry* geometry, const GfRay &ray, Location* hit, 
     double maxDistance, double* minDistance);
 
 public:
@@ -46,7 +46,7 @@ public:
     void Insert(Edge* edge);
     void Insert(Triangle* triangle);
 
-    bool Raycast(const Geometry* geometry, const pxr::GfRay& ray, 
+    bool Raycast(const Geometry* geometry, const GfRay& ray, 
       Location* hit, double maxDistance=-1, double* minDistance=NULL) const;
     
     // data
@@ -65,9 +65,9 @@ public:
   {
      DeleteCells();
   }
-  pxr::GfVec3f GetCellPosition(uint32_t index);
-  pxr::GfVec3f GetCellMin(uint32_t index);
-  pxr::GfVec3f GetCellMax(uint32_t index);
+  GfVec3f GetCellPosition(uint32_t index);
+  GfVec3f GetCellMin(uint32_t index);
+  GfVec3f GetCellMax(uint32_t index);
   inline uint32_t GetNumCells(){return _numCells;};
   uint32_t* GetResolution(){return &_resolution[0];};
   inline uint32_t GetResolutionX(){return _resolution[0];};
@@ -85,30 +85,30 @@ public:
   void InsertPoints(Points* points);
 
   // intersect a ray with the grid
-  bool Raycast(const pxr::GfRay& ray, Location* hitPoint,
+  bool Raycast(const GfRay& ray, Location* hitPoint,
     double maxDistance=DBL_MAX, double* minDistance=NULL) const override;
-  bool Closest(const pxr::GfVec3f& point, Location* hit,
+  bool Closest(const GfVec3f& point, Location* hit,
     double maxDistance=DBL_MAX) const override;
 
   Cell* GetCell(uint32_t index);
   Cell* GetCell(uint32_t x, uint32_t y, uint32_t z);
-  Cell* GetCell(const pxr::GfVec3f& pos);
+  Cell* GetCell(const GfVec3f& pos);
   
-  pxr::GfVec3f GetCellDimension(){return _cellDimension;};
+  GfVec3f GetCellDimension(){return _cellDimension;};
   void IndexToXYZ(const uint32_t index, uint32_t& x, uint32_t& y, uint32_t& z);
   void XYZToIndex(const uint32_t x, const uint32_t y, const uint32_t z, 
     uint32_t& index);
-  pxr::GfVec3f GetColorXYZ(const uint32_t index);
+  GfVec3f GetColorXYZ(const uint32_t index);
 
-  void GetCells(pxr::VtArray<pxr::GfVec3f>& positions, pxr::VtArray<pxr::GfVec3f>& sizes, 
-    pxr::VtArray<pxr::GfVec3f>& colors, bool branchOrLeaf) override;
+  void GetCells(VtArray<GfVec3f>& positions, VtArray<GfVec3f>& sizes, 
+    VtArray<GfVec3f>& colors, bool branchOrLeaf) override;
 
 protected:
 
 
 private:
   uint32_t                _resolution[3];
-  pxr::GfVec3f            _cellDimension;
+  GfVec3f            _cellDimension;
   // cells
   Cell**                  _cells;
   uint32_t                _numCells;
@@ -123,9 +123,9 @@ public:
   void Update() override;
 
   // intersect a ray with the multi-grid
-  bool Raycast(const pxr::GfRay& ray, Location* hitPoint,
+  bool Raycast(const GfRay& ray, Location* hitPoint,
     double maxDistance = DBL_MAX, double* minDistance = NULL) const override;
-  bool Closest(const pxr::GfVec3f& point, Location* hit,
+  bool Closest(const GfVec3f& point, Location* hit,
     double maxDistance = DBL_MAX) const override;
 
 private:

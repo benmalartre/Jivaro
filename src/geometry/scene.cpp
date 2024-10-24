@@ -37,13 +37,13 @@ Scene::~Scene()
 }
 
 void 
-Scene::Init(const pxr::UsdStageRefPtr& stage)
+Scene::Init(const UsdStageRefPtr& stage)
 {
   std::cout << "-----------------------------------------------------------------------------------" << std::endl;
   std::cout << "SCENE INIT CALLED" << std::endl;
 
-  for (pxr::UsdPrim prim : stage->TraverseAll())
-    if (prim.IsA<pxr::UsdShadeMaterial>()) {
+  for (UsdPrim prim : stage->TraverseAll())
+    if (prim.IsA<UsdShadeMaterial>()) {
       std::cout << "FOUND MATERIAL : " << prim.GetPath() << std::endl;
     }
 
@@ -51,18 +51,18 @@ Scene::Init(const pxr::UsdStageRefPtr& stage)
 }
 
 void
-Scene::Sync(const pxr::UsdStageRefPtr& stage, const pxr::UsdTimeCode& time)
+Scene::Sync(const UsdStageRefPtr& stage, const UsdTimeCode& time)
 {
-  pxr::UsdTimeCode activeTime = pxr::UsdTimeCode(time);
-  pxr::UsdGeomXformCache xformCache(activeTime);
+  UsdTimeCode activeTime = UsdTimeCode(time);
+  UsdGeomXformCache xformCache(activeTime);
 
   for(auto& itPrim: _prims) {
-    pxr::UsdPrim prim = stage->GetPrimAtPath(itPrim.first);
+    UsdPrim prim = stage->GetPrimAtPath(itPrim.first);
     Geometry* geometry = itPrim.second.geom;
     if (!geometry->IsInput() || !prim.IsValid())
       continue;
     
-    pxr::GfMatrix4d matrix(xformCache.GetLocalToWorldTransform(prim));
+    GfMatrix4d matrix(xformCache.GetLocalToWorldTransform(prim));
     geometry->Sync(matrix, time);
   }
 }
@@ -79,13 +79,13 @@ Scene::Export(const std::string& filename)
   
 }
 
-Mesh* Scene::AddMesh(const pxr::SdfPath& path, const pxr::GfMatrix4d& xfo)
+Mesh* Scene::AddMesh(const SdfPath& path, const GfMatrix4d& xfo)
 {
   _prims[path] = { new Mesh(xfo) };
   return (Mesh*)_prims[path].geom;
 }
 
-Voxels* Scene::AddVoxels(const pxr::SdfPath& path, Mesh* mesh, float radius)
+Voxels* Scene::AddVoxels(const SdfPath& path, Mesh* mesh, float radius)
 {
   _prims[path] = { new Voxels() };
   Voxels* voxels = (Voxels*)_prims[path].geom;
@@ -97,135 +97,135 @@ Voxels* Scene::AddVoxels(const pxr::SdfPath& path, Mesh* mesh, float radius)
   return voxels;
 }
 
-Geometry* Scene::AddGeometry(const pxr::SdfPath& path, short type, const pxr::GfMatrix4d& xfo)
+Geometry* Scene::AddGeometry(const SdfPath& path, short type, const GfMatrix4d& xfo)
 {
   const auto& primIt = _prims.find(path);
   if( primIt != _prims.end())
     return primIt->second.geom;
 
   if(type == Geometry::XFORM) {
-    _prims[path] = {new Xform(xfo), pxr::HdChangeTracker::Clean};
+    _prims[path] = {new Xform(xfo), HdChangeTracker::Clean};
     return _prims[path].geom;
   } else if (type == Geometry::PLANE) {
-    _prims[path] = { new Plane(xfo), pxr::HdChangeTracker::Clean};
+    _prims[path] = { new Plane(xfo), HdChangeTracker::Clean};
     return _prims[path].geom;
   } else if (type == Geometry::SPHERE) {
-    _prims[path] = { new Sphere(xfo), pxr::HdChangeTracker::Clean };
+    _prims[path] = { new Sphere(xfo), HdChangeTracker::Clean };
     return _prims[path].geom;
   } else if (type == Geometry::CUBE) {
-    _prims[path] = { new Cube(xfo), pxr::HdChangeTracker::Clean };
+    _prims[path] = { new Cube(xfo), HdChangeTracker::Clean };
     return _prims[path].geom;
   } else if (type == Geometry::CONE) {
-    _prims[path] = { new Cone(xfo), pxr::HdChangeTracker::Clean };
+    _prims[path] = { new Cone(xfo), HdChangeTracker::Clean };
     return _prims[path].geom;
   } else if (type == Geometry::CAPSULE) {
-    _prims[path] = { new Capsule(xfo), pxr::HdChangeTracker::Clean };
+    _prims[path] = { new Capsule(xfo), HdChangeTracker::Clean };
     return _prims[path].geom;
   } else if (type == Geometry::POINT) {
-    _prims[path] = { new Points(xfo), pxr::HdChangeTracker::Clean };
+    _prims[path] = { new Points(xfo), HdChangeTracker::Clean };
     return _prims[path].geom;
   } else if (type == Geometry::CURVE) {
-    _prims[path] = { new Curve(xfo), pxr::HdChangeTracker::Clean };
+    _prims[path] = { new Curve(xfo), HdChangeTracker::Clean };
     return _prims[path].geom;
   } else if (type == Geometry::MESH) {
-    _prims[path] = { new Mesh(xfo), pxr::HdChangeTracker::Clean };
+    _prims[path] = { new Mesh(xfo), HdChangeTracker::Clean };
     return _prims[path].geom;
   } else if (type == Geometry::INSTANCER) {
-    _prims[path] = { new Instancer(xfo), pxr::HdChangeTracker::Clean };
+    _prims[path] = { new Instancer(xfo), HdChangeTracker::Clean };
     return _prims[path].geom;
   } else {
     return NULL;
   }
 }
 
-void Scene::AddGeometry(const pxr::SdfPath& path, Geometry* geom)
+void Scene::AddGeometry(const SdfPath& path, Geometry* geom)
 {
-  _prims[path] = {geom, pxr::HdChangeTracker::Clean};
+  _prims[path] = {geom, HdChangeTracker::Clean};
 }
 
 
-pxr::GfMatrix4d _GetParentXform(const pxr::UsdPrim& prim,
-  const pxr::UsdTimeCode& time) 
+GfMatrix4d _GetParentXform(const UsdPrim& prim,
+  const UsdTimeCode& time) 
 {
-  const pxr::UsdPrim& parent = prim.GetParent();
-  if (!parent.IsValid())return pxr::GfMatrix4d(1.0);
+  const UsdPrim& parent = prim.GetParent();
+  if (!parent.IsValid())return GfMatrix4d(1.0);
 
-  if (parent.IsA<pxr::UsdGeomXformable>()) {
-    pxr::UsdGeomXformable xformable(parent);
+  if (parent.IsA<UsdGeomXformable>()) {
+    UsdGeomXformable xformable(parent);
     return xformable.ComputeLocalToWorldTransform(time);
   } else {
     return _GetParentXform(parent, time);
   }
 }
 
-void Scene::InjectGeometry(pxr::UsdStageRefPtr& stage, 
- const pxr::SdfPath& path, Geometry* geometry, const pxr::UsdTimeCode& time)
+void Scene::InjectGeometry(UsdStageRefPtr& stage, 
+ const SdfPath& path, Geometry* geometry, const UsdTimeCode& time)
 {
-  pxr::UsdPrim prim = stage->GetPrimAtPath(path);
+  UsdPrim prim = stage->GetPrimAtPath(path);
   if(!prim.IsValid()) {
     switch (geometry->GetType()) {
       case Geometry::XFORM:
-        prim = pxr::UsdGeomXform::Define(stage, path).GetPrim();
+        prim = UsdGeomXform::Define(stage, path).GetPrim();
         break;
       case Geometry::PLANE:
-        prim = pxr::UsdGeomPlane::Define(stage, path).GetPrim();
+        prim = UsdGeomPlane::Define(stage, path).GetPrim();
         break;
       case Geometry::SPHERE:
-        prim = pxr::UsdGeomSphere::Define(stage, path).GetPrim();
+        prim = UsdGeomSphere::Define(stage, path).GetPrim();
         break;
       case Geometry::CONE:
-        prim = pxr::UsdGeomCone::Define(stage, path).GetPrim();
+        prim = UsdGeomCone::Define(stage, path).GetPrim();
         break;
       case Geometry::CUBE:
-        prim = pxr::UsdGeomCube::Define(stage, path).GetPrim();
+        prim = UsdGeomCube::Define(stage, path).GetPrim();
         break;
       case Geometry::CAPSULE:
-        prim = pxr::UsdGeomCapsule::Define(stage, path).GetPrim();
+        prim = UsdGeomCapsule::Define(stage, path).GetPrim();
         break;
       case Geometry::POINT:
-        prim = pxr::UsdGeomPoints::Define(stage, path).GetPrim();
+        prim = UsdGeomPoints::Define(stage, path).GetPrim();
         break;
       case Geometry::CURVE:
-        prim = pxr::UsdGeomBasisCurves::Define(stage, path).GetPrim();
+        prim = UsdGeomBasisCurves::Define(stage, path).GetPrim();
         break;
       case Geometry::MESH:
-        prim = pxr::UsdGeomMesh::Define(stage, path).GetPrim();
+        prim = UsdGeomMesh::Define(stage, path).GetPrim();
         break;
       case Geometry::INSTANCER:
-        prim = pxr::UsdGeomPointInstancer::Define(stage, path).GetPrim();
+        prim = UsdGeomPointInstancer::Define(stage, path).GetPrim();
         break;
       case Geometry::VOXEL:
-        prim = pxr::UsdGeomPoints::Define(stage, path).GetPrim();
+        prim = UsdGeomPoints::Define(stage, path).GetPrim();
         break;
       default:
         return;
     }
   }
 
-  const pxr::GfMatrix4d& parent = _GetParentXform(prim, time);
+  const GfMatrix4d& parent = _GetParentXform(prim, time);
   geometry->SetPrim(prim);
   geometry->Inject(parent, time);
 }
 
-void Scene::RemoveGeometry(const pxr::SdfPath& path)
+void Scene::RemoveGeometry(const SdfPath& path)
 {
   if(_prims.find(path) != _prims.end())_prims.erase(path);
 }
 
 
-Curve* Scene::AddCurve(const pxr::SdfPath & path, const pxr::GfMatrix4d & xfo)
+Curve* Scene::AddCurve(const SdfPath & path, const GfMatrix4d & xfo)
 {
   _prims[path] = { new Curve() };
   return (Curve*)_prims[path].geom;
 }
 
-Points* Scene::AddPoints(const pxr::SdfPath& path, const pxr::GfMatrix4d& xfo)
+Points* Scene::AddPoints(const SdfPath& path, const GfMatrix4d& xfo)
 {
   _prims[path] = { new Points() };
   return (Points*)_prims[path].geom;
 }
 
-void Scene::Remove(const pxr::SdfPath & path)
+void Scene::Remove(const SdfPath & path)
 {
   const auto& primIt = _prims.find(path);
   if (primIt != _prims.end()) {
@@ -236,7 +236,7 @@ void Scene::Remove(const pxr::SdfPath & path)
 }
 
 Geometry*
-Scene::GetGeometry(const pxr::SdfPath& path)
+Scene::GetGeometry(const SdfPath& path)
 {
   if (_prims.find(path) != _prims.end()) {
     return _prims[path].geom;
@@ -245,7 +245,7 @@ Scene::GetGeometry(const pxr::SdfPath& path)
 }
 
 Scene::_Prim*
-Scene::GetPrim(const pxr::SdfPath& path)
+Scene::GetPrim(const SdfPath& path)
 {
   if (_prims.find(path) != _prims.end()) {
     return &_prims[path];
@@ -253,15 +253,15 @@ Scene::GetPrim(const pxr::SdfPath& path)
   return NULL;
 }
 
-pxr::SdfPath
-Scene::GetInstancerBinding(const pxr::SdfPath& path)
+SdfPath
+Scene::GetInstancerBinding(const SdfPath& path)
 {
-  return pxr::SdfPath();
+  return SdfPath();
 }
 
 
 void 
-Scene::MarkPrimDirty(const pxr::SdfPath& path, pxr::HdDirtyBits bits)
+Scene::MarkPrimDirty(const SdfPath& path, HdDirtyBits bits)
 {
   Scene::_Prim* prim = GetPrim(path);
   if(prim) prim->bits = bits; 
@@ -271,36 +271,36 @@ Scene::MarkPrimDirty(const pxr::SdfPath& path, pxr::HdDirtyBits bits)
 /// \name Rprim Aspects
 // -----------------------------------------------------------------------//
 
-pxr::HdMeshTopology
-Scene::GetMeshTopology(pxr::SdfPath const& id)
+HdMeshTopology
+Scene::GetMeshTopology(SdfPath const& id)
 {
   if(IsMesh(id)) {
     Mesh* mesh = (Mesh*)_prims[id].geom;
-    return pxr::HdMeshTopology(
-      pxr::UsdGeomTokens->catmullClark,
-      pxr::UsdGeomTokens->rightHanded,
+    return HdMeshTopology(
+      UsdGeomTokens->catmullClark,
+      UsdGeomTokens->rightHanded,
       mesh->GetFaceCounts(),
       mesh->GetFaceConnects());
   }
-  return pxr::HdMeshTopology();
+  return HdMeshTopology();
 }
 
-pxr::HdBasisCurvesTopology
-Scene::GetBasisCurvesTopology(pxr::SdfPath const& id)
+HdBasisCurvesTopology
+Scene::GetBasisCurvesTopology(SdfPath const& id)
 {  
   if (IsCurves(id)) {
     Curve* curve = (Curve*)_prims[id].geom;
-    return pxr::HdBasisCurvesTopology(
-      pxr::HdTokens->linear,
-      pxr::TfToken(),
-      pxr::HdTokens->nonperiodic,
-      curve->GetCvCounts(), pxr::VtArray<int>());
+    return HdBasisCurvesTopology(
+      HdTokens->linear,
+      TfToken(),
+      HdTokens->nonperiodic,
+      curve->GetCvCounts(), VtArray<int>());
   }
-  return pxr::HdBasisCurvesTopology();
+  return HdBasisCurvesTopology();
 }
 
-pxr::GfRange3d 
-Scene::GetExtent(pxr::SdfPath const& id)
+GfRange3d 
+Scene::GetExtent(SdfPath const& id)
 {
 
   if (_prims.find(id) != _prims.end()) {
@@ -313,93 +313,93 @@ Scene::GetExtent(pxr::SdfPath const& id)
   }
  
   
-  return pxr::GfRange3d();
+  return GfRange3d();
 }
 
 
-pxr::GfMatrix4d
-Scene::GetTransform(pxr::SdfPath const & id)
+GfMatrix4d
+Scene::GetTransform(SdfPath const & id)
 {
   if(_prims.find(id) != _prims.end())return _prims[id].geom->GetMatrix(); 
-  return pxr::GfMatrix4d(1.0);
+  return GfMatrix4d(1.0);
 }
 
 bool 
-Scene::IsMesh(const pxr::SdfPath& id)
+Scene::IsMesh(const SdfPath& id)
 {
   return _prims[id].geom->GetType() == Geometry::MESH;
 }
 
 bool
-Scene::IsCurves(const pxr::SdfPath& id)
+Scene::IsCurves(const SdfPath& id)
 {
   return _prims[id].geom->GetType() == Geometry::CURVE;
 }
 
 bool
-Scene::IsPoints(const pxr::SdfPath& id)
+Scene::IsPoints(const SdfPath& id)
 {
   return _prims[id].geom->GetType() == Geometry::POINT;
 }
 
-const pxr::SdfPath
+const SdfPath
 Scene::GetPrimPath(Geometry* geom) const
 {
   for (auto& prim : _prims) {
     if(prim.second.geom == geom)return prim.first;
   }
-  return pxr::SdfPath();
+  return SdfPath();
 }
 
 
-pxr::TfToken
-Scene::GetRenderTag(pxr::SdfPath const& id)
+TfToken
+Scene::GetRenderTag(SdfPath const& id)
 {
   if(_prims.find(id)!=_prims.end()) {
-    return pxr::HdRenderTagTokens->geometry;
+    return HdRenderTagTokens->geometry;
   }
-  return pxr::HdRenderTagTokens->hidden;
+  return HdRenderTagTokens->hidden;
 }
 
-pxr::VtValue 
-Scene::Get(pxr::SdfPath const& id, pxr::TfToken const& key)
+VtValue 
+Scene::Get(SdfPath const& id, TfToken const& key)
 {
   const _Prim& prim = _prims[id];
   const short type = prim.geom->GetType();
 
   if(type == Geometry::INSTANCER) {
     Instancer* instancer = (Instancer*)prim.geom;
-    if (key == pxr::HdInstancerTokens->instanceTranslations) {
-      return pxr::VtValue(instancer->GetPositions());
-    } else if (key == pxr::HdTokens->displayColor) {
-      return pxr::VtValue(instancer->GetColors());
-    } else if (key == pxr::HdInstancerTokens->instanceIndexBase) {
-      return pxr::VtValue(instancer->GetProtoIndices());
-    } else if (key == pxr::HdTokens->indices) {
+    if (key == HdInstancerTokens->instanceTranslations) {
+      return VtValue(instancer->GetPositions());
+    } else if (key == HdTokens->displayColor) {
+      return VtValue(instancer->GetColors());
+    } else if (key == HdInstancerTokens->instanceIndexBase) {
+      return VtValue(instancer->GetProtoIndices());
+    } else if (key == HdTokens->indices) {
       return instancer->HaveIndices() ? 
-        pxr::VtValue(instancer->GetIndices()) :  pxr::VtValue();
-    } else if (key == pxr::HdInstancerTokens->instanceScales) {
-      return pxr::VtValue(instancer->GetScales());
-    } else if (key == pxr::HdInstancerTokens->instanceRotations) {
-      return pxr::VtValue(instancer->GetRotations());
+        VtValue(instancer->GetIndices()) :  VtValue();
+    } else if (key == HdInstancerTokens->instanceScales) {
+      return VtValue(instancer->GetScales());
+    } else if (key == HdInstancerTokens->instanceRotations) {
+      return VtValue(instancer->GetRotations());
     } else {
     }
   } else {
-    if (key == pxr::HdTokens->points) {
-      return pxr::VtValue(((Deformable*)prim.geom)->GetPositions());
-    } else if (key == pxr::HdTokens->displayColor) {
-      pxr::VtArray<pxr::GfVec3f>& colors =
+    if (key == HdTokens->points) {
+      return VtValue(((Deformable*)prim.geom)->GetPositions());
+    } else if (key == HdTokens->displayColor) {
+      VtArray<GfVec3f>& colors =
         ((Points*)prim.geom)->GetColors();
-      if(colors.size())return pxr::VtValue(colors);
-    } else if (key == pxr::HdTokens->widths) {
-      return pxr::VtValue(((Points*)prim.geom)->GetWidths());
-    } else if (key == pxr::HdTokens->normals) {
+      if(colors.size())return VtValue(colors);
+    } else if (key == HdTokens->widths) {
+      return VtValue(((Points*)prim.geom)->GetWidths());
+    } else if (key == HdTokens->normals) {
       if(((Deformable*)prim.geom)->HaveNormals()) {
-        return pxr::VtValue(((Points*)prim.geom)->GetNormals());
+        return VtValue(((Points*)prim.geom)->GetNormals());
       }
     }
   }
-  return pxr::VtValue();
+  return VtValue();
 }
 
 
@@ -407,21 +407,21 @@ Scene::Get(pxr::SdfPath const& id, pxr::TfToken const& key)
 /// \name Materials
 // -----------------------------------------------------------------------//
 
-pxr::SdfPath 
-Scene::GetMaterialId(pxr::SdfPath const &rprimId)
+SdfPath 
+Scene::GetMaterialId(SdfPath const &rprimId)
 {
-  pxr::SdfPath materialId;
-  pxr::TfMapLookup(_materialBindings, rprimId, &materialId);
+  SdfPath materialId;
+  TfMapLookup(_materialBindings, rprimId, &materialId);
   return materialId;
 }
 
-pxr::VtValue 
-Scene::GetMaterialResource(pxr::SdfPath const &materialId)
+VtValue 
+Scene::GetMaterialResource(SdfPath const &materialId)
 {
-  if (pxr::VtValue *material = pxr::TfMapLookupPtr(_materials, materialId))
+  if (VtValue *material = TfMapLookupPtr(_materials, materialId))
     return *material;
   
-  return pxr::VtValue();
+  return VtValue();
 }
 
 

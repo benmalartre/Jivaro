@@ -19,15 +19,15 @@ public:
   Location() 
     : _geomId(INVALID_INDEX)
     , _compId(INVALID_INDEX)
-    , _coords(pxr::GfVec4d(0.0, 0.0, 0.0, DBL_MAX))
-    , _point(pxr::GfVec3d(DBL_MAX)){};
+    , _coords(GfVec4d(0.0, 0.0, 0.0, DBL_MAX))
+    , _point(GfVec3d(DBL_MAX)){};
 
   // Convert
-  inline void ConvertToWorld(const pxr::GfMatrix4d &matrix) {
+  inline void ConvertToWorld(const GfMatrix4d &matrix) {
     _point = matrix.Transform(_point);
   };
 
-  inline void ConvertToLocal(const pxr::GfMatrix4d &invMatrix) {
+  inline void ConvertToLocal(const GfMatrix4d &invMatrix) {
     _point = invMatrix.Transform(_point);
   };
 
@@ -35,30 +35,30 @@ public:
   void Set(const Location& other);
   inline void SetGeometryIndex(int id) { _geomId = id; };
   inline void SetComponentIndex(int id) { _compId = id; };
-  virtual inline void SetCoordinates(const pxr::GfVec3d& coords) { 
+  virtual inline void SetCoordinates(const GfVec3d& coords) { 
     _coords[0] = coords[0]; 
     _coords[1] = coords[1];
     _coords[2] = coords[2];
   };
-  inline void SetPoint(const pxr::GfVec3d& point) {_point = point;};
+  inline void SetPoint(const GfVec3d& point) {_point = point;};
   inline void SetDistance(double t) { _coords[3] = t;};
 
   // Getters
   inline int GetGeometryIndex() const { return _geomId; };
   inline int GetComponentIndex() const { return _compId; };
-  inline const pxr::GfVec3d GetCoordinates() const { 
-    return pxr::GfVec3d(_coords[0], _coords[1], _coords[2]);};
-  inline const pxr::GfVec3d& GetPoint(){return _point;};
+  inline const GfVec3d GetCoordinates() const { 
+    return GfVec3d(_coords[0], _coords[1], _coords[2]);};
+  inline const GfVec3d& GetPoint(){return _point;};
   inline double GetDistance() const { return _coords[3]; };
 
-  virtual pxr::GfVec3f ComputePosition(const pxr::GfVec3f* positions, 
-    const int* elements, size_t sz, const pxr::GfMatrix4d* m=NULL) const;
+  virtual GfVec3f ComputePosition(const GfVec3f* positions, 
+    const int* elements, size_t sz, const GfMatrix4d* m=NULL) const;
 
-  virtual pxr::GfVec3f ComputeNormal(const pxr::GfVec3f* normals, 
-    const int* elements, size_t sz, const pxr::GfMatrix4d* m=NULL) const;
+  virtual GfVec3f ComputeNormal(const GfVec3f* normals, 
+    const int* elements, size_t sz, const GfMatrix4d* m=NULL) const;
 
-  virtual pxr::GfVec3f ComputeVelocity(const pxr::GfVec3f* positions, const pxr::GfVec3f* previous, 
-    const int* elements, size_t sz, const pxr::GfMatrix4d* m=NULL) const;
+  virtual GfVec3f ComputeVelocity(const GfVec3f* positions, const GfVec3f* previous, 
+    const int* elements, size_t sz, const GfMatrix4d* m=NULL) const;
 
   template<typename T>
   T ComputeValue(const T* values, const int* elements, size_t sz) const;
@@ -69,8 +69,8 @@ public:
 protected:
   size_t        _geomId;
   size_t        _compId;
-  pxr::GfVec4d  _coords;
-  pxr::GfVec3d  _point;
+  GfVec4d  _coords;
+  GfVec3d  _point;
 };
 
 template<typename T>

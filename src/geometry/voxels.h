@@ -21,18 +21,18 @@ public:
   void Build(float randomize=0.f);
 
   size_t GetNumCells();
-  pxr::GfVec3f GetCellPosition(size_t cellIdx);
+  GfVec3f GetCellPosition(size_t cellIdx);
   BVH* GetTree() { return &_bvh; };
   const BVH* GetTree() const { return &_bvh; };
 
   float GetRadius() { return _radius; };
 
   // query 3d position on geometry
-  bool Raycast(const pxr::GfRay& ray, Location* hit,
+  bool Raycast(const GfRay& ray, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override {
     return false;
   };
-  bool Closest(const pxr::GfVec3f& point, Location* hit,
+  bool Closest(const GfVec3f& point, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override {
     return false;
   };
@@ -42,12 +42,12 @@ private:
   void _ProximityWork(size_t begin, size_t end);
   size_t _ComputeFlatIndex(size_t x, size_t y, size_t z, short axis);
 
-  DirtyState _Sync(const pxr::GfMatrix4d& matrix, 
-    const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override;
-  void _Inject(const pxr::GfMatrix4d& parent,
-    const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default())override;
+  DirtyState _Sync(const GfMatrix4d& matrix, 
+    const UsdTimeCode& code=UsdTimeCode::Default()) override;
+  void _Inject(const GfMatrix4d& parent,
+    const UsdTimeCode& code=UsdTimeCode::Default())override;
 
-  pxr::GfVec3i            _resolution;
+  GfVec3i            _resolution;
   std::vector<uint8_t>    _data;
   Deformable*             _geometry;
   BVH                     _bvh;

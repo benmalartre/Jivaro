@@ -15,18 +15,18 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 struct StrokeLine {
-  std::vector<pxr::GfVec3f> points;
+  std::vector<GfVec3f> points;
   std::vector<float> widths;
 
   StrokeLine() {};
-  StrokeLine(const std::vector<pxr::GfVec3f>& p, const std::vector<float>& w)
+  StrokeLine(const std::vector<GfVec3f>& p, const std::vector<float>& w)
     : points(p), widths(w){};
 };
 
 struct StrokeInput {
-  std::vector<pxr::GfVec3f> raw_points;
+  std::vector<GfVec3f> raw_points;
   std::vector<float> raw_widths;
-  std::vector<pxr::GfVec3f> points;
+  std::vector<GfVec3f> points;
   std::vector<float> widths;
   uint32_t baseIndex;
 
@@ -48,12 +48,12 @@ public:
   Stroke(const Stroke& other, bool normalize = true);
   virtual ~Stroke();
 
-  const pxr::VtArray<StrokeLine>& GetLines() const { return _lines;};
-  pxr::VtArray<StrokeLine>& GetLines() { return _lines;};
+  const VtArray<StrokeLine>& GetLines() const { return _lines;};
+  VtArray<StrokeLine>& GetLines() { return _lines;};
 
   void SetDisplayColor(Geometry::Interpolation interp, 
-    const pxr::VtArray<pxr::GfVec3f>& colors);
-  const pxr::VtArray<pxr::GfVec3f>& GetDisplayColor() const {return _colors;};
+    const VtArray<GfVec3f>& colors);
+  const VtArray<GfVec3f>& GetDisplayColor() const {return _colors;};
   Geometry::Interpolation GetDisplayColorInterpolation() const {
     return _colorsInterpolation;
   };
@@ -63,7 +63,7 @@ public:
   float GetSegmentLength(uint32_t lineIndex, uint32_t segmentIndex);
 
   void StartLine();
-  void AddPoint(const pxr::GfVec3f& position);
+  void AddPoint(const GfVec3f& position);
   void EndLine(bool closed);
   void Refine();
 
@@ -73,12 +73,12 @@ private:
   uint32_t                    _numLines;
 
   // strokes
-  pxr::VtArray<StrokeLine>    _lines;
+  VtArray<StrokeLine>    _lines;
   StrokeInput                 _input;
   short                       _interacting;
 
   // colors
-  pxr::VtArray<pxr::GfVec3f>  _colors;
+  VtArray<GfVec3f>  _colors;
   Geometry::Interpolation     _colorsInterpolation;
 
 };

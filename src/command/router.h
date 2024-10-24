@@ -52,14 +52,14 @@ public:
     UndoRouter& operator= (const UndoRouter&) = delete;
     static UndoRouter& Get();
     void   AddInverse(std::function<bool()> inverse);
-    static bool TrackLayer(const pxr::SdfLayerHandle& layer);
+    static bool TrackLayer(const SdfLayerHandle& layer);
     static bool TransferEdits(UndoInverse* inverse);
     static bool IsMuted();
 
     friend class UndoBlock;
     friend class UndoInverse;
     friend class UndoStateDelegate;
-    friend class pxr::TfSingleton<UndoRouter>;
+    friend class TfSingleton<UndoRouter>;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

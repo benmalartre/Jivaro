@@ -62,8 +62,8 @@ public:
 
   void Update(float l);
 
-  void GetPositions(pxr::VtArray<pxr::GfVec3f>&) const;
-  void GetTopology(pxr::VtArray<int>& faceCounts, pxr::VtArray<int>& faceConnects) const;
+  void GetPositions(VtArray<GfVec3f>&) const;
+  void GetTopology(VtArray<int>& faceCounts, VtArray<int>& faceConnects) const;
   const float DesiredLength() { return _length; };
 
   bool CompareEdgeLengthDivergence(const HalfEdge* lhs, const HalfEdge* rhs);
@@ -89,8 +89,8 @@ private:
   HalfEdgePriorityQueue       _queue;
   Mesh*                       _input;
   HalfEdgeGraph               _graph;
-  pxr::VtArray<pxr::GfVec3f>  _positions;
-  pxr::VtArray<int>           _valences;
+  VtArray<GfVec3f>  _positions;
+  VtArray<int>           _valences;
 
   float                       _length;
 

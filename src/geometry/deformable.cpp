@@ -17,7 +17,7 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-Deformable::Deformable(short type, const pxr::GfMatrix4d& matrix)
+Deformable::Deformable(short type, const GfMatrix4d& matrix)
   : Geometry(type, matrix)
   , _haveWidths(false)
   , _haveNormals(false)
@@ -25,32 +25,32 @@ Deformable::Deformable(short type, const pxr::GfMatrix4d& matrix)
 {
 }
 
-Deformable::Deformable(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& matrix)
+Deformable::Deformable(const UsdPrim& prim, const GfMatrix4d& matrix)
   : Geometry(prim, matrix)
 {
-  if(prim.IsA<pxr::UsdGeomPointBased>()) {
-    pxr::UsdGeomPointBased pointBased(prim);
+  if(prim.IsA<UsdGeomPointBased>()) {
+    UsdGeomPointBased pointBased(prim);
 
-    pxr::UsdAttribute pointsAttr = pointBased.GetPointsAttr();
-    pointsAttr.Get(&_positions, pxr::UsdTimeCode::Default());
+    UsdAttribute pointsAttr = pointBased.GetPointsAttr();
+    pointsAttr.Get(&_positions, UsdTimeCode::Default());
     _previous = _positions;
     _points.resize(_positions.size());
     size_t pointIdx = 0;
     for(auto& point: _points)point.id = pointIdx++;
 
-    pxr::UsdAttribute normalsAttr = pointBased.GetNormalsAttr();
+    UsdAttribute normalsAttr = pointBased.GetNormalsAttr();
     if(normalsAttr.IsDefined() && normalsAttr.HasAuthoredValue()) {
       _haveNormals = true;
-      normalsAttr.Get(&_normals, pxr::UsdTimeCode::Default());
+      normalsAttr.Get(&_normals, UsdTimeCode::Default());
     }
   }
 
-  if(prim.IsA<pxr::UsdGeomPoints>()) {
-    pxr::UsdGeomPoints points(prim);
-    pxr::UsdAttribute widthsAttr = points.GetWidthsAttr();
+  if(prim.IsA<UsdGeomPoints>()) {
+    UsdGeomPoints points(prim);
+    UsdAttribute widthsAttr = points.GetWidthsAttr();
       if(widthsAttr.IsDefined() && widthsAttr.HasAuthoredValue()) {
         _haveWidths = true;
-        widthsAttr.Get(&_widths, pxr::UsdTimeCode::Default());
+        widthsAttr.Get(&_widths, UsdTimeCode::Default());
       }
   }
 }
@@ -73,20 +73,20 @@ void Deformable::_ValidateNumPoints(size_t n)
 }
 
 void
-Deformable::SetPositions(const pxr::GfVec3f* positions, size_t n)
+Deformable::SetPositions(const GfVec3f* positions, size_t n)
 {
   _ValidateNumPoints(n);
-  memcpy(&_previous[0], &_positions[0], n * sizeof(pxr::GfVec3f));
-  memcpy(&_positions[0], positions, n * sizeof(pxr::GfVec3f));
+  memcpy(&_previous[0], &_positions[0], n * sizeof(GfVec3f));
+  memcpy(&_positions[0], positions, n * sizeof(GfVec3f));
 }
 
 
 void
-Deformable::SetNormals(const pxr::GfVec3f* normals, size_t n)
+Deformable::SetNormals(const GfVec3f* normals, size_t n)
 {
   _haveNormals = true;
   _ValidateNumPoints(n);
-  memcpy(&_normals[0], normals, n * sizeof(pxr::GfVec3f));
+  memcpy(&_normals[0], normals, n * sizeof(GfVec3f));
 }
 
 void
@@ -98,33 +98,33 @@ Deformable::SetWidths(const float* widths, size_t n)
 }
 
 void
-Deformable::SetColors(const pxr::GfVec3f* colors, size_t n)
+Deformable::SetColors(const GfVec3f* colors, size_t n)
 {
   _haveColors = true;
   _ValidateNumPoints(n);
-  memcpy(&_colors[0], colors, n * sizeof(pxr::GfVec3f));
+  memcpy(&_colors[0], colors, n * sizeof(GfVec3f));
 }
 
 void
-Deformable::SetPositions(const pxr::VtArray<pxr::GfVec3f>& positions)
+Deformable::SetPositions(const VtArray<GfVec3f>& positions)
 {
   const size_t n = positions.size();
   _ValidateNumPoints(n);
-  memcpy(&_previous[0], &_positions[0], n * sizeof(pxr::GfVec3f));
-  memcpy(&_positions[0], &positions[0], n * sizeof(pxr::GfVec3f));
+  memcpy(&_previous[0], &_positions[0], n * sizeof(GfVec3f));
+  memcpy(&_positions[0], &positions[0], n * sizeof(GfVec3f));
 }
 
 void
-Deformable::SetNormals(const pxr::VtArray<pxr::GfVec3f>& normals)
+Deformable::SetNormals(const VtArray<GfVec3f>& normals)
 {
   _haveNormals = true;
   const size_t n = normals.size();
   _ValidateNumPoints(n);
-  memcpy(&_normals[0], &normals[0], n * sizeof(pxr::GfVec3f));
+  memcpy(&_normals[0], &normals[0], n * sizeof(GfVec3f));
 }
 
 void
-Deformable::SetWidths(const pxr::VtArray<float>& widths)
+Deformable::SetWidths(const VtArray<float>& widths)
 {
   _haveWidths = true;
   const size_t n = widths.size();
@@ -133,12 +133,12 @@ Deformable::SetWidths(const pxr::VtArray<float>& widths)
 }
 
 void
-Deformable::SetColors(const pxr::VtArray<pxr::GfVec3f>& colors)
+Deformable::SetColors(const VtArray<GfVec3f>& colors)
 {
   _haveColors = true;
   const size_t n = colors.size();
   _ValidateNumPoints(n);
-  memcpy(&_colors[0], &colors[0], n * sizeof(pxr::GfVec3f));
+  memcpy(&_colors[0], &colors[0], n * sizeof(GfVec3f));
 }
 
 void
@@ -147,7 +147,7 @@ Deformable::Normalize()
   if (!_positions.size())return;
 
   // compute center of mass
-  pxr::GfVec3f center(0.f);
+  GfVec3f center(0.f);
   for (const auto& position: _positions) {
     center += position;
   }
@@ -172,25 +172,25 @@ Deformable::Normalize()
   }
 }
 
-pxr::GfVec3f 
+GfVec3f 
 Deformable::GetPrevious(uint32_t index) const
 {
   return _previous[index];
 }
 
-pxr::GfVec3f 
+GfVec3f 
 Deformable::GetPosition(uint32_t index) const
 {
   return _positions[index];
 }
 
-pxr::GfVec3f 
+GfVec3f 
 Deformable::GetNormal(uint32_t index) const
 {
   return _normals[index];
 }
 
-pxr::GfVec3f
+GfVec3f
 Deformable::GetColor(uint32_t index) const
 {
   if (HaveColors())
@@ -199,7 +199,7 @@ Deformable::GetColor(uint32_t index) const
     return _wirecolor;
 }
 
-pxr::GfVec3f
+GfVec3f
 Deformable::GetVelocity(uint32_t index) const
 {
   return _positions[index] - _previous[index];
@@ -215,19 +215,19 @@ Deformable::GetWidth(uint32_t index) const
 }
 
 void
-Deformable::SetPrevious(uint32_t index, const pxr::GfVec3f& previous)
+Deformable::SetPrevious(uint32_t index, const GfVec3f& previous)
 {
   _previous[index] = previous;
 }
 
 void
-Deformable::SetPosition(uint32_t index, const pxr::GfVec3f& position)
+Deformable::SetPosition(uint32_t index, const GfVec3f& position)
 {
   _positions[index] = position;
 }
 
 void 
-Deformable::SetNormal(uint32_t index, const pxr::GfVec3f& normal)
+Deformable::SetNormal(uint32_t index, const GfVec3f& normal)
 {
   _normals[index] = normal;
 }
@@ -242,19 +242,19 @@ Deformable::SetWidth(uint32_t index, float width)
 void 
 Deformable::ComputeBoundingBox()
 {
-  pxr::GfRange3d range;
+  GfRange3d range;
   for (const auto& position : _positions)
     range.ExtendBy(position);
   
-  range.SetMin(range.GetMin() - pxr::GfVec3f(FLT_EPSILON));
-  range.SetMax(range.GetMax() + pxr::GfVec3f(FLT_EPSILON));
+  range.SetMin(range.GetMin() - GfVec3f(FLT_EPSILON));
+  range.SetMax(range.GetMax() + GfVec3f(FLT_EPSILON));
   _bbox.Set(range, _matrix);
    
 }
 
 void
-Deformable::AddPoint(const pxr::GfVec3f& pos, float width, 
-  const pxr::GfVec3f* normal, const pxr::GfVec3f* color)
+Deformable::AddPoint(const GfVec3f& pos, float width, 
+  const GfVec3f* normal, const GfVec3f* color)
 {
   _previous.push_back(pos);
   _positions.push_back(pos);

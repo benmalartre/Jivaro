@@ -33,7 +33,7 @@ PropertyEditorUI::~PropertyEditorUI()
 }
 
 void 
-PropertyEditorUI::SetPrim(const pxr::UsdPrim& prim)
+PropertyEditorUI::SetPrim(const UsdPrim& prim)
 {
   if(prim.IsValid())_prim = prim;
   _initialized = false;
@@ -45,18 +45,18 @@ PropertyEditorUI::OnSelectionChangedNotice(const SelectionChangedNotice& n)
   Application* app = Application::Get();
   Selection* selection = app->GetSelection();
   if (selection->GetNumSelectedItems()) {
-    pxr::UsdPrim prim = app->GetWorkStage()->GetPrimAtPath(selection->GetSelectedPaths().back());
+    UsdPrim prim = app->GetWorkStage()->GetPrimAtPath(selection->GetSelectedPaths().back());
     SetPrim(prim);
   }
   else {
-    SetPrim(pxr::UsdPrim());
+    SetPrim(UsdPrim());
   }
 }
 
 bool 
-PropertyEditorUI::_DrawAssetInfo(const pxr::UsdPrim& prim) 
+PropertyEditorUI::_DrawAssetInfo(const UsdPrim& prim) 
 {
-  pxr::VtDictionary assetInfo = prim.GetAssetInfo();
+  VtDictionary assetInfo = prim.GetAssetInfo();
   if (assetInfo.empty())
     return false;
 
@@ -75,8 +75,8 @@ PropertyEditorUI::_DrawAssetInfo(const pxr::UsdPrim& prim)
       ImGui::Text("%s", keyValue->first.c_str());
       ImGui::TableSetColumnIndex(2);
       ImGui::PushItemWidth(-FLT_MIN);
-      pxr::UsdAttribute attribute = prim.GetAttribute(pxr::TfToken(keyValue->first));
-      pxr::VtValue modified = UIUtils::AddAttributeWidget(attribute, pxr::UsdTimeCode::Default());
+      UsdAttribute attribute = prim.GetAttribute(TfToken(keyValue->first));
+      VtValue modified = UIUtils::AddAttributeWidget(attribute, UsdTimeCode::Default());
       if (!modified.IsEmpty()) {
         UndoBlock editBlock;
         prim.SetAssetInfoByKey(TfToken(keyValue->first), modified);
@@ -103,18 +103,18 @@ static void DrawPropertyMiniButton(ImGuiID id=0)
 }
 
 void
-PropertyEditorUI::_DrawAttributeTypeInfo(const pxr::UsdAttribute& attribute) 
+PropertyEditorUI::_DrawAttributeTypeInfo(const UsdAttribute& attribute) 
 {
-  pxr::SdfValueTypeName attributeTypeName = attribute.GetTypeName();
-  pxr::TfToken attributeRoleName = attribute.GetRoleName();
+  SdfValueTypeName attributeTypeName = attribute.GetTypeName();
+  TfToken attributeRoleName = attribute.GetRoleName();
   ImGui::Text("%s(%s)", attributeRoleName.GetString().c_str(), 
     attributeTypeName.GetAsToken().GetString().c_str());
 }
 
 bool 
-PropertyEditorUI::_DrawXformsCommon(pxr::UsdTimeCode time)
+PropertyEditorUI::_DrawXformsCommon(UsdTimeCode time)
 {
-  pxr::UsdGeomXformCommonAPI xformApi(_prim);
+  UsdGeomXformCommonAPI xformApi(_prim);
 
   if (xformApi) {
     ManipTargetDescList targets(1);
@@ -207,33 +207,33 @@ PropertyEditorUI::_DrawXformsCommon(pxr::UsdTimeCode time)
 }
 
 
-pxr::VtValue 
-PropertyEditorUI::_DrawAttributeValue(const pxr::UsdAttribute& attribute, 
-  const pxr::UsdTimeCode& timeCode) 
+VtValue 
+PropertyEditorUI::_DrawAttributeValue(const UsdAttribute& attribute, 
+  const UsdTimeCode& timeCode) 
 {
-  pxr::VtValue value;
+  VtValue value;
   attribute.Get(&value, timeCode);
-  if(value.IsHolding<pxr::TfToken>()) {
+  if(value.IsHolding<TfToken>()) {
     return UIUtils::AddTokenWidget(attribute, timeCode);
-  } else if (attribute.GetRoleName() == pxr::TfToken("Color")) {
+  } else if (attribute.GetRoleName() == TfToken("Color")) {
     return UIUtils::AddColorWidget(attribute, timeCode);
   }
   return UIUtils::AddAttributeWidget(attribute, timeCode);
 }
 
 void 
-PropertyEditorUI::_DrawAttributeValueAtTime(const pxr::UsdAttribute& attribute, 
-  const pxr::UsdTimeCode& currentTime) 
+PropertyEditorUI::_DrawAttributeValueAtTime(const UsdAttribute& attribute, 
+  const UsdTimeCode& currentTime) 
 {
   const ImGuiStyle& style = ImGui::GetStyle();
-  pxr::VtValue value;
+  VtValue value;
   const bool hasValue = attribute.Get(&value, currentTime);
   const bool hasConnections = attribute.HasAuthoredConnections();
   
   if (hasConnections) {
-    pxr::SdfPathVector sources;
+    SdfPathVector sources;
     attribute.GetConnections(&sources);
-    for (pxr::SdfPath& connection : sources) {
+    for (SdfPath& connection : sources) {
       ImGui::PushID(connection.GetString().c_str());
       if (ImGui::Button("DELETE")) {
         UndoBlock editBlock;
@@ -247,11 +247,11 @@ PropertyEditorUI::_DrawAttributeValueAtTime(const pxr::UsdAttribute& attribute,
   }
 
   else if (hasValue) {
-    pxr::VtValue modified = _DrawAttributeValue(attribute, currentTime);
+    VtValue modified = _DrawAttributeValue(attribute, currentTime);
     if (!modified.IsEmpty()) {
-      pxr::UsdAttributeVector attributes = { attribute };
+      UsdAttributeVector attributes = { attribute };
       ADD_COMMAND(SetAttributeCommand, attributes, modified, value, 
-        attribute.GetNumTimeSamples() ? currentTime : pxr::UsdTimeCode::Default());
+        attribute.GetNumTimeSamples() ? currentTime : UsdTimeCode::Default());
       _parent->SetInteracting(true);
     }
   }
@@ -262,7 +262,7 @@ PropertyEditorUI::_DrawAttributeValueAtTime(const pxr::UsdAttribute& attribute,
 }
 
 bool 
-PropertyEditorUI::_DrawVariantSetsCombos(pxr::UsdPrim &prim) 
+PropertyEditorUI::_DrawVariantSetsCombos(UsdPrim &prim) 
 {
   /*
   int buttonID = 0;
@@ -328,8 +328,8 @@ PropertyEditorUI::Draw()
   Time& time = *Time::Get();
   
   bool opened;
-  const pxr::GfVec2f pos(GetX(), GetY());
-  const pxr::GfVec2f size(GetWidth(), GetHeight());
+  const GfVec2f pos(GetX(), GetY());
+  const GfVec2f size(GetWidth(), GetHeight());
 
   ImGui::SetNextWindowSize(size);
   ImGui::SetNextWindowPos(pos);
@@ -345,15 +345,15 @@ PropertyEditorUI::Draw()
   );
 
   if (_prim.IsValid()) {
-    if (_prim.IsA<pxr::UsdGeomXform>()) {
-      pxr::UsdGeomXform xfo(_prim);
-      pxr::TfTokenVector attrNames = xfo.GetSchemaAttributeNames();
+    if (_prim.IsA<UsdGeomXform>()) {
+      UsdGeomXform xfo(_prim);
+      TfTokenVector attrNames = xfo.GetSchemaAttributeNames();
     }
 
     if (_DrawAssetInfo(_prim))
       ImGui::Separator();
 
-    if (_DrawXformsCommon(pxr::UsdTimeCode::Default()))
+    if (_DrawXformsCommon(UsdTimeCode::Default()))
       ImGui::Separator();
 
     if (ImGui::BeginTable("##DrawPropertyEditorTable", 3,
@@ -366,7 +366,7 @@ PropertyEditorUI::Draw()
       int miniButtonId = 0;
 
       // Draw attributes
-      for (pxr::UsdAttribute& attribute : _prim.GetAttributes()) {
+      for (UsdAttribute& attribute : _prim.GetAttributes()) {
         ImGui::TableNextRow(ImGuiTableRowFlags_None, 12);
         ImGui::TableSetColumnIndex(0);
         ImGui::PushID(miniButtonId++);

@@ -14,11 +14,11 @@ Location::Set(const Location& other) {
   _point  = other._point;
 }
 
-pxr::GfVec3f 
-Location::ComputePosition(const pxr::GfVec3f* positions, const int* elements, size_t sz,
- const pxr::GfMatrix4d* m) const 
+GfVec3f 
+Location::ComputePosition(const GfVec3f* positions, const int* elements, size_t sz,
+ const GfMatrix4d* m) const 
 {
-  pxr::GfVec3f result(0.f);
+  GfVec3f result(0.f);
   if(elements)
     for(size_t d = 0; d < sz; ++d) 
       result += positions[elements[d]] * _coords[d];
@@ -29,11 +29,11 @@ Location::ComputePosition(const pxr::GfVec3f* positions, const int* elements, si
   else return result;
 }
 
-pxr::GfVec3f
-Location::ComputeNormal(const pxr::GfVec3f* normals, const int* elements, size_t sz, 
-  const pxr::GfMatrix4d* m) const
+GfVec3f
+Location::ComputeNormal(const GfVec3f* normals, const int* elements, size_t sz, 
+  const GfMatrix4d* m) const
 {
-  pxr::GfVec3f result(0.f);
+  GfVec3f result(0.f);
   if (elements)
     for (size_t d = 0; d < sz; ++d)
       result += normals[elements[d]] * _coords[d];
@@ -44,11 +44,11 @@ Location::ComputeNormal(const pxr::GfVec3f* normals, const int* elements, size_t
   else return result.GetNormalized();
 }
 
-pxr::GfVec3f
-Location::ComputeVelocity(const pxr::GfVec3f* positions, const pxr::GfVec3f* previous,
-  const int* elements, size_t sz, const pxr::GfMatrix4d* m) const
+GfVec3f
+Location::ComputeVelocity(const GfVec3f* positions, const GfVec3f* previous,
+  const int* elements, size_t sz, const GfMatrix4d* m) const
 {
-  pxr::GfVec3f result(0.f);
+  GfVec3f result(0.f);
   if (elements)
     for (size_t d = 0; d < sz; ++d)
       result += (positions[elements[d]] - previous[elements[d]]) * _coords[d];

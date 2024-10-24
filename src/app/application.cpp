@@ -77,7 +77,7 @@ Application::CreateFullScreenWindow(const std::string& name)
 // create child window
 //----------------------------------------------------------------------------
 Window*
-Application::CreateChildWindow(const std::string& name, const pxr::GfVec4i& dimension, Window* parent)
+Application::CreateChildWindow(const std::string& name, const GfVec4i& dimension, Window* parent)
 {
   return
     Window::CreateChildWindow(name, dimension, parent);
@@ -86,7 +86,7 @@ Application::CreateChildWindow(const std::string& name, const pxr::GfVec4i& dime
 // create standard window
 //----------------------------------------------------------------------------
 Window*
-Application::CreateStandardWindow(const std::string& name, const pxr::GfVec4i& dimension)
+Application::CreateStandardWindow(const std::string& name, const GfVec4i& dimension)
 {
   return Window::CreateStandardWindow(name, dimension);
 }
@@ -176,7 +176,7 @@ Application::_IsAnyEngineDirty()
 }
 
 void
-Application::SetStage(pxr::UsdStageRefPtr& stage)
+Application::SetStage(UsdStageRefPtr& stage)
 {
   _stageCache.Insert(stage);
   _stage = stage;
@@ -191,7 +191,7 @@ Application::Init(unsigned width, unsigned height, bool fullscreen)
   if(fullscreen) {
     _mainWindow = CreateFullScreenWindow(name);
   } else {
-    _mainWindow = CreateStandardWindow(name, pxr::GfVec4i(0,0,width, height));
+    _mainWindow = CreateStandardWindow(name, GfVec4i(0,0,width, height));
   }
   
   _activeWindow = _mainWindow;
@@ -201,44 +201,44 @@ Application::Init(unsigned width, unsigned height, bool fullscreen)
   //TfDebug::Enable(HD_ENGINE_PHASE_INFO);
   //TfDebug::Enable(GLF_DEBUG_CONTEXT_CAPS);
   //TfDebug::Enable(HDST_DUMP_SHADER_SOURCEFILE);
-  //pxr::TfDebug::Enable(pxr::HD_DIRTY_LIST);
-  //pxr::TfDebug::Enable(pxr::HD_COLLECTION_CHANGED);
-  //pxr::TfDebug::Enable(pxr::LOFI_REGISTRY);
+  //TfDebug::Enable(HD_DIRTY_LIST);
+  //TfDebug::Enable(HD_COLLECTION_CHANGED);
+  //TfDebug::Enable(LOFI_REGISTRY);
 
     // setup notifications
-  pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::SelectionChangedCallback);
-  pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::NewSceneCallback);
-  pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::SceneChangedCallback);
-  pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::AttributeChangedCallback);
-  pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::TimeChangedCallback);
-  pxr::TfNotice::Register(TfCreateWeakPtr(this), &Application::UndoStackNoticeCallback);
+  TfNotice::Register(TfCreateWeakPtr(this), &Application::SelectionChangedCallback);
+  TfNotice::Register(TfCreateWeakPtr(this), &Application::NewSceneCallback);
+  TfNotice::Register(TfCreateWeakPtr(this), &Application::SceneChangedCallback);
+  TfNotice::Register(TfCreateWeakPtr(this), &Application::AttributeChangedCallback);
+  TfNotice::Register(TfCreateWeakPtr(this), &Application::TimeChangedCallback);
+  TfNotice::Register(TfCreateWeakPtr(this), &Application::UndoStackNoticeCallback);
 
   // create window
   _mainWindow->SetDesiredLayout(WINDOW_LAYOUT_STANDARD);
   
   //_stage = TestAnimXFromFile(filename, editor);
-  //pxr::UsdStageRefPtr stage = TestAnimX(editor);
+  //UsdStageRefPtr stage = TestAnimX(editor);
   //_scene->GetRootStage()->GetRootLayer()->InsertSubLayerPath(stage->GetRootLayer()->GetIdentifier());
 
   /*
   // Create the layer to populate.
   std::string shotFilePath = "E:/Projects/RnD/USD_BUILD/assets/AnimX/test.usda";
   std::string animFilePath = "E:/Projects/RnD/USD_BUILD/assets/AnimX/anim.animx";
-  //pxr::SdfLayerRefPtr baseLayer = pxr::SdfLayer::FindOrOpen(shotFilePath);
+  //SdfLayerRefPtr baseLayer = SdfLayer::FindOrOpen(shotFilePath);
   
   // Create a UsdStage with that root layer.
-  pxr::UsdStageRefPtr stage = pxr::UsdStage::Create(shotFilePath);
+  UsdStageRefPtr stage = UsdStage::Create(shotFilePath);
   stage->SetStartTimeCode(1);
   stage->SetEndTimeCode(100);
   
-  pxr::UsdGeomCube cube =
-    pxr::UsdGeomCube::Define(stage, pxr::SdfPath("/Cube"));
+  UsdGeomCube cube =
+    UsdGeomCube::Define(stage, SdfPath("/Cube"));
     
 
   stage->GetRootLayer()->Save();
 
   // we use Sdf, a lower level library, to obtain the 'anim' layer.
-  pxr::SdfLayerRefPtr animLayer = pxr::SdfLayer::FindOrOpen(animFilePath);
+  SdfLayerRefPtr animLayer = SdfLayer::FindOrOpen(animFilePath);
   std::cout << "HAS LOCAL LAYER : " << stage->HasLocalLayer(animLayer) << std::endl;
 
   stage->SetEditTarget(animLayer);
@@ -250,19 +250,19 @@ Application::Init(unsigned width, unsigned height, bool fullscreen)
         UsdGeomMesh mesh =
             UsdGeomMesh::Define(stage, SdfPath("/" + group.name));*/
   
-  //_stage = pxr::UsdStage::CreateNew("test_stage");
-  //_stage = pxr::UsdStage::Open(filename);
+  //_stage = UsdStage::CreateNew("test_stage");
+  //_stage = UsdStage::Open(filename);
 
-  //_stage = pxr::UsdStage::CreateNew("test.usda", pxr::TfNullPtr);
-  //_stage = pxr::UsdStage::CreateInMemory();
+  //_stage = UsdStage::CreateNew("test.usda", TfNullPtr);
+  //_stage = UsdStage::CreateInMemory();
 
-  //_mesh = MakeColoredPolygonSoup(_scene->GetCurrentStage(), pxr::TfToken("/polygon_soup"));
-  //Mesh* vdbMesh = MakeOpenVDBSphere(_stage, pxr::TfToken("/openvdb_sphere"));
+  //_mesh = MakeColoredPolygonSoup(_scene->GetCurrentStage(), TfToken("/polygon_soup"));
+  //Mesh* vdbMesh = MakeOpenVDBSphere(_stage, TfToken("/openvdb_sphere"));
 /*
   for(size_t i=0; i< 12; ++i) {
-    pxr::SdfPath path(pxr::TfToken("/cube_"+std::to_string(i)));
-    pxr::UsdGeomCube cube = pxr::UsdGeomCube::Define(_stage, path);
-    cube.AddTranslateOp().Set(pxr::GfVec3d(i * 3, 0, 0), pxr::UsdTimeCode::Default());
+    SdfPath path(TfToken("/cube_"+std::to_string(i)));
+    UsdGeomCube cube = UsdGeomCube::Define(_stage, path);
+    cube.AddTranslateOp().Set(GfVec3d(i * 3, 0, 0), UsdTimeCode::Default());
   }
 */
   //_stages.push_back(stage1);
@@ -283,7 +283,7 @@ Application::Init(unsigned width, unsigned height, bool fullscreen)
 }
 
 void 
-Application::InitExec(pxr::UsdStageRefPtr& stage)
+Application::InitExec(UsdStageRefPtr& stage)
 {
   //_exec = new TestPendulum();
   //_exec = new TestVelocity();
@@ -306,7 +306,7 @@ Application::InitExec(pxr::UsdStageRefPtr& stage)
 }
 
 void
-Application::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
+Application::UpdateExec(UsdStageRefPtr& stage, float time)
 {
   _exec->UpdateExec(stage, time);
 
@@ -317,7 +317,7 @@ Application::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
 }
 
 void
-Application::TerminateExec(pxr::UsdStageRefPtr& stage)
+Application::TerminateExec(UsdStageRefPtr& stage)
 {
   for (auto& engine : _engines) {
     engine->TerminateExec();
@@ -589,7 +589,7 @@ void
 Application::Delete()
 {
   Selection* selection = GetSelection();
-  const pxr::SdfPathVector& paths = selection->GetSelectedPaths();
+  const SdfPathVector& paths = selection->GetSelectedPaths();
   selection->Clear();
   ADD_COMMAND(DeletePrimCommand, GetWorkStage(), paths);
 }
@@ -649,21 +649,21 @@ Application::GetExec()
 };
 
 // get stage for display
-pxr::UsdStageRefPtr
+UsdStageRefPtr
 Application::GetDisplayStage()
 {
   return _stage;
 }
 
 // get stage for work
-pxr::UsdStageRefPtr
+UsdStageRefPtr
 Application::GetWorkStage()
 {
   return _stage;
 }
 
 // get current layer
-pxr::SdfLayerRefPtr
+SdfLayerRefPtr
 Application::GetCurrentLayer()
 {
   return _layer;
@@ -671,25 +671,25 @@ Application::GetCurrentLayer()
 
 // selection
 void 
-Application::SetSelection(const pxr::SdfPathVector& selection)
+Application::SetSelection(const SdfPathVector& selection)
 {
   ADD_COMMAND(SelectCommand, Selection::PRIM, selection, SelectCommand::SET);
 }
 
 void
-Application::ToggleSelection(const pxr::SdfPathVector& selection)
+Application::ToggleSelection(const SdfPathVector& selection)
 {
   ADD_COMMAND(SelectCommand, Selection::PRIM, selection, SelectCommand::TOGGLE);
 }
 
 void 
-Application::AddToSelection(const pxr::SdfPathVector& paths)
+Application::AddToSelection(const SdfPathVector& paths)
 {
   ADD_COMMAND(SelectCommand, Selection::PRIM, paths, SelectCommand::ADD);
 }
 
 void 
-Application::RemoveFromSelection(const pxr::SdfPathVector& paths)
+Application::RemoveFromSelection(const SdfPathVector& paths)
 {
   ADD_COMMAND(SelectCommand, Selection::PRIM, paths, SelectCommand::REMOVE);
 }
@@ -700,36 +700,36 @@ Application::ClearSelection()
   ADD_COMMAND(SelectCommand, Selection::PRIM, {}, SelectCommand::SET);
 }
 
-pxr::GfBBox3d
+GfBBox3d
 Application::GetStageBoundingBox()
 {
-  pxr::GfBBox3d bbox;
-  pxr::TfTokenVector purposes = { pxr::UsdGeomTokens->default_ };
-  pxr::UsdGeomBBoxCache bboxCache(
-    pxr::UsdTimeCode(Time::Get()->GetActiveTime()), purposes, false, false);
+  GfBBox3d bbox;
+  TfTokenVector purposes = { UsdGeomTokens->default_ };
+  UsdGeomBBoxCache bboxCache(
+    UsdTimeCode(Time::Get()->GetActiveTime()), purposes, false, false);
   return bboxCache.ComputeWorldBound(_stage->GetPseudoRoot());
 }
 
-pxr::GfBBox3d 
+GfBBox3d 
 Application::GetSelectionBoundingBox()
 {
-  pxr::GfBBox3d bbox;
-  static pxr::TfTokenVector purposes = {
-    pxr::UsdGeomTokens->default_,
-    pxr::UsdGeomTokens->proxy,
-    pxr::UsdGeomTokens->guide,
-    pxr::UsdGeomTokens->render
+  GfBBox3d bbox;
+  static TfTokenVector purposes = {
+    UsdGeomTokens->default_,
+    UsdGeomTokens->proxy,
+    UsdGeomTokens->guide,
+    UsdGeomTokens->render
   };
-  pxr::UsdGeomBBoxCache bboxCache(
-    pxr::UsdTimeCode(Time::Get()->GetActiveTime()), purposes, false, false);
+  UsdGeomBBoxCache bboxCache(
+    UsdTimeCode(Time::Get()->GetActiveTime()), purposes, false, false);
   for (size_t n = 0; n < _selection.GetNumSelectedItems(); ++n) {
     const Selection::Item& item = _selection[n];
     if (item.type == Selection::Type::PRIM) {
-      pxr::UsdPrim prim = _stage->GetPrimAtPath(item.path);
+      UsdPrim prim = _stage->GetPrimAtPath(item.path);
       
       if (prim.IsActive()) {
-        const pxr::GfBBox3d primBBox = bboxCache.ComputeWorldBound(prim);
-        bbox = bbox.Combine(bbox, pxr::GfBBox3d(primBBox.ComputeAlignedRange()));
+        const GfBBox3d primBBox = bboxCache.ComputeWorldBound(prim);
+        bbox = bbox.Combine(bbox, GfBBox3d(primBBox.ComputeAlignedRange()));
       }
         
     }
@@ -745,44 +745,44 @@ Application::GetSelectionBoundingBox()
   }
 
   /*
-  pxr::UsdPrim& prim = _stage->GetPrimAtPath(pxr::SdfPath("/Cube"));
+  UsdPrim& prim = _stage->GetPrimAtPath(SdfPath("/Cube"));
   if (!prim.IsValid()) {
-    prim = pxr::UsdGeomCube::Define(_stage, pxr::SdfPath("/Cube")).GetPrim();
-    pxr::UsdGeomCube cube(prim);
-    cube.CreateSizeAttr().Set(pxr::VtValue(1.0));
+    prim = UsdGeomCube::Define(_stage, SdfPath("/Cube")).GetPrim();
+    UsdGeomCube cube(prim);
+    cube.CreateSizeAttr().Set(VtValue(1.0));
    
-    pxr::VtArray<pxr::TfToken> xformOpOrderTokens =
-    { pxr::TfToken("xformOp:scale"), pxr::TfToken("xformOp:translate")};
-    cube.CreateXformOpOrderAttr().Set(pxr::VtValue(xformOpOrderTokens));
+    VtArray<TfToken> xformOpOrderTokens =
+    { TfToken("xformOp:scale"), TfToken("xformOp:translate")};
+    cube.CreateXformOpOrderAttr().Set(VtValue(xformOpOrderTokens));
    
   }
-  pxr::UsdGeomCube cube(prim);
+  UsdGeomCube cube(prim);
 
   bool resetXformStack = false;
   bool foundScaleOp = false;
   bool foundTranslateOp = false;
-  std::vector<pxr::UsdGeomXformOp> xformOps = cube.GetOrderedXformOps(&resetXformStack);
+  std::vector<UsdGeomXformOp> xformOps = cube.GetOrderedXformOps(&resetXformStack);
   for (auto& xformOp : xformOps) {
  
-    if (xformOp.GetName() == pxr::TfToken("xformOp:scale")) {
-      pxr::GfRange3d bboxRange = bbox.GetRange();
-      xformOp.Set(pxr::VtValue(pxr::GfVec3f(bboxRange.GetMax() - bboxRange.GetMin())));
+    if (xformOp.GetName() == TfToken("xformOp:scale")) {
+      GfRange3d bboxRange = bbox.GetRange();
+      xformOp.Set(VtValue(GfVec3f(bboxRange.GetMax() - bboxRange.GetMin())));
       foundScaleOp = true;
-    } else if(xformOp.GetName() == pxr::TfToken("xformOp:translate")) {
-      pxr::GfVec3d center = bbox.ComputeCentroid();
-      xformOp.Set(pxr::VtValue(center));
+    } else if(xformOp.GetName() == TfToken("xformOp:translate")) {
+      GfVec3d center = bbox.ComputeCentroid();
+      xformOp.Set(VtValue(center));
       foundTranslateOp = true;
     }
   }
   if (!foundScaleOp) {
-    pxr::UsdGeomXformOp scaleOp = cube.AddScaleOp();
-    pxr::GfRange3d bboxRange = bbox.GetRange();
-    scaleOp.Set(pxr::VtValue(pxr::GfVec3f(bboxRange.GetMax() - bboxRange.GetMin())));
+    UsdGeomXformOp scaleOp = cube.AddScaleOp();
+    GfRange3d bboxRange = bbox.GetRange();
+    scaleOp.Set(VtValue(GfVec3f(bboxRange.GetMax() - bboxRange.GetMin())));
   }
   if (!foundTranslateOp) {
-    pxr::UsdGeomXformOp translateOp = cube.AddTranslateOp();
-    pxr::GfVec3d center = bbox.ComputeCentroid();
-    translateOp.Set(pxr::VtValue(center));
+    UsdGeomXformOp translateOp = cube.AddTranslateOp();
+    GfVec3d center = bbox.ComputeCentroid();
+    translateOp.Set(VtValue(center));
   }
   */
   return bbox;

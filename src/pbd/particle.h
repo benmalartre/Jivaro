@@ -24,7 +24,7 @@ class Body : public Element
 
 public:
 
-  Body(Geometry* geom, size_t offset, size_t n, const pxr::GfVec3f& color,
+  Body(Geometry* geom, size_t offset, size_t n, const GfVec3f& color,
     float mass=1.f, float radius=0.01f, float damp=0.1f)
   : Element(Element::BODY)
   , _geometry(geom)
@@ -42,14 +42,14 @@ public:
   ~Body();
 
   size_t GetTypeId() const override {return 0;};
-  void UpdateParameters(pxr::UsdPrim& prim, float time) override;
+  void UpdateParameters(UsdPrim& prim, float time) override;
   void UpdateParticles(Particles* particles);
 
   void SetOffset(size_t offset){_offset = offset;};
   void SetNumPoints(size_t numPoints){_numPoints = numPoints;};
 
-  void SetVelocity(const pxr::GfVec3f& velocity){_velocity=velocity;};
-  void SetTorque(const pxr::GfVec3f& torque){_torque=torque;};
+  void SetVelocity(const GfVec3f& velocity){_velocity=velocity;};
+  void SetTorque(const GfVec3f& torque){_torque=torque;};
 
   Geometry* GetGeometry() const {return _geometry;};
   size_t GetOffset() const {return _offset;};
@@ -57,9 +57,9 @@ public:
   float GetMass() const {return _mass;};
   float GetRadius() const {return _radius;};
   float GetDamp() const {return _damp;};
-  pxr::GfVec3f GetColor() const {return _color;};
-  pxr::GfVec3f GetVelocity() const {return _velocity;};
-  pxr::GfVec3f GetTorque() const {return _torque;};
+  GfVec3f GetColor() const {return _color;};
+  GfVec3f GetVelocity() const {return _velocity;};
+  GfVec3f GetTorque() const {return _torque;};
 
   bool GetSelfCollisionEnabled() const {return _selfCollisionEnabled;};
   float GetSelfCollisionRadius() const {return _selfCollisionRadius;};
@@ -70,8 +70,8 @@ public:
   float GetSelfCollisionMaxSeparationVelocity() const {return _selfCollisionMaxSeparationVelocity;};
 
   size_t GetNumConstraintsGroup();
-  ConstraintsGroup* AddConstraintsGroup(const pxr::TfToken& group, short type);
-  ConstraintsGroup* GetConstraintsGroup(const pxr::TfToken& group);
+  ConstraintsGroup* AddConstraintsGroup(const TfToken& group, short type);
+  ConstraintsGroup* GetConstraintsGroup(const TfToken& group);
 
   void SmoothVelocities(Particles* particles, size_t iterations);
 
@@ -94,16 +94,16 @@ protected:
   float                                     _selfCollisionDamp;
   float                                     _selfCollisionMaxSeparationVelocity;
 
-  pxr::GfVec3f                              _color;
-  pxr::GfVec3f                              _velocity;
-  pxr::GfVec3f                              _torque;
-  std::map<pxr::TfToken, ConstraintsGroup*> _constraints;
+  GfVec3f                              _color;
+  GfVec3f                              _velocity;
+  GfVec3f                              _torque;
+  std::map<TfToken, ConstraintsGroup*> _constraints;
 
   std::vector<int>                          _connexions;
   std::vector<int>                          _connexionsCounts;
   std::vector<int>                          _connexionsOffsets;
 
-  Smooth<pxr::GfVec3f>*                     _smoothKernel;
+  Smooth<GfVec3f>*                     _smoothKernel;
 };
 
 enum BodyType
@@ -127,7 +127,7 @@ struct Particles
   ~Particles();
 
   size_t GetNumParticles() { return num; };
-  void AddBody(Body* body, const pxr::GfMatrix4d& matrix);
+  void AddBody(Body* body, const GfMatrix4d& matrix);
   void RemoveBody(Body* body);
   void RemoveAllBodies();
 
@@ -143,15 +143,15 @@ struct Particles
   float*              mass;
   float*              invMass;
   float*              radius;
-  pxr::GfVec3f*       rest;
-  pxr::GfQuatf*       rotation;
-  pxr::GfVec3f*       input;
-  pxr::GfVec3f*       previous;
-  pxr::GfVec3f*       position;
-  pxr::GfVec3f*       predicted;
-  pxr::GfVec3f*       velocity;
-  pxr::GfVec3f*       color;
-  pxr::GfVec2f*       counter;
+  GfVec3f*       rest;
+  GfQuatf*       rotation;
+  GfVec3f*       input;
+  GfVec3f*       previous;
+  GfVec3f*       position;
+  GfVec3f*       predicted;
+  GfVec3f*       velocity;
+  GfVec3f*       color;
+  GfVec2f*       counter;
   size_t              num;
 };
 

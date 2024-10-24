@@ -7,14 +7,14 @@ JVR_NAMESPACE_OPEN_SCOPE
 // setup binds (static) points
 //-------------------------------------------------------
 void 
-KabschSolver::Bind(const pxr::VtArray<pxr::GfVec3f>& positions, 
-  const pxr::GfMatrix4d& matrix, const pxr::VtArray<int>& indices) 
+KabschSolver::Bind(const VtArray<GfVec3f>& positions, 
+  const GfMatrix4d& matrix, const VtArray<int>& indices) 
 {
   int numBinds = indices.size();
   _binds.resize(numBinds);
   if(!numBinds)return;
 
-  _bndCentroid = pxr::GfVec3f(0.f);
+  _bndCentroid = GfVec3f(0.f);
 
   // get world points
   for(int i = 0; i < numBinds; ++i)_binds[i] = matrix.Transform(positions[indices[i]]);
@@ -34,11 +34,11 @@ KabschSolver::Bind(const pxr::VtArray<pxr::GfVec3f>& positions,
 // setup input (deform) points
 //-------------------------------------------------------
 void 
-KabschSolver::Update(const pxr::VtArray<pxr::GfVec3f>& positions, 
-  const pxr::GfMatrix4d& matrix, const pxr::VtArray<int>& indices) 
+KabschSolver::Update(const VtArray<GfVec3f>& positions, 
+  const GfMatrix4d& matrix, const VtArray<int>& indices) 
 {
   size_t numPoints = indices.size();
-  _pntCentroid = pxr::GfVec3f(0.f);
+  _pntCentroid = GfVec3f(0.f);
 
   if(numPoints == _numPoints){
     _points.resize(_numPoints);
@@ -55,10 +55,10 @@ KabschSolver::Update(const pxr::VtArray<pxr::GfVec3f>& positions,
   }
 }
 
-const pxr::GfMatrix4d&
+const GfMatrix4d&
 KabschSolver::Solve(bool solveRotation, bool solveScale, bool firstSolve)
 {
-  static const pxr::GfMatrix4d _identity = pxr::GfMatrix4d(1.0);
+  static const GfMatrix4d _identity = GfMatrix4d(1.0);
   if(_points.size() != _binds.size())return _identity;
   size_t numPoints = _points.size();
 
@@ -75,28 +75,28 @@ KabschSolver::Solve(bool solveRotation, bool solveScale, bool firstSolve)
   // calculate the 3x3 covariance matrix, and the optimal rotation
   if (solveRotation) {
     if(firstSolve) {
-      pxr::VtArray<pxr::GfVec3f> randomizedPoints(numPoints);
+      VtArray<GfVec3f> randomizedPoints(numPoints);
       for(size_t i=0; i < numPoints; ++i) {
         randomizedPoints[i] = 
-          _points[i] + pxr::GfVec3f(
+          _points[i] + GfVec3f(
             (float)rand() / (float)RAND_MAX,
             (float)rand() / (float)RAND_MAX,
             (float)rand() / (float)RAND_MAX);
       }
-      pxr::GfMatrix4d covariantMatrix = 
+      GfMatrix4d covariantMatrix = 
         _ComputeCovarianceMatrix(randomizedPoints, _binds, _pntCentroid, _bndCentroid);
       _ExtractRotation(covariantMatrix, &_rotation, 16);
       covariantMatrix = 
         _ComputeCovarianceMatrix(_points, _binds, _pntCentroid, _bndCentroid);
       _ExtractRotation(covariantMatrix, &_rotation, 32);
     } else {
-      pxr::GfMatrix4d covariantMatrix = 
+      GfMatrix4d covariantMatrix = 
         _ComputeCovarianceMatrix(_points, _binds, _pntCentroid, _bndCentroid);
       _ExtractRotation(covariantMatrix, &_rotation, 16);
     }
   }
-  pxr::GfTransform S, R, T;
-  pxr::GfVec3f scale(_scale);
+  GfTransform S, R, T;
+  GfVec3f scale(_scale);
   S.SetScale(scale);
   R.SetRotation(_rotation);
   T.SetTranslation(_pntCentroid);
@@ -106,10 +106,10 @@ KabschSolver::Solve(bool solveRotation, bool solveScale, bool firstSolve)
 }
 
 
-void KabschSolver::_BuildMatrixFromQuaternion(const pxr::GfQuatd& quat, pxr::GfMatrix4d* matrix) {
-  pxr::GfVec3f right(quat.Transform(pxr::GfVec3d(1,0,0)));
-  pxr::GfVec3f up(quat.Transform(pxr::GfVec3d(0,1,0)));
-  pxr::GfVec3f forward(quat.Transform(pxr::GfVec3d(0,0,1)));
+void KabschSolver::_BuildMatrixFromQuaternion(const GfQuatd& quat, GfMatrix4d* matrix) {
+  GfVec3f right(quat.Transform(GfVec3d(1,0,0)));
+  GfVec3f up(quat.Transform(GfVec3d(0,1,0)));
+  GfVec3f forward(quat.Transform(GfVec3d(0,0,1)));
 
   *matrix[0][0] = right[0];
   *matrix[0][1] = right[1];
@@ -127,45 +127,45 @@ void KabschSolver::_BuildMatrixFromQuaternion(const pxr::GfQuatd& quat, pxr::GfM
 //https://animation.rwth-aachen.de/media/papers/2016-MIG-StableRotation.pdf
 //Iteratively apply torque to the basis using Cross products (in place of SVD)
 void 
-KabschSolver::_ExtractRotation(const pxr::GfMatrix4d& matrix, pxr::GfQuatd* rotation, size_t iterations)
+KabschSolver::_ExtractRotation(const GfMatrix4d& matrix, GfQuatd* rotation, size_t iterations)
 {
-  pxr::GfQuatd rotation2;
+  GfQuatd rotation2;
 
-  pxr::GfVec3f matrix0(matrix[0][0], matrix[0][1], matrix[0][2]);
-  pxr::GfVec3f matrix1(matrix[1][0], matrix[1][1], matrix[1][2]);
-  pxr::GfVec3f matrix2(matrix[2][0], matrix[2][1], matrix[2][2]);
+  GfVec3f matrix0(matrix[0][0], matrix[0][1], matrix[0][2]);
+  GfVec3f matrix1(matrix[1][0], matrix[1][1], matrix[1][2]);
+  GfVec3f matrix2(matrix[2][0], matrix[2][1], matrix[2][2]);
 
   for(int iter = 0;iter < iterations; ++iter)
   {
     _BuildMatrixFromQuaternion(*rotation, &_basis);
-    pxr::GfVec3f basis0(_basis[0][0], _basis[0][1], _basis[0][2]);
-    pxr::GfVec3f basis1(_basis[1][0], _basis[1][1], _basis[1][2]);
-    pxr::GfVec3f basis2(_basis[2][0], _basis[2][1], _basis[2][2]);
+    GfVec3f basis0(_basis[0][0], _basis[0][1], _basis[0][2]);
+    GfVec3f basis1(_basis[1][0], _basis[1][1], _basis[1][2]);
+    GfVec3f basis2(_basis[2][0], _basis[2][1], _basis[2][2]);
 
-    pxr::GfVec3f omega = ((basis0 ^ matrix0) + (basis1 ^ matrix1) + (basis2 ^ matrix2)) *
-    (1.0f / pxr::GfAbs((basis0 * matrix0) + (basis1 * matrix1) + (basis2 * matrix2) + KABSCH_EPSILON));
+    GfVec3f omega = ((basis0 ^ matrix0) + (basis1 ^ matrix1) + (basis2 ^ matrix2)) *
+    (1.0f / GfAbs((basis0 * matrix0) + (basis1 * matrix1) + (basis2 * matrix2) + KABSCH_EPSILON));
 
     float w = omega.GetLength();
     if(w < KABSCH_EPSILON) break;
 
-    rotation2 = pxr::GfQuatd(w, omega / w);
+    rotation2 = GfQuatd(w, omega / w);
     rotation2 *= *rotation;
     *rotation = rotation2.GetNormalized();
   }
 }
 
 
-const pxr::GfMatrix4d& 
-KabschSolver::_ComputeCovarianceMatrix( const pxr::VtArray<pxr::GfVec3f>& vec1,
-                                        const pxr::VtArray<pxr::GfVec3f>& vec2,
-                                        const pxr::GfVec3f& centroid1,
-                                        const pxr::GfVec3f& centroid2)
+const GfMatrix4d& 
+KabschSolver::_ComputeCovarianceMatrix( const VtArray<GfVec3f>& vec1,
+                                        const VtArray<GfVec3f>& vec2,
+                                        const GfVec3f& centroid1,
+                                        const GfVec3f& centroid2)
 {
-  _covariance = pxr::GfMatrix4d();
+  _covariance = GfMatrix4d();
 
   for (int k = 0; k < vec1.size(); ++k) {//k is the column in this matrix
-    pxr::GfVec3f lhs = vec1[k];// *vec2[k][3];
-    pxr::GfVec3f rhs = vec2[k];// *pxr::GfAbs(vec2[k][3]);
+    GfVec3f lhs = vec1[k];// *vec2[k][3];
+    GfVec3f rhs = vec2[k];// *GfAbs(vec2[k][3]);
 
     _covariance[0][0] += lhs[0]*rhs[0];
     _covariance[1][0] += lhs[1]*rhs[0];

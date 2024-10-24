@@ -13,24 +13,24 @@ class TestPBD : public Execution {
 public:
   friend class Scene;
   TestPBD() : Execution(){};
-  void InitExec(pxr::UsdStageRefPtr& stage) override;
-  void UpdateExec(pxr::UsdStageRefPtr& stage, float time) override;
-  void TerminateExec(pxr::UsdStageRefPtr& stage) override;
+  void InitExec(UsdStageRefPtr& stage) override;
+  void UpdateExec(UsdStageRefPtr& stage, float time) override;
+  void TerminateExec(UsdStageRefPtr& stage) override;
 
 protected: 
-  void _TraverseStageFindingElements(pxr::UsdStageRefPtr& stage);
-  void _AddAnimationSamples(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path);
+  void _TraverseStageFindingElements(UsdStageRefPtr& stage);
+  void _AddAnimationSamples(UsdStageRefPtr& stage, SdfPath& path);
 
 private:
   Solver*                   _solver;
   Plane*                    _ground;
-  pxr::SdfPath              _groundId;
-  pxr::SdfPath              _solverId;
+  SdfPath              _groundId;
+  SdfPath              _solverId;
 
   std::vector<Geometry*>    _clothes;
-  std::vector<pxr::SdfPath> _clothesId;
+  std::vector<SdfPath> _clothesId;
   std::vector<Geometry*>    _colliders;
-  std::vector<pxr::SdfPath> _collidersId;
+  std::vector<SdfPath> _collidersId;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

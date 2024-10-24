@@ -31,7 +31,7 @@ void ModalBase::Init()
   Window* mainWindow = app->GetMainWindow();
   mainWindow->SetIdle(true);
 
-  _window = app->CreateChildWindow(_title, pxr::GfVec4i(_x, _y, _width, _height), mainWindow);
+  _window = app->CreateChildWindow(_title, GfVec4i(_x, _y, _width, _height), mainWindow);
   _window->SetDesiredLayout(_window->GetLayout());
 }
 

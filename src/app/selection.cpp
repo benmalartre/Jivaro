@@ -15,7 +15,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 void 
 Selection::Item::ComputeHash()
 {
-  hash = pxr::TfHash::Combine(
+  hash = TfHash::Combine(
     type,
     path,
     components,
@@ -27,14 +27,14 @@ Selection::ComputeHash()
 {
   _hash = 0;
   for (auto& item: _items) {
-   _hash = pxr::TfHash::Combine(_hash,item.hash);
+   _hash = TfHash::Combine(_hash,item.hash);
   }
 }
 
 bool 
-Selection::IsSelected(const pxr::UsdPrim& prim) const
+Selection::IsSelected(const UsdPrim& prim) const
 {
-  const pxr::SdfPath primPath = prim.GetPath();
+  const SdfPath primPath = prim.GetPath();
   for (auto& item : _items) {
     if (item.path == primPath) return true;
   }
@@ -42,9 +42,9 @@ Selection::IsSelected(const pxr::UsdPrim& prim) const
 }
 
 bool 
-Selection::IsSelected(const pxr::SdfPrimSpec& prim) const
+Selection::IsSelected(const SdfPrimSpec& prim) const
 {
-  const pxr::SdfPath primPath = prim.GetPath();
+  const SdfPath primPath = prim.GetPath();
   for (auto& item : _items) {
     if (item.path == primPath) return true;
   }
@@ -87,36 +87,36 @@ Selection::IsAttribute() const
 }
 
 bool 
-Selection::_CheckKind(Mode mode, const pxr::TfToken& kind)
+Selection::_CheckKind(Mode mode, const TfToken& kind)
 {
   switch (mode) {
   case Mode::COMPONENT:
-    return pxr::KindRegistry::GetInstance().IsA(kind, pxr::KindTokens->model);
+    return KindRegistry::GetInstance().IsA(kind, KindTokens->model);
   case Mode::GROUP:
-    return pxr::KindRegistry::GetInstance().IsA(kind, pxr::KindTokens->group);
+    return KindRegistry::GetInstance().IsA(kind, KindTokens->group);
   case Mode::ASSEMBLY:
-    return pxr::KindRegistry::GetInstance().IsA(kind, pxr::KindTokens->assembly);
+    return KindRegistry::GetInstance().IsA(kind, KindTokens->assembly);
   case Mode::SUBCOMPONENT:
     return true;
   case Mode::MODEL:
-    return pxr::KindRegistry::GetInstance().IsA(kind, pxr::KindTokens->model);
+    return KindRegistry::GetInstance().IsA(kind, KindTokens->model);
   }
 }
 
 bool 
-Selection::IsPickablePath(const pxr::UsdStage& stage,
-  const pxr::SdfPath& path) {
+Selection::IsPickablePath(const UsdStage& stage,
+  const SdfPath& path) {
   auto prim = stage.GetPrimAtPath(path);
   if (prim.IsPseudoRoot())
     return true;
 
-  pxr::TfToken primKind;
-  pxr::UsdModelAPI(prim).GetKind(&primKind);
+  TfToken primKind;
+  UsdModelAPI(prim).GetKind(&primKind);
   return(_CheckKind(_mode, primKind));
 }
 
 void 
-Selection::AddItem(const pxr::SdfPath& path)
+Selection::AddItem(const SdfPath& path)
 {
   for (auto& item: _items) {
     if (path == item.path)return;
@@ -128,7 +128,7 @@ Selection::AddItem(const pxr::SdfPath& path)
 }
 
 void 
-Selection::RemoveItem(const pxr::SdfPath& path)
+Selection::RemoveItem(const SdfPath& path)
 {
   for (auto it = _items.begin(); it < _items.end(); ++it) {
     if (path == it->path) _items.erase(it);
@@ -137,7 +137,7 @@ Selection::RemoveItem(const pxr::SdfPath& path)
 }
 
 void 
-Selection::ToggleItem(const pxr::SdfPath& path)
+Selection::ToggleItem(const SdfPath& path)
 {
   for (auto it = _items.begin(); it < _items.end(); ++it) {
     if (path == it->path) {
@@ -151,28 +151,28 @@ Selection::ToggleItem(const pxr::SdfPath& path)
 }
 
 void 
-Selection::AddComponent(const pxr::SdfPath& object,
+Selection::AddComponent(const SdfPath& object,
   Type type, int index)
 {
   ComputeHash();
 }
 
 void 
-Selection::RemoveComponent(const pxr::SdfPath& object,
+Selection::RemoveComponent(const SdfPath& object,
   Type type, int index)
 {
   ComputeHash();
 }
 
 void 
-Selection::AddComponents(const pxr::SdfPath& object,
+Selection::AddComponents(const SdfPath& object,
   Type type, std::vector<int> indices)
 {
   ComputeHash();
 }
 
 void 
-Selection::RemoveComponents(const pxr::SdfPath& object,
+Selection::RemoveComponents(const SdfPath& object,
   Type type, std::vector<int> indices)
 {
   ComputeHash();
@@ -185,18 +185,18 @@ Selection::Clear()
   ComputeHash();
 }
 
-pxr::SdfPath
+SdfPath
 Selection::GetAnchorPath() const
 {
-  pxr::SdfPathVector paths = GetSelectedPaths();
-  if(!paths.size()) return pxr::SdfPath::AbsoluteRootPath();
+  SdfPathVector paths = GetSelectedPaths();
+  if(!paths.size()) return SdfPath::AbsoluteRootPath();
   return paths[0];
 }
 
-pxr::SdfPathVector 
+SdfPathVector 
 Selection::GetSelectedPaths() const
 {
-  pxr::SdfPathVector selectedPaths;
+  SdfPathVector selectedPaths;
   for (const auto& item : _items) {
     selectedPaths.push_back(item.path);
   }

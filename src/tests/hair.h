@@ -9,22 +9,22 @@ class TestHair : public Execution {
 public:
   friend class Scene;
   TestHair() : Execution(){};
-  void InitExec(pxr::UsdStageRefPtr& stage) override;
-  void UpdateExec(pxr::UsdStageRefPtr& stage, float time) override;
-  void TerminateExec(pxr::UsdStageRefPtr& stage) override;
+  void InitExec(UsdStageRefPtr& stage) override;
+  void UpdateExec(UsdStageRefPtr& stage, float time) override;
+  void TerminateExec(UsdStageRefPtr& stage) override;
 
 protected:
-  void _InitControls(pxr::UsdStageRefPtr& stage);
-  void _QueryControls(pxr::UsdStageRefPtr& stage);
-  pxr::HdDirtyBits _HairEmit(pxr::UsdStageRefPtr& stage, Curve* curve, 
-    pxr::UsdGeomMesh& mesh, pxr::GfMatrix4d& xform, double time);
+  void _InitControls(UsdStageRefPtr& stage);
+  void _QueryControls(UsdStageRefPtr& stage);
+  HdDirtyBits _HairEmit(UsdStageRefPtr& stage, Curve* curve, 
+    UsdGeomMesh& mesh, GfMatrix4d& xform, double time);
 
 
 private:
-  pxr::TfHashMap<pxr::SdfPath, _Sources, pxr::SdfPath::Hash> _sourcesMap;
+  TfHashMap<SdfPath, _Sources, SdfPath::Hash> _sourcesMap;
   int _density;
   float _length, _amplitude, _frequency, _width, _scale, _radius;
-  pxr::GfVec3f _color;
+  GfVec3f _color;
 };
 
 

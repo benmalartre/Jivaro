@@ -71,18 +71,18 @@ public:
   };
 
   Geometry();
-  Geometry(int type, const pxr::GfMatrix4d& world);
-  Geometry(const pxr::UsdPrim& other, const pxr::GfMatrix4d& world);
+  Geometry(int type, const GfMatrix4d& world);
+  Geometry(const UsdPrim& other, const GfMatrix4d& world);
   virtual ~Geometry() {};
 
   int GetType() const { return _type; };
   virtual size_t GetNumPoints() const {return 1;};
-  pxr::UsdPrim& GetPrim(){return _prim;};
-  const pxr::UsdPrim& GetPrim() const {return _prim;};
+  UsdPrim& GetPrim(){return _prim;};
+  const UsdPrim& GetPrim() const {return _prim;};
 
   template<typename T>
-  DirtyState GetAttributeValue(const pxr::TfToken& name, 
-    const pxr::UsdTimeCode& time, T* value);
+  DirtyState GetAttributeValue(const TfToken& name, 
+    const UsdTimeCode& time, T* value);
 
 
   bool IsInput(){return BITMASK_CHECK(_mode, Mode::INPUT);};
@@ -91,69 +91,69 @@ public:
   void SetOutputOnly() {_mode = Mode::OUTPUT;};
   void SetInputOutput() {_mode = Mode::INPUT|Mode::OUTPUT;};
   
-  void SetWirecolor(const pxr::GfVec3f& wirecolor){_wirecolor=wirecolor;};
-  const pxr::GfVec3f& GetWirecolor() { return _wirecolor; };
+  void SetWirecolor(const GfVec3f& wirecolor){_wirecolor=wirecolor;};
+  const GfVec3f& GetWirecolor() { return _wirecolor; };
 
-  void SetMatrix(const pxr::GfMatrix4d& matrix);
-  const pxr::GfMatrix4d& GetMatrix() const { return _matrix; };
-  const pxr::GfMatrix4d& GetPreviousMatrix() const { return _prevMatrix; };
-  const pxr::GfMatrix4d& GetInverseMatrix() const { return _invMatrix; };
+  void SetMatrix(const GfMatrix4d& matrix);
+  const GfMatrix4d& GetMatrix() const { return _matrix; };
+  const GfMatrix4d& GetPreviousMatrix() const { return _prevMatrix; };
+  const GfMatrix4d& GetInverseMatrix() const { return _invMatrix; };
 
-  const pxr::GfVec3d GetTranslate();
-  const pxr::GfVec3d GetScale();
-  const pxr::GfQuatd GetRotation();
+  const GfVec3d GetTranslate();
+  const GfVec3d GetScale();
+  const GfQuatd GetRotation();
 
-  const pxr::GfVec3f GetTorque() const;
-  const pxr::GfVec3f GetVelocity() const;
+  const GfVec3f GetTorque() const;
+  const GfVec3f GetVelocity() const;
 
   virtual void ComputeBoundingBox() {};
-  void SetBoundingBox(const pxr::GfRange3d &range){ _bbox.Set(range, _matrix);};
-  const pxr::GfBBox3d GetBoundingBox(bool worldSpace=true) const;
+  void SetBoundingBox(const GfRange3d &range){ _bbox.Set(range, _matrix);};
+  const GfBBox3d GetBoundingBox(bool worldSpace=true) const;
 
-  void SetPrim(const pxr::UsdPrim& prim){_prim = prim;};
-  virtual DirtyState Sync(const pxr::GfMatrix4d& matrix, 
-    const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default());
-  virtual void Inject(const pxr::GfMatrix4d& parent,
-    const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default());
+  void SetPrim(const UsdPrim& prim){_prim = prim;};
+  virtual DirtyState Sync(const GfMatrix4d& matrix, 
+    const UsdTimeCode& code=UsdTimeCode::Default());
+  virtual void Inject(const GfMatrix4d& parent,
+    const UsdTimeCode& code=UsdTimeCode::Default());
 
   // query 3d position on geometry
-  virtual bool Raycast(const pxr::GfRay& ray, Location* hit,
+  virtual bool Raycast(const GfRay& ray, Location* hit,
     double maxDistance=-1.0, double* minDistance=NULL) const {return false;};
-  virtual bool Closest(const pxr::GfVec3f& point, Location* hit,
+  virtual bool Closest(const GfVec3f& point, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const {return false;};
 
-  virtual float SignedDistance(const pxr::GfVec3f& point) const {return 0.f;};
+  virtual float SignedDistance(const GfVec3f& point) const {return 0.f;};
 
 protected:
   void _ComputeVelocity();
-  virtual DirtyState _Sync(const pxr::GfMatrix4d& matrix, 
-    const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) { return DirtyState::CLEAN;};
+  virtual DirtyState _Sync(const GfMatrix4d& matrix, 
+    const UsdTimeCode& code=UsdTimeCode::Default()) { return DirtyState::CLEAN;};
 
-  virtual void _Inject(const pxr::GfMatrix4d& parent,
-    const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) = 0;
+  virtual void _Inject(const GfMatrix4d& parent,
+    const UsdTimeCode& code=UsdTimeCode::Default()) = 0;
 
   // infos
   short                               _mode;
   int                                 _type;
-  pxr::SdfPath                        _path;
-  pxr::UsdPrim                        _prim;
+  SdfPath                        _path;
+  UsdPrim                        _prim;
 
   // bounding box
-  pxr::GfMatrix4d                     _matrix;
-  pxr::GfMatrix4d                     _prevMatrix;
-  pxr::GfMatrix4d                     _invMatrix;
-  pxr::GfVec3f                        _velocity;  // positional velocity
-  pxr::GfVec3f                        _torque;    // rotational velocity
-  pxr::GfBBox3d                       _bbox;
-  pxr::GfVec3f                        _wirecolor;
+  GfMatrix4d                     _matrix;
+  GfMatrix4d                     _prevMatrix;
+  GfMatrix4d                     _invMatrix;
+  GfVec3f                        _velocity;  // positional velocity
+  GfVec3f                        _torque;    // rotational velocity
+  GfBBox3d                       _bbox;
+  GfVec3f                        _wirecolor;
 };
 
 template<typename T>
 Geometry::DirtyState
-Geometry::GetAttributeValue(const pxr::TfToken& name, 
-  const pxr::UsdTimeCode& time, T *value)
+Geometry::GetAttributeValue(const TfToken& name, 
+  const UsdTimeCode& time, T *value)
 {
-  pxr::UsdAttribute attr = _prim.GetAttribute(name);
+  UsdAttribute attr = _prim.GetAttribute(name);
   if(!attr.IsValid())return DirtyState::CLEAN;
 
   T tmp;

@@ -25,12 +25,12 @@ BaseUI::BaseUI(View* parent, short type, bool popup)
     _parent->SetDirty();
   }
 
-  pxr::TfWeakPtr<BaseUI> me(this);
-  //pxr::TfNotice::Register(me, &BaseUI::OnAllNotices);
-  pxr::TfNotice::Register(me, &BaseUI::OnNewSceneNotice);
-  pxr::TfNotice::Register(me, &BaseUI::OnSceneChangedNotice);
-  pxr::TfNotice::Register(me, &BaseUI::OnSelectionChangedNotice);
-  pxr::TfNotice::Register(me, &BaseUI::OnAttributeChangedNotice);
+  TfWeakPtr<BaseUI> me(this);
+  //TfNotice::Register(me, &BaseUI::OnAllNotices);
+  TfNotice::Register(me, &BaseUI::OnNewSceneNotice);
+  TfNotice::Register(me, &BaseUI::OnSceneChangedNotice);
+  TfNotice::Register(me, &BaseUI::OnSelectionChangedNotice);
+  TfNotice::Register(me, &BaseUI::OnAttributeChangedNotice);
 };
 
 std::string 
@@ -58,7 +58,7 @@ void BaseUI::OnAttributeChangedNotice(const AttributeChangedNotice& n)
 {
 }
 
-void BaseUI::OnAllNotices(const pxr::TfNotice& n)
+void BaseUI::OnAllNotices(const TfNotice& n)
 {
 }
 
@@ -66,7 +66,7 @@ void BaseUI::OnAllNotices(const pxr::TfNotice& n)
 void BaseUI::GetRelativeMousePosition(const float inX, const float inY, 
   float& outX, float& outY)
 {
-  pxr::GfVec2f parentPosition = _parent->GetMin();
+  GfVec2f parentPosition = _parent->GetMin();
   float parentX = parentPosition[0];
   float parentY = parentPosition[1];
   if (_parent->GetTab()) parentY += _parent->GetTab()->GetHeight();
@@ -74,9 +74,9 @@ void BaseUI::GetRelativeMousePosition(const float inX, const float inY,
   outY = inY - parentY;
 }
 
-void BaseUI::DiscardEventsIfMouseInsideBox(const pxr::GfVec2f& min, const pxr::GfVec2f& max)
+void BaseUI::DiscardEventsIfMouseInsideBox(const GfVec2f& min, const GfVec2f& max)
 {
-  const pxr::GfVec2f mousePos = ImGui::GetMousePos() - _parent->GetMin();
+  const GfVec2f mousePos = ImGui::GetMousePos() - _parent->GetMin();
   if (mousePos[0] > min[0] && mousePos[0] < max[0] && mousePos[1] > min[1] && mousePos[1] < max[1]) {
     _parent->SetFlag(View::DISCARDMOUSEBUTTON | View::DISCARDMOUSEMOVE);
   }
@@ -98,14 +98,14 @@ BaseUI::GetWindowHeight()
 };
 
 // ui dimensions
-pxr::GfVec2f BaseUI::GetPosition()
+GfVec2f BaseUI::GetPosition()
 {
-  return pxr::GfVec2f(GetX(), GetY());
+  return GfVec2f(GetX(), GetY());
 }
 
-pxr::GfVec2f BaseUI::GetSize()
+GfVec2f BaseUI::GetSize()
 {
-  return pxr::GfVec2f(GetWidth(), GetHeight());
+  return GfVec2f(GetWidth(), GetHeight());
 }
 
 int BaseUI::GetX()
@@ -157,10 +157,10 @@ void BaseUI::AttachTooltip(const char* tooltip)
 {
   ImGui::SetTooltip("%s", tooltip);
   ImGuiContext& g = *GImGui;
-  const pxr::GfVec2i min = pxr::GfVec2i(g.IO.MousePos.x, g.IO.MousePos.y) +
-    pxr::GfVec2i(16 * g.Style.MouseCursorScale, 8 * g.Style.MouseCursorScale);
+  const GfVec2i min = GfVec2i(g.IO.MousePos.x, g.IO.MousePos.y) +
+    GfVec2i(16 * g.Style.MouseCursorScale, 8 * g.Style.MouseCursorScale);
   ImVec2 size(ImGui::CalcTextSize(tooltip));
-  GetWindow()->DirtyViewsUnderBox(min, pxr::GfVec2i(size.x, size.y));
+  GetWindow()->DirtyViewsUnderBox(min, GfVec2i(size.x, size.y));
 }
 
 

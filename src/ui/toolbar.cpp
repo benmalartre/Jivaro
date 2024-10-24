@@ -67,7 +67,7 @@ bool ToolbarSeparator::Draw()
 
 ToolbarButton::ToolbarButton(BaseUI* ui, short tool, const std::string& label, 
   const std::string& shortcut, const std::string& tooltip, const char* icon, bool toggable, 
-  bool enabled, CALLBACK_FN func, const pxr::VtArray<pxr::VtValue> args)
+  bool enabled, CALLBACK_FN func, const VtArray<VtValue> args)
   : ToolbarItem(ui, TOOLBAR_BUTTON)
   , tool(tool)
   , label(label)

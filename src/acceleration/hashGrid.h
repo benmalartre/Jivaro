@@ -21,21 +21,21 @@ class Geometry;
 class HashGrid
 {
 protected:
-  typedef int64_t (HashGrid::*HashFunc)(const pxr::GfVec3i& intCoords) const;
+  typedef int64_t (HashGrid::*HashFunc)(const GfVec3i& intCoords) const;
 
   // hash from integer coordinates
-  inline int64_t _HashCoordsMuller(const pxr::GfVec3i& intCoords) const {
+  inline int64_t _HashCoordsMuller(const GfVec3i& intCoords) const {
     int64_t h = (intCoords[0] * 92837111) ^ (intCoords[1] * 689287499) ^ (intCoords[2] * 283923481);
     return std::abs(h) % _tableSize;
   };
-  inline int64_t _HashCoordsPixar(const pxr::GfVec3i& intCoords) const {
-    int64_t h = pxr::TfHash()(intCoords);
+  inline int64_t _HashCoordsPixar(const GfVec3i& intCoords) const {
+    int64_t h = TfHash()(intCoords);
     return std::abs(h) % _tableSize;
   };
 
   // integer coordinates
-  inline pxr::GfVec3i _IntCoords(const pxr::GfVec3f& coords) const{
-    return pxr::GfVec3i(
+  inline GfVec3i _IntCoords(const GfVec3f& coords) const{
+    return GfVec3i(
       std::floorf(coords[0] * _scl),
       std::floorf(coords[1] * _scl),
       std::floorf(coords[2] * _scl)
@@ -61,16 +61,16 @@ public:
     }
   };
 
-  void Init(size_t n, const pxr::GfVec3f* positions, float radius);
-  void Update(const pxr::GfVec3f* positions);
+  void Init(size_t n, const GfVec3f* positions, float radius);
+  void Update(const GfVec3f* positions);
 
-  size_t Closests(size_t index, const pxr::GfVec3f* positions,
+  size_t Closests(size_t index, const GfVec3f* positions,
     std::vector<int>& closests, float distance) const;
-  size_t Closests(size_t index, const pxr::GfVec3f* positions, const pxr::GfVec3f* velocities, float ft,
+  size_t Closests(size_t index, const GfVec3f* positions, const GfVec3f* velocities, float ft,
     std::vector<int>& closests, float distance) const;
 
   void SetSpacing(float spacing) { _spacing = spacing > 1e-6f ? spacing : 1e-6f; _scl = 1.f/_spacing; };
-  pxr::GfVec3f GetColor(const pxr::GfVec3f& point);
+  GfVec3f GetColor(const GfVec3f& point);
 
 private:
   size_t                            _n;

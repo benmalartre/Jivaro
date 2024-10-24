@@ -39,9 +39,9 @@
 PXR_NAMESPACE_OPEN_SCOPE
 // Unfortunately Inherit and Specialize are just alias to SdfPath
 // To reuse templated code we create new type SdfInherit and SdfSpecialize 
-template <int InheritOrSpecialize> struct SdfInheritOrSpecialize : pxr::SdfPath {
-  SdfInheritOrSpecialize() : pxr::SdfPath() {}
-  SdfInheritOrSpecialize(const pxr::SdfPath &path) : pxr::SdfPath(path) {}
+template <int InheritOrSpecialize> struct SdfInheritOrSpecialize : SdfPath {
+  SdfInheritOrSpecialize() : SdfPath() {}
+  SdfInheritOrSpecialize(const SdfPath &path) : SdfPath(path) {}
 };
 
 using SdfInherit = SdfInheritOrSpecialize<0>;
@@ -50,9 +50,9 @@ PXR_NAMESPACE_CLOSE_SCOPE
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-const pxr::GfVec2f BUTTON_LARGE_SIZE(64.f, 64.f);
-const pxr::GfVec2f BUTTON_NORMAL_SIZE(24.f, 24.f);
-const pxr::GfVec2f BUTTON_MINI_SIZE(16.f, 20.f);
+const GfVec2f BUTTON_LARGE_SIZE(64.f, 64.f);
+const GfVec2f BUTTON_NORMAL_SIZE(24.f, 24.f);
+const GfVec2f BUTTON_MINI_SIZE(16.f, 20.f);
 
 /// Height of a row in the property editor
 constexpr float TABLE_ROW_DEFAULT_HEIGHT = 22.f;
@@ -63,16 +63,16 @@ public:
 
   static void HelpMarker(const char* desc);
 
-  static void AddAttributeDisplayName(const pxr::UsdAttribute& attribute);
-  static pxr::VtValue AddTokenWidget(const pxr::UsdAttribute& attribute, const pxr::UsdTimeCode& timeCode);
-  static pxr::VtValue AddColorWidget(const pxr::UsdAttribute& attribute, const pxr::UsdTimeCode& timeCode);
-  static pxr::VtValue AddAttributeWidget(const pxr::UsdAttribute& attribute, const pxr::UsdTimeCode& timeCode);
+  static void AddAttributeDisplayName(const UsdAttribute& attribute);
+  static VtValue AddTokenWidget(const UsdAttribute& attribute, const UsdTimeCode& timeCode);
+  static VtValue AddColorWidget(const UsdAttribute& attribute, const UsdTimeCode& timeCode);
+  static VtValue AddAttributeWidget(const UsdAttribute& attribute, const UsdTimeCode& timeCode);
 
   template <typename VectorType, int DataType, int N>
-  static pxr::VtValue AddVectorWidget(const pxr::UsdAttribute& attribute, const pxr::UsdTimeCode& timeCode);
+  static VtValue AddVectorWidget(const UsdAttribute& attribute, const UsdTimeCode& timeCode);
 
   template <typename MatrixType, int DataType, int Rows, int Cols>
-  static pxr::VtValue AddMatrixWidget(const pxr::UsdAttribute& attribute, const pxr::UsdTimeCode& timeCode);
+  static VtValue AddMatrixWidget(const UsdAttribute& attribute, const UsdTimeCode& timeCode);
 
   static void IconButton(const char* icon, short state, CALLBACK_FN func);
   static bool AddIconButton(const char* icon, short state, CALLBACK_FN func);
@@ -82,21 +82,21 @@ public:
 
   static void AddPropertyMiniButton(const char* btnStr, int rowId, 
     const ImVec4& btnColor = ImVec4(0.0, 0.7, 0.0, 1.0));
-  static void AddPrimKind(const pxr::SdfPrimSpecHandle& primSpec);
-  static void AddPrimType(const pxr::SdfPrimSpecHandle& primSpec, ImGuiComboFlags comboFlags = 0);
-  static void AddPrimSpecifier(const pxr::SdfPrimSpecHandle& primSpec, ImGuiComboFlags comboFlags = 0);
-  static void AddPrimInstanceable(const pxr::SdfPrimSpecHandle& primSpec);
-  static void AddPrimHidden(const pxr::SdfPrimSpecHandle& primSpec);
-  static void AddPrimActive(const pxr::SdfPrimSpecHandle& primSpec);
-  static void AddPrimName(const pxr::SdfPrimSpecHandle& primSpec);
+  static void AddPrimKind(const SdfPrimSpecHandle& primSpec);
+  static void AddPrimType(const SdfPrimSpecHandle& primSpec, ImGuiComboFlags comboFlags = 0);
+  static void AddPrimSpecifier(const SdfPrimSpecHandle& primSpec, ImGuiComboFlags comboFlags = 0);
+  static void AddPrimInstanceable(const SdfPrimSpecHandle& primSpec);
+  static void AddPrimHidden(const SdfPrimSpecHandle& primSpec);
+  static void AddPrimActive(const SdfPrimSpecHandle& primSpec);
+  static void AddPrimName(const SdfPrimSpecHandle& primSpec);
 
 };
 
 template <typename MatrixType, int DataType, int Rows, int Cols>
-pxr::VtValue 
-UIUtils::AddMatrixWidget(const pxr::UsdAttribute& attribute, const pxr::UsdTimeCode& timeCode)
+VtValue 
+UIUtils::AddMatrixWidget(const UsdAttribute& attribute, const UsdTimeCode& timeCode)
 {
-  pxr::VtValue value;
+  VtValue value;
   attribute.Get(&value, timeCode);
   MatrixType buffer = value.Get<MatrixType>();
   bool valueChanged = false;
@@ -117,14 +117,14 @@ UIUtils::AddMatrixWidget(const pxr::UsdAttribute& attribute, const pxr::UsdTimeC
   ImGui::PopID();
     
   if (valueChanged) {
-    return pxr::VtValue(buffer);
+    return VtValue(buffer);
   }
-  return pxr::VtValue();
+  return VtValue();
 }
 
 template <typename VectorType, int DataType, int N>
-pxr::VtValue 
-UIUtils::AddVectorWidget(const pxr::UsdAttribute& attribute, const pxr::UsdTimeCode& timeCode)
+VtValue 
+UIUtils::AddVectorWidget(const UsdAttribute& attribute, const UsdTimeCode& timeCode)
 {
   VectorType buffer;
   attribute.Get<VectorType>(&buffer, timeCode);
@@ -133,35 +133,35 @@ UIUtils::AddVectorWidget(const pxr::UsdAttribute& attribute, const pxr::UsdTimeC
     NULL, NULL, format, ImGuiInputTextFlags());
 
   if (ImGui::IsItemDeactivatedAfterEdit()) {
-    return pxr::VtValue(VectorType(buffer));
+    return VtValue(VectorType(buffer));
   }
-  return pxr::VtValue();
+  return VtValue();
 }
 
 // ExtraArgsT is used to pass additional arguments as the function passed as visitor
 // might need more than the operation and the item
 template <typename PolicyT, typename FuncT, typename... ExtraArgsT>
-static void IterateListEditorItems(const pxr::SdfListEditorProxy<PolicyT> &listEditor, 
+static void IterateListEditorItems(const SdfListEditorProxy<PolicyT> &listEditor, 
   const FuncT &call, ExtraArgsT... args) 
 {
   // TODO: should we check if the list is already all explicit ??
   for (const typename PolicyT::value_type &item : listEditor.GetExplicitItems()) {
-    call(pxr::SdfListOpTypeExplicit, item, args...);
+    call(SdfListOpTypeExplicit, item, args...);
   }
   for (const typename PolicyT::value_type &item : listEditor.GetOrderedItems()) {
-    call(pxr::SdfListOpTypeOrdered, item, args...);
+    call(SdfListOpTypeOrdered, item, args...);
   }
   for (const typename PolicyT::value_type &item : listEditor.GetAddedItems()) {
-    call(pxr::SdfListOpTypeAdded, item, args...); // return "add" as TfToken instead ?
+    call(SdfListOpTypeAdded, item, args...); // return "add" as TfToken instead ?
   }
   for (const typename PolicyT::value_type &item : listEditor.GetPrependedItems()) {
-    call(pxr::SdfListOpTypePrepended, item, args...);
+    call(SdfListOpTypePrepended, item, args...);
   }
   for (const typename PolicyT::value_type &item : listEditor.GetAppendedItems()) {
-    call(pxr::SdfListOpTypeAppended, item, args...);
+    call(SdfListOpTypeAppended, item, args...);
   }
   for (const typename PolicyT::value_type &item : listEditor.GetDeletedItems()) {
-    call(pxr::SdfListOpTypeDeleted, item, args...);
+    call(SdfListOpTypeDeleted, item, args...);
   }
 }
 
@@ -181,26 +181,26 @@ template <typename IntOrSdfListOpT> inline const char *GetListEditorOperationAbb
 }
 
 template <typename PolicyT>
-inline void CreateListEditorOperation(pxr::SdfListEditorProxy<PolicyT> &&listEditor, pxr::SdfListOpType op,
-                                      typename pxr::SdfListEditorProxy<PolicyT>::value_type item) 
+inline void CreateListEditorOperation(SdfListEditorProxy<PolicyT> &&listEditor, SdfListOpType op,
+                                      typename SdfListEditorProxy<PolicyT>::value_type item) 
 {
   switch (op) {
-  case pxr:: SdfListOpTypeAdded:
+  case  SdfListOpTypeAdded:
     listEditor.GetAddedItems().push_back(item);
     break;
-  case pxr::SdfListOpTypePrepended:
+  case SdfListOpTypePrepended:
     listEditor.GetPrependedItems().push_back(item);
     break;
-  case pxr::SdfListOpTypeAppended:
+  case SdfListOpTypeAppended:
       listEditor.GetAppendedItems().push_back(item);
       break;
-  case pxr::SdfListOpTypeDeleted:
+  case SdfListOpTypeDeleted:
       listEditor.GetDeletedItems().push_back(item);
       break;
-  case pxr::SdfListOpTypeExplicit:
+  case SdfListOpTypeExplicit:
       listEditor.GetExplicitItems().push_back(item);
       break;
-  case pxr::SdfListOpTypeOrdered:
+  case SdfListOpTypeOrdered:
       listEditor.GetOrderedItems().push_back(item);
       break;
   default:
@@ -211,16 +211,16 @@ inline void CreateListEditorOperation(pxr::SdfListEditorProxy<PolicyT> &&listEdi
 template <typename ListEditorT, typename OpOrIntT> 
 inline auto GetSdfListOpItems(ListEditorT &listEditor, OpOrIntT op_)
  {
-    const pxr::SdfListOpType op = static_cast<pxr::SdfListOpType>(op_);
-    if (op == pxr::SdfListOpTypeOrdered) {
+    const SdfListOpType op = static_cast<SdfListOpType>(op_);
+    if (op == SdfListOpTypeOrdered) {
         return listEditor.GetOrderedItems();
-    } else if (op == pxr::SdfListOpTypeAppended) {
+    } else if (op == SdfListOpTypeAppended) {
         return listEditor.GetAppendedItems();
-    } else if (op == pxr::SdfListOpTypeAdded) {
+    } else if (op == SdfListOpTypeAdded) {
         return listEditor.GetAddedItems();
-    } else if (op == pxr::SdfListOpTypePrepended) {
+    } else if (op == SdfListOpTypePrepended) {
         return listEditor.GetPrependedItems();
-    } else if (op == pxr::SdfListOpTypeDeleted) {
+    } else if (op == SdfListOpTypeDeleted) {
         return listEditor.GetDeletedItems();
     }
     return listEditor.GetExplicitItems();
@@ -230,16 +230,16 @@ inline auto GetSdfListOpItems(ListEditorT &listEditor, OpOrIntT op_)
 template <typename ListEditorT, typename OpOrIntT, typename ItemsT> 
 inline void SetSdfListOpItems(ListEditorT &listEditor, OpOrIntT op_, const ItemsT &items) 
 {
-    const pxr::SdfListOpType op = static_cast<pxr::SdfListOpType>(op_);
-    if (op == pxr::SdfListOpTypeOrdered) {
+    const SdfListOpType op = static_cast<SdfListOpType>(op_);
+    if (op == SdfListOpTypeOrdered) {
         listEditor.SetOrderedItems(items);
-    } else if (op == pxr::SdfListOpTypeAppended) {
+    } else if (op == SdfListOpTypeAppended) {
         listEditor.SetAppendedItems(items);
-    } else if (op == pxr::SdfListOpTypeAdded) {
+    } else if (op == SdfListOpTypeAdded) {
         listEditor.SetAddedItems(items);
-    } else if (op == pxr::SdfListOpTypePrepended) {
+    } else if (op == SdfListOpTypePrepended) {
         listEditor.SetPrependedItems(items);
-    } else if (op == pxr::SdfListOpTypeDeleted) {
+    } else if (op == SdfListOpTypeDeleted) {
         listEditor.SetDeletedItems(items);
     } else {
         listEditor.SetExplicitItems(items);
@@ -247,8 +247,8 @@ inline void SetSdfListOpItems(ListEditorT &listEditor, OpOrIntT op_, const Items
 };
 
 template <typename Policy>
-void CreateListEditorOperation(pxr::SdfListEditorProxy<Policy>&& listEditor, int operation,
-  typename pxr::SdfListEditorProxy<Policy>::value_type item) {
+void CreateListEditorOperation(SdfListEditorProxy<Policy>&& listEditor, int operation,
+  typename SdfListEditorProxy<Policy>::value_type item) {
   switch (operation) {
   case 0:
     listEditor.Add(item);
@@ -272,26 +272,26 @@ void CreateListEditorOperation(pxr::SdfListEditorProxy<Policy>&& listEditor, int
 
 /// Remove SdfPath from their lists (Inherits and Specialize)
 template <typename ListT> inline 
-void RemovePathFromList(const pxr::SdfPrimSpecHandle &primSpec, const pxr::SdfPath &item);
+void RemovePathFromList(const SdfPrimSpecHandle &primSpec, const SdfPath &item);
 template <> inline 
-void RemovePathFromList<pxr::SdfInherit>(const pxr::SdfPrimSpecHandle &primSpec, const pxr::SdfPath &item) 
+void RemovePathFromList<SdfInherit>(const SdfPrimSpecHandle &primSpec, const SdfPath &item) 
 {
     primSpec->GetInheritPathList().RemoveItemEdits(item);
 }
 template <> inline 
-void RemovePathFromList<pxr::SdfSpecialize>(const pxr::SdfPrimSpecHandle &primSpec, const pxr::SdfPath &item) 
+void RemovePathFromList<SdfSpecialize>(const SdfPrimSpecHandle &primSpec, const SdfPath &item) 
 {
     primSpec->GetSpecializesList().RemoveItemEdits(item);
 }
 
 // forward decl
 template<typename ArcT>
-inline void RemoveArc(const pxr::SdfPrimSpecHandle &primSpec, const ArcT &arc);
+inline void RemoveArc(const SdfPrimSpecHandle &primSpec, const ArcT &arc);
 
 
 /// Draw the menu items for AssetPaths (SdfReference and SdfPayload)
 template <typename AssetPathT> 
-void AddAssetPathMenuItems(const pxr::SdfPrimSpecHandle &primSpec, const AssetPathT &assetPath) 
+void AddAssetPathMenuItems(const SdfPrimSpecHandle &primSpec, const AssetPathT &assetPath) 
 {
   if (ImGui::MenuItem("Select Arc")) {
     auto realPath = primSpec->GetLayer()->ComputeAbsolutePath(assetPath.GetAssetPath());
@@ -314,7 +314,7 @@ void AddAssetPathMenuItems(const pxr::SdfPrimSpecHandle &primSpec, const AssetPa
 }
 
 template <typename AssetPathT> 
-AssetPathT AddSdfPathEditor(const pxr::SdfPrimSpecHandle &primSpec, 
+AssetPathT AddSdfPathEditor(const SdfPrimSpecHandle &primSpec, 
   const AssetPathT& arc, ImVec2 outerSize) 
 {
   AssetPathT updatedArc;
@@ -335,7 +335,7 @@ AssetPathT AddSdfPathEditor(const pxr::SdfPrimSpecHandle &primSpec,
 }
 
 template <typename ArcT> 
-void AddSdfPathMenuItems(const pxr::SdfPrimSpecHandle &primSpec, const pxr::SdfPath &path) 
+void AddSdfPathMenuItems(const SdfPrimSpecHandle &primSpec, const SdfPath &path) 
 {
   if (ImGui::MenuItem("Remove")) {
     if (!primSpec)
@@ -353,7 +353,7 @@ void AddSdfPathMenuItems(const pxr::SdfPrimSpecHandle &primSpec, const pxr::SdfP
 // and avoid to duplicate the code
 template <typename AssetPathT>
 static void AddAssetPathRow(const char *operationName, const AssetPathT &item,
-                             const pxr::SdfPrimSpecHandle &primSpec) { // TODO:primSpec might not be useful here
+                             const SdfPrimSpecHandle &primSpec) { // TODO:primSpec might not be useful here
   ImGui::TableNextRow();
   ImGui::TableSetColumnIndex(0);
   if (ImGui::SmallButton(ICON_FA_TRASH)) { // TODO: replace with the proper menu
@@ -385,7 +385,7 @@ static void AddAssetPathRow(const char *operationName, const AssetPathT &item,
 struct Inherit {};
 struct Specialize {};
 
-static bool HasComposition(const pxr::SdfPrimSpecHandle &primSpec) 
+static bool HasComposition(const SdfPrimSpecHandle &primSpec) 
 {
   return
     primSpec->HasReferences() || 
@@ -394,56 +394,56 @@ static bool HasComposition(const pxr::SdfPrimSpecHandle &primSpec)
     primSpec->HasSpecializes();
 }
 
-inline pxr::SdfReferencesProxy 
-GetCompositionArcList(const pxr::SdfPrimSpecHandle &primSpec, const pxr::SdfReference &val) 
+inline SdfReferencesProxy 
+GetCompositionArcList(const SdfPrimSpecHandle &primSpec, const SdfReference &val) 
 {
   return primSpec->GetReferenceList();
 }
 
-inline pxr::SdfPayloadsProxy 
-GetCompositionArcList(const pxr::SdfPrimSpecHandle &primSpec, const pxr::SdfPayload &val) 
+inline SdfPayloadsProxy 
+GetCompositionArcList(const SdfPrimSpecHandle &primSpec, const SdfPayload &val) 
 {
   return primSpec->GetPayloadList();
 }
 
-inline pxr::SdfInheritsProxy 
-GetCompositionArcList(const pxr::SdfPrimSpecHandle &primSpec, const pxr::SdfInherit &val) 
+inline SdfInheritsProxy 
+GetCompositionArcList(const SdfPrimSpecHandle &primSpec, const SdfInherit &val) 
 {
   return primSpec->GetInheritPathList();
 }
 
-inline pxr::SdfSpecializesProxy 
-GetCompositionArcList(const pxr::SdfPrimSpecHandle &primSpec, const pxr::SdfSpecialize &val) 
+inline SdfSpecializesProxy 
+GetCompositionArcList(const SdfPrimSpecHandle &primSpec, const SdfSpecialize &val) 
 {
   return primSpec->GetSpecializesList();
 }
 
 inline void 
-ClearArcList(const pxr::SdfPrimSpecHandle &primSpec, const pxr::SdfReference &val) 
+ClearArcList(const SdfPrimSpecHandle &primSpec, const SdfReference &val) 
 {
   return primSpec->ClearReferenceList();
 }
 
 inline void 
-ClearArcList(const pxr::SdfPrimSpecHandle &primSpec, const pxr::SdfPayload &val) 
+ClearArcList(const SdfPrimSpecHandle &primSpec, const SdfPayload &val) 
 {
   return primSpec->ClearPayloadList();
 }
 
 inline void 
-ClearArcList(const pxr::SdfPrimSpecHandle &primSpec, const pxr::SdfInherit &val) 
+ClearArcList(const SdfPrimSpecHandle &primSpec, const SdfInherit &val) 
 {
   return primSpec->ClearInheritPathList();
 }
 
 inline void 
-ClearArcList(const pxr::SdfPrimSpecHandle &primSpec, const pxr::SdfSpecialize &val) 
+ClearArcList(const SdfPrimSpecHandle &primSpec, const SdfSpecialize &val) 
 {
   return primSpec->ClearSpecializesList();
 }
 
 template<typename ArcT>
-inline void RemoveArc(const pxr::SdfPrimSpecHandle &primSpec, const ArcT &arc) {
+inline void RemoveArc(const SdfPrimSpecHandle &primSpec, const ArcT &arc) {
   std::function<void()> removeItem = [=]() {
     GetCompositionArcList(primSpec, arc).RemoveItemEdits(arc);
     // Also clear the arc list if there are no more items
@@ -455,48 +455,48 @@ inline void RemoveArc(const pxr::SdfPrimSpecHandle &primSpec, const ArcT &arc) {
 }
 
 inline void 
-SelectArcType(const pxr::SdfPrimSpecHandle &primSpec, const pxr::SdfReference &ref) 
+SelectArcType(const SdfPrimSpecHandle &primSpec, const SdfReference &ref) 
 {
   auto realPath = ref.GetAssetPath().empty() ? primSpec->GetLayer()->GetRealPath()
                                               : primSpec->GetLayer()->ComputeAbsolutePath(ref.GetAssetPath());
-  auto layerOrOpen = pxr::SdfLayer::FindOrOpen(realPath);
+  auto layerOrOpen = SdfLayer::FindOrOpen(realPath);
   //ExecuteAfterDraw<EditorSetSelection>(layerOrOpen, ref.GetPrimPath());
 }
 
 inline void 
-SelectArcType(const pxr::SdfPrimSpecHandle &primSpec, const pxr::SdfPayload &pay) 
+SelectArcType(const SdfPrimSpecHandle &primSpec, const SdfPayload &pay) 
 {
   auto realPath = primSpec->GetLayer()->ComputeAbsolutePath(pay.GetAssetPath());
-  auto layerOrOpen = pxr::SdfLayer::FindOrOpen(realPath);
+  auto layerOrOpen = SdfLayer::FindOrOpen(realPath);
   //ExecuteAfterDraw<EditorSetSelection>(layerOrOpen, pay.GetPrimPath());
 }
 
 inline void 
-SelectArcType(const pxr::SdfPrimSpecHandle &primSpec, const pxr::SdfPath &path) {
+SelectArcType(const SdfPrimSpecHandle &primSpec, const SdfPath &path) {
   //ExecuteAfterDraw<EditorSetSelection>(primSpec->GetLayer(), path);
 }
 
-inline void AddArcTypeMenuItems(const pxr::SdfPrimSpecHandle &primSpec, 
-  const pxr::SdfReference &ref) 
+inline void AddArcTypeMenuItems(const SdfPrimSpecHandle &primSpec, 
+  const SdfReference &ref) 
 {
   AddAssetPathMenuItems(primSpec, ref);
 }
 
-inline void AddArcTypeMenuItems(const pxr::SdfPrimSpecHandle &primSpec, 
-  const pxr::SdfPayload &pay) 
+inline void AddArcTypeMenuItems(const SdfPrimSpecHandle &primSpec, 
+  const SdfPayload &pay) 
 {
   AddAssetPathMenuItems(primSpec, pay);
 }
 
-inline void AddArcTypeMenuItems(const pxr::SdfPrimSpecHandle &primSpec,
-  const pxr::SdfInherit &inh) 
+inline void AddArcTypeMenuItems(const SdfPrimSpecHandle &primSpec,
+  const SdfInherit &inh) 
 {
-  AddSdfPathMenuItems<pxr::SdfInherit>(primSpec, inh);
+  AddSdfPathMenuItems<SdfInherit>(primSpec, inh);
 }
-inline void AddArcTypeMenuItems(const pxr::SdfPrimSpecHandle &primSpec, 
-  const pxr::SdfSpecialize &spe) 
+inline void AddArcTypeMenuItems(const SdfPrimSpecHandle &primSpec, 
+  const SdfSpecialize &spe) 
 {
-  AddSdfPathMenuItems<pxr::SdfSpecialize>(primSpec, spe);
+  AddSdfPathMenuItems<SdfSpecialize>(primSpec, spe);
 }
 
 #define CREATE_COMPOSITION_BUTTON(NAME_, ABBR_, LIST_)                                                                        \
@@ -512,37 +512,37 @@ if (primSpec->Has##NAME_##s()) {                                                
   ImGui::PopID();                                                                                                          \
 }
 
-inline std::string GetArcSummary(const pxr::SdfReference &arc) 
+inline std::string GetArcSummary(const SdfReference &arc) 
 { 
   return arc.IsInternal() ? arc.GetPrimPath().GetString() : arc.GetAssetPath(); 
 }
 
-inline std::string GetArcSummary(const pxr::SdfPayload &arc) 
+inline std::string GetArcSummary(const SdfPayload &arc) 
 { 
   return arc.GetAssetPath(); 
 }
 
-inline std::string GetArcSummary(const pxr::SdfPath &arc) 
+inline std::string GetArcSummary(const SdfPath &arc) 
 { 
   return arc.GetString(); 
 }
 
-void AddReferenceSummary(pxr::SdfListOpType operation, const pxr::SdfReference &assetPath, 
-  const pxr::SdfPrimSpecHandle &primSpec, int &menuItemId);
+void AddReferenceSummary(SdfListOpType operation, const SdfReference &assetPath, 
+  const SdfPrimSpecHandle &primSpec, int &menuItemId);
 
-void AddPayloadSummary(pxr::SdfListOpType operation, const pxr::SdfPayload &assetPath, 
-  const pxr::SdfPrimSpecHandle &primSpec, int &menuItemId);
+void AddPayloadSummary(SdfListOpType operation, const SdfPayload &assetPath, 
+  const SdfPrimSpecHandle &primSpec, int &menuItemId);
 
-void AddInheritPathSummary(pxr::SdfListOpType operation, const pxr::SdfPath &path, 
-  const pxr::SdfPrimSpecHandle &primSpec, int &menuItemId);
+void AddInheritPathSummary(SdfListOpType operation, const SdfPath &path, 
+  const SdfPrimSpecHandle &primSpec, int &menuItemId);
 
-void AddSpecializesSummary(pxr::SdfListOpType operation, const pxr::SdfPath &path,
-  const pxr::SdfPrimSpecHandle &primSpec, int &menuItemId);
+void AddSpecializesSummary(SdfListOpType operation, const SdfPath &path,
+  const SdfPrimSpecHandle &primSpec, int &menuItemId);
 
 template <typename ArcT>
 inline
-void AddPathInRow(pxr::SdfListOpType operation, const ArcT &assetPath, 
-  const pxr::SdfPrimSpecHandle &primSpec, int *itemId) {
+void AddPathInRow(SdfListOpType operation, const ArcT &assetPath, 
+  const SdfPrimSpecHandle &primSpec, int *itemId) {
     std::string path;
     path += GetArcSummary(assetPath);
     ImGui::PushID((*itemId)++);
@@ -558,24 +558,24 @@ void AddPathInRow(pxr::SdfListOpType operation, const ArcT &assetPath,
 }
 
 void 
-AddPrimCompositionSummary(const pxr::SdfPrimSpecHandle &primSpec);
+AddPrimCompositionSummary(const SdfPrimSpecHandle &primSpec);
 
 // Works with SdfReference and SdfPayload
 template <typename ReferenceOrPayloadT>
-ReferenceOrPayloadT DrawReferenceOrPayloadEditor(const pxr::SdfPrimSpecHandle &primSpec, 
+ReferenceOrPayloadT DrawReferenceOrPayloadEditor(const SdfPrimSpecHandle &primSpec, 
   const ReferenceOrPayloadT &ref, ImVec2 outerSize) 
 {
   ReferenceOrPayloadT ret;
   std::string updatedPath = ref.GetAssetPath();
   std::string targetPath = ref.GetPrimPath().GetString();
-  pxr::SdfLayerOffset layerOffset = ref.GetLayerOffset();
+  SdfLayerOffset layerOffset = ref.GetLayerOffset();
   float offset = layerOffset.GetOffset();
   float scale = layerOffset.GetScale();
   ImGui::PushID("DrawAssetPathArcEditor");
   constexpr ImGuiTableFlags tableFlags = ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_PreciseWidths |
                                           ImGuiTableFlags_NoSavedSettings | ImGuiTableFlags_Resizable;
   if (ImGui::BeginTable("DrawAssetPathArcEditorTable", 4, tableFlags, outerSize)) {
-    const float stretchLayer = (layerOffset == pxr::SdfLayerOffset()) ? 0.01 : 0.1;
+    const float stretchLayer = (layerOffset == SdfLayerOffset()) ? 0.01 : 0.1;
     const float stretchTarget = (targetPath.empty()) ? 0.01 : 0.3 * (1 - 2 * stretchLayer);
     const float stretchPath = 1 - 2 * stretchLayer - stretchTarget;
     ImGui::TableSetupColumn("path", ImGuiTableColumnFlags_WidthStretch, stretchPath);
@@ -604,14 +604,14 @@ ReferenceOrPayloadT DrawReferenceOrPayloadEditor(const pxr::SdfPrimSpecHandle &p
     ImGui::InputText("##targetpath", &targetPath);
     if (ImGui::IsItemDeactivatedAfterEdit()) {
       ret = ref;
-      ret.SetPrimPath(pxr::SdfPath(targetPath));
+      ret.SetPrimPath(SdfPath(targetPath));
     }
 
     ImGui::TableSetColumnIndex(2);
     ImGui::SetNextItemWidth(-FLT_MIN);
     ImGui::InputFloat("##offset", &offset);
     if (ImGui::IsItemDeactivatedAfterEdit()) {
-      pxr::SdfLayerOffset updatedLayerOffset(layerOffset);
+      SdfLayerOffset updatedLayerOffset(layerOffset);
       updatedLayerOffset.SetOffset(offset);
       ret = ref;
       ret.SetLayerOffset(updatedLayerOffset);
@@ -621,7 +621,7 @@ ReferenceOrPayloadT DrawReferenceOrPayloadEditor(const pxr::SdfPrimSpecHandle &p
     ImGui::SetNextItemWidth(-FLT_MIN);
     ImGui::InputFloat("##scale", &scale);
     if (ImGui::IsItemDeactivatedAfterEdit()) {
-      pxr::SdfLayerOffset updatedLayerOffset(layerOffset);
+      SdfLayerOffset updatedLayerOffset(layerOffset);
       updatedLayerOffset.SetScale(scale);
       ret = ref;
       ret.SetLayerOffset(updatedLayerOffset);
@@ -634,16 +634,16 @@ ReferenceOrPayloadT DrawReferenceOrPayloadEditor(const pxr::SdfPrimSpecHandle &p
 
 
 /// Add modal dialogs to add composition on primspec (reference, payload, inherit, specialize)
-void AddPrimCreateReference(const pxr::SdfPrimSpecHandle &primSpec);
-void AddPrimCreatePayload(const pxr::SdfPrimSpecHandle &primSpec);
-void AddPrimCreateInherit(const pxr::SdfPrimSpecHandle &primSpec);
-void AddPrimCreateSpecialize(const pxr::SdfPrimSpecHandle &primSpec);
+void AddPrimCreateReference(const SdfPrimSpecHandle &primSpec);
+void AddPrimCreatePayload(const SdfPrimSpecHandle &primSpec);
+void AddPrimCreateInherit(const SdfPrimSpecHandle &primSpec);
+void AddPrimCreateSpecialize(const SdfPrimSpecHandle &primSpec);
 
 /// Add multiple tables with the compositions (Reference, Payload, Inherit, Specialize)
-void AddPrimCompositions(const pxr::SdfPrimSpecHandle &primSpec);
+void AddPrimCompositions(const SdfPrimSpecHandle &primSpec);
 
 // Add a text summary of the composition
-void AddPrimCompositionSummary(const pxr::SdfPrimSpecHandle &primSpec);
+void AddPrimCompositionSummary(const SdfPrimSpecHandle &primSpec);
 
 /// Function to convert a hash from usd to ImGuiID with a seed, to avoid collision with path coming from layer and stages.
 template <ImU32 seed, typename T> inline ImGuiID ToImGuiID(const T &val) {

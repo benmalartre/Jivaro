@@ -64,14 +64,14 @@ static ImColor NODE_CONTOUR_DEFAULT(0, 0, 0, 100);
 static ImColor NODE_CONTOUR_SELECTED(255, 255, 255, 255);
 static ImColor NODE_CONTOUR_HOVERED(60, 60, 60, 100);
 
-static int _GetColorFromAttribute(const pxr::UsdAttribute& attr);
+static int _GetColorFromAttribute(const UsdAttribute& attr);
 
 class Selection;
 
 class GraphEditorUI : public BaseUI
 {
 public:
-  static const pxr::TfToken NodeExpendState[3];
+  static const TfToken NodeExpendState[3];
 
   enum GraphType {
     PIPELINE,
@@ -109,16 +109,16 @@ protected:
   class Item {
     public:
       Item();
-      Item(const pxr::GfVec2f& pos, 
-        const pxr::GfVec2f& size, int color);
+      Item(const GfVec2f& pos, 
+        const GfVec2f& size, int color);
       Item(int color);
 
-      virtual void SetPosition(const pxr::GfVec2f& pos);
-      virtual void SetSize(const pxr::GfVec2f& size);
-      virtual void SetColor(const pxr::GfVec3f& color);
+      virtual void SetPosition(const GfVec2f& pos);
+      virtual void SetSize(const GfVec2f& size);
+      virtual void SetColor(const GfVec3f& color);
       void SetColor(int color);
-      virtual const pxr::GfVec2f& GetPosition() const { return _pos; };
-      virtual const pxr::GfVec2f& GetSize() const { return _size; };
+      virtual const GfVec2f& GetPosition() const { return _pos; };
+      virtual const GfVec2f& GetSize() const { return _size; };
       virtual float GetWidth() const { return _size[0]; };
       virtual float GetHeight() const { return _size[1]; };
       virtual float GetX() const { return _pos[0]; };
@@ -127,16 +127,16 @@ protected:
 
       void SetState(size_t flag, bool value);
       bool GetState(size_t flag);
-      virtual bool Contains(const pxr::GfVec2f& position, 
-        const pxr::GfVec2f& extend = pxr::GfVec2f(0,0));
-      virtual bool Intersect(const pxr::GfVec2f& start, 
-        const pxr::GfVec2f& end);
+      virtual bool Contains(const GfVec2f& position, 
+        const GfVec2f& extend = GfVec2f(0,0));
+      virtual bool Intersect(const GfVec2f& start, 
+        const GfVec2f& end);
       virtual bool IsVisible(GraphEditorUI* editor) = 0;
       virtual void Draw(GraphEditorUI* editor) = 0;
 
     protected:
-      pxr::GfVec2f _pos;
-      pxr::GfVec2f _size;
+      GfVec2f _pos;
+      GfVec2f _size;
       int          _color;
       short        _state;
     };
@@ -148,8 +148,8 @@ protected:
       Port() {};
       Port(Node* node, Graph::Port* port);
 
-      bool Contains(const pxr::GfVec2f& position,
-        const pxr::GfVec2f& extend = pxr::GfVec2f(0, 0)) override;
+      bool Contains(const GfVec2f& position,
+        const GfVec2f& extend = GfVec2f(0, 0)) override;
 
       bool IsVisible(GraphEditorUI* editor) override { return true; };
       bool IsConnected(GraphEditorUI* editor, Graph::Connexion* connexion=NULL);
@@ -167,7 +167,7 @@ protected:
 
   struct ConnexionData
   {
-    pxr::GfVec2f  p0, p1, p2, p3;
+    GfVec2f  p0, p1, p2, p3;
     int           numSegments;
   };
 
@@ -185,12 +185,12 @@ protected:
       void Draw(GraphEditorUI* editor) override;
       inline ConnexionData GetDescription();
 
-      virtual bool Contains(const pxr::GfVec2f& position,
-        const pxr::GfVec2f& extend = pxr::GfVec2f(0, 0)) override;
-      virtual bool Intersect(const pxr::GfVec2f& start,
-        const pxr::GfVec2f& end) override;
+      virtual bool Contains(const GfVec2f& position,
+        const GfVec2f& extend = GfVec2f(0, 0)) override;
+      virtual bool Intersect(const GfVec2f& start,
+        const GfVec2f& end) override;
 
-      pxr::GfRange2f GetBoundingBox();
+      GfRange2f GetBoundingBox();
       Graph::Connexion* Get() { return _connexion; };
       Port* GetStart() { return _start; };
       Port* GetEnd() { return _end; };
@@ -217,15 +217,15 @@ protected:
       Node(Graph::Node* node);
       ~Node();
 
-      void SetColor(const pxr::GfVec3f& color) override;
+      void SetColor(const GfVec3f& color) override;
       bool IsVisible(GraphEditorUI* editor) override;
       void Draw(GraphEditorUI* graph) override;
       void ComputeSize(GraphEditorUI* editor);
 
       std::vector<Port>& GetPorts() { return _ports; };
-      Port* GetPort(const pxr::TfToken& name);
+      Port* GetPort(const TfToken& name);
       Graph::Node* Get() { return _node; };
-      pxr::TfToken& GetExpended() { return _expended; };
+      TfToken& GetExpended() { return _expended; };
       short GetDirty() { return _dirty; };
       void SetDirty(short dirty) { _dirty = dirty; };
 
@@ -238,7 +238,7 @@ protected:
       // ui
       std::vector<Port>           _ports;
       Node*                       _parent;
-      pxr::TfToken                _expended;
+      TfToken                _expended;
       short                       _dirty;
 
       // data
@@ -246,8 +246,8 @@ protected:
   };
 
   struct Marquee {
-    pxr::GfVec2f start;
-    pxr::GfVec2f end;
+    GfVec2f start;
+    GfVec2f end;
   };
 
   struct Connect {
@@ -277,10 +277,10 @@ public:
   void DrawGrid();
 
   inline float GetScale() const { return _scale; };
-  inline const pxr::GfVec2f& GetOffset() const { return _offset; };
+  inline const GfVec2f& GetOffset() const { return _offset; };
 
   void Init();
-  void Init(const std::vector<pxr::UsdStageRefPtr>& stages);
+  void Init(const std::vector<UsdStageRefPtr>& stages);
   void Term();
 
   // font
@@ -289,8 +289,8 @@ public:
   inline float GetFontScale() { return _fontScale; };
 
   // conversion
-  pxr::GfVec2f ViewPositionToGridPosition(const pxr::GfVec2f& mousePos);
-  pxr::GfVec2f GridPositionToViewPosition(const pxr::GfVec2f& gridPos);
+  GfVec2f ViewPositionToGridPosition(const GfVec2f& mousePos);
+  GfVec2f GridPositionToViewPosition(const GfVec2f& gridPos);
 
   // graph
   Graph* GetGraph() { return _graph; };
@@ -315,7 +315,7 @@ public:
   void MarqueeSelect(int mod);
   std::set<Node*>& GetSelectedNodes() { return _selectedNodes; };
   const std::set<Node*>& GetSelectedNodes() const { return _selectedNodes; };
-  pxr::SdfPathVector GetSelectedNodesPath();
+  SdfPathVector GetSelectedNodesPath();
 
   // display
   void ResetScaleOffset();
@@ -336,14 +336,14 @@ public:
   void OnNewSceneNotice(const NewSceneNotice& n) override;
   
 private:
-  void _GetPortUnderMouse(const pxr::GfVec2f& mousePos, Node* node);
-  void _GetNodeUnderMouse(const pxr::GfVec2f& mousePos, bool useExtend = false);
-  void _GetConnexionUnderMouse(const pxr::GfVec2f& mousePos);
+  void _GetPortUnderMouse(const GfVec2f& mousePos, Node* node);
+  void _GetNodeUnderMouse(const GfVec2f& mousePos, bool useExtend = false);
+  void _GetConnexionUnderMouse(const GfVec2f& mousePos);
   
   int                                   _id;
   int                                   _depth;
-  pxr::GfVec2f                          _offset;  
-  pxr::GfVec2f                          _dragOffset;
+  GfVec2f                          _offset;  
+  GfVec2f                          _dragOffset;
   float                                 _scale;
   float                                 _invScale;
   float                                 _currentX;
@@ -358,7 +358,7 @@ private:
   size_t                                _fontIndex;
 
   int                                   _nodeId;
-  pxr::UsdStageRefPtr                   _stage;
+  UsdStageRefPtr                   _stage;
   Graph*                                _graph;
   std::set<Node*>                       _selectedNodes;
   std::set<Connexion*>                  _selectedConnexions;

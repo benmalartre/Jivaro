@@ -51,53 +51,53 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 // conversion pxr/embree - embree/pxr  
 inline embree::Vec3fa 
-pxr2embree(const pxr::GfVec3f& v){return embree::Vec3fa(v[0], v[1], v[2]);};
+pxr2embree(const GfVec3f& v){return embree::Vec3fa(v[0], v[1], v[2]);};
 inline embree::Vec3fa 
-pxr2embree(const pxr::GfVec3d& v){return embree::Vec3fa((float)v[0], (float)v[1], (float)v[2]);};
+pxr2embree(const GfVec3d& v){return embree::Vec3fa((float)v[0], (float)v[1], (float)v[2]);};
 inline embree::Vec2fa
-pxr2embree(const pxr::GfVec2f& v){return embree::Vec2fa(v[0], v[1]);};
+pxr2embree(const GfVec2f& v){return embree::Vec2fa(v[0], v[1]);};
 inline embree::Vec2fa 
-pxr2embree(const pxr::GfVec2d& v){return embree::Vec2fa((float)v[0], (float)v[1]);};
+pxr2embree(const GfVec2d& v){return embree::Vec2fa((float)v[0], (float)v[1]);};
 
-inline pxr::GfVec3f
-embree2pxr(const embree::Vec3fa & v){return pxr::GfVec3f(v.x, v.y, v.z);};
-inline pxr::GfVec2f
-embree2pxr(const embree::Vec2fa & v){return pxr::GfVec2f(v.x, v.y);};
+inline GfVec3f
+embree2pxr(const embree::Vec3fa & v){return GfVec3f(v.x, v.y, v.z);};
+inline GfVec2f
+embree2pxr(const embree::Vec2fa & v){return GfVec2f(v.x, v.y);};
 
 class UsdEmbreeContext;
 void 
-ComputeVertexNormals(const pxr::VtArray<pxr::GfVec3f>& positions,
-                    const pxr::VtArray<int>& counts,
-                    const pxr::VtArray<int>& indices,
-                    const pxr::VtArray<int>& triangles,
-                    pxr::VtArray<pxr::GfVec3f>& normals);
+ComputeVertexNormals(const VtArray<GfVec3f>& positions,
+                    const VtArray<int>& counts,
+                    const VtArray<int>& indices,
+                    const VtArray<int>& triangles,
+                    VtArray<GfVec3f>& normals);
 /*
 void 
-ComputeVertexColors(const pxr::VtArray<pxr::GfVec3f>& positions,
-                    const pxr::VtArray<int>& counts,
-                    const pxr::VtArray<int>& indices,
-                    const pxr::VtArray<int>& triangles,
-                    pxr::GfVec3f color,
-                    pxr::VtArray<pxr::GfVec3f>& normals);
+ComputeVertexColors(const VtArray<GfVec3f>& positions,
+                    const VtArray<int>& counts,
+                    const VtArray<int>& indices,
+                    const VtArray<int>& triangles,
+                    GfVec3f color,
+                    VtArray<GfVec3f>& normals);
 
 void 
-ComputeVertexColors(const pxr::VtArray<pxr::GfVec3f>& positions,
-                    const pxr::VtArray<int>& counts,
-                    const pxr::VtArray<int>& indices,
-                    pxr::GfVec3f color,
-                    pxr::VtArray<pxr::GfVec3f>& normals);
+ComputeVertexColors(const VtArray<GfVec3f>& positions,
+                    const VtArray<int>& counts,
+                    const VtArray<int>& indices,
+                    GfVec3f color,
+                    VtArray<GfVec3f>& normals);
 */
 int 
-TriangulateMesh(const pxr::VtArray<int>& counts, 
-                const pxr::VtArray<int>& indices, 
-                pxr::VtArray<int>& triangles,
-                pxr::VtArray<int>& samples);
+TriangulateMesh(const VtArray<int>& counts, 
+                const VtArray<int>& indices, 
+                VtArray<int>& triangles,
+                VtArray<int>& samples);
 
 template<typename T>
 void 
-TriangulateData(const pxr::VtArray<int>& indices, 
-                const pxr::VtArray<T>& datas,
-                pxr::VtArray<T>& result)
+TriangulateData(const VtArray<int>& indices, 
+                const VtArray<T>& datas,
+                VtArray<T>& result)
 {
   result.resize(indices.size());
   for(int i=0;i<indices.size();++i)
@@ -107,6 +107,6 @@ TriangulateData(const pxr::VtArray<int>& indices,
 };
 
 void
-GetProperties(const pxr::UsdPrim& prim, UsdEmbreeContext* ctxt);
+GetProperties(const UsdPrim& prim, UsdEmbreeContext* ctxt);
 
 JVR_NAMESPACE_CLOSE_SCOPE

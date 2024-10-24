@@ -16,49 +16,49 @@ ExecutionGraph* TestUsdExecAPI()
 {
   /*
   UndoBlock editBlock;
-  pxr::UsdStageRefPtr stage = Application::Get()->GetWorkStage();
+  UsdStageRefPtr stage = Application::Get()->GetWorkStage();
 
-  const pxr::SdfPath GRAPH_PATH("/graph");
-  const pxr::TfToken GET("get");
-  const pxr::TfToken MUL("multiply");
-  const pxr::TfToken SET("set");
+  const SdfPath GRAPH_PATH("/graph");
+  const TfToken GET("get");
+  const TfToken MUL("multiply");
+  const TfToken SET("set");
 
-  pxr::UsdExecGraph graph = pxr::UsdExecGraph::Define(stage, GRAPH_PATH);
+  UsdExecGraph graph = UsdExecGraph::Define(stage, GRAPH_PATH);
 
-  pxr::UsdExecNode get = pxr::UsdExecNode::Define(stage, GRAPH_PATH.AppendChild(GET));
-  pxr::UsdUINodeGraphNodeAPI api(get);
-  api.CreatePosAttr().Set(pxr::GfVec2f(0, 0));
-  api.CreateDisplayColorAttr().Set(pxr::GfVec3f(0.5));
-  pxr::UsdExecInput inPrim = get.CreateInput(pxr::TfToken("Primitive"), pxr::SdfValueTypeNames->Asset);
+  UsdExecNode get = UsdExecNode::Define(stage, GRAPH_PATH.AppendChild(GET));
+  UsdUINodeGraphNodeAPI api(get);
+  api.CreatePosAttr().Set(GfVec2f(0, 0));
+  api.CreateDisplayColorAttr().Set(GfVec3f(0.5));
+  UsdExecInput inPrim = get.CreateInput(TfToken("Primitive"), SdfValueTypeNames->Asset);
   inPrim.SetConnectability(UsdExecTokens->interfaceOnly);
-  pxr::UsdExecInput inAttr = get.CreateInput(pxr::TfToken("Attribute"), pxr::SdfValueTypeNames->Token);
+  UsdExecInput inAttr = get.CreateInput(TfToken("Attribute"), SdfValueTypeNames->Token);
   inAttr.SetConnectability(UsdExecTokens->interfaceOnly);
-  pxr::UsdExecOutput inVal = get.CreateOutput(pxr::TfToken("Value"), pxr::SdfValueTypeNames->Vector3f);
-  inVal.Set(pxr::VtValue(pxr::GfVec3f(0.f)));
+  UsdExecOutput inVal = get.CreateOutput(TfToken("Value"), SdfValueTypeNames->Vector3f);
+  inVal.Set(VtValue(GfVec3f(0.f)));
 
-  pxr::UsdExecNode mul = pxr::UsdExecNode::Define(stage, GRAPH_PATH.AppendChild(MUL));
-  api = pxr::UsdUINodeGraphNodeAPI(mul);
-  api.CreatePosAttr().Set(pxr::GfVec2f(120, 0));
-  api.CreateDisplayColorAttr().Set(pxr::GfVec3f(0.5));
-  pxr::UsdExecInput factor = mul.CreateInput(pxr::TfToken("Factor"), pxr::SdfValueTypeNames->Float);
-  factor.Set(pxr::VtValue(1.f));
-  pxr::UsdExecInput input = mul.CreateInput(pxr::TfToken("Input"), pxr::SdfValueTypeNames->Vector3f);
-  pxr::UsdExecOutput output = mul.CreateOutput(pxr::TfToken("Output"), pxr::SdfValueTypeNames->Vector3f);
+  UsdExecNode mul = UsdExecNode::Define(stage, GRAPH_PATH.AppendChild(MUL));
+  api = UsdUINodeGraphNodeAPI(mul);
+  api.CreatePosAttr().Set(GfVec2f(120, 0));
+  api.CreateDisplayColorAttr().Set(GfVec3f(0.5));
+  UsdExecInput factor = mul.CreateInput(TfToken("Factor"), SdfValueTypeNames->Float);
+  factor.Set(VtValue(1.f));
+  UsdExecInput input = mul.CreateInput(TfToken("Input"), SdfValueTypeNames->Vector3f);
+  UsdExecOutput output = mul.CreateOutput(TfToken("Output"), SdfValueTypeNames->Vector3f);
 
-  pxr::UsdExecNode set = pxr::UsdExecNode::Define(stage, GRAPH_PATH.AppendChild(SET));
-  api = pxr::UsdUINodeGraphNodeAPI(set);
-  api.CreatePosAttr().Set(pxr::GfVec2f(240, 0));
-  api.CreateDisplayColorAttr().Set(pxr::GfVec3f(0.5));
-  pxr::UsdExecInput outPrim = set.CreateInput(pxr::TfToken("Primitive"), pxr::SdfValueTypeNames->Asset);
+  UsdExecNode set = UsdExecNode::Define(stage, GRAPH_PATH.AppendChild(SET));
+  api = UsdUINodeGraphNodeAPI(set);
+  api.CreatePosAttr().Set(GfVec2f(240, 0));
+  api.CreateDisplayColorAttr().Set(GfVec3f(0.5));
+  UsdExecInput outPrim = set.CreateInput(TfToken("Primitive"), SdfValueTypeNames->Asset);
   outPrim.SetConnectability(UsdExecTokens->interfaceOnly);
-  pxr::UsdExecInput outAttr = set.CreateInput(pxr::TfToken("Attribute"), pxr::SdfValueTypeNames->Token);
+  UsdExecInput outAttr = set.CreateInput(TfToken("Attribute"), SdfValueTypeNames->Token);
   outAttr.SetConnectability(UsdExecTokens->interfaceOnly);
-  pxr::UsdExecInput outVal0 = set.CreateInput(pxr::TfToken("Value0"), pxr::SdfValueTypeNames->Vector3f);
-  outVal0.Set(pxr::VtValue(pxr::GfVec3f(0.f)));
-  pxr::UsdExecInput outVal1 = set.CreateInput(pxr::TfToken("Value1"), pxr::SdfValueTypeNames->Vector3f);
-  outVal1.Set(pxr::VtValue(pxr::GfVec3f(0.f)));
-  pxr::UsdExecInput outVal2 = set.CreateInput(pxr::TfToken("Value2"), pxr::SdfValueTypeNames->Vector3f);
-  outVal2.Set(pxr::VtValue(pxr::GfVec3f(0.f)));
+  UsdExecInput outVal0 = set.CreateInput(TfToken("Value0"), SdfValueTypeNames->Vector3f);
+  outVal0.Set(VtValue(GfVec3f(0.f)));
+  UsdExecInput outVal1 = set.CreateInput(TfToken("Value1"), SdfValueTypeNames->Vector3f);
+  outVal1.Set(VtValue(GfVec3f(0.f)));
+  UsdExecInput outVal2 = set.CreateInput(TfToken("Value2"), SdfValueTypeNames->Vector3f);
+  outVal2.Set(VtValue(GfVec3f(0.f)));
 
 
   input.ConnectToSource(inVal);
@@ -71,50 +71,50 @@ ExecutionGraph* TestUsdExecAPI()
 }
 
 
-pxr::SdfValueTypeName 
-_GetRuntimeTypeName(pxr::SdfValueTypeName vtn)
+SdfValueTypeName 
+_GetRuntimeTypeName(SdfValueTypeName vtn)
 {
-  if (vtn == pxr::SdfValueTypeNames->Bool ||
-    vtn == pxr::SdfValueTypeNames->BoolArray) return pxr::SdfValueTypeNames->BoolArray;
-  else if (vtn == pxr::SdfValueTypeNames->Int ||
-    vtn == pxr::SdfValueTypeNames->IntArray) return pxr::SdfValueTypeNames->IntArray;
-  else if (vtn == pxr::SdfValueTypeNames->UChar) return pxr::SdfValueTypeNames->UCharArray;
-  else if (vtn == pxr::SdfValueTypeNames->Float ||
-    vtn == pxr::SdfValueTypeNames->FloatArray ||
-    vtn == pxr::SdfValueTypeNames->Double ||
-    vtn == pxr::SdfValueTypeNames->DoubleArray) return pxr::SdfValueTypeNames->FloatArray;
-  else if (vtn == pxr::SdfValueTypeNames->Float2 ||
-    vtn == pxr::SdfValueTypeNames->Float2Array) return pxr::SdfValueTypeNames->Float2Array;
-  else if (vtn == pxr::SdfValueTypeNames->Float3 ||
-    vtn == pxr::SdfValueTypeNames->Vector3f ||
-    vtn == pxr::SdfValueTypeNames->Float3Array ||
-    vtn == pxr::SdfValueTypeNames->Vector3fArray ||
-    vtn == pxr::SdfValueTypeNames->Point3f ||
-    vtn == pxr::SdfValueTypeNames->Point3fArray ||
-    vtn == pxr::SdfValueTypeNames->Normal3f ||
-    vtn == pxr::SdfValueTypeNames->Normal3fArray ||
-    vtn == pxr::SdfValueTypeNames->Vector3d ||
-    vtn == pxr::SdfValueTypeNames->Double3Array ||
-    vtn == pxr::SdfValueTypeNames->Vector3dArray ||
-    vtn == pxr::SdfValueTypeNames->Point3d ||
-    vtn == pxr::SdfValueTypeNames->Point3dArray ||
-    vtn == pxr::SdfValueTypeNames->Normal3d ||
-    vtn == pxr::SdfValueTypeNames->Normal3dArray) return pxr::SdfValueTypeNames->Float3Array;
-  else if (vtn == pxr::SdfValueTypeNames->Float4 ||
-    vtn == pxr::SdfValueTypeNames->Float4Array) return pxr::SdfValueTypeNames->Float4Array;
-  else if (vtn == pxr::SdfValueTypeNames->Color4f ||
-    vtn == pxr::SdfValueTypeNames->Color4fArray) return pxr::SdfValueTypeNames->Color3fArray;
-  else if (vtn == pxr::SdfValueTypeNames->Asset ||
-    vtn == pxr::SdfValueTypeNames->AssetArray) return pxr::SdfValueTypeNames->AssetArray;
-  else if (vtn == pxr::SdfValueTypeNames->Token ||
-    vtn == pxr::SdfValueTypeNames->TokenArray) return pxr::SdfValueTypeNames->TokenArray;
+  if (vtn == SdfValueTypeNames->Bool ||
+    vtn == SdfValueTypeNames->BoolArray) return SdfValueTypeNames->BoolArray;
+  else if (vtn == SdfValueTypeNames->Int ||
+    vtn == SdfValueTypeNames->IntArray) return SdfValueTypeNames->IntArray;
+  else if (vtn == SdfValueTypeNames->UChar) return SdfValueTypeNames->UCharArray;
+  else if (vtn == SdfValueTypeNames->Float ||
+    vtn == SdfValueTypeNames->FloatArray ||
+    vtn == SdfValueTypeNames->Double ||
+    vtn == SdfValueTypeNames->DoubleArray) return SdfValueTypeNames->FloatArray;
+  else if (vtn == SdfValueTypeNames->Float2 ||
+    vtn == SdfValueTypeNames->Float2Array) return SdfValueTypeNames->Float2Array;
+  else if (vtn == SdfValueTypeNames->Float3 ||
+    vtn == SdfValueTypeNames->Vector3f ||
+    vtn == SdfValueTypeNames->Float3Array ||
+    vtn == SdfValueTypeNames->Vector3fArray ||
+    vtn == SdfValueTypeNames->Point3f ||
+    vtn == SdfValueTypeNames->Point3fArray ||
+    vtn == SdfValueTypeNames->Normal3f ||
+    vtn == SdfValueTypeNames->Normal3fArray ||
+    vtn == SdfValueTypeNames->Vector3d ||
+    vtn == SdfValueTypeNames->Double3Array ||
+    vtn == SdfValueTypeNames->Vector3dArray ||
+    vtn == SdfValueTypeNames->Point3d ||
+    vtn == SdfValueTypeNames->Point3dArray ||
+    vtn == SdfValueTypeNames->Normal3d ||
+    vtn == SdfValueTypeNames->Normal3dArray) return SdfValueTypeNames->Float3Array;
+  else if (vtn == SdfValueTypeNames->Float4 ||
+    vtn == SdfValueTypeNames->Float4Array) return SdfValueTypeNames->Float4Array;
+  else if (vtn == SdfValueTypeNames->Color4f ||
+    vtn == SdfValueTypeNames->Color4fArray) return SdfValueTypeNames->Color3fArray;
+  else if (vtn == SdfValueTypeNames->Asset ||
+    vtn == SdfValueTypeNames->AssetArray) return SdfValueTypeNames->AssetArray;
+  else if (vtn == SdfValueTypeNames->Token ||
+    vtn == SdfValueTypeNames->TokenArray) return SdfValueTypeNames->TokenArray;
   else
-    return pxr::SdfValueTypeNames->Int;
+    return SdfValueTypeNames->Int;
 }
 
 // Graph constructor
 //------------------------------------------------------------------------------
-ExecutionGraph::ExecutionGraph(const pxr::UsdPrim& prim) 
+ExecutionGraph::ExecutionGraph(const UsdPrim& prim) 
   : Graph(prim)
 {
   Populate(prim);
@@ -126,7 +126,7 @@ ExecutionGraph::~ExecutionGraph()
 {
 }
 
-ExecutionGraph::ExecutionNode::ExecutionNode(pxr::UsdPrim& prim)
+ExecutionGraph::ExecutionNode::ExecutionNode(UsdPrim& prim)
   : Graph::Node(prim)
 {
   _PopulatePorts();
@@ -135,25 +135,25 @@ ExecutionGraph::ExecutionNode::ExecutionNode(pxr::UsdPrim& prim)
 void ExecutionGraph::ExecutionNode::_PopulatePorts()
 {
   /*
-  if (_prim.IsA<pxr::UsdExecGraph>()) {
-    pxr::UsdExecGraph graph(_prim);
+  if (_prim.IsA<UsdExecGraph>()) {
+    UsdExecGraph graph(_prim);
     for (const auto& input : graph.GetInputs()) {
-      pxr::UsdAttribute attr = input.GetAttr();
+      UsdAttribute attr = input.GetAttr();
       AddInput(attr, input.GetBaseName());
     }
     for (const auto& output : graph.GetOutputs()) {
-      pxr::UsdAttribute attr = output.GetAttr();
+      UsdAttribute attr = output.GetAttr();
       AddOutput(attr, output.GetBaseName());
     }
   }
-  else if (_prim.IsA<pxr::UsdExecNode>()) {
-    pxr::UsdExecNode node(_prim);
+  else if (_prim.IsA<UsdExecNode>()) {
+    UsdExecNode node(_prim);
     for (const auto& input : node.GetInputs()) {
-      pxr::UsdAttribute attr = input.GetAttr();
+      UsdAttribute attr = input.GetAttr();
       AddInput(attr, input.GetBaseName());
     }
     for (const auto& output : node.GetOutputs()) {
-      pxr::UsdAttribute attr = output.GetAttr();
+      UsdAttribute attr = output.GetAttr();
       AddOutput(attr, output.GetBaseName());
     }
   }
@@ -165,7 +165,7 @@ ExecutionGraph::_DiscoverNodes()
 {
   if (!_prim.IsValid())return;
 
-  for (pxr::UsdPrim child : _prim.GetChildren()) {
+  for (UsdPrim child : _prim.GetChildren()) {
     ExecutionGraph::ExecutionNode* node = new ExecutionGraph::ExecutionNode(child);
     AddNode(node);
   }
@@ -174,13 +174,13 @@ ExecutionGraph::_DiscoverNodes()
 void
 ExecutionGraph::_DiscoverConnexions()
 {
-  for (pxr::UsdPrim child : _prim.GetChildren()) {
+  for (UsdPrim child : _prim.GetChildren()) {
     /*
-    if (child.IsA<pxr::UsdExecNode>()) {
-      pxr::UsdExecNode node(child);
-      for (pxr::UsdExecInput& input : node.GetInputs()) {
-        if (input.GetConnectability() != pxr::UsdExecTokens->full) continue;
-        pxr::UsdExecInput::SourceInfoVector connexions = input.GetConnectedSources();
+    if (child.IsA<UsdExecNode>()) {
+      UsdExecNode node(child);
+      for (UsdExecInput& input : node.GetInputs()) {
+        if (input.GetConnectability() != UsdExecTokens->full) continue;
+        UsdExecInput::SourceInfoVector connexions = input.GetConnectedSources();
         for (auto& connexion : connexions) {
           Graph::Node* source = GetNode(connexion.source.GetPrim());
           Graph::Node* destination = GetNode(child);

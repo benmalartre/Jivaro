@@ -31,7 +31,7 @@ ImGuiTreeNodeFlags ExplorerUI::_treeFlags =
   ImGuiTreeNodeFlags_OpenOnDoubleClick |
   ImGuiTreeNodeFlags_SpanAvailWidth;
 
-static void ExploreLayerTree(pxr::SdfLayerTreeHandle tree, pxr::PcpNodeRef node) {
+static void ExploreLayerTree(SdfLayerTreeHandle tree, PcpNodeRef node) {
   if (!tree)
     return;
   auto obj = tree->GetLayer()->GetObjectAtPath(node.GetPath());
@@ -50,13 +50,13 @@ static void ExploreLayerTree(pxr::SdfLayerTreeHandle tree, pxr::PcpNodeRef node)
   }
 }
 
-static void ExploreComposition(pxr::PcpNodeRef root) {
+static void ExploreComposition(PcpNodeRef root) {
   auto tree = root.GetLayerStack()->GetLayerTree();
   ExploreLayerTree(tree, root);
   TF_FOR_ALL(childNode, root.GetChildrenRange()) { ExploreComposition(*childNode); }
 }
 
-static void DrawUsdPrimEditMenuItems(const pxr::UsdPrim& prim) {
+static void DrawUsdPrimEditMenuItems(const UsdPrim& prim) {
   if (ImGui::MenuItem("Toggle active")) {
     const bool active = !prim.IsActive();
     //ExecuteAfterDraw(&UsdPrim::SetActive, prim, active);
@@ -104,7 +104,7 @@ ExplorerUI::Init()
 }
 
 ExplorerUI::Item*
-ExplorerUI::_GetItemUnderMouse(const pxr::GfVec2f &relative)
+ExplorerUI::_GetItemUnderMouse(const GfVec2f &relative)
 {
   const ImGuiStyle& style = ImGui::GetStyle();
   size_t lineHeight = ImGui::GetTextLineHeight() + style.FramePadding.y * 2 + style.ItemInnerSpacing.y;
@@ -127,7 +127,7 @@ void
 ExplorerUI::MouseMove(int x, int y)
 {
   if(_drag) {
-    _GetItemUnderMouse(pxr::GfVec2f(x - GetX(), y - GetY()));
+    _GetItemUnderMouse(GfVec2f(x - GetX(), y - GetY()));
   }
 }
 
@@ -173,8 +173,8 @@ ExplorerUI::DrawBackground()
   const auto& style = ImGui::GetStyle();
   _scroll[0] = ImGui::GetScrollX();
   _scroll[1] = ImGui::GetScrollY();
-  pxr::GfVec2f clipRectMin(GetX(), GetY());
-  pxr::GfVec2f clipRectMax(GetX() + GetWidth(), GetY() + GetHeight());
+  GfVec2f clipRectMin(GetX(), GetY());
+  GfVec2f clipRectMax(GetX() + GetWidth(), GetY() + GetHeight());
 
   if (ImGui::GetScrollMaxX() > 0)
   {
@@ -201,7 +201,7 @@ ExplorerUI::DrawBackground()
 }
 
 void 
-ExplorerUI::DrawType(const pxr::UsdPrim& prim, bool selected)
+ExplorerUI::DrawType(const UsdPrim& prim, bool selected)
 {
   ImGui::Text("%s", prim.GetTypeName().GetText());
   if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
@@ -210,7 +210,7 @@ ExplorerUI::DrawType(const pxr::UsdPrim& prim, bool selected)
   ImGui::NextColumn();
 }
 
-static void _PushCurrentPath(const pxr::SdfPath& path, pxr::SdfPathVector& paths)
+static void _PushCurrentPath(const SdfPath& path, SdfPathVector& paths)
 {
   if (path.IsEmpty())return;
   for (auto& _path : paths) {
@@ -220,7 +220,7 @@ static void _PushCurrentPath(const pxr::SdfPath& path, pxr::SdfPathVector& paths
 }
 
 void
-ExplorerUI::DrawVisibility(const pxr::UsdPrim& prim, bool visible, bool selected)
+ExplorerUI::DrawVisibility(const UsdPrim& prim, bool visible, bool selected)
 {
   const ImGuiStyle& style = ImGui::GetStyle();
   
@@ -234,7 +234,7 @@ ExplorerUI::DrawVisibility(const pxr::UsdPrim& prim, bool visible, bool selected
   Application* app = Application::Get();
   if (ImGui::Button(visible ? visibleIcon : invisibleIcon)) {
     _current = prim.GetPath();
-    pxr::SdfPathVector paths = app->GetSelection()->GetSelectedPaths();
+    SdfPathVector paths = app->GetSelection()->GetSelectedPaths();
     _PushCurrentPath(_current, paths);
     ADD_COMMAND(ShowHideCommand, paths, ShowHideCommand::TOGGLE);
   }
@@ -244,7 +244,7 @@ ExplorerUI::DrawVisibility(const pxr::UsdPrim& prim, bool visible, bool selected
 }
 
 void
-ExplorerUI::DrawActive(const pxr::UsdPrim& prim, bool selected)
+ExplorerUI::DrawActive(const UsdPrim& prim, bool selected)
 {
   const ImGuiStyle& style = ImGui::GetStyle();
 
@@ -261,7 +261,7 @@ ExplorerUI::DrawActive(const pxr::UsdPrim& prim, bool selected)
  
   if (ImGui::Button(selected ? activeIcon : inactiveIcon)) {
     _current = prim.GetPath();
-    pxr::SdfPathVector paths = selection->GetSelectedPaths();
+    SdfPathVector paths = selection->GetSelectedPaths();
     _PushCurrentPath(_current, paths);
     ADD_COMMAND(ActivateCommand, paths, ActivateCommand::TOGGLE);
   }
@@ -276,7 +276,7 @@ static ImVec4 PrimInstanceColor(135.f/255.f, 206.f/255.f, 250.f/255.f, 1.0);
 static ImVec4 PrimPrototypeColor(118.f/255.f, 136.f/255.f, 217.f/255.f, 1.0);
 static ImVec4 PrimHasCompositionColor(222.f/255.f, 158.f/255.f, 46.f/255.f, 1.0);
 
-static ImVec4 GetPrimColor(const pxr::UsdPrim& prim) {
+static ImVec4 GetPrimColor(const UsdPrim& prim) {
   if (!prim.IsActive() || !prim.IsLoaded()) {
     return PrimInactiveColor;
   }
@@ -304,7 +304,7 @@ static ImVec4 GetPrimColor(const pxr::UsdPrim& prim) {
   Application* app = Application::Get();
   if (button == GLFW_MOUSE_BUTTON_LEFT) {
     if (action == GLFW_PRESS) {
-      ExplorerUI::Item* item = _GetItemUnderMouse(pxr::GfVec2f(x - GetX(), y - GetY()));
+      ExplorerUI::Item* item = _GetItemUnderMouse(GfVec2f(x - GetX(), y - GetY()));
       if (!item) return;
 
       _current = item->path;
@@ -327,12 +327,12 @@ static ImVec4 GetPrimColor(const pxr::UsdPrim& prim) {
 
 /// Recursive function to draw a prim and its descendants
 void 
-ExplorerUI::DrawPrim(const pxr::UsdPrim& prim, Selection* selection) 
+ExplorerUI::DrawPrim(const UsdPrim& prim, Selection* selection) 
 {
   ImGuiTreeNodeFlags flags = _treeFlags;
   
   const auto& children = prim.GetFilteredChildren(
-    pxr::UsdTraverseInstanceProxies(pxr::UsdPrimAllPrimsPredicate));
+    UsdTraverseInstanceProxies(UsdPrimAllPrimsPredicate));
 
   if (children.empty()) {
     flags |= ImGuiTreeNodeFlags_Leaf;
@@ -366,11 +366,11 @@ ExplorerUI::DrawPrim(const pxr::UsdPrim& prim, Selection* selection)
 
   DrawType(prim, selected);
   
-  pxr::UsdGeomImageable imageable(prim);
+  UsdGeomImageable imageable(prim);
   if (imageable) {
-    pxr::TfToken visibility;
-    imageable.GetVisibilityAttr().Get<pxr::TfToken>(&visibility);
-    const bool visible = (visibility != pxr::UsdGeomTokens->invisible);
+    TfToken visibility;
+    imageable.GetVisibilityAttr().Get<TfToken>(&visibility);
+    const bool visible = (visibility != UsdGeomTokens->invisible);
     DrawVisibility(prim, visible, selected);
   } else {
     ImGui::NextColumn();
@@ -397,12 +397,12 @@ ExplorerUI::Draw()
   /// Draw the hierarchy of the stage
   Application* app = Application::Get();
   Selection* selection = app->GetSelection();
-  pxr::UsdStageRefPtr stage = app->GetWorkStage();
+  UsdStageRefPtr stage = app->GetWorkStage();
   const ImGuiStyle& style = ImGui::GetStyle();
   if (!stage) return false;
 
-  const pxr::GfVec2f min(GetX(), GetY());
-  const pxr::GfVec2f size(GetWidth(), GetHeight());
+  const GfVec2f min(GetX(), GetY());
+  const GfVec2f size(GetWidth(), GetHeight());
 
   ImGui::SetNextWindowPos(min);
   ImGui::SetNextWindowSize(size);
@@ -416,8 +416,8 @@ ExplorerUI::Draw()
   ImDrawList* backgroundList = ImGui::GetBackgroundDrawList();
   backgroundList->AddRectFilled(min, min + size, ImColor(style.Colors[ImGuiCol_WindowBg]));
 
-  const pxr::UsdPrim root = stage->GetPseudoRoot();
-  pxr::SdfLayerHandle layer = stage->GetSessionLayer();
+  const UsdPrim root = stage->GetPseudoRoot();
+  SdfLayerHandle layer = stage->GetSessionLayer();
 
   // setup transparent background
   ImGui::PushStyleColor(ImGuiCol_Header, TRANSPARENT_COLOR);
@@ -458,7 +458,7 @@ ExplorerUI::Draw()
   */
   //ImGui::PushFont(GetWindow()->GetRegularFont(1));
   const auto& children = root.GetFilteredChildren(
-    pxr::UsdTraverseInstanceProxies(pxr::UsdPrimAllPrimsPredicate));
+    UsdTraverseInstanceProxies(UsdPrimAllPrimsPredicate));
   for (const auto& child : children) {
     DrawPrim(child, selection);
   }

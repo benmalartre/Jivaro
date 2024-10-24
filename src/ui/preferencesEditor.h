@@ -17,12 +17,12 @@ struct SummaryStats
 };
 
 SummaryStats
-GetSummaryStats(pxr::SdfLayerHandle const &layer)
+GetSummaryStats(SdfLayerHandle const &layer)
 {
     SummaryStats stats;
     layer->Traverse(
-        pxr::SdfPath::AbsoluteRootPath(), [&stats, &layer](
-          pxr::SdfPath const &path) {
+        SdfPath::AbsoluteRootPath(), [&stats, &layer](
+          SdfPath const &path) {
             ++stats.numSpecs;
             stats.numPrimSpecs += path.IsPrimPath();
             stats.numPropertySpecs += path.IsPropertyPath();
@@ -49,7 +49,7 @@ class PreferenceUI : public BaseUI
     void MouseMove(int x, int y) override;
     */
     bool Draw() override;
-    void DrawNavigation(pxr::SdfLayerRefPtr layer);
+    void DrawNavigation(SdfLayerRefPtr layer);
 
 
   private:

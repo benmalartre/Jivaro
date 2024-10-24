@@ -43,19 +43,19 @@ void Particles::_EnsureDataSize(size_t desired)
   mass =      _ResizeArray<float>(mass, num, size);
   invMass =   _ResizeArray<float>(invMass, num, size);
   radius =    _ResizeArray<float>(radius, num, size);
-  counter =   _ResizeArray<pxr::GfVec2f>(counter, num, size);
-  rest =      _ResizeArray<pxr::GfVec3f>(rest, num, size);
-  input =     _ResizeArray<pxr::GfVec3f>(input, num, size);
-  previous =  _ResizeArray<pxr::GfVec3f>(previous, num, size);
-  position =  _ResizeArray<pxr::GfVec3f>(position, num, size);
-  predicted = _ResizeArray<pxr::GfVec3f>(predicted, num, size);
-  velocity =  _ResizeArray<pxr::GfVec3f>(velocity, num, size);
-  color =     _ResizeArray<pxr::GfVec3f>(color, num, size);
-  rotation =  _ResizeArray<pxr::GfQuatf>(rotation, num, size);
+  counter =   _ResizeArray<GfVec2f>(counter, num, size);
+  rest =      _ResizeArray<GfVec3f>(rest, num, size);
+  input =     _ResizeArray<GfVec3f>(input, num, size);
+  previous =  _ResizeArray<GfVec3f>(previous, num, size);
+  position =  _ResizeArray<GfVec3f>(position, num, size);
+  predicted = _ResizeArray<GfVec3f>(predicted, num, size);
+  velocity =  _ResizeArray<GfVec3f>(velocity, num, size);
+  color =     _ResizeArray<GfVec3f>(color, num, size);
+  rotation =  _ResizeArray<GfQuatf>(rotation, num, size);
 
 }
 
-void Particles::AddBody(Body* item, const pxr::GfMatrix4d& matrix)
+void Particles::AddBody(Body* item, const GfMatrix4d& matrix)
 {
   Geometry* geom = item->GetGeometry();
   if(geom->GetType() < Geometry::POINT) return;
@@ -67,9 +67,9 @@ void Particles::AddBody(Body* item, const pxr::GfMatrix4d& matrix)
   float m = item->GetMass();
   float w = m < 1e-6f ? 0.f : 1.f / m;
 
-  const pxr::GfVec3f* points = ((Deformable*)geom)->GetPositionsCPtr();
-  const pxr::GfRange3d range = geom->GetBoundingBox().GetRange();
-  pxr::GfVec3f pos;
+  const GfVec3f* points = ((Deformable*)geom)->GetPositionsCPtr();
+  const GfRange3d range = geom->GetBoundingBox().GetRange();
+  GfVec3f pos;
   size_t idx;
   for (size_t idx = base; idx < size; ++idx) {
     
@@ -83,12 +83,12 @@ void Particles::AddBody(Body* item, const pxr::GfMatrix4d& matrix)
     previous[idx] = pos;
     position[idx] = pos;
     predicted[idx] = pos;
-    rotation[idx] = pxr::GfQuatf(1.f);
+    rotation[idx] = GfQuatf(1.f);
     velocity[idx] = item->GetVelocity();
     body[idx] = item;
-    color[idx] = (pxr::GfVec3f(RANDOM_LO_HI(0.f, 0.2f)+0.6) + item->GetColor()) * 0.5f * bY;
+    color[idx] = (GfVec3f(RANDOM_LO_HI(0.f, 0.2f)+0.6) + item->GetColor()) * 0.5f * bY;
     state[idx] = ACTIVE;
-    counter[idx] = pxr::GfVec2f(0.f);
+    counter[idx] = GfVec2f(0.f);
   }
 
   item->SetOffset(base);
@@ -169,8 +169,8 @@ Body::~Body()
 void 
 Body::_InitSmoothKernel()
 {
-  pxr::VtFloatArray weights;
-  _smoothKernel = new Smooth<pxr::GfVec3f>(_numPoints, weights);
+  VtFloatArray weights;
+  _smoothKernel = new Smooth<GfVec3f>(_numPoints, weights);
   switch(_geometry->GetType()) {
     case Geometry::MESH:
     {
@@ -178,7 +178,7 @@ Body::_InitSmoothKernel()
       if(!(mesh->GetFlags() & Mesh::ADJACENTS))mesh->ComputeAdjacents(); 
 
       for(size_t i = 0; i < _numPoints; ++i) {
-        _smoothKernel->SetDatas(i, pxr::GfVec3f(0.f));
+        _smoothKernel->SetDatas(i, GfVec3f(0.f));
         _smoothKernel->SetNeighbors(i, mesh->GetNumAdjacents(i), mesh->GetAdjacents(i));
       }
       break;
@@ -194,7 +194,7 @@ Body::SmoothVelocities(Particles* particles, size_t iterations)
     {
       Mesh* mesh = (Mesh*)_geometry;
       if(!(mesh->GetFlags() & Mesh::ADJACENTS))mesh->ComputeAdjacents(); 
-      const pxr::GfVec3f* velocities = &particles->velocity[0];
+      const GfVec3f* velocities = &particles->velocity[0];
 
       for(size_t i = 0; i < _numPoints; ++i) {
         _smoothKernel->SetDatas(i, velocities[i + _offset]);
@@ -209,9 +209,9 @@ Body::SmoothVelocities(Particles* particles, size_t iterations)
   }
 }
 
-void Body::UpdateParameters(pxr::UsdPrim& prim, float time)
+void Body::UpdateParameters(UsdPrim& prim, float time)
 {
-  pxr::UsdPbdBodyAPI bodyApi(prim);
+  UsdPbdBodyAPI bodyApi(prim);
   bodyApi.GetSimulationEnabledAttr().Get(&_simulationEnabled, time);
   bodyApi.GetRadiusAttr().Get(&_radius, time);
   bodyApi.GetMassAttr().Get(&_mass, time);
@@ -228,8 +228,8 @@ void Body::UpdateParameters(pxr::UsdPrim& prim, float time)
   float stiffness, damp;
   
   for(auto& constraintsIt: _constraints) {
-    if(prim.HasAPI<pxr::UsdPbdConstraintAPI>(constraintsIt.first)) {
-      pxr::UsdPbdConstraintAPI api(prim, constraintsIt.first);
+    if(prim.HasAPI<UsdPbdConstraintAPI>(constraintsIt.first)) {
+      UsdPbdConstraintAPI api(prim, constraintsIt.first);
 
       api.GetStiffnessAttr().Get(&stiffness);
       api.GetDampAttr().Get(&damp);
@@ -258,7 +258,7 @@ void Body::UpdateParticles(Particles* particles)
 }
 
 ConstraintsGroup* 
-Body::AddConstraintsGroup(const pxr::TfToken& name, short type)
+Body::AddConstraintsGroup(const TfToken& name, short type)
 {
   if(_constraints.find(name) != _constraints.end())
     return _constraints[name];
@@ -272,7 +272,7 @@ Body::GetNumConstraintsGroup()
   return _constraints.size();
 };
 
- ConstraintsGroup* Body::GetConstraintsGroup(const pxr::TfToken& group)
+ ConstraintsGroup* Body::GetConstraintsGroup(const TfToken& group)
 {
   if(_constraints.find(group) != _constraints.end())return _constraints[group];
   return NULL;

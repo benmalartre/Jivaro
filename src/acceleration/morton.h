@@ -38,26 +38,26 @@ struct Morton {
 };
 
 // Conversion
-pxr::GfVec3d MortonToWorld(const pxr::GfRange3d& range, const pxr::GfVec3i& p);
-pxr::GfVec3i WorldToMorton(const pxr::GfRange3d& range, const pxr::GfVec3d& p);
+GfVec3d MortonToWorld(const GfRange3d& range, const GfVec3i& p);
+GfVec3i WorldToMorton(const GfRange3d& range, const GfVec3d& p);
 
 // Encoding
-uint32_t MortonEncode2D(const pxr::GfVec2i& p);
-uint64_t MortonEncode3D(const pxr::GfVec3i& p);
+uint32_t MortonEncode2D(const GfVec2i& p);
+uint64_t MortonEncode3D(const GfVec3i& p);
 
 // Decoding
-pxr::GfVec2i MortonDecode2D(uint32_t code);
-pxr::GfVec3i MortonDecode3D(uint64_t code);
+GfVec2i MortonDecode2D(uint32_t code);
+GfVec3i MortonDecode3D(uint64_t code);
 
 // Utils
-pxr::GfVec3i& MortonClamp(pxr::GfVec3i& p);
+GfVec3i& MortonClamp(GfVec3i& p);
 uint32_t MortonLeadingZeros(const uint64_t x);
 uint32_t MortonFindSplit(const Morton* mortons, int first, int last);
 uint32_t MortonLowerBound(const Morton* mortons, int first, int last, uint64_t code);
 uint32_t MortonUpperBound(const Morton* mortons, int first, int last, uint64_t code);
 
-pxr::GfVec3f MortonColor(const pxr::GfRange3d &range, const pxr::GfVec3d &p);
-pxr::GfVec3f MortonColor(const Morton& morton);
+GfVec3f MortonColor(const GfRange3d &range, const GfVec3d &p);
+GfVec3f MortonColor(const Morton& morton);
 
 uint64_t MortonBigMin( uint64_t zval, uint64_t minimum, uint64_t maximum);
 uint64_t MortonLitMax( uint64_t zval, uint64_t minimum, uint64_t maximum);

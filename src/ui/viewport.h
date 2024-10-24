@@ -58,7 +58,7 @@ class ViewportUI : public BaseUI
 
     Engine* GetEngine(){return _engine;};
     Camera* GetCamera(){return _camera;};
-    pxr::GfVec4f ComputeCameraViewport(float cameraAspectRatio);
+    GfVec4f ComputeCameraViewport(float cameraAspectRatio);
     double GetLastMouseX(){return _lastX;};
     double GetLastMouseY(){return _lastY;};
 
@@ -73,14 +73,14 @@ class ViewportUI : public BaseUI
     void Resize() override;
     void Update();
     
-    pxr::GfFrustum _ComputePickFrustum(int x, int y);
+    GfFrustum _ComputePickFrustum(int x, int y);
     bool Pick(int x, int y, int mods);
 
     void SetMessage(const std::string& message){_message = message;};
 
     /*
-    pxr::HdSelectionSharedPtr _Pick(pxr::GfVec2i const& startPos,
-      pxr::GfVec2i const& endPos, pxr::TfToken const& pickTarget);*/
+    HdSelectionSharedPtr _Pick(GfVec2i const& startPos,
+      GfVec2i const& endPos, TfToken const& pickTarget);*/
 
   private:
     void                                _DrawPickMode();
@@ -97,12 +97,12 @@ class ViewportUI : public BaseUI
     bool                                _highlightSelection;
     // usd imaging engine
     Engine*                             _engine;
-    pxr::UsdImagingGLRenderParams       _renderParams;
-    pxr::UsdPrim                        _root;
-    pxr::UsdLuxDomeLight                _light;
-    pxr::GlfDrawTargetRefPtr            _drawTarget;
+    UsdImagingGLRenderParams       _renderParams;
+    UsdPrim                        _root;
+    UsdLuxDomeLight                _light;
+    GlfDrawTargetRefPtr            _drawTarget;
     GLuint                              _drawTexId = 0;
-    pxr::GlfDrawTargetRefPtr            _toolTarget;
+    GlfDrawTargetRefPtr            _toolTarget;
     GLuint                              _toolTexId = 0;
     int                                 _drawMode;
     int                                 _rendererIndex;
@@ -110,7 +110,7 @@ class ViewportUI : public BaseUI
 
     const char**                        _rendererNames;
     int                                 _numRenderers;
-    pxr::CameraUtilConformWindowPolicy  _conformWindowPolicy;
+    CameraUtilConformWindowPolicy  _conformWindowPolicy;
 
     std::string                         _message;
 

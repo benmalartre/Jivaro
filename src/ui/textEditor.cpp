@@ -34,8 +34,8 @@ TextEditorUI::Draw()
   if (window->SkipItems) {
     return false;
   }
-  const pxr::GfVec2f min(GetX(), GetY());
-  const pxr::GfVec2f size(GetWidth(), GetHeight());
+  const GfVec2f min(GetX(), GetY());
+  const GfVec2f size(GetWidth(), GetHeight());
 
   ImGui::SetNextWindowPos(min);
   ImGui::SetNextWindowSize(size);

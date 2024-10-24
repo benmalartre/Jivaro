@@ -6,15 +6,15 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-void TestPush::_TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage)
+void TestPush::_TraverseStageFindingMeshes(UsdStageRefPtr& stage)
 {
-  pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
-  for (pxr::UsdPrim prim : stage->TraverseAll())
-    if (prim.IsA<pxr::UsdGeomMesh>()) {
+  UsdGeomXformCache xformCache(UsdTimeCode::Default());
+  for (UsdPrim prim : stage->TraverseAll())
+    if (prim.IsA<UsdGeomMesh>()) {
       std::cout << "prim " << prim.GetPath() << std::endl;
       std::cout << "xform " << xformCache.GetLocalToWorldTransform(prim) << std::endl;
 
-      _meshes.push_back(new Mesh(pxr::UsdGeomMesh(prim), 
+      _meshes.push_back(new Mesh(UsdGeomMesh(prim), 
         xformCache.GetLocalToWorldTransform(prim)));
       _meshesId.push_back(prim.GetPath());
       _meshes.back()->SetInputOutput();
@@ -24,40 +24,40 @@ void TestPush::_TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage)
     }
 }
 
-void TestPush::InitExec(pxr::UsdStageRefPtr& stage)
+void TestPush::InitExec(UsdStageRefPtr& stage)
 {
   if (!stage) return;
 
   // get root prim
-  pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
+  UsdPrim rootPrim = stage->GetDefaultPrim();
   if(!rootPrim.IsValid()) {
-    pxr::UsdGeomXform root = pxr::UsdGeomXform::Define(stage, pxr::SdfPath("/Root"));
+    UsdGeomXform root = UsdGeomXform::Define(stage, SdfPath("/Root"));
     rootPrim = root.GetPrim();
     stage->SetDefaultPrim(rootPrim);
   }
-  const pxr::SdfPath  rootId = rootPrim.GetPath();
+  const SdfPath  rootId = rootPrim.GetPath();
   _TraverseStageFindingMeshes(stage);
 
   UpdateExec(stage, 1);
 }
 
 
-void TestPush::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
+void TestPush::UpdateExec(UsdStageRefPtr& stage, float time)
 {
   _scene.Sync(stage, time);
   const float factor = RANDOM_0_X(3);
   for(size_t m = 0; m < _meshes.size(); ++m) {
-    pxr::GfVec3f* positions = _meshes[m]->GetPositionsPtr();
-    const pxr::GfVec3f* normal = _meshes[m]->GetNormalsCPtr();
+    GfVec3f* positions = _meshes[m]->GetPositionsPtr();
+    const GfVec3f* normal = _meshes[m]->GetNormalsCPtr();
     for(size_t p=0; p < _meshes[m]->GetNumPoints(); ++p) {
       positions[p] += normal[p] * factor;
     }
-    _scene.MarkPrimDirty(_meshesId[m], pxr::HdChangeTracker::AllDirty);
+    _scene.MarkPrimDirty(_meshesId[m], HdChangeTracker::AllDirty);
   }
 
 }
 
-void TestPush::TerminateExec(pxr::UsdStageRefPtr& stage)
+void TestPush::TerminateExec(UsdStageRefPtr& stage)
 {
   if (!stage) return;
 }

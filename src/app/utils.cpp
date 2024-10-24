@@ -26,12 +26,12 @@ std::string FindNextAvailableTokenString(std::string prefix) {
         newName << prefix.substr(0, end + 1) << std::setfill('0') << std::setw(padding) << value;
         // Looking for existing token with the same name.
         // There might be a better solution here
-    } while (pxr::TfToken::Find(newName.str()) != pxr::TfToken());
+    } while (TfToken::Find(newName.str()) != TfToken());
     return newName.str();
 }
 
 const std::vector<std::string> GetUsdValidExtensions() {
-    const auto usdExtensions = pxr::SdfFileFormat::FindAllFileFormatExtensions();
+    const auto usdExtensions = SdfFileFormat::FindAllFileFormatExtensions();
     std::vector<std::string> validExtensions;
     auto addDot = [](const std::string &str) { return "." + str; };
     std::transform(usdExtensions.cbegin(), usdExtensions.cend(), std::back_inserter(validExtensions), addDot);

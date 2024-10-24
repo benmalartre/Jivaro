@@ -9,7 +9,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 // Graph constructor
 //------------------------------------------------------------------------------
-HierarchyGraph::HierarchyGraph(const pxr::SdfLayerRefPtr& layer, const pxr::UsdPrim& prim) 
+HierarchyGraph::HierarchyGraph(const SdfLayerRefPtr& layer, const UsdPrim& prim) 
   : Graph(prim)
   , _layer(layer)
 {
@@ -24,7 +24,7 @@ HierarchyGraph::~HierarchyGraph()
 
 // Graph populate
 //------------------------------------------------------------------------------
-void HierarchyGraph::Populate(const pxr::UsdPrim& prim)
+void HierarchyGraph::Populate(const UsdPrim& prim)
 {
   _prim = prim;
   Clear();
@@ -33,7 +33,7 @@ void HierarchyGraph::Populate(const pxr::UsdPrim& prim)
 }
 
 
-HierarchyGraph::HierarchyNode::HierarchyNode(pxr::UsdPrim& prim, 
+HierarchyGraph::HierarchyNode::HierarchyNode(UsdPrim& prim, 
   HierarchyGraph::HierarchyNode* parent)
   : Graph::Node(prim)
   , _parent(parent)
@@ -51,10 +51,10 @@ void HierarchyGraph::HierarchyNode::_PopulatePorts()
 void
 HierarchyGraph::_RecurseNodes(HierarchyGraph::HierarchyNode* parent)
 {
-  pxr::SdfPrimSpecHandle primSpec = _layer->GetPrimAtPath(parent->GetPrim().GetPath());
+  SdfPrimSpecHandle primSpec = _layer->GetPrimAtPath(parent->GetPrim().GetPath());
   for (const auto& child : primSpec.GetSpec().GetNameChildren()) {
-    pxr::UsdPrim childPrim = 
-      parent->GetPrim().GetChild(pxr::TfToken(child->GetName()));
+    UsdPrim childPrim = 
+      parent->GetPrim().GetChild(TfToken(child->GetName()));
     HierarchyGraph::HierarchyNode* node =
       new HierarchyGraph::HierarchyNode(childPrim, parent);
     AddNode(node);
@@ -82,12 +82,12 @@ HierarchyGraph::_DiscoverConnexions()
 {
   /*
   std::cout << "execution discover connexions ..." << std::endl;
-  for (pxr::UsdPrim child : _prim.GetChildren()) {
-    if (child.IsA<pxr::UsdExecNode>()) {
-      pxr::UsdExecNode node(child);
-      for (pxr::UsdExecInput& input : node.GetInputs()) {
-        if (input.GetConnectability() != pxr::UsdExecTokens->full) continue;
-        pxr::UsdExecInput::SourceInfoVector connexions = input.GetConnectedSources();
+  for (UsdPrim child : _prim.GetChildren()) {
+    if (child.IsA<UsdExecNode>()) {
+      UsdExecNode node(child);
+      for (UsdExecInput& input : node.GetInputs()) {
+        if (input.GetConnectability() != UsdExecTokens->full) continue;
+        UsdExecInput::SourceInfoVector connexions = input.GetConnectedSources();
         for (auto& connexion : connexions) {
           Graph::Node* source = GetNode(connexion.source.GetPrim());
           Graph::Node* destination = GetNode(child);

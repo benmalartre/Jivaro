@@ -35,10 +35,10 @@ public:
 class GravityForce : public Force
 {
 public:
-  GravityForce(const pxr::GfVec3f& gravity=pxr::GfVec3f(0.f, -9.81f, 0.f));
-  GravityForce(const pxr::UsdAttribute& attr);
+  GravityForce(const GfVec3f& gravity=GfVec3f(0.f, -9.81f, 0.f));
+  GravityForce(const UsdAttribute& attr);
 
-  void Set(const pxr::GfVec3f& gravity){_gravity = gravity;};
+  void Set(const GfVec3f& gravity){_gravity = gravity;};
 
   void Update(float time);
   void Apply(size_t begin, size_t end, Particles* particles, float dt) const override;
@@ -46,8 +46,8 @@ public:
 
 private:
   static size_t         TYPE_ID;
-  pxr::UsdAttribute     _attr;
-  pxr::GfVec3f          _gravity;
+  UsdAttribute     _attr;
+  GfVec3f          _gravity;
 };
 
 class DampForce : public Force
@@ -55,7 +55,7 @@ class DampForce : public Force
 public:
 
   DampForce(float damping=0.1f);
-  DampForce(const pxr::UsdAttribute& attr);
+  DampForce(const UsdAttribute& attr);
 
   void Set(float damp){_damp = damp;};
 
@@ -65,7 +65,7 @@ public:
 
 private:
   static size_t         TYPE_ID;
-  pxr::UsdAttribute     _attr;
+  UsdAttribute     _attr;
   float _damp;
 };
 

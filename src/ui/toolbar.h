@@ -21,7 +21,7 @@ enum ToolbarItemType {
 };
 
 // callback prototype
-//typedef void(*ToolbarPressedFunc)(const pxr::VtArray<pxr::VtValue>& args);
+//typedef void(*ToolbarPressedFunc)(const VtArray<VtValue>& args);
 struct ToolbarItem {
   BaseUI*                     ui;
   ToolbarItemType             type;
@@ -54,14 +54,14 @@ struct ToolbarButton : public ToolbarItem {
   bool                        toggable;
   bool                        enabled;
 
-  pxr::VtArray<pxr::VtValue>  args;
+  VtArray<VtValue>  args;
   CALLBACK_FN                 func;
   const char*                 icon;
 
   ToolbarButton(BaseUI* ui, short tool, const std::string& lbl, 
     const std::string& sht, const std::string& tooltip, const char* icon, 
     bool sel, bool enb, CALLBACK_FN f = NULL,
-    const pxr::VtArray<pxr::VtValue> a = pxr::VtArray<pxr::VtValue>());
+    const VtArray<VtValue> a = VtArray<VtValue>());
   ~ToolbarButton(){};
   bool Draw() override;
 };
@@ -79,7 +79,7 @@ public:
 
 private:
   bool                        _vertical;
-  pxr::GfVec3f                _color;
+  GfVec3f                _color;
   std::vector<ToolbarItem*>   _items;
   ToolbarItem*                _current;
   static ImGuiWindowFlags     _flags;

@@ -11,7 +11,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 /// Notifications sent by the Jivaro Application
 
 /// Base class for all Plug notices.
-class BaseNotice : public pxr::TfNotice
+class BaseNotice : public TfNotice
 {
 public:
   BaseNotice();

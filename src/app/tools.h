@@ -28,7 +28,7 @@ public:
 
   void SetActiveTool(short tool);
   void SetProgram(GLSLProgram* pgm);
-  void SetViewport(const pxr::GfVec4f& viewport);
+  void SetViewport(const GfVec4f& viewport);
   void SetCamera(Camera* camera);
   void ResetSelection();
 
@@ -47,7 +47,7 @@ private:
   void            _ResetActiveTool();
   short           _last;
   short           _current;
-  pxr::GfVec4f    _viewport;
+  GfVec4f    _viewport;
   bool            _interacting;
   BaseHandle*     _active;
   short           _activeAxis;

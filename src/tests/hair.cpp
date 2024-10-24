@@ -22,51 +22,51 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 void 
-TestHair::_InitControls(pxr::UsdStageRefPtr& stage)
+TestHair::_InitControls(UsdStageRefPtr& stage)
 {
-  pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
+  UsdPrim rootPrim = stage->GetDefaultPrim();
 
-  pxr::UsdPrim controlPrim = stage->DefinePrim(rootPrim.GetPath().AppendChild(pxr::TfToken("Controls")));
-  controlPrim.CreateAttribute(pxr::TfToken("Density"), pxr::SdfValueTypeNames->Int).Set(100);
-  controlPrim.CreateAttribute(pxr::TfToken("Radius"), pxr::SdfValueTypeNames->Float).Set(0.1f);
-  controlPrim.CreateAttribute(pxr::TfToken("Length"), pxr::SdfValueTypeNames->Float).Set(4.f);
-  controlPrim.CreateAttribute(pxr::TfToken("Scale"), pxr::SdfValueTypeNames->Float).Set(1.f);
-  controlPrim.CreateAttribute(pxr::TfToken("Amplitude"), pxr::SdfValueTypeNames->Float).Set(0.5f);
-  controlPrim.CreateAttribute(pxr::TfToken("Frequency"), pxr::SdfValueTypeNames->Float).Set(1.f);
-  controlPrim.CreateAttribute(pxr::TfToken("Width"), pxr::SdfValueTypeNames->Float).Set(0.1f);
-  controlPrim.CreateAttribute(pxr::TfToken("Color"), pxr::SdfValueTypeNames->Float3).Set(
-    pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1));
+  UsdPrim controlPrim = stage->DefinePrim(rootPrim.GetPath().AppendChild(TfToken("Controls")));
+  controlPrim.CreateAttribute(TfToken("Density"), SdfValueTypeNames->Int).Set(100);
+  controlPrim.CreateAttribute(TfToken("Radius"), SdfValueTypeNames->Float).Set(0.1f);
+  controlPrim.CreateAttribute(TfToken("Length"), SdfValueTypeNames->Float).Set(4.f);
+  controlPrim.CreateAttribute(TfToken("Scale"), SdfValueTypeNames->Float).Set(1.f);
+  controlPrim.CreateAttribute(TfToken("Amplitude"), SdfValueTypeNames->Float).Set(0.5f);
+  controlPrim.CreateAttribute(TfToken("Frequency"), SdfValueTypeNames->Float).Set(1.f);
+  controlPrim.CreateAttribute(TfToken("Width"), SdfValueTypeNames->Float).Set(0.1f);
+  controlPrim.CreateAttribute(TfToken("Color"), SdfValueTypeNames->Float3).Set(
+    GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1));
 }
 
 void 
-TestHair::_QueryControls(pxr::UsdStageRefPtr& stage)
+TestHair::_QueryControls(UsdStageRefPtr& stage)
 {
-  pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
-  pxr::UsdPrim controlPrim = rootPrim.GetChild(pxr::TfToken("Controls"));
+  UsdPrim rootPrim = stage->GetDefaultPrim();
+  UsdPrim controlPrim = rootPrim.GetChild(TfToken("Controls"));
 
-  controlPrim.GetAttribute(pxr::TfToken("Density")).Get(&_density);
-  controlPrim.GetAttribute(pxr::TfToken("Radius")).Get(&_radius);
-  controlPrim.GetAttribute(pxr::TfToken("Length")).Get(&_length);
-  controlPrim.GetAttribute(pxr::TfToken("Scale")).Get(&_scale);
-  controlPrim.GetAttribute(pxr::TfToken("Amplitude")).Get(&_amplitude);
-  controlPrim.GetAttribute(pxr::TfToken("Frequency")).Get(&_frequency);
-  controlPrim.GetAttribute(pxr::TfToken("Width")).Get(&_width);
-  controlPrim.GetAttribute(pxr::TfToken("Color")).Get(&_color);
+  controlPrim.GetAttribute(TfToken("Density")).Get(&_density);
+  controlPrim.GetAttribute(TfToken("Radius")).Get(&_radius);
+  controlPrim.GetAttribute(TfToken("Length")).Get(&_length);
+  controlPrim.GetAttribute(TfToken("Scale")).Get(&_scale);
+  controlPrim.GetAttribute(TfToken("Amplitude")).Get(&_amplitude);
+  controlPrim.GetAttribute(TfToken("Frequency")).Get(&_frequency);
+  controlPrim.GetAttribute(TfToken("Width")).Get(&_width);
+  controlPrim.GetAttribute(TfToken("Color")).Get(&_color);
 }
 
-pxr::HdDirtyBits 
-TestHair::_HairEmit(pxr::UsdStageRefPtr& stage, Curve* curve, pxr::UsdGeomMesh& mesh, 
-  pxr::GfMatrix4d& xform, double time)
+HdDirtyBits 
+TestHair::_HairEmit(UsdStageRefPtr& stage, Curve* curve, UsdGeomMesh& mesh, 
+  GfMatrix4d& xform, double time)
 {
   uint64_t T = CurrentTime();
-  pxr::HdDirtyBits bits = pxr::HdChangeTracker::Clean;
+  HdDirtyBits bits = HdChangeTracker::Clean;
  
-  pxr::VtArray<pxr::GfVec3f> positions;
-  pxr::VtArray<pxr::GfVec3f> normals;
-  pxr::VtArray<int> counts;
-  pxr::VtArray<int> indices;
-  pxr::VtArray<Triangle> triangles;
-  pxr::VtArray<Sample> samples;
+  VtArray<GfVec3f> positions;
+  VtArray<GfVec3f> normals;
+  VtArray<int> counts;
+  VtArray<int> indices;
+  VtArray<Triangle> triangles;
+  VtArray<Sample> samples;
 
   mesh.GetPointsAttr().Get(&positions, time);
   mesh.GetFaceVertexCountsAttr().Get(&counts, time);
@@ -88,24 +88,24 @@ TestHair::_HairEmit(pxr::UsdStageRefPtr& stage, Curve* curve, pxr::UsdGeomMesh& 
   size_t numCVs = 4 * samples.size();
 
 
-  pxr::VtArray<pxr::GfVec3f> points(numCVs);
-  pxr::VtArray<pxr::GfVec3f> colors(numCVs);
-  pxr::VtArray<float> radii(numCVs);
-  pxr::VtArray<int> cvCounts(samples.size());
+  VtArray<GfVec3f> points(numCVs);
+  VtArray<GfVec3f> colors(numCVs);
+  VtArray<float> radii(numCVs);
+  VtArray<int> cvCounts(samples.size());
 
 
   for (size_t sampleIdx = 0; sampleIdx < samples.size(); ++sampleIdx) {
 
-    const pxr::GfVec3f& normal = samples[sampleIdx].GetNormal(&normals[0]);
-    const pxr::GfVec3f& tangent = samples[sampleIdx].GetTangent(&positions[0], &normals[0]);
-    const pxr::GfVec3f bitangent = (normal ^ tangent).GetNormalized();
-    const pxr::GfVec3f& position = samples[sampleIdx].GetPosition(&positions[0]);
-    const float tangentFactor = pxr::GfCos(position[2] * _scale + time * _frequency) * _amplitude;
+    const GfVec3f& normal = samples[sampleIdx].GetNormal(&normals[0]);
+    const GfVec3f& tangent = samples[sampleIdx].GetTangent(&positions[0], &normals[0]);
+    const GfVec3f bitangent = (normal ^ tangent).GetNormalized();
+    const GfVec3f& position = samples[sampleIdx].GetPosition(&positions[0]);
+    const float tangentFactor = GfCos(position[2] * _scale + time * _frequency) * _amplitude;
 
-    colors[sampleIdx * 4] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
-    colors[sampleIdx * 4 + 1] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
-    colors[sampleIdx * 4 + 2] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
-    colors[sampleIdx * 4 + 3] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+    colors[sampleIdx * 4] = GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+    colors[sampleIdx * 4 + 1] = GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+    colors[sampleIdx * 4 + 2] = GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+    colors[sampleIdx * 4 + 3] = GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
 
 
     points[sampleIdx * 4] = xform.Transform(position);
@@ -129,34 +129,34 @@ TestHair::_HairEmit(pxr::UsdStageRefPtr& stage, Curve* curve, pxr::UsdGeomMesh& 
   //uint64_t T6 = CurrentTime() - T;
   //T = CurrentTime();
 
-  return pxr::HdChangeTracker::DirtyTopology;
+  return HdChangeTracker::DirtyTopology;
 }
 
 
 void 
-TestHair::InitExec(pxr::UsdStageRefPtr& stage)
+TestHair::InitExec(UsdStageRefPtr& stage)
 {
   if (!stage) return;
 
-  pxr::UsdPrimRange primRange = stage->TraverseAll();
-  pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
-  pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
+  UsdPrimRange primRange = stage->TraverseAll();
+  UsdGeomXformCache xformCache(UsdTimeCode::Default());
+  UsdPrim rootPrim = stage->GetDefaultPrim();
 
   _InitControls(stage);
   _QueryControls(stage);
 
 
-  for (pxr::UsdPrim prim : primRange) {
-    if (prim.IsA<pxr::UsdGeomMesh>()) {
+  for (UsdPrim prim : primRange) {
+    if (prim.IsA<UsdGeomMesh>()) {
       Curve* curve = new Curve();
-      pxr::UsdGeomMesh usdMesh(prim);
-      pxr::GfMatrix4d matrix = xformCache.GetLocalToWorldTransform(prim);
+      UsdGeomMesh usdMesh(prim);
+      GfMatrix4d matrix = xformCache.GetLocalToWorldTransform(prim);
       _HairEmit(stage, curve, usdMesh, matrix, 1.f);
       
       _Sources sources;
-      pxr::SdfPath hairPath = prim.GetPath().AppendPath(pxr::SdfPath(pxr::TfToken("Hair")));
+      SdfPath hairPath = prim.GetPath().AppendPath(SdfPath(TfToken("Hair")));
       _scene.AddGeometry(hairPath, curve);
-      sources.push_back({ prim.GetPath(), pxr::HdChangeTracker::Clean });
+      sources.push_back({ prim.GetPath(), HdChangeTracker::Clean });
       _sourcesMap[hairPath] = sources;
     }
   }
@@ -164,41 +164,41 @@ TestHair::InitExec(pxr::UsdStageRefPtr& stage)
 }
 
 void 
-TestHair::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
+TestHair::UpdateExec(UsdStageRefPtr& stage, float time)
 {
   _QueryControls(stage);
 
   _scene.Sync(stage, time);
   for(auto& source: _sourcesMap) {
-    const pxr::SdfPath& path = source.first;
+    const SdfPath& path = source.first;
     _Sources& sources = source.second;
 
     Scene::_Prim* prim = _scene.GetPrim(path);
     Curve* curve = (Curve*)prim->geom;
 
     double time = Time::Get()->GetActiveTime();
-    pxr::UsdGeomXformCache xformCache(time);
-    pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
+    UsdGeomXformCache xformCache(time);
+    UsdPrim rootPrim = stage->GetDefaultPrim();
 
-    pxr::UsdGeomMesh mesh(stage->GetPrimAtPath(sources[0].first));
-    pxr::GfMatrix4d matrix = xformCache.GetLocalToWorldTransform(mesh.GetPrim());
+    UsdGeomMesh mesh(stage->GetPrimAtPath(sources[0].first));
+    GfMatrix4d matrix = xformCache.GetLocalToWorldTransform(mesh.GetPrim());
     prim->bits = _HairEmit(stage, curve, mesh, matrix, time);    
   }
 }
 
 void 
-TestHair::TerminateExec(pxr::UsdStageRefPtr& stage)
+TestHair::TerminateExec(UsdStageRefPtr& stage)
 {
   if (!stage) return;
 
-  pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
-  pxr::SdfPath rootId = rootPrim.GetPath();
+  UsdPrim rootPrim = stage->GetDefaultPrim();
+  SdfPath rootId = rootPrim.GetPath();
 
-  pxr::UsdPrimRange primRange = stage->TraverseAll();
+  UsdPrimRange primRange = stage->TraverseAll();
 
-   for (pxr::UsdPrim prim : primRange) {
-    if (prim.IsA<pxr::UsdGeomMesh>()) {
-      pxr::SdfPath hairPath = prim.GetPath().AppendPath(pxr::SdfPath(pxr::TfToken("Hair")));
+   for (UsdPrim prim : primRange) {
+    if (prim.IsA<UsdGeomMesh>()) {
+      SdfPath hairPath = prim.GetPath().AppendPath(SdfPath(TfToken("Hair")));
       _scene.Remove(hairPath);
     }
   }

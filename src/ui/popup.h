@@ -32,7 +32,7 @@ public:
     float& outX, float& outY) override;
 
   // get the (x,y) position in window space (left top corner)
-  pxr::GfVec2f GetPosition() override { return pxr::GfVec2f(_x, _y); };;
+  GfVec2f GetPosition() override { return GfVec2f(_x, _y); };;
 
   // get the x position in window space (x-coordinate of left top corner)
   int GetX() override {return _x;};
@@ -74,17 +74,17 @@ class ColorPopupUI : public PopupUI
 {
 public:
   ColorPopupUI(int  x, int y, int width, int height, 
-    const pxr::UsdAttribute& attribute, const pxr::UsdTimeCode& timeCode);
+    const UsdAttribute& attribute, const UsdTimeCode& timeCode);
   ~ColorPopupUI() override;
 
   bool Draw() override;
   void MouseButton(int button, int action, int mods) override;
   bool Terminate() override;
 private:
-  pxr::UsdAttribute _attribute;
-  pxr::UsdTimeCode  _time;
-  pxr::GfVec3f      _color;
-  pxr::GfVec3f      _original;
+  UsdAttribute _attribute;
+  UsdTimeCode  _time;
+  GfVec3f      _color;
+  GfVec3f      _original;
   bool              _isArray;
 };
 
@@ -127,11 +127,11 @@ class SdfPathPopupUI : public PopupUI
 {
 public:
   SdfPathPopupUI(int x, int y, int width, int height,
-    const pxr::SdfPrimSpecHandle& primSpec);
+    const SdfPrimSpecHandle& primSpec);
   ~SdfPathPopupUI() override;
   bool Draw() override;
 private:
-  pxr::SdfPrimSpecHandle  _primSpec;
+  SdfPrimSpecHandle  _primSpec;
   std::string             _primPath;
   int                     _operation = 0;
 };

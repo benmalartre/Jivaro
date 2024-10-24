@@ -13,16 +13,16 @@ JVR_NAMESPACE_OPEN_SCOPE
 #define KEYFRAME_SAMPLE_SIZE 32
 
 struct CurveEditorGrabUI {
-  pxr::GfVec2f start;
-  pxr::GfVec2f end;
+  GfVec2f start;
+  GfVec2f end;
 };
 
-typedef std::vector<pxr::UsdAnimXCurve*> AnimXCurves;
-typedef pxr::TfHashMap <pxr::SdfPath, AnimXCurves, pxr::SdfPath::Hash> AnimXCurvesMap;
+typedef std::vector<UsdAnimXCurve*> AnimXCurves;
+typedef TfHashMap <SdfPath, AnimXCurves, SdfPath::Hash> AnimXCurvesMap;
 
 class CurveEditorUI : public BaseUI
 {
-friend pxr::UsdAnimXData;
+friend UsdAnimXData;
 public:
   CurveEditorUI(View* parent);
   ~CurveEditorUI() override;
@@ -36,12 +36,12 @@ public:
   bool Draw() override;
 
   void DrawBackground();
-  void DrawCurve(pxr::UsdAnimXCurve* crv);
+  void DrawCurve(UsdAnimXCurve* crv);
   void DrawCurves();
   void DrawTime();
 
-  void SetLayer(pxr::SdfLayerHandle layer);
-  void SetDatas(const pxr::UsdAnimXDataRefPtr& datas);
+  void SetLayer(SdfLayerHandle layer);
+  void SetDatas(const UsdAnimXDataRefPtr& datas);
   void PopulateCurves();
   /*
   void RecurseStage();
@@ -60,12 +60,12 @@ private:
   size_t _GetNumSamples(float width);
 
   AnimXCurvesMap                _curves;
-  pxr::SdfLayerHandle           _layer;
-  pxr::UsdAnimXDataRefPtr       _datas;
+  SdfLayerHandle           _layer;
+  UsdAnimXDataRefPtr       _datas;
 
-  pxr::GfVec2f                  _offset;
-  pxr::GfVec2f                  _scale;
-  pxr::GfVec2f                  _invScale;
+  GfVec2f                  _offset;
+  GfVec2f                  _scale;
+  GfVec2f                  _invScale;
   float                         _lastX;
   float                         _lastY;
   bool                          _drag;

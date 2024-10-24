@@ -11,28 +11,28 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 
-static pxr::GfPlane DEFAULT_PLANE(pxr::GfVec3d(0, 1, 0), pxr::GfVec3d(0));
+static GfPlane DEFAULT_PLANE(GfVec3d(0, 1, 0), GfVec3d(0));
 
-bool IntersectDisc(const pxr::GfRay& localRay, const double radius,
+bool IntersectDisc(const GfRay& localRay, const double radius,
   double* distance);
 
-bool IntersectRing(const pxr::GfRay& localRay, const double radius,
+bool IntersectRing(const GfRay& localRay, const double radius,
   const double section, double* distance);
 
-bool IntersectCylinder(const pxr::GfRay& localRay, const double radius, 
+bool IntersectCylinder(const GfRay& localRay, const double radius, 
   const double height, double* distance);
 
-bool IntersectTube(const pxr::GfRay& localRay, const double innerRadius,
+bool IntersectTube(const GfRay& localRay, const double innerRadius,
   const double outerRadius, const double height, double* distance);
 
-bool IntersectTorus( const pxr::GfRay& localRay, const double radius, 
+bool IntersectTorus( const GfRay& localRay, const double radius, 
   const double section, double* distance);
 
-bool IntersectTorusApprox(const pxr::GfRay& localRay, const double radius,
+bool IntersectTorusApprox(const GfRay& localRay, const double radius,
   const double section, double* distance);
 
-bool IntersectTriangle(const pxr::GfRay& ray, const pxr::GfVec3f& a,
-  const pxr::GfVec3f& b, const pxr::GfVec3f& c, double* distance, pxr::GfVec3f* uvw);
+bool IntersectTriangle(const GfRay& ray, const GfVec3f& a,
+  const GfVec3f& b, const GfVec3f& c, double* distance, GfVec3f* uvw);
 
 PXR_NAMESPACE_CLOSE_SCOPE
 

@@ -24,7 +24,7 @@ Tool::~Tool()
 
 
 void 
-Tool::SetViewport(const pxr::GfVec4f& viewport)
+Tool::SetViewport(const GfVec4f& viewport)
 {
   _viewport = viewport;
 }
@@ -43,8 +43,8 @@ Tool::SetCamera(Camera* camera)
 
   // update shader
   _active->UpdateCamera(
-    pxr::GfMatrix4f(camera->GetViewMatrix()),
-    pxr::GfMatrix4f(camera->GetProjectionMatrix()));
+    GfMatrix4f(camera->GetViewMatrix()),
+    GfMatrix4f(camera->GetProjectionMatrix()));
 
   if(_active) {
     _active->UpdatePickingPlane(_active->GetActiveAxis());

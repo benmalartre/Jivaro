@@ -24,7 +24,7 @@
 JVR_NAMESPACE_OPEN_SCOPE
 // View constructor
 //----------------------------------------------------------------------------
-View::View(View* parent, const pxr::GfVec2f& min, const pxr::GfVec2f& max, unsigned flags)
+View::View(View* parent, const GfVec2f& min, const GfVec2f& max, unsigned flags)
   : _parent(parent)
   , _tab(NULL)
   , _left(NULL)
@@ -47,8 +47,8 @@ View::View(View* parent, int x, int y, int w, int h, unsigned flags)
   , _tab(NULL)
   , _left(NULL)
   , _right(NULL)
-  , _min(pxr::GfVec2f(x, y))
-  , _max(pxr::GfVec2f(x+w, y+h))
+  , _min(GfVec2f(x, y))
+  , _max(GfVec2f(x+w, y+h))
   , _flags(flags)
   , _perc(0.5)
   , _buffered(0)
@@ -229,10 +229,10 @@ View::Contains(int x, int y)
 }
 
 bool
-View::Intersect(const pxr::GfVec2f& min, const pxr::GfVec2f& size)
+View::Intersect(const GfVec2f& min, const GfVec2f& size)
 {
-  pxr::GfRange2f viewRange(GetMin(), GetMax());
-  pxr::GfRange2f boxRange(min, min + size);
+  GfRange2f viewRange(GetMin(), GetMax());
+  GfRange2f boxRange(min, min + size);
   return !boxRange.IsOutside(viewRange);
 }
 
@@ -298,13 +298,13 @@ void View::Clear()
 }
 
 // mouse positon relative to the view
-pxr::GfVec2f 
+GfVec2f 
 View::GetRelativeMousePosition(const int inX, const int inY)
 {
-  pxr::GfVec2f position = GetMin();
+  GfVec2f position = GetMin();
   int x = position[0];
   int y = position[1];
-  return pxr::GfVec2f(inX - x, inY - y);
+  return GfVec2f(inX - x, inY - y);
 }
 
 float View::GetTabHeight() {
@@ -385,7 +385,7 @@ View::Focus(int state)
 }
 
 void
-View::GetChildMinMax(bool leftOrRight, pxr::GfVec2f& cMin, pxr::GfVec2f& cMax)
+View::GetChildMinMax(bool leftOrRight, GfVec2f& cMin, GfVec2f& cMax)
 {
   // horizontal splitter
   if(GetFlag(HORIZONTAL)) {
@@ -419,7 +419,7 @@ View::GetChildMinMax(bool leftOrRight, pxr::GfVec2f& cMin, pxr::GfVec2f& cMax)
 }
 
 void
-View::GetSplitInfos(pxr::GfVec2f& sMin, pxr::GfVec2f& sMax,
+View::GetSplitInfos(GfVec2f& sMin, GfVec2f& sMax,
   const int width, const int height)
 {
   if(GetFlag(HORIZONTAL))
@@ -441,10 +441,10 @@ View::GetSplitInfos(pxr::GfVec2f& sMin, pxr::GfVec2f& sMax,
     sMax[0] = w + SPLITTER_THICKNESS;
   }
 
-  sMin[0] = pxr::GfClamp(sMin[0], 0, width);
-  sMin[1] = pxr::GfClamp(sMin[1], 0, height);
-  sMax[0] = pxr::GfClamp(sMax[0], 0, width);
-  sMax[1] = pxr::GfClamp(sMax[1], 0, height);
+  sMin[0] = GfClamp(sMin[0], 0, width);
+  sMin[1] = GfClamp(sMin[1], 0, height);
+  sMax[0] = GfClamp(sMax[0], 0, width);
+  sMax[1] = GfClamp(sMax[1], 0, height);
 
 }
 
@@ -471,7 +471,7 @@ View::Split(double perc, bool horizontal, int fixed, int numPixels)
   _perc = perc;
   _fixedPixels = numPixels;
 
-  pxr::GfVec2f cMin, cMax;    
+  GfVec2f cMin, cMax;    
   GetChildMinMax(true, cMin, cMax);
   _left = new View(this, cMin, cMax);
   _left->_parent = this;
@@ -493,15 +493,15 @@ View::Split(double perc, bool horizontal, int fixed, int numPixels)
 void 
 View::Resize(int x, int y, int w, int h, bool rationalize)
 {
-  pxr::GfVec2f ratio;
+  GfVec2f ratio;
 
   if(rationalize)
   {
     ratio[0] = 1 / (((double)_max[0] - (double)_min[0]) / (double)w);
     ratio[1] = 1 / (((double)_max[1] - (double)_min[1]) / (double)h);
   }
-  _min = pxr::GfVec2f(x , y);
-  _max = pxr::GfVec2f(x + w, y + h);
+  _min = GfVec2f(x , y);
+  _max = GfVec2f(x + w, y + h);
 
   if(!GetFlag(LEAF))
   {
@@ -587,7 +587,7 @@ View::ComputeNumPixels(bool postFix)
 }
 
 void 
-View::RescaleNumPixels(pxr::GfVec2f  ratio)
+View::RescaleNumPixels(GfVec2f  ratio)
 {
   if(!GetFlag(LEAF))
   {

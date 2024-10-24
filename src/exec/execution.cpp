@@ -5,12 +5,12 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-void Execution::_GetRootPrim(pxr::UsdStageRefPtr &stage)
+void Execution::_GetRootPrim(UsdStageRefPtr &stage)
 {
   // get root prim
   _rootPrim = stage->GetDefaultPrim();
   if(!_rootPrim.IsValid()) {
-    pxr::UsdGeomXform root = pxr::UsdGeomXform::Define(stage, pxr::SdfPath("/Root"));
+    UsdGeomXform root = UsdGeomXform::Define(stage, SdfPath("/Root"));
     _rootPrim = root.GetPrim();
     stage->SetDefaultPrim(_rootPrim);
   }

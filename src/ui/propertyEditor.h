@@ -16,8 +16,8 @@ public:
   PropertyEditorUI(View* parent);
   ~PropertyEditorUI()         override;
 
-  void SetPrim(const pxr::UsdPrim& prim);
-  pxr::UsdPrim& GetPrim() { return _prim; };
+  void SetPrim(const UsdPrim& prim);
+  UsdPrim& GetPrim() { return _prim; };
 
 
   void MouseButton(int action, int button, int mods) override{};
@@ -26,30 +26,30 @@ public:
   void OnSelectionChangedNotice(const SelectionChangedNotice& n) override;
 
 private:
-  void _DrawAttributeTypeInfo(const pxr::UsdAttribute& attribute);
-  pxr::VtValue _DrawAttributeValue(const pxr::UsdAttribute& attribute, const pxr::UsdTimeCode& timeCode);
-  void _DrawAttributeValueAtTime(const pxr:: UsdAttribute& attribute, const pxr::UsdTimeCode& currentTime);
-  bool _DrawAssetInfo(const pxr::UsdPrim& prim);
-  bool _DrawXformsCommon(pxr::UsdTimeCode time);
-  bool _DrawVariantSetsCombos(pxr::UsdPrim& prim);
+  void _DrawAttributeTypeInfo(const UsdAttribute& attribute);
+  VtValue _DrawAttributeValue(const UsdAttribute& attribute, const UsdTimeCode& timeCode);
+  void _DrawAttributeValueAtTime(const  UsdAttribute& attribute, const UsdTimeCode& currentTime);
+  bool _DrawAssetInfo(const UsdPrim& prim);
+  bool _DrawXformsCommon(UsdTimeCode time);
+  bool _DrawVariantSetsCombos(UsdPrim& prim);
   /*
-  static pxr::VtValue _DrawAttributeValue(
-    const std::string &label, pxr::UsdAttribute &attribute, const pxr::VtValue &value);
+  static VtValue _DrawAttributeValue(
+    const std::string &label, UsdAttribute &attribute, const VtValue &value);
   static void _DrawAttributeTypeInfo(
-    const pxr::UsdAttribute &attribute);
+    const UsdAttribute &attribute);
   static void _DrawAttributeDisplayName(
-    const pxr::UsdAttribute &attribute);
+    const UsdAttribute &attribute);
   static void _DrawAttributeValueAtTime(
-    pxr::UsdAttribute &attribute, pxr::UsdTimeCode currentTime);
+    UsdAttribute &attribute, UsdTimeCode currentTime);
   static void _DrawUsdRelationshipDisplayName(
-    const pxr::UsdRelationship &relationship);
+    const UsdRelationship &relationship);
   static void _DrawUsdRelationshipList(
-    const pxr::UsdRelationship &relationship);
-  static bool _DrawVariantSetsCombos(pxr::UsdPrim &prim);
+    const UsdRelationship &relationship);
+  static bool _DrawVariantSetsCombos(UsdPrim &prim);
   */
 
-  pxr::GfVec3f            _color;
-  pxr::UsdPrim            _prim;
+  GfVec3f            _color;
+  UsdPrim            _prim;
   static ImGuiWindowFlags _flags;
   ImGuiID                 _focused;
 };

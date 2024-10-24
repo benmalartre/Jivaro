@@ -36,7 +36,7 @@ void _SubdivideMesh(Mesh* mesh, int refineLevel)
 
   // Initialize coarse mesh positions
   int nCoarseVerts = mesh->GetNumPoints();
-  const pxr::GfVec3f* points = mesh->GetPositionsCPtr();
+  const GfVec3f* points = mesh->GetPositionsCPtr();
   for (int i = 0; i < nCoarseVerts; ++i) {
     verts[i].SetPosition(points[i][0], points[i][1], points[i][2]);
   }
@@ -76,9 +76,9 @@ void _SubdivideMesh(Mesh* mesh, int refineLevel)
     int numVerts = refLastLevel.GetNumVertices();
     int numFaces = refLastLevel.GetNumFaces();
 
-    pxr::VtArray<pxr::GfVec3f> positions(numVerts);
-    pxr::VtArray<int> faceCounts(numFaces);
-    pxr::VtArray<int> faceConnects;
+    VtArray<GfVec3f> positions(numVerts);
+    VtArray<int> faceCounts(numFaces);
+    VtArray<int> faceConnects;
 
     // vertex positions
     int firstOfLastVerts = refiner->GetNumVerticesTotal() - numVerts;

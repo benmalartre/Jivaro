@@ -17,13 +17,13 @@ JVR_NAMESPACE_OPEN_SCOPE
 /// Sample points
 struct Sample
 {
-  pxr::GfVec3i  elemIdx;
+  GfVec3i  elemIdx;
   int           cellIdx;
-  pxr::GfVec3f  baryWeights;
+  GfVec3f  baryWeights;
 
-  pxr::GfVec3f GetPosition(const pxr::GfVec3f* positions) const;
-  pxr::GfVec3f GetNormal(const pxr::GfVec3f* normals) const;
-  pxr::GfVec3f GetTangent(const pxr::GfVec3f* positions, const pxr::GfVec3f* normals) const;
+  GfVec3f GetPosition(const GfVec3f* positions) const;
+  GfVec3f GetNormal(const GfVec3f* normals) const;
+  GfVec3f GetTangent(const GfVec3f* positions, const GfVec3f* normals) const;
 
 };
 
@@ -38,31 +38,31 @@ struct Cell {
 /*
 void PoissonSampling(
   float radius, int nbSamples,
-  const pxr::VtArray<pxr::GfVec3f>& points,
-  const pxr::VtArray<pxr::GfVec3f>& normals,
-  const pxr::VtArray<int>& triangles,
-  pxr::VtArray<Sample>& samples);*/
+  const VtArray<GfVec3f>& points,
+  const VtArray<GfVec3f>& normals,
+  const VtArray<int>& triangles,
+  VtArray<Sample>& samples);*/
 
 void StochasticSampling(
   int nbSamples,
-  const pxr::VtArray<pxr::GfVec3f>& points,
-  const pxr::VtArray<pxr::GfVec3f>& normals,
-  const pxr::VtArray<Triangle>& triangles,
-  pxr::VtArray<Sample>& samples);
+  const VtArray<GfVec3f>& points,
+  const VtArray<GfVec3f>& normals,
+  const VtArray<Triangle>& triangles,
+  VtArray<Sample>& samples);
 
 void PoissonSampling(
   float radius, int nbSamples,
-  const pxr::VtArray<pxr::GfVec3f>& points,
-  const pxr::VtArray<pxr::GfVec3f>& normals,
-  const pxr::VtArray<Triangle>& triangles,
-  pxr::VtArray<Sample>& samples);
+  const VtArray<GfVec3f>& points,
+  const VtArray<GfVec3f>& normals,
+  const VtArray<Triangle>& triangles,
+  VtArray<Sample>& samples);
 
 void GridSampling(
   float radius,
-  const pxr::VtArray<pxr::GfVec3f>& points,
-  const pxr::VtArray<pxr::GfVec3f>& normals,
-  const pxr::VtArray<Triangle>& triangles,
-  pxr::VtArray<Sample>& samples);
+  const VtArray<GfVec3f>& points,
+  const VtArray<GfVec3f>& normals,
+  const VtArray<Triangle>& triangles,
+  VtArray<Sample>& samples);
 
 
 JVR_NAMESPACE_CLOSE_SCOPE

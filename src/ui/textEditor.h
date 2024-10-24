@@ -17,7 +17,7 @@ public:
   bool Draw()      override;
 
 private:
-  pxr::SdfLayerRefPtr           _layer;
+  SdfLayerRefPtr           _layer;
   static ImGuiWindowFlags       _flags;
 };
 

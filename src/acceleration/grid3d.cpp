@@ -24,19 +24,19 @@ void Grid3D::Cell::Insert(Triangle* triangle)
   components.push_back((Component*)triangle);
 }
 
-bool Grid3D::Cell::Raycast(const Geometry* geometry, const pxr::GfRay& ray,
+bool Grid3D::Cell::Raycast(const Geometry* geometry, const GfRay& ray,
   Location* hit, double maxDistance, double* minDistance) const
 {
   bool hitSomething = false;
 
-  pxr::GfRay localRay(ray);
+  GfRay localRay(ray);
   localRay.Transform(geometry->GetInverseMatrix());
-  const pxr::GfVec3f* points = ((const Deformable*)geometry)->GetPositionsCPtr();
+  const GfVec3f* points = ((const Deformable*)geometry)->GetPositionsCPtr();
 
   Location localHit(*hit);
   for (Component* component : components) {
     if (component->Raycast(points, localRay, &localHit)) {
-      const pxr::GfVec3f localPoint(localRay.GetPoint(localHit.GetDistance()));
+      const GfVec3f localPoint(localRay.GetPoint(localHit.GetDistance()));
       const float distance = (ray.GetStartPoint() - geometry->GetMatrix().Transform(localPoint)).GetLength();
       if (distance < *minDistance && distance < maxDistance) {
         hit->Set(localHit);
@@ -65,23 +65,23 @@ void Grid3D::DeleteCells()
 void Grid3D::InsertMesh(Mesh* mesh)
 {
   size_t numTriangles = mesh->GetNumTriangles();
-  const pxr::GfMatrix4d& matrix = mesh->GetMatrix();
-  const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
+  const GfMatrix4d& matrix = mesh->GetMatrix();
+  const GfVec3f* positions = mesh->GetPositionsCPtr();
 
-  pxr::GfVec3f invDimensions(1.f / _cellDimension[0], 1.f / _cellDimension[1], 1.f / _cellDimension[2]);
+  GfVec3f invDimensions(1.f / _cellDimension[0], 1.f / _cellDimension[1], 1.f / _cellDimension[2]);
 
-  const pxr::GfVec3f bboxMin(GetMin());
-  const pxr::GfVec3f bboxMax(GetMax());
+  const GfVec3f bboxMin(GetMin());
+  const GfVec3f bboxMax(GetMax());
 
   // insert all the triangles in the cells
   for(size_t t = 0; t < numTriangles; ++t)
   {
-    pxr::GfVec3f tmin(FLT_MAX,FLT_MAX,FLT_MAX);
-    pxr::GfVec3f tmax(-FLT_MAX,-FLT_MAX,-FLT_MAX);
+    GfVec3f tmin(FLT_MAX,FLT_MAX,FLT_MAX);
+    GfVec3f tmax(-FLT_MAX,-FLT_MAX,-FLT_MAX);
     Triangle* triangle = mesh->GetTriangle(t);
-    pxr::GfVec3f A = matrix.Transform(positions[triangle->vertices[0]]);
-    pxr::GfVec3f B = matrix.Transform(positions[triangle->vertices[1]]);
-    pxr::GfVec3f C = matrix.Transform(positions[triangle->vertices[2]]);
+    GfVec3f A = matrix.Transform(positions[triangle->vertices[0]]);
+    GfVec3f B = matrix.Transform(positions[triangle->vertices[1]]);
+    GfVec3f C = matrix.Transform(positions[triangle->vertices[2]]);
 
     for (uint8_t k = 0; k < 3; ++k) {
       if (A[k] < tmin[k]) tmin[k] = A[k];
@@ -161,18 +161,18 @@ void Grid3D::Update()
 
   // compute bound of the grid
   size_t totalNumComponents = _GetGeometryNumComponents(GetGeometry(0));
-  const pxr::GfBBox3d bbox = GetGeometry(0)->GetBoundingBox(true);
-  pxr::GfRange3d accum = bbox.GetRange();
+  const GfBBox3d bbox = GetGeometry(0)->GetBoundingBox(true);
+  GfRange3d accum = bbox.GetRange();
   for (size_t i = 1; i < GetNumGeometries(); ++i) {
     totalNumComponents += _GetGeometryNumComponents(GetGeometry(i));
-    const pxr::GfBBox3d bbox = GetGeometry(i)->GetBoundingBox(true);
+    const GfBBox3d bbox = GetGeometry(i)->GetBoundingBox(true);
     accum.UnionWith(bbox.GetRange());
   }
   SetMin(accum.GetMin());
   SetMax(accum.GetMax());
 
   // create the grid
-  pxr::GfVec3f size(GetMax() - GetMin());
+  GfVec3f size(GetMax() - GetMin());
 
   //float desiredCellSize = area*12;
   float volume = size[0] * size[1] * size[2];
@@ -180,7 +180,7 @@ void Grid3D::Update()
   float cubeRoot = sqrt((12*totalNumComponents) / volume);
 
   for (uint8_t i = 0; i < 3; ++i) {
-    _resolution[i] = floor(pxr::GfPow(size[i], 1/3) * cubeRoot);
+    _resolution[i] = floor(GfPow(size[i], 1/3) * cubeRoot);
     _resolution[i] = MAX(uint32_t(1), MIN(_resolution[i], uint32_t(128)));
   }
 
@@ -209,20 +209,20 @@ void Grid3D::Update()
   }
 }
 
-bool Grid3D::Raycast(const pxr::GfRay& ray, Location* hit,
+bool Grid3D::Raycast(const GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 {
   double enterDistance, exitDistance;
   // if the ray doesn't intersect the grid return
-  if(!ray.Intersect(pxr::GfBBox3d(*this), &enterDistance, &exitDistance))
+  if(!ray.Intersect(GfBBox3d(*this), &enterDistance, &exitDistance))
   {
     return false;
   }
 
   // initialization step
   int32_t exit[3], step[3], cell[3];
-  pxr::GfVec3d deltaT, nextCrossingT;
-  pxr::GfVec3d invdir = -1.0 * ray.GetDirection();
+  GfVec3d deltaT, nextCrossingT;
+  GfVec3d invdir = -1.0 * ray.GetDirection();
 
   for (uint8_t i = 0; i < 3; ++i) {
     // convert ray starting point to cell coordinates
@@ -276,14 +276,14 @@ bool Grid3D::Raycast(const pxr::GfRay& ray, Location* hit,
   return hitSomething;
 }
 
-bool Grid3D::Closest(const pxr::GfVec3f& point, Location* hit, double maxDistance) const
+bool Grid3D::Closest(const GfVec3f& point, Location* hit, double maxDistance) const
 {
   return false;
 }
 
-pxr::GfVec3f Grid3D::GetCellPosition(uint32_t index) {
-  pxr::GfVec3f position;
-  const pxr::GfVec3d& bboxMin = GetMin();
+GfVec3f Grid3D::GetCellPosition(uint32_t index) {
+  GfVec3f position;
+  const GfVec3d& bboxMin = GetMin();
   position[0] = bboxMin[0] + 
     _cellDimension[0] * (index % _resolution[0]);
   position[1] = bboxMin[1] + 
@@ -293,11 +293,11 @@ pxr::GfVec3f Grid3D::GetCellPosition(uint32_t index) {
   return position;
 }
 
-pxr::GfVec3f Grid3D::GetCellMin(uint32_t index){
+GfVec3f Grid3D::GetCellMin(uint32_t index){
   return GetCellPosition(index) - _cellDimension * 0.5f;
 }
 
-pxr::GfVec3f Grid3D::GetCellMax(uint32_t index){
+GfVec3f Grid3D::GetCellMax(uint32_t index){
   return GetCellPosition(index) + _cellDimension * 0.5f;
 }
 
@@ -316,14 +316,14 @@ Grid3D::Cell* Grid3D::GetCell(uint32_t x, uint32_t y, uint32_t z)
       _cells[_resolution[0] * _resolution[1] * cz + _resolution[0] * cy + cx];
 }
 
-Grid3D::Cell* Grid3D::GetCell(const pxr::GfVec3f& pos){
-  pxr::GfVec3f rescale;
-  pxr::GfVec3f invDimensions(1.f/_cellDimension[0],
+Grid3D::Cell* Grid3D::GetCell(const GfVec3f& pos){
+  GfVec3f rescale;
+  GfVec3f invDimensions(1.f/_cellDimension[0],
                              1.f/_cellDimension[1],
                              1.f/_cellDimension[2]);
 
   // convert to cell coordinates
-  const pxr::GfVec3d& bboxMin = GetMin();
+  const GfVec3d& bboxMin = GetMin();
   rescale[0] = (pos[0] - bboxMin[0]) * invDimensions[0];
   rescale[0] = (pos[1] - bboxMin[1]) * invDimensions[1];
   rescale[0] = (pos[2] - bboxMin[2]) * invDimensions[2];
@@ -337,10 +337,10 @@ Grid3D::Cell* Grid3D::GetCell(const pxr::GfVec3f& pos){
 }
 
 
-pxr::GfVec3f Grid3D::GetColorXYZ(const uint32_t index)
+GfVec3f Grid3D::GetColorXYZ(const uint32_t index)
 {
-  pxr::GfVec3f rescale;
-  pxr::GfVec3f invDimensions(1.f/(_cellDimension[0]),
+  GfVec3f rescale;
+  GfVec3f invDimensions(1.f/(_cellDimension[0]),
                              1.f/(_cellDimension[1]),
                              1.f/(_cellDimension[2]));
 
@@ -348,7 +348,7 @@ pxr::GfVec3f Grid3D::GetColorXYZ(const uint32_t index)
   uint32_t x, y, z;
   IndexToXYZ(index, x, y, z);
 
-  pxr::GfVec3f color;
+  GfVec3f color;
   color[0] = static_cast<float>(x) / _resolution[0];
   color[1] = static_cast<float>(y) / _resolution[1];
   color[2] = static_cast<float>(z) / _resolution[2];
@@ -372,12 +372,12 @@ void Grid3D::XYZToIndex(const uint32_t x, const uint32_t y, const uint32_t z, ui
     index = z * (GetResolutionX() * GetResolutionY()) + y * GetResolutionX() + x;
 }
 
-void Grid3D::GetCells(pxr::VtArray<pxr::GfVec3f>& positions, 
-  pxr::VtArray<pxr::GfVec3f>& scales, pxr::VtArray<pxr::GfVec3f>& colors, bool branchOrLeaf)
+void Grid3D::GetCells(VtArray<GfVec3f>& positions, 
+  VtArray<GfVec3f>& scales, VtArray<GfVec3f>& colors, bool branchOrLeaf)
 {
   for(size_t c = 0; c < _numCells; ++c) {
     if(_cells[c]) {
-      const pxr::GfVec3f scale(_cellDimension);
+      const GfVec3f scale(_cellDimension);
       positions.push_back(GetCellPosition(c)+scale*0.5);
       scales.push_back(scale);
       colors.push_back(GetColorXYZ(c));

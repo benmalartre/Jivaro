@@ -16,7 +16,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 class Geometry;
 class Location;
-class Intersector : public pxr::GfRange3d
+class Intersector : public GfRange3d
 { 
 public:
   static const size_t INVALID_INDEX = std::numeric_limits<size_t>::max();
@@ -43,18 +43,18 @@ public:
   size_t GetNumGeometries() const {return _geoms.size();};
 
   //used for visually debug
-  virtual void GetCells(pxr::VtArray<pxr::GfVec3f>& positions, pxr::VtArray<pxr::GfVec3f>& sizes, 
-    pxr::VtArray<pxr::GfVec3f>& colors, bool branchOrLeaf=true){};
+  virtual void GetCells(VtArray<GfVec3f>& positions, VtArray<GfVec3f>& sizes, 
+    VtArray<GfVec3f>& colors, bool branchOrLeaf=true){};
 
 
   virtual void Init(const std::vector<Geometry*>& geometries) = 0;
 
   // overriden by derived classes
   virtual void Update() {};
-  virtual bool Raycast(const pxr::GfRay& ray, Location* hit,
+  virtual bool Raycast(const GfRay& ray, Location* hit,
     double maxDistance=DBL_MAX, double* minDistance=NULL) const = 0;
     
-  virtual bool Closest(const pxr::GfVec3f& point, Location* hit,
+  virtual bool Closest(const GfVec3f& point, Location* hit,
     double maxDistance=DBL_MAX) const = 0;
 
 protected:

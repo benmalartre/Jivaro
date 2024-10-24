@@ -46,7 +46,7 @@ void
 IconUI::MouseMove(int x, int y)
 {
   if (_drag) {
-    _offset = _origin - pxr::GfVec2f(x, y) * _scale;
+    _offset = _origin - GfVec2f(x, y) * _scale;
   }
   _parent->SetDirty();
 }
@@ -60,8 +60,8 @@ void IconUI::MouseWheel(int x, int y)
 bool IconUI::Draw()
 {
   static bool opened = false;
-  const pxr::GfVec2f pos(GetX(), GetY());
-  const pxr::GfVec2f size(GetWidth(), GetHeight());
+  const GfVec2f pos(GetX(), GetY());
+  const GfVec2f size(GetWidth(), GetHeight());
 
   ImGui::SetNextWindowSize(size);
   ImGui::SetNextWindowPos(pos);
@@ -74,8 +74,8 @@ bool IconUI::Draw()
   drawList->AddRectFilled(pos, pos+size, ImColor(0,0,0,255));
 
   const float ratio = (float)GetHeight() / (float)GetWidth();
-  pxr::GfVec2f minUV = _offset * 0.01;
-  pxr::GfVec2f maxUV = _offset * 0.01 + pxr::GfVec2f(_scale, _scale * ratio);
+  GfVec2f minUV = _offset * 0.01;
+  GfVec2f maxUV = _offset * 0.01 + GfVec2f(_scale, _scale * ratio);
   drawList->AddImage(io.Fonts->TexID, pos, pos+size, minUV, maxUV);
 
   ImGui::End();

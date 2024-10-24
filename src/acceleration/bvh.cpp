@@ -34,7 +34,7 @@ BVH::Cell::Cell(size_t lhs, BVH::Cell* left, size_t rhs, BVH::Cell* right)
   , _type(BVH::Cell::BRANCH)
 {
   if (left && right) {
-    const pxr::GfRange3d range = pxr::GfRange3d::GetUnion(*left,*right);
+    const GfRange3d range = GfRange3d::GetUnion(*left,*right);
     SetMin(range.GetMin());
     SetMax(range.GetMax());
   } else if (left) {
@@ -46,7 +46,7 @@ BVH::Cell::Cell(size_t lhs, BVH::Cell* left, size_t rhs, BVH::Cell* right)
   }
 }
 
-BVH::Cell::Cell(Component* component, const pxr::GfRange3d& range)
+BVH::Cell::Cell(Component* component, const GfRange3d& range)
   : _left(Intersector::INVALID_INDEX)
   , _right(Intersector::INVALID_INDEX)
   , _data((void*)component)
@@ -57,10 +57,10 @@ BVH::Cell::Cell(Component* component, const pxr::GfRange3d& range)
 }
 
 bool
-BVH::_Raycast(const BVH::Cell* cell, const pxr::GfRay& ray, Location* hit,
+BVH::_Raycast(const BVH::Cell* cell, const GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 {
-  maxDistance = pxr::GfMin(maxDistance, hit->GetDistance());
+  maxDistance = GfMin(maxDistance, hit->GetDistance());
   if(cell->GetDistanceSquared(ray.GetPoint(0.f)) > maxDistance * maxDistance) return false;
 
   if (cell->IsLeaf()) {
@@ -68,16 +68,16 @@ BVH::_Raycast(const BVH::Cell* cell, const pxr::GfRay& ray, Location* hit,
     size_t geomIdx = GetGeometryIndexFromCell(cell);
     const Geometry* geometry = GetGeometry(geomIdx);
 
-    pxr::GfRay localRay(ray);
+    GfRay localRay(ray);
 
     localRay.Transform(geometry->GetInverseMatrix());
-    const pxr::GfVec3f* points = ((const Deformable*)geometry)->GetPositionsCPtr();
+    const GfVec3f* points = ((const Deformable*)geometry)->GetPositionsCPtr();
     
     Component* component = (Component*)cell->GetData();
     Location localHit(*hit);
     if (component->Raycast(points, localRay, &localHit)) {
 
-      const pxr::GfVec3d localPoint(localRay.GetPoint(localHit.GetDistance()));
+      const GfVec3d localPoint(localRay.GetPoint(localHit.GetDistance()));
       const double distance = (ray.GetStartPoint() - geometry->GetMatrix().Transform(localPoint)).GetLength();
       
       if ((distance < maxDistance)) {
@@ -96,9 +96,9 @@ BVH::_Raycast(const BVH::Cell* cell, const pxr::GfRay& ray, Location* hit,
     const BVH::Cell* right = _GetCell(cell->GetRight());
   
     double leftDist=maxDistance, rightDist=maxDistance;
-    ray.Intersect(pxr::GfBBox3d(*left), &leftDist);
+    ray.Intersect(GfBBox3d(*left), &leftDist);
     bool leftCheck = leftDist < maxDistance;
-    ray.Intersect(pxr::GfBBox3d(*right), &rightDist);
+    ray.Intersect(GfBBox3d(*right), &rightDist);
     bool rightCheck = rightDist < maxDistance;
   
     if(leftCheck && rightCheck) {
@@ -122,7 +122,7 @@ BVH::_Raycast(const BVH::Cell* cell, const pxr::GfRay& ray, Location* hit,
 }
 
 bool 
-BVH::_Closest(const BVH::Cell* cell, const pxr::GfVec3f& point, Location* hit, 
+BVH::_Closest(const BVH::Cell* cell, const GfVec3f& point, Location* hit, 
   double maxDistanceSq) const
 {  
   if(!cell->Contains(point)) {
@@ -134,11 +134,11 @@ BVH::_Closest(const BVH::Cell* cell, const pxr::GfVec3f& point, Location* hit,
 
     size_t geomIdx = GetGeometryIndexFromCell(cell);
     const Geometry* geometry = GetGeometry(geomIdx);
-    const pxr::GfMatrix4d& invMatrix = geometry->GetInverseMatrix();
+    const GfMatrix4d& invMatrix = geometry->GetInverseMatrix();
     
-    const pxr::GfVec3f* points = ((const Deformable*)geometry)->GetPositionsCPtr();
+    const GfVec3f* points = ((const Deformable*)geometry)->GetPositionsCPtr();
     Component* component = (Component*)cell->GetData();
-    pxr::GfVec3f localPoint(invMatrix.Transform(point));
+    GfVec3f localPoint(invMatrix.Transform(point));
     
     Location localHit(*hit);
     if(hit->IsValid())
@@ -181,7 +181,7 @@ BVH::_Closest(const BVH::Cell* cell, const pxr::GfVec3f& point, Location* hit,
   }
 }
 
-pxr::GfRange3f 
+GfRange3f 
 BVH::_RecurseUpdateCells(BVH::Cell* cell)
 {
 
@@ -189,19 +189,19 @@ BVH::_RecurseUpdateCells(BVH::Cell* cell)
     const Geometry* geometry = GetGeometryFromCell(cell);
     if (geometry->GetType() >= Geometry::POINT) {
       Component* component = (Component*)cell->GetData();
-      const pxr::GfVec3f* positions = ((Deformable*)geometry)->GetPositionsCPtr();
-      const pxr::GfMatrix4d& matrix = geometry->GetMatrix();
-      const pxr::GfRange3f range = component->GetBoundingBox(positions, matrix);
+      const GfVec3f* positions = ((Deformable*)geometry)->GetPositionsCPtr();
+      const GfMatrix4d& matrix = geometry->GetMatrix();
+      const GfRange3f range = component->GetBoundingBox(positions, matrix);
       cell->SetMin(range.GetMin());
       cell->SetMax(range.GetMax());
       return range;
     } else {
       // todo handle implicit geometries
-      return pxr::GfRange3f();
+      return GfRange3f();
     }
    
   } else {
-    pxr::GfRange3f range;
+    GfRange3f range;
     if (cell->GetLeft() && cell->GetRight()) {
       range.UnionWith(_RecurseUpdateCells(_GetCell(cell->GetLeft())));
       range.UnionWith(_RecurseUpdateCells(_GetCell(cell->GetRight())));
@@ -220,14 +220,14 @@ BVH::_RecurseUpdateCells(BVH::Cell* cell)
 }
 
 uint64_t 
-BVH::_ComputeCode(const pxr::GfVec3d& point) const
+BVH::_ComputeCode(const GfVec3d& point) const
 {
-  const pxr::GfVec3i p = WorldToMorton(*this, point);
+  const GfVec3i p = WorldToMorton(*this, point);
   return MortonEncode3D(p);
 }
 
-pxr::GfVec3d 
-BVH::_ComputeCodeAsColor(const pxr::GfVec3d& point) const
+GfVec3d 
+BVH::_ComputeCodeAsColor(const GfVec3d& point) const
 {
   return MortonColor(*this, point);
 }
@@ -250,7 +250,7 @@ BVH::AddCell( BVH::Cell* lhs, BVH::Cell* rhs)
 }
 
 size_t
-BVH::AddCell(Component* component, const pxr::GfRange3d& range)
+BVH::AddCell(Component* component, const GfRange3d& range)
 {
   _cells.push_back(BVH::Cell(component, range));
   return _cells.size() - 1;
@@ -299,11 +299,11 @@ BVH::Init(const std::vector<Geometry*>& geometries)
 {
   Intersector::_Init(geometries);
   
-  const pxr::GfBBox3d bbox;
-  pxr::GfRange3d accum = bbox.GetRange();
+  const GfBBox3d bbox;
+  GfRange3d accum = bbox.GetRange();
   _numComponents = 0;
   for (size_t g = 0; g < GetNumGeometries(); ++g) {
-    const pxr::GfBBox3d bbox = GetGeometry(g)->GetBoundingBox(true);
+    const GfBBox3d bbox = GetGeometry(g)->GetBoundingBox(true);
     accum.UnionWith(bbox.GetRange());
     _numComponents += ((Mesh*)GetGeometry(g))->GetTrianglePairs().size();
   }
@@ -325,11 +325,11 @@ BVH::Init(const std::vector<Geometry*>& geometries)
       {
         Mesh* mesh = (Mesh*)geometry;
 
-        pxr::VtArray<TrianglePair>& trianglePairs = mesh->GetTrianglePairs();
+        VtArray<TrianglePair>& trianglePairs = mesh->GetTrianglePairs();
         size_t numTrianglePairs = trianglePairs.size();
 
-        const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
-        const pxr::GfMatrix4d& matrix = mesh->GetMatrix();
+        const GfVec3f* positions = mesh->GetPositionsCPtr();
+        const GfMatrix4d& matrix = mesh->GetMatrix();
         for (size_t t = 0; t < numTrianglePairs; ++t) {
           size_t leafIdx = AddCell(&trianglePairs[t],
             trianglePairs[t].GetBoundingBox(positions, matrix));
@@ -360,7 +360,7 @@ BVH::Update()
 {
   if(_accelerated) {
     
-    pxr::GfRange3f newRange = _RecurseUpdateCells(_root);
+    GfRange3f newRange = _RecurseUpdateCells(_root);
     SetMin(newRange.GetMin());
     SetMax(newRange.GetMax());
     
@@ -378,7 +378,7 @@ BVH::Update()
         {
           Mesh* mesh = (Mesh*)geometry;
 
-          pxr::VtArray<TrianglePair>& trianglePairs = mesh->GetTrianglePairs();
+          VtArray<TrianglePair>& trianglePairs = mesh->GetTrianglePairs();
           size_t numTrianglePairs = trianglePairs.size();
 
           for(size_t i = 0; i < numTrianglePairs; ++i) {
@@ -404,7 +404,7 @@ BVH::Update()
   }
 }
 
-bool BVH::Raycast(const pxr::GfRay& ray, Location* hit,
+bool BVH::Raycast(const GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 {
   if(_accelerated) 
@@ -475,14 +475,14 @@ BVH::SortCells()
    };
 } 
 
-pxr::GfVec3f
-BVH::GetMortonColor(const pxr::GfVec3f& point)
+GfVec3f
+BVH::GetMortonColor(const GfVec3f& point)
 {
-  return pxr::GfVec3f(_ComputeCodeAsColor(point));
+  return GfVec3f(_ComputeCodeAsColor(point));
 }
 
 
-pxr::GfVec3f 
+GfVec3f 
 BVH::_ComputeHitPoint(Location* hit) const
 {
   const Geometry* geometry = GetGeometry(hit->GetGeometryIndex());
@@ -491,7 +491,7 @@ BVH::_ComputeHitPoint(Location* hit) const
     {
       const Mesh* mesh = (Mesh*)geometry;
       const Triangle* triangle = mesh->GetTriangle(hit->GetComponentIndex());
-      const pxr::GfVec3f* positions = mesh->GetPositionsCPtr();
+      const GfVec3f* positions = mesh->GetPositionsCPtr();
 
       return hit->ComputePosition(positions, &triangle->vertices[0], 3, &geometry->GetMatrix());
     }
@@ -500,16 +500,16 @@ BVH::_ComputeHitPoint(Location* hit) const
     {
       const Curve* curve = (Curve*)geometry;
       const Edge* edge = curve->GetEdge(hit->GetComponentIndex());
-      const pxr::GfVec3f* positions = curve->GetPositionsCPtr();
+      const GfVec3f* positions = curve->GetPositionsCPtr();
 
       return hit->ComputePosition(positions, &edge->vertices[0], 2, &geometry->GetMatrix());
     }
   }
-  return pxr::GfVec3f(0.f);
+  return GfVec3f(0.f);
 }
 
 
-bool BVH::Closest(const pxr::GfVec3f& point, 
+bool BVH::Closest(const GfVec3f& point, 
   Location* hit, double maxDistance) const
 {
   if(_accelerated)
@@ -518,8 +518,8 @@ bool BVH::Closest(const pxr::GfVec3f& point,
   return false;
 }
 
-void BVH::GetCells(pxr::VtArray<pxr::GfVec3f>& positions,
-  pxr::VtArray<pxr::GfVec3f>& sizes, pxr::VtArray<pxr::GfVec3f>& colors, bool branchOrLeaf)
+void BVH::GetCells(VtArray<GfVec3f>& positions,
+  VtArray<GfVec3f>& sizes, VtArray<GfVec3f>& colors, bool branchOrLeaf)
 {
   std::vector<const BVH::Cell*> cells;
   if(branchOrLeaf)GetLeaves(_root, cells);
@@ -529,10 +529,10 @@ void BVH::GetCells(pxr::VtArray<pxr::GfVec3f>& positions,
   sizes.resize(numCells);
   colors.resize(numCells);
   for (size_t l = 0; l < cells.size(); ++l) {
-    positions[l] = pxr::GfVec3f(cells[l]->GetMidpoint());
-    sizes[l] = pxr::GfVec3f(cells[l]->GetSize());
-    colors[l] = pxr::GfVec3f(_ComputeCodeAsColor( 
-      pxr::GfVec3f(cells[l]->GetMidpoint())));
+    positions[l] = GfVec3f(cells[l]->GetMidpoint());
+    sizes[l] = GfVec3f(cells[l]->GetSize());
+    colors[l] = GfVec3f(_ComputeCodeAsColor( 
+      GfVec3f(cells[l]->GetMidpoint())));
   }
 }
 

@@ -57,7 +57,7 @@ void Grid3D::PlaceIntoGrid(Mesh* mesh, std::vector<Vertex*>& points,
   _bbox.compute(mesh);
 
   // create the grid
-  pxr::GfVec3f size = _bbox.max() - _bbox.min();
+  GfVec3f size = _bbox.max() - _bbox.min();
 
  cellSize = fmax(cellSize, 0.01f);
   //float desiredCellSize = area*12;
@@ -82,8 +82,8 @@ void Grid3D::PlaceIntoGrid(Mesh* mesh, std::vector<Vertex*>& points,
   memset(_cells, 0x0, sizeof(Grid3D::Cell*) * _nc);
 
   Vertex* V;
-  pxr::GfVec3f P, R;
-  pxr::GfVec3f invDimensions(
+  GfVec3f P, R;
+  GfVec3f invDimensions(
     1/_cellDimension[0],
     1/_cellDimension[1],
     1/_cellDimension[2]);
@@ -128,10 +128,10 @@ void Grid2DIntersector::Init(const std::vector<Geometry*>& geometries)
   uint32_t totalNumElements = 0;
   _range.SetEmpty();
   for(Geometry* geom:_geometries) {
-    const pxr::GfBBox3d& bbox = geom->GetBoundingBox();
-    const pxr::GfRange3d& range = bbox.GetRange();
-    _range.UnionWith(pxr::GfRange3f(
-      pxr::GfVec3f(range.GetMin()), pxr::GfVec3f(range.GetMax())));
+    const GfBBox3d& bbox = geom->GetBoundingBox();
+    const GfRange3d& range = bbox.GetRange();
+    _range.UnionWith(GfRange3f(
+      GfVec3f(range.GetMin()), GfVec3f(range.GetMax())));
     switch (geom->GetType()) {
       case Geometry::MESH:
       {
@@ -155,7 +155,7 @@ void Grid2DIntersector::Init(const std::vector<Geometry*>& geometries)
   }
 
   // create the grid
-  pxr::GfVec3f size = _range.GetMax() - _range.GetMin();
+  GfVec3f size = _range.GetMax() - _range.GetMin();
 
   //float desiredCellSize = area*12;
   float squareRoot = 
@@ -176,14 +176,14 @@ void Grid2DIntersector::Init(const std::vector<Geometry*>& geometries)
   // set all pointers to NULL
   memset(_cells, 0x0, sizeof(Grid2DIntersector::Cell*) * _numCells);
 
-  pxr::GfVec2f A, B, C;
+  GfVec2f A, B, C;
   Triangle* T;
   unsigned offset = 0;
 
-  pxr::GfVec2f invDimensions(1/_cellDimension[0], 1/_cellDimension[1]);
+  GfVec2f invDimensions(1/_cellDimension[0], 1/_cellDimension[1]);
 
-  const pxr::GfVec3f& bboxMin = _range.GetMin();
-  const pxr::GfVec3f& bboxMax = _range.GetMax();
+  const GfVec3f& bboxMin = _range.GetMin();
+  const GfVec3f& bboxMax = _range.GetMax();
   // insert all the triangles in the cells
   for (const auto& geom : _geometries) {
     switch (geom->GetType()) {
@@ -200,21 +200,21 @@ void Grid2DIntersector::Update()
 
 }
 
-bool Grid2DIntersector::Raycast(const pxr::GfRay& ray, Location* hit, 
+bool Grid2DIntersector::Raycast(const GfRay& ray, Location* hit, 
   double maxDistance, double* minDistance) const
 {
     double bmin, bmax;
     // if the ray doesn't intersect the grid return
-    if(!ray.Intersect(pxr::GfBBox3d(
-      pxr::GfRange3d(_range.GetMin(), _range.GetMax())), &bmin, &bmax))
+    if(!ray.Intersect(GfBBox3d(
+      GfRange3d(_range.GetMin(), _range.GetMax())), &bmin, &bmax))
     {
         return false;
     }
 
     // initialization step
     int32_t exit[3], step[3], cell[3];
-    pxr::GfVec3d deltaT, nextCrossingT;
-    pxr::GfVec3d invdir = -1.0 * ray.GetDirection();
+    GfVec3d deltaT, nextCrossingT;
+    GfVec3d invdir = -1.0 * ray.GetDirection();
 
     for (uint8_t i = 0; i < 2; ++i) {
         // convert ray starting point to cell coordinates
@@ -276,15 +276,15 @@ bool Grid2DIntersector::Raycast(const pxr::GfRay& ray, Location* hit,
     return hit;
 }
 
-bool Grid2DIntersector::Closest(const pxr::GfVec3f& point, Location* hit,
+bool Grid2DIntersector::Closest(const GfVec3f& point, Location* hit,
   double maxDistance, double* minDistance) const
 {
   return false;
 }
 
-pxr::GfVec3f Grid2DIntersector::GetCellPosition(uint32_t index) {
-  pxr::GfVec3f position;
-  const pxr::GfVec3f& bboxMin = _range.GetMin();
+GfVec3f Grid2DIntersector::GetCellPosition(uint32_t index) {
+  GfVec3f position;
+  const GfVec3f& bboxMin = _range.GetMin();
   position[0] = bboxMin[0] + 
     _cellDimension[0] * (index % _resolution[0]);
   position[1] = bboxMin[1] + 
@@ -292,20 +292,20 @@ pxr::GfVec3f Grid2DIntersector::GetCellPosition(uint32_t index) {
   return position;
 }
 
-pxr::GfVec3f Grid2DIntersector::GetCellMin(uint32_t index){
+GfVec3f Grid2DIntersector::GetCellMin(uint32_t index){
   return GetCellPosition(index) - _cellDimension * 0.5f;
 }
 
-pxr::GfVec3f Grid2DIntersector::GetCellMax(uint32_t index){
+GfVec3f Grid2DIntersector::GetCellMax(uint32_t index){
   return GetCellPosition(index) + _cellDimension * 0.5f;
 }
 
-bool Grid2DIntersector::Cell::Raycast(Geometry* geom, const pxr::GfRay& ray,
+bool Grid2DIntersector::Cell::Raycast(Geometry* geom, const GfRay& ray,
   Location* hit, double maxDistance, double* minDistance) const
 {
   /*
-  pxr::GfVec3f p0, p1, p2;
-  pxr::GfVec3d baryCoords;
+  GfVec3f p0, p1, p2;
+  GfVec3d baryCoords;
   double distance;
 
   bool frontFacing;
@@ -326,7 +326,7 @@ bool Grid2DIntersector::Cell::Raycast(Geometry* geom, const pxr::GfRay& ray,
         hit->SetElementIndex(tri->id);
         
         hit->id = tri->id;
-        hit-> = pxr::GfVec3f(baryCoords);
+        hit-> = GfVec3f(baryCoords);
         hit = true;
 
       }
@@ -409,14 +409,14 @@ Grid2DIntersector::Cell* Grid2DIntersector::GetCell(uint32_t x, uint32_t y)
     return _cells[_resolution[0] * cy + cx];
 }
 
-Grid2DIntersector::Cell* Grid2DIntersector::GetCell(const pxr::GfVec3f& pos){
-  pxr::GfVec3f rescale;
-  pxr::GfVec3f invDimensions(1.f/_cellDimension[0],
+Grid2DIntersector::Cell* Grid2DIntersector::GetCell(const GfVec3f& pos){
+  GfVec3f rescale;
+  GfVec3f invDimensions(1.f/_cellDimension[0],
                              1.f/_cellDimension[1],
                              1.f/_cellDimension[2]);
 
   // convert to cell coordinates
-  const pxr::GfVec3f& bboxMin = _range.GetMin();
+  const GfVec3f& bboxMin = _range.GetMin();
   rescale[0] = (pos[0] - bboxMin[0]) * invDimensions[0];
   rescale[0] = (pos[1] - bboxMin[1]) * invDimensions[1];
   rescale[0] = (pos[2] - bboxMin[2]) * invDimensions[2];
@@ -430,16 +430,16 @@ Grid2DIntersector::Cell* Grid2DIntersector::GetCell(const pxr::GfVec3f& pos){
 }
 
 
-void Grid2DIntersector::GetCellIndexAndWeights(const pxr::GfVec3f& pos,
+void Grid2DIntersector::GetCellIndexAndWeights(const GfVec3f& pos,
                                     uint32_t& index,
-                                    pxr::GfVec3f& weights){
-  pxr::GfVec3f rescale;
-  pxr::GfVec3f invDimensions(1.f/(_cellDimension[0]),
+                                    GfVec3f& weights){
+  GfVec3f rescale;
+  GfVec3f invDimensions(1.f/(_cellDimension[0]),
                              1.f/(_cellDimension[1]),
                              1.f/(_cellDimension[2]));
 
   // convert to cell coordinates
-  const pxr::GfVec3f& bboxMin = _range.GetMin();
+  const GfVec3f& bboxMin = _range.GetMin();
   rescale[0] = (pos[0] - bboxMin[0] - 0.5f * _cellDimension[0]) * invDimensions[0];
   rescale[1] = (pos[1] - bboxMin[1] - 0.5f * _cellDimension[1]) * invDimensions[1];
   rescale[2] = (pos[2] - bboxMin[2] - 0.5f * _cellDimension[2]) * invDimensions[2];

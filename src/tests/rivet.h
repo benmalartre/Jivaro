@@ -20,10 +20,10 @@ class TestRivet : public Execution {
 public:
   friend class Scene;
   TestRivet() : Execution(){};
-  void InitExec(pxr::UsdStageRefPtr& stage) override;
-  void UpdateExec(pxr::UsdStageRefPtr& stage, float time) override;
-  void TerminateExec(pxr::UsdStageRefPtr& stage) override;
-  void _TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage);
+  void InitExec(UsdStageRefPtr& stage) override;
+  void UpdateExec(UsdStageRefPtr& stage, float time) override;
+  void TerminateExec(UsdStageRefPtr& stage) override;
+  void _TraverseStageFindingMeshes(UsdStageRefPtr& stage);
 
 protected:
 
@@ -31,12 +31,12 @@ private:
   std::vector<Location>     _rivets;
   Mesh*                     _mesh;
   Curve*                    _curves;
-  pxr::SdfPath              _curvesId;
+  SdfPath              _curvesId;
   Points*                   _points;
-  pxr::SdfPath              _pointsId;
+  SdfPath              _pointsId;
   BVH                       _bvh;
   std::vector<Mesh*>        _meshes;
-  std::vector<pxr::SdfPath> _meshesId;
+  std::vector<SdfPath> _meshesId;
 
 };
 

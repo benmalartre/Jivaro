@@ -133,7 +133,7 @@ struct Icon {
 typedef std::vector<std::vector<Icon> > IconList;
 extern IconList ICONS;
 
-void IconHoverDatas(pxr::HioImage::StorageSpec* storage, int numChannels);
+void IconHoverDatas(HioImage::StorageSpec* storage, int numChannels);
 GLuint CreateIconFromImage(const std::string& filename, int index, ICON_SIZE size);
 void InitializeIcons();
 void TerminateIcons();

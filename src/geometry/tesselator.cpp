@@ -79,8 +79,8 @@ Tesselator::_IsCollapsable(const HalfEdge* edge)
   /*
   if (edge->twin >= 0) {
     const HalfEdge* twin = _graph.GetEdge(edge->twin);
-    const pxr::VtArray<int>& edgeNeighbors = _vertices[edge->vertex].neighbors;
-    const pxr::VtArray<int>& twinNeighbors = _vertices[twin->vertex].neighbors;
+    const VtArray<int>& edgeNeighbors = _vertices[edge->vertex].neighbors;
+    const VtArray<int>& twinNeighbors = _vertices[twin->vertex].neighbors;
     size_t commonNeighbors = 0;
 
     for (auto& edgeNeighbor : edgeNeighbors)
@@ -99,7 +99,7 @@ bool
 Tesselator::_IsStarCollapsable(const HalfEdge* edge, float squaredLen)
 {
   if (!_graph.IsUsed(edge))return false;
-  pxr::VtArray<int> neighbors;
+  VtArray<int> neighbors;
   _graph.ComputeNeighbors(edge, neighbors);
   for (auto& neighbor : neighbors) {
     if ((_positions[edge->vertex] - _positions[neighbor]).GetLengthSq() > squaredLen)
@@ -112,11 +112,11 @@ bool
 Tesselator::_IsFaceCollapsable(const HalfEdge* edge, float squaredLen)
 {
   if (!_graph.IsUsed(edge))return false;
-  pxr::VtArray<int> neighbors;
-  pxr::GfVec3f start = _positions[edge->vertex];
+  VtArray<int> neighbors;
+  GfVec3f start = _positions[edge->vertex];
   const HalfEdge* current = _graph.GetEdge(edge->next);
   while (current != edge) {
-    pxr::GfVec3f end = _positions[current->vertex];
+    GfVec3f end = _positions[current->vertex];
     if ((end - start).GetLengthSq() > squaredLen)return false;
     start = end;
     current = _graph.GetEdge(current->next);
@@ -173,11 +173,11 @@ bool Tesselator::_CollapseEdges()
       std::cout << "face collapsable " << edge << std::endl;
       
       size_t vertex = edge->vertex;
-      pxr::VtArray<int> neighbors;
+      VtArray<int> neighbors;
       if (_graph.CollapseFace(edge, neighbors)) {
 
         std::cout << "num neighbors : " << neighbors.size() << std::endl;
-        pxr::GfVec3f average(0.f);
+        GfVec3f average(0.f);
         for (auto& neighbor : neighbors)
           average += _positions[neighbor];
         average += _positions[vertex];
@@ -248,7 +248,7 @@ void Tesselator::Update(float l)
   
 }
 
-void Tesselator::GetPositions(pxr::VtArray<pxr::GfVec3f>& positions) const
+void Tesselator::GetPositions(VtArray<GfVec3f>& positions) const
 {
   size_t numVertices = _positions.size();
   positions.resize(numVertices);
@@ -258,7 +258,7 @@ void Tesselator::GetPositions(pxr::VtArray<pxr::GfVec3f>& positions) const
 
 }
 
-void Tesselator::GetTopology(pxr::VtArray<int>& faceCounts, pxr::VtArray<int>& faceConnects) const
+void Tesselator::GetTopology(VtArray<int>& faceCounts, VtArray<int>& faceConnects) const
 {
   _graph.ComputeTopology(faceCounts, faceConnects);
 }

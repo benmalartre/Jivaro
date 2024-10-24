@@ -18,19 +18,19 @@ public:
   Contact(){};
   virtual ~Contact(){};
 
-  void Init(const pxr::GfVec3f &normal, const pxr::GfVec3f &velocity, const float depth);
-  void Update(const pxr::GfVec3f &normal, const pxr::GfVec3f &velocity, const float depth);
+  void Init(const GfVec3f &normal, const GfVec3f &velocity, const float depth);
+  void Update(const GfVec3f &normal, const GfVec3f &velocity, const float depth);
 
   void SetTouching(bool touching){_touching = touching;};
   bool IsTouching(){return _touching;};
-  const pxr::GfVec3f& GetNormal() const {return _normal;};
-  const pxr::GfVec3f& GetVelocity() const {return _velocity;};
+  const GfVec3f& GetNormal() const {return _normal;};
+  const GfVec3f& GetVelocity() const {return _velocity;};
   float GetDepth() const {return _depth;};
   float GetInitDepth() const {return _initDepth;};
 
 private:
-  pxr::GfVec3f      _normal;   // contact normal
-  pxr::GfVec3f      _velocity; // relative velocity
+  GfVec3f      _normal;   // contact normal
+  GfVec3f      _velocity; // relative velocity
 
   float             _initDepth;// start frame penetration depth
   float             _depth;    // current substep penetration depth

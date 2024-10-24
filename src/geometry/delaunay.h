@@ -42,16 +42,16 @@ class Delaunay {
   }
 
   static inline double _Dist(
-    const pxr::GfVec2d& a,
-    const pxr::GfVec2d& b) {
+    const GfVec2d& a,
+    const GfVec2d& b) {
     return (b - a).GetLengthSq();
   }
 
   static inline double _CircumRadius(
-    const pxr::GfVec2d& a, const pxr::GfVec2d& b, const pxr::GfVec2d& c) {
+    const GfVec2d& a, const GfVec2d& b, const GfVec2d& c) {
 
-    const pxr::GfVec2d d(b - a);
-    const pxr::GfVec2d e(c - a);
+    const GfVec2d d(b - a);
+    const GfVec2d e(c - a);
 
     const double bl = d.GetLengthSq();
     const double cl = e.GetLengthSq();
@@ -68,31 +68,31 @@ class Delaunay {
     }
   }
 
-  static inline bool _Orient(const pxr::GfVec2d& p,const  pxr::GfVec2d& q, const pxr::GfVec2d& r) {
+  static inline bool _Orient(const GfVec2d& p,const  GfVec2d& q, const GfVec2d& r) {
     return (q[1] - p[1]) * (r[0] - q[0]) - (q[0] - p[0]) * (r[1] - q[1]) < 0.0;
   }
 
-  static inline pxr::GfVec2d _CircumCenter(
-    const pxr::GfVec2d& a, const pxr::GfVec2d& b, const pxr::GfVec2d& c) {
-    const pxr::GfVec2d d(b - a);
-    const pxr::GfVec2d e(c - a);
+  static inline GfVec2d _CircumCenter(
+    const GfVec2d& a, const GfVec2d& b, const GfVec2d& c) {
+    const GfVec2d d(b - a);
+    const GfVec2d e(c - a);
 
     const double bl = d.GetLengthSq();
     const double cl = e.GetLengthSq();
     const double f = d[0] * e[1] - d[1] * e[0];
 
-    return a + pxr::GfVec2d(
+    return a + GfVec2d(
       (e[1] * bl - d[1] * cl) * 0.5 / f,
       (d[0] * cl - e[0] * bl) * 0.5 / f
     );
   }
 
   static inline bool _InCircle(
-    const pxr::GfVec2d& a, const pxr::GfVec2d& b, const pxr::GfVec2d& c,
-    const pxr::GfVec2d& p) {
-    const pxr::GfVec2d d(a - p);
-    const pxr::GfVec2d e(b - p);
-    const pxr::GfVec2d f(c - p);
+    const GfVec2d& a, const GfVec2d& b, const GfVec2d& c,
+    const GfVec2d& p) {
+    const GfVec2d d(a - p);
+    const GfVec2d e(b - p);
+    const GfVec2d f(c - p);
 
     const double ap = d.GetLengthSq();
     const double bp = e.GetLengthSq();
@@ -104,7 +104,7 @@ class Delaunay {
   }
 
   // monotonically increases with real angle, but doesn't need expensive trigonometry
-  static inline double _PseudoAngle(const pxr::GfVec2d& v) {
+  static inline double _PseudoAngle(const GfVec2d& v) {
     const double p = v[0] / (std::abs(v[0]) + std::abs(v[1]));
     return (v[1] > 0.0 ? 3.0 - p : 1.0 + p) / 4.0; // [0..1)
   }
@@ -112,8 +112,8 @@ class Delaunay {
 protected:
   struct Compare {
 
-    std::vector<pxr::GfVec2d> const& coords;
-    pxr::GfVec2d coord;
+    std::vector<GfVec2d> const& coords;
+    GfVec2d coord;
 
     bool operator()(std::size_t i, std::size_t j) {
       const double d1 = _Dist(coords[i], coord);
@@ -135,13 +135,13 @@ protected:
   };
 
   size_t _Legalize(size_t a);
-  size_t _ComputeHash(const pxr::GfVec2d& coord) const;
+  size_t _ComputeHash(const GfVec2d& coord) const;
   size_t _AddTriangle(size_t i0, size_t i1, size_t i2,
     size_t a, size_t b, size_t c);
   void _Link(size_t a, size_t b);
 
 public:
-  std::vector<pxr::GfVec2d>         _coords;
+  std::vector<GfVec2d>         _coords;
   std::vector<size_t>               _triangles;
   std::vector<size_t>               _halfEdges;
   std::vector<size_t>               _hullPrev;
@@ -149,13 +149,13 @@ public:
   std::vector<size_t>               _hullTri;
   size_t                            _hullStart;
 
-  Delaunay(const std::vector<pxr::GfVec2d>& inCoords);
+  Delaunay(const std::vector<GfVec2d>& inCoords);
 
   double GetHullArea();
 
 private:
   std::vector<size_t>               _hash;
-  pxr::GfVec2d                      _center;
+  GfVec2d                      _center;
   size_t                            _hashSize;
   std::vector<size_t>               _edgeStack;
 };

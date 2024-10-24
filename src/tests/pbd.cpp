@@ -28,35 +28,35 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 
-void TestPBD::_TraverseStageFindingElements(pxr::UsdStageRefPtr& stage)
+void TestPBD::_TraverseStageFindingElements(UsdStageRefPtr& stage)
 {
-  pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
-  for (pxr::UsdPrim prim : stage->TraverseAll())
-    if(prim.HasAPI<pxr::UsdPbdBodyAPI>()) {
-      if (prim.IsA<pxr::UsdGeomMesh>()) {
-        _clothes.push_back(new Mesh(pxr::UsdGeomMesh(prim), 
+  UsdGeomXformCache xformCache(UsdTimeCode::Default());
+  for (UsdPrim prim : stage->TraverseAll())
+    if(prim.HasAPI<UsdPbdBodyAPI>()) {
+      if (prim.IsA<UsdGeomMesh>()) {
+        _clothes.push_back(new Mesh(UsdGeomMesh(prim), 
           xformCache.GetLocalToWorldTransform(prim)));
         _clothesId.push_back(prim.GetPath());
       };
-    } else if (prim.HasAPI<pxr::UsdPbdCollisionAPI>()) {
-      if(prim.IsA<pxr::UsdGeomMesh>()) {
-        _colliders.push_back(new Mesh(pxr::UsdGeomMesh(prim), 
+    } else if (prim.HasAPI<UsdPbdCollisionAPI>()) {
+      if(prim.IsA<UsdGeomMesh>()) {
+        _colliders.push_back(new Mesh(UsdGeomMesh(prim), 
           xformCache.GetLocalToWorldTransform(prim)));
         _collidersId.push_back(prim.GetPath());
-      } else if (prim.IsA<pxr::UsdGeomSphere>()) {
-        _colliders.push_back(new Sphere(pxr::UsdGeomSphere(prim), 
+      } else if (prim.IsA<UsdGeomSphere>()) {
+        _colliders.push_back(new Sphere(UsdGeomSphere(prim), 
           xformCache.GetLocalToWorldTransform(prim)));
         _collidersId.push_back(prim.GetPath());
-      } else if (prim.IsA<pxr::UsdGeomCube>()) {
-        _colliders.push_back(new Cube(pxr::UsdGeomCube(prim), 
+      } else if (prim.IsA<UsdGeomCube>()) {
+        _colliders.push_back(new Cube(UsdGeomCube(prim), 
           xformCache.GetLocalToWorldTransform(prim)));
         _collidersId.push_back(prim.GetPath());
-      } else if (prim.IsA<pxr::UsdGeomCylinder>()) {
-        _colliders.push_back(new Cylinder(pxr::UsdGeomCylinder(prim), 
+      } else if (prim.IsA<UsdGeomCylinder>()) {
+        _colliders.push_back(new Cylinder(UsdGeomCylinder(prim), 
           xformCache.GetLocalToWorldTransform(prim)));
         _collidersId.push_back(prim.GetPath());
-      } else if (prim.IsA<pxr::UsdGeomCapsule>()) {
-        _colliders.push_back(new Capsule(pxr::UsdGeomCapsule(prim), 
+      } else if (prim.IsA<UsdGeomCapsule>()) {
+        _colliders.push_back(new Capsule(UsdGeomCapsule(prim), 
           xformCache.GetLocalToWorldTransform(prim)));
         _collidersId.push_back(prim.GetPath());
       }
@@ -64,18 +64,18 @@ void TestPBD::_TraverseStageFindingElements(pxr::UsdStageRefPtr& stage)
     }
 }
 
-void TestPBD::_AddAnimationSamples(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path)
+void TestPBD::_AddAnimationSamples(UsdStageRefPtr& stage, SdfPath& path)
 {
-  pxr::UsdPrim prim = stage->GetPrimAtPath(path);
+  UsdPrim prim = stage->GetPrimAtPath(path);
 
   if(prim.IsValid()) {
-    pxr::UsdGeomXformable xformable(prim);
-    pxr::GfVec3f scale = pxr::GfVec3f(1.f, 1.f, 1.f);
-    pxr::GfVec3d translate0 = pxr::GfVec3f(0.f, 0.f, 0.f);
-    pxr::GfVec3d translate1 = pxr::GfVec3f(0.f, -10.f, 0.f);
-    pxr::GfVec3d translate2 = pxr::GfVec3f(0.f, 10.f, 0.f);
+    UsdGeomXformable xformable(prim);
+    GfVec3f scale = GfVec3f(1.f, 1.f, 1.f);
+    GfVec3d translate0 = GfVec3f(0.f, 0.f, 0.f);
+    GfVec3d translate1 = GfVec3f(0.f, -10.f, 0.f);
+    GfVec3d translate2 = GfVec3f(0.f, 10.f, 0.f);
 
-    pxr::UsdGeomXformOp op = xformable.AddScaleOp();
+    UsdGeomXformOp op = xformable.AddScaleOp();
     op.Set(scale);
 
     op = xformable.AddRotateYOp();
@@ -96,7 +96,7 @@ void TestPBD::_AddAnimationSamples(pxr::UsdStageRefPtr& stage, pxr::SdfPath& pat
 }
 
 
-void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
+void TestPBD::InitExec(UsdStageRefPtr& stage)
 {
   std::cout << "Test PBD Init Execution" << std::endl;
   if (!stage) return;
@@ -105,13 +105,13 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   std::cout << " - initialized scene" << std::endl;
 
   // get root prim
-  pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
+  UsdPrim rootPrim = stage->GetDefaultPrim();
   if(!rootPrim.IsValid()) {
-    pxr::UsdGeomXform root = pxr::UsdGeomXform::Define(stage, pxr::SdfPath("/Root"));
+    UsdGeomXform root = UsdGeomXform::Define(stage, SdfPath("/Root"));
     rootPrim = root.GetPrim();
     stage->SetDefaultPrim(rootPrim);
   }
-  const pxr::SdfPath  rootId = rootPrim.GetPath();
+  const SdfPath  rootId = rootPrim.GetPath();
   std::cout << " - found root prim" << rootId << std::endl;
 
   _TraverseStageFindingElements(stage);
@@ -124,7 +124,7 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
  
   
   // create solver with attributes
-  _solverId = rootId.AppendChild(pxr::TfToken("Solver"));
+  _solverId = rootId.AppendChild(TfToken("Solver"));
   _solver = _CreateSolver(&_scene, stage, _solverId, 5);
   _scene.AddGeometry(_solverId, _solver);
   std::cout << " - created solver " << _solverId << std::endl;
@@ -135,9 +135,9 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
 
   for(size_t x = 0; x < 0; ++x) {
     std::string name = "Cloth_"+std::to_string(x);
-    pxr::SdfPath clothPath = rootId.AppendChild(pxr::TfToken(name));
-    const pxr::GfMatrix4d matrix = pxr::GfMatrix4d(1.f).SetScale(10.f) *
-      pxr::GfMatrix4d(1.f).SetTranslate({ 0.f, 10.f + x, 0.f });
+    SdfPath clothPath = rootId.AppendChild(TfToken(name));
+    const GfMatrix4d matrix = GfMatrix4d(1.f).SetScale(10.f) *
+      GfMatrix4d(1.f).SetTranslate({ 0.f, 10.f + x, 0.f });
     Mesh* clothMesh = _CreateClothMesh(stage, clothPath, size, matrix);
     
     _clothesId.push_back(clothPath);
@@ -171,8 +171,8 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
       _colliders[c]->SetInputOnly();
       Collision* collision = NULL;
 
-      _colliders[c]->GetAttributeValue(pxr::UsdPbdTokens->pbdFriction, pxr::UsdTimeCode::Default(), &friction);
-      _colliders[c]->GetAttributeValue(pxr::UsdPbdTokens->pbdRestitution, pxr::UsdTimeCode::Default(), &restitution);
+      _colliders[c]->GetAttributeValue(UsdPbdTokens->pbdFriction, UsdTimeCode::Default(), &friction);
+      _colliders[c]->GetAttributeValue(UsdPbdTokens->pbdRestitution, UsdTimeCode::Default(), &restitution);
 
       switch(_colliders[c]->GetType()) {
         case Geometry::CUBE:
@@ -214,10 +214,10 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   bool createGroundCollision = true;
   if(createGroundCollision) {
       // create collide ground
-    _groundId = rootId.AppendChild(pxr::TfToken("Ground"));
+    _groundId = rootId.AppendChild(TfToken("Ground"));
     _ground = _CreateCollidePlane(stage, _groundId);
     _ground->SetMatrix(
-      pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, -0.5f, 0.f)));
+      GfMatrix4d().SetTranslate(GfVec3f(0.f, -0.5f, 0.f)));
     _scene.AddGeometry(_groundId, _ground);
 
     Collision* collision = new PlaneCollision(_ground, _groundId, restitution, friction);
@@ -231,13 +231,13 @@ void TestPBD::InitExec(pxr::UsdStageRefPtr& stage)
   
 }
 
-void TestPBD::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
+void TestPBD::UpdateExec(UsdStageRefPtr& stage, float time)
 {
   _scene.Sync(stage, time);
   _solver->Update(stage, time);
 }
 
-void TestPBD::TerminateExec(pxr::UsdStageRefPtr& stage)
+void TestPBD::TerminateExec(UsdStageRefPtr& stage)
 {
   if (!stage) return;
   _scene.RemoveGeometry(_solverId);

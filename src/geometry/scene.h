@@ -26,64 +26,64 @@ class Scene  {
 public:
   struct _Prim {
     Geometry*          geom;
-    pxr::HdDirtyBits   bits;
+    HdDirtyBits   bits;
   };
 
   struct _Graph {
     Graph*             graph;
-    pxr::HdDirtyBits   bits;
+    HdDirtyBits   bits;
   };
 
-  typedef pxr::TfHashMap< pxr::SdfPath, _Prim, pxr::SdfPath::Hash >   _PrimMap;
-  typedef pxr::TfHashMap< pxr::SdfPath, _Graph, pxr::SdfPath::Hash >  _GraphMap;
-  typedef std::map< pxr::SdfPath, pxr::VtValue >                      _MaterialMap;
-  typedef std::map< pxr::SdfPath, pxr::SdfPath >                      _MaterialBindingMap;
+  typedef TfHashMap< SdfPath, _Prim, SdfPath::Hash >   _PrimMap;
+  typedef TfHashMap< SdfPath, _Graph, SdfPath::Hash >  _GraphMap;
+  typedef std::map< SdfPath, VtValue >                      _MaterialMap;
+  typedef std::map< SdfPath, SdfPath >                      _MaterialBindingMap;
   
   friend class Execution;
 
   Scene();
   ~Scene();
 
-  void Init(const pxr::UsdStageRefPtr& stage);
-  void Sync(const pxr::UsdStageRefPtr& stage, 
-    const pxr::UsdTimeCode& time=pxr::UsdTimeCode::Default());
+  void Init(const UsdStageRefPtr& stage);
+  void Sync(const UsdStageRefPtr& stage, 
+    const UsdTimeCode& time=UsdTimeCode::Default());
 
   void Save(const std::string& filename);
   void Export(const std::string& filename);
 
-  Mesh* AddMesh(const pxr::SdfPath& path, const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
-  Curve* AddCurve(const pxr::SdfPath& path, const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
-  Points* AddPoints(const pxr::SdfPath& path, const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
-  Voxels* AddVoxels(const pxr::SdfPath& path, Mesh* mesh, float radius);
+  Mesh* AddMesh(const SdfPath& path, const GfMatrix4d& xfo=GfMatrix4d(1.0));
+  Curve* AddCurve(const SdfPath& path, const GfMatrix4d& xfo=GfMatrix4d(1.0));
+  Points* AddPoints(const SdfPath& path, const GfMatrix4d& xfo=GfMatrix4d(1.0));
+  Voxels* AddVoxels(const SdfPath& path, Mesh* mesh, float radius);
 
-  Geometry* AddGeometry(const pxr::SdfPath& path, short type, const pxr::GfMatrix4d& xfo);
-  void AddGeometry(const pxr::SdfPath& path, Geometry* geom);
+  Geometry* AddGeometry(const SdfPath& path, short type, const GfMatrix4d& xfo);
+  void AddGeometry(const SdfPath& path, Geometry* geom);
 
-  void InjectGeometry(pxr::UsdStageRefPtr& stage, const pxr::SdfPath& path, 
-    Geometry* geometry, const pxr::UsdTimeCode& time=pxr::UsdTimeCode::Default());
+  void InjectGeometry(UsdStageRefPtr& stage, const SdfPath& path, 
+    Geometry* geometry, const UsdTimeCode& time=UsdTimeCode::Default());
 
-  void RemoveGeometry(const pxr::SdfPath& path);
+  void RemoveGeometry(const SdfPath& path);
 
-  void Remove(const pxr::SdfPath& path);
-  bool IsMesh(const pxr::SdfPath& path);
-  bool IsCurves(const pxr::SdfPath& path);
-  bool IsPoints(const pxr::SdfPath& path);
+  void Remove(const SdfPath& path);
+  bool IsMesh(const SdfPath& path);
+  bool IsCurves(const SdfPath& path);
+  bool IsPoints(const SdfPath& path);
 
-  const pxr::SdfPath GetPrimPath(Geometry* geom) const;
+  const SdfPath GetPrimPath(Geometry* geom) const;
   _PrimMap& GetPrims() { return _prims; };
   const _PrimMap& GetPrims() const { return _prims; };
 
-  _Prim* GetPrim(const pxr::SdfPath& path);
-  Geometry* GetGeometry(const pxr::SdfPath& path);
-  pxr::SdfPath GetInstancerBinding(const pxr::SdfPath& path);
+  _Prim* GetPrim(const SdfPath& path);
+  Geometry* GetGeometry(const SdfPath& path);
+  SdfPath GetInstancerBinding(const SdfPath& path);
 
-  void MarkPrimDirty(const pxr::SdfPath& path, pxr::HdDirtyBits bits);
+  void MarkPrimDirty(const SdfPath& path, HdDirtyBits bits);
 
   /// Gets the topological mesh data for a given prim.
-  pxr::HdMeshTopology GetMeshTopology(pxr::SdfPath const& id);
+  HdMeshTopology GetMeshTopology(SdfPath const& id);
 
   /// Gets the topological curve data for a given prim.
-  pxr::HdBasisCurvesTopology GetBasisCurvesTopology(pxr::SdfPath const& id);
+  HdBasisCurvesTopology GetBasisCurvesTopology(SdfPath const& id);
 
   /// Gets the axis aligned bounds of a prim.
   /// The returned bounds are in the local space of the prim
@@ -92,34 +92,34 @@ public:
   ///
   /// The returned bounds does not include any displacement that
   /// might occur as the result of running shaders on the prim.
-  pxr::GfRange3d GetExtent(pxr::SdfPath const & id);
+  GfRange3d GetExtent(SdfPath const & id);
 
   /// Returns the object space transform, including all parent transforms.
-  pxr::GfMatrix4d GetTransform(pxr::SdfPath const & id);
+  GfMatrix4d GetTransform(SdfPath const & id);
 
   /// Returns the authored visible state of the prim.
-  bool GetVisible(pxr::SdfPath const & id);
+  bool GetVisible(SdfPath const & id);
 
 
-  pxr::TfToken GetRenderTag(pxr::SdfPath const& id);
+  TfToken GetRenderTag(SdfPath const& id);
     
   /// Returns a named value.
-  pxr::VtValue Get(pxr::SdfPath const& id, pxr::TfToken const& key);
+  VtValue Get(SdfPath const& id, TfToken const& key);
 
   /// Returns a named primvar value. If \a *outIndices is not nullptr and the 
   /// primvar has indices, it will return the unflattened primvar and set 
   /// \a *outIndices to the primvar's associated indices, clearing the array
   /// if the primvar is not indexed.
-  pxr::VtValue GetIndexedPrimvar(pxr::SdfPath const& id, 
-                                    pxr::TfToken const& key, 
-                                    pxr::VtIntArray *outIndices);
+  VtValue GetIndexedPrimvar(SdfPath const& id, 
+                                    TfToken const& key, 
+                                    VtIntArray *outIndices);
 
-  pxr::HdPrimvarDescriptorVector GetPrimvarDescriptors(pxr::SdfPath const& id,
-    pxr::HdInterpolation interpolation);
+  HdPrimvarDescriptorVector GetPrimvarDescriptors(SdfPath const& id,
+    HdInterpolation interpolation);
 
   /// Materials
-  pxr::SdfPath GetMaterialId(pxr::SdfPath const &rprimId);
-  pxr::VtValue GetMaterialResource(pxr::SdfPath const &materialId);
+  SdfPath GetMaterialId(SdfPath const &rprimId);
+  VtValue GetMaterialResource(SdfPath const &materialId);
 
 
 private:

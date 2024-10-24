@@ -18,15 +18,15 @@ public:
 
   struct IndexPoint {
     size_t        index;
-    pxr::GfVec3f  position;
+    GfVec3f  position;
 
-    explicit IndexPoint(size_t index, const pxr::GfVec3f& position)
+    explicit IndexPoint(size_t index, const GfVec3f& position)
       : index(index), position(position) {};
   };
   
-  struct Cell : public pxr::GfRange3d
+  struct Cell : public GfRange3d
   {
-    explicit Cell(const IndexPoint &point=IndexPoint(INVALID_INDEX, pxr::GfVec3f(0.f)))
+    explicit Cell(const IndexPoint &point=IndexPoint(INVALID_INDEX, GfVec3f(0.f)))
       : point(point), left(INVALID_INDEX), right(INVALID_INDEX)
     {
     }
@@ -68,7 +68,7 @@ public:
   Cell* GetCell(size_t index) { return &_cells[index]; };
   const Cell* GetCell(size_t index) const { return &_cells[index]; };
 
-  size_t AddCell(const IndexPoint& point=IndexPoint(INVALID_INDEX, pxr::GfVec3f(0.f)));
+  size_t AddCell(const IndexPoint& point=IndexPoint(INVALID_INDEX, GfVec3f(0.f)));
 
   const Geometry* GetGeometryFromCell(const Cell* cell) const;
   size_t GetGeometryIndexFromCell(const Cell* cell) const;
@@ -81,9 +81,9 @@ public:
   virtual void Init(const std::vector<Geometry*>& geometries) override;
   virtual void Update() override;
 
-  virtual bool Raycast(const pxr::GfRay& ray, Location* hit,
+  virtual bool Raycast(const GfRay& ray, Location* hit,
     double maxDistance = DBL_MAX, double* minDistance = NULL) const override;
-  virtual bool Closest(const pxr::GfVec3f& point, Location* hit,
+  virtual bool Closest(const GfVec3f& point, Location* hit,
     double maxDistance) const override;
 
 private:
@@ -102,15 +102,15 @@ private:
     }
   };
 
-  bool _ContainsSphere(const pxr::GfVec3f& center, double radius, KDTree::Cell *cell) ;
-  bool _IntersectSphere(const pxr::GfVec3f& center, double radius, KDTree::Cell *cell);
+  bool _ContainsSphere(const GfVec3f& center, double radius, KDTree::Cell *cell) ;
+  bool _IntersectSphere(const GfVec3f& center, double radius, KDTree::Cell *cell);
 
   size_t _GetIndex(const Cell* cell) const;
 
-  size_t _BuildTreeRecursively(const pxr::GfRange3d& range, 
+  size_t _BuildTreeRecursively(const GfRange3d& range, 
     size_t depth, size_t begin, size_t end);
 
-  void _RecurseClosest(const Cell *cell, const pxr::GfVec3f &point, 
+  void _RecurseClosest(const Cell *cell, const GfVec3f &point, 
     size_t index, double &minDistanceSq, Cell *&nearest) const;
 
   Cell*                           _root = nullptr;

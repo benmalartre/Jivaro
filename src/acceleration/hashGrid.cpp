@@ -5,7 +5,7 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 void 
-HashGrid::Init(size_t n, const pxr::GfVec3f* points, float spacing)
+HashGrid::Init(size_t n, const GfVec3f* points, float spacing)
 {
   _spacing = spacing>1e-6 ? spacing : 1e-6;
   _scl = 1.f/_spacing;
@@ -18,7 +18,7 @@ HashGrid::Init(size_t n, const pxr::GfVec3f* points, float spacing)
 }
 
 void 
-HashGrid::Update(const pxr::GfVec3f* points)
+HashGrid::Update(const GfVec3f* points)
 {
   uint64_t T = CurrentTime();
   memset(&_cellStart[0], 0, _cellStart.size() * sizeof(int));
@@ -44,18 +44,18 @@ HashGrid::Update(const pxr::GfVec3f* points)
 }
 
 size_t 
-HashGrid::Closests(size_t index, const pxr::GfVec3f* positions,
+HashGrid::Closests(size_t index, const GfVec3f* positions,
   std::vector<int>& closests, float distance) const
 {
-  const pxr::GfVec3f& point = positions[index];
-  const pxr::GfVec3i minCoords = _IntCoords(point - pxr::GfVec3f(distance));
-  const pxr::GfVec3i maxCoords = _IntCoords(point + pxr::GfVec3f(distance));
+  const GfVec3f& point = positions[index];
+  const GfVec3i minCoords = _IntCoords(point - GfVec3f(distance));
+  const GfVec3i maxCoords = _IntCoords(point + GfVec3f(distance));
   const float distance2 = distance * distance;
 
   for (int x = minCoords[0]; x <= maxCoords[0]; ++x)
     for (int y = minCoords[1]; y <= maxCoords[1]; ++y)
       for (int z = minCoords[2]; z <= maxCoords[2]; ++z) {
-        int64_t hash = (this->*_HashCoords)(pxr::GfVec3i(x, y, z));
+        int64_t hash = (this->*_HashCoords)(GfVec3i(x, y, z));
         int start = _cellStart[hash];
         int end = _cellStart[hash + 1];
 
@@ -70,18 +70,18 @@ HashGrid::Closests(size_t index, const pxr::GfVec3f* positions,
 }
 
 size_t 
-HashGrid::Closests(size_t index, const pxr::GfVec3f* positions, const pxr::GfVec3f* velocities, float ft,
+HashGrid::Closests(size_t index, const GfVec3f* positions, const GfVec3f* velocities, float ft,
   std::vector<int>& closests, float distance) const
 {
-  const pxr::GfVec3f& point = positions[index] + velocities[index] * ft;
-  const pxr::GfVec3i minCoords = _IntCoords(point - pxr::GfVec3f(distance));
-  const pxr::GfVec3i maxCoords = _IntCoords(point + pxr::GfVec3f(distance));
+  const GfVec3f& point = positions[index] + velocities[index] * ft;
+  const GfVec3i minCoords = _IntCoords(point - GfVec3f(distance));
+  const GfVec3i maxCoords = _IntCoords(point + GfVec3f(distance));
   const float distance2 = distance * distance;
 
   for (int x = minCoords[0]; x <= maxCoords[0]; ++x)
     for (int y = minCoords[1]; y <= maxCoords[1]; ++y)
       for (int z = minCoords[2]; z <= maxCoords[2]; ++z) {
-        int64_t hash = (this->*_HashCoords)(pxr::GfVec3i(x, y, z));
+        int64_t hash = (this->*_HashCoords)(GfVec3i(x, y, z));
         int start = _cellStart[hash];
         int end = _cellStart[hash + 1];
 
@@ -95,11 +95,11 @@ HashGrid::Closests(size_t index, const pxr::GfVec3f* positions, const pxr::GfVec
   return closests.size();
 }
 
-pxr::GfVec3f
-HashGrid::GetColor(const pxr::GfVec3f& point)
+GfVec3f
+HashGrid::GetColor(const GfVec3f& point)
 {
   int64_t h = (this->*_HashCoords)(_IntCoords(point));
-  return UnpackColor3<pxr::GfVec3f>(h);
+  return UnpackColor3<GfVec3f>(h);
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

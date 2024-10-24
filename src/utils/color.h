@@ -10,7 +10,7 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 // index to random color
-static inline pxr::GfVec3f RandomColorByIndex(uint32_t index)
+static inline GfVec3f RandomColorByIndex(uint32_t index)
 {
   srand(index);
   uint32_t color = rand();
@@ -18,7 +18,7 @@ static inline pxr::GfVec3f RandomColorByIndex(uint32_t index)
   float g = ((color >>  8) & 0xff) / 255.0f;
   float b = ((color      ) & 0xff) / 255.0f;
 
-  return pxr::GfVec3f(r, g, b);
+  return GfVec3f(r, g, b);
 }
 
 template <typename T>
@@ -85,7 +85,7 @@ static int PackColor3(const T& c)
   return code;
 }
 
-static float PackColorAsFloat(const pxr::GfVec4f& c)
+static float PackColorAsFloat(const GfVec4f& c)
 {
   int code = PackColor4(c);
   return *(float*)&code;

@@ -33,7 +33,7 @@ void TestRivet::_UpdateCurves()
   const size_t numRays = _mesh->GetNumPoints();
   /*
   const size_t num = std::sqrt(numRays);
-  pxr::VtArray<pxr::GfVec3f> deformed(numRays);
+  VtArray<GfVec3f> deformed(numRays);
 
   const float speed = 0.25f;
   const float amplitude = 0.1f;
@@ -43,22 +43,22 @@ void TestRivet::_UpdateCurves()
     for (size_t x = 0; x < num; ++x) {
       xf = (float)x/(float)num - 0.5;
       zf = (float)z/(float)num - 0.5;
-      yf = pxr::GfSin(zf*frequency + time*speed) * amplitude;
+      yf = GfSin(zf*frequency + time*speed) * amplitude;
       
-      deformed[x + z * num] = pxr::GfVec3f(xf, yf, zf);
+      deformed[x + z * num] = GfVec3f(xf, yf, zf);
     }
   }
   _mesh->SetPositions(deformed);
   */
 
-  const pxr::GfVec3f* positions = _mesh->GetPositionsCPtr();
-  const pxr::GfVec3f* normals = _mesh->GetNormalsCPtr();
-  const pxr::GfMatrix4d& matrix = _mesh->GetMatrix();
+  const GfVec3f* positions = _mesh->GetPositionsCPtr();
+  const GfVec3f* normals = _mesh->GetNormalsCPtr();
+  const GfMatrix4d& matrix = _mesh->GetMatrix();
 
-  pxr::VtArray<pxr::GfVec3f> points;
-  pxr::VtArray<float> radiis;
-  pxr::VtArray<int> counts;
-  pxr::VtArray<pxr::GfVec3f> colors;
+  VtArray<GfVec3f> points;
+  VtArray<float> radiis;
+  VtArray<int> counts;
+  VtArray<GfVec3f> colors;
 
   points.resize(numRays * 2);
   radiis.resize(numRays * 2);
@@ -71,8 +71,8 @@ void TestRivet::_UpdateCurves()
     radiis[r*2+1]   = 0.01f;
     points[r*2]   = matrix.Transform(positions[r]);
     points[r*2+1] = matrix.Transform(positions[r] + normals[r] * 0.2);
-    colors[r*2]   = pxr::GfVec3f(0.66f,0.66f,0.66f);
-    colors[r*2+1] = pxr::GfVec3f(0.66f,0.66f,0.66f);
+    colors[r*2]   = GfVec3f(0.66f,0.66f,0.66f);
+    colors[r*2+1] = GfVec3f(0.66f,0.66f,0.66f);
   }
 
   _rays->SetTopology(points, radiis, counts); 
@@ -80,16 +80,16 @@ void TestRivet::_UpdateCurves()
 }
 
 // thread task
-void TestRivet::_FindHits(size_t begin, size_t end, const pxr::GfVec3f* positions, 
-  pxr::GfVec3f* results, bool* hits, Intersector* intersector)
+void TestRivet::_FindHits(size_t begin, size_t end, const GfVec3f* positions, 
+  GfVec3f* results, bool* hits, Intersector* intersector)
 {
   for (size_t index = begin; index < end; ++index) {
-    pxr::GfRay ray(positions[index*2], positions[index*2+1] - positions[index*2]);
+    GfRay ray(positions[index*2], positions[index*2+1] - positions[index*2]);
     double minDistance = DBL_MAX;
     Location hit;
     if (intersector->Raycast(ray, &hit, DBL_MAX, &minDistance)) {
       const Geometry* collided = intersector->GetGeometry(hit.GetGeometryIndex());
-      const pxr::GfMatrix4d& matrix = collided->GetMatrix();
+      const GfMatrix4d& matrix = collided->GetMatrix();
       switch (collided->GetType()) {
         case Geometry::MESH:
         {
@@ -109,24 +109,24 @@ void TestRivet::_FindHits(size_t begin, size_t end, const pxr::GfVec3f* position
 // parallelize raycast
 void TestRivet::_UpdateHits()
 {
-  const pxr::GfVec3f* positions = _rays->GetPositionsCPtr();  
+  const GfVec3f* positions = _rays->GetPositionsCPtr();  
   size_t numRays = _rays->GetNumPoints() >> 1;
 
   std::cout << "num rays : " << numRays << std::endl;
 
-  pxr::VtArray<pxr::GfVec3f> points(numRays * 2);
-  pxr::VtArray<bool> hits(numRays * 2, false);
+  VtArray<GfVec3f> points(numRays * 2);
+  VtArray<bool> hits(numRays * 2, false);
 
 
   uint64_t startT = CurrentTime();
-  pxr::WorkParallelForN(_rays->GetNumCurves(),
+  WorkParallelForN(_rays->GetNumCurves(),
     std::bind(&TestRivet::_FindHits, this, std::placeholders::_1, 
       std::placeholders::_2, positions, &points[0], &hits[0], &_grid));
   uint64_t bvhRaycastT = CurrentTime() - startT;
   std::cout << "raycast bvh : " << ((double)bvhRaycastT * 1e-6) << " seconds" << std::endl;
 
   startT = CurrentTime();
-  pxr::WorkParallelForN(_rays->GetNumCurves(),
+  WorkParallelForN(_rays->GetNumCurves(),
     std::bind(&TestRivet::_FindHits, this, std::placeholders::_1, 
       std::placeholders::_2, positions, &points[numRays], &hits[numRays], &_bvh));
   uint64_t gridRaycastT = CurrentTime() - startT;
@@ -135,22 +135,22 @@ void TestRivet::_UpdateHits()
 
 
   // need accumulate result
-  pxr::VtArray<pxr::GfVec3f> result;
-  pxr::VtArray<pxr::GfVec3f> colors;
-  pxr::VtArray<float> widths;
+  VtArray<GfVec3f> result;
+  VtArray<GfVec3f> colors;
+  VtArray<float> widths;
   result.reserve(numRays * 2);
   colors.reserve(numRays * 2);
   widths.reserve(numRays * 2);
   size_t bvhHits = 0, gridHits = 0;
   for(size_t r = 0; r < numRays; ++r) {
     if(hits[r]) {
-      result.push_back(points[r]+pxr::GfVec3f(RANDOM_0_1*0.05));
+      result.push_back(points[r]+GfVec3f(RANDOM_0_1*0.05));
       colors.push_back({1.f, 0.f, 0.f});
       widths.push_back( 0.25f);
       bvhHits++;
     }
     if(hits[r+numRays]) {
-      result.push_back(points[r+numRays]+pxr::GfVec3f(RANDOM_0_1*0.05));
+      result.push_back(points[r+numRays]+GfVec3f(RANDOM_0_1*0.05));
       colors.push_back({0.f, 1.f, 0.f});
       widths.push_back( 0.25f);
       gridHits++;
@@ -168,7 +168,7 @@ void TestRivet::_UpdateHits()
 
 }
 
-bool TestRivet::_CompareHits(const pxr::VtArray<bool>& hits, const  pxr::VtArray<pxr::GfVec3f> points)
+bool TestRivet::_CompareHits(const VtArray<bool>& hits, const  VtArray<GfVec3f> points)
 {
   size_t numRays = hits.size() / 2;
   size_t cntHitError = 0;
@@ -189,40 +189,40 @@ bool TestRivet::_CompareHits(const pxr::VtArray<bool>& hits, const  pxr::VtArray
   return cntHitError == 0 && cntCoordError == 0;
 }
 
-void TestRivet::_TraverseStageFindingMeshes(pxr::UsdStageRefPtr& stage)
+void TestRivet::_TraverseStageFindingMeshes(UsdStageRefPtr& stage)
 {
-  pxr::UsdGeomXformCache xformCache(pxr::UsdTimeCode::Default());
-  for (pxr::UsdPrim prim : stage->TraverseAll())
-    if (prim.IsA<pxr::UsdGeomMesh>()) {
-      _meshes.push_back(new Mesh(pxr::UsdGeomMesh(prim), 
+  UsdGeomXformCache xformCache(UsdTimeCode::Default());
+  for (UsdPrim prim : stage->TraverseAll())
+    if (prim.IsA<UsdGeomMesh>()) {
+      _meshes.push_back(new Mesh(UsdGeomMesh(prim), 
         xformCache.GetLocalToWorldTransform(prim)));
       _meshesId.push_back(prim.GetPath());
     }
       
 }
 
-void TestRivet::_AddAnimationSamples(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path)
+void TestRivet::_AddAnimationSamples(UsdStageRefPtr& stage, SdfPath& path)
 {
-  pxr::UsdPrim prim = stage->GetPrimAtPath(path);
+  UsdPrim prim = stage->GetPrimAtPath(path);
   if(prim.IsValid()) {
-    pxr::UsdGeomXformable xformable(prim);
-    pxr::GfRotation rotation(pxr::GfVec3f(0.f, 0.f, 1.f), 0.f);
-    pxr::GfMatrix4d scale = pxr::GfMatrix4d().SetScale(pxr::GfVec3f(10.f, 10.f, 10.f));
-    pxr::GfMatrix4d rotate = pxr::GfMatrix4d().SetRotate(rotation);
-    pxr::GfMatrix4d translate1 = pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, 0.f, -10.f));
-    pxr::GfMatrix4d translate2 = pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, 0.f, 10.f));
+    UsdGeomXformable xformable(prim);
+    GfRotation rotation(GfVec3f(0.f, 0.f, 1.f), 0.f);
+    GfMatrix4d scale = GfMatrix4d().SetScale(GfVec3f(10.f, 10.f, 10.f));
+    GfMatrix4d rotate = GfMatrix4d().SetRotate(rotation);
+    GfMatrix4d translate1 = GfMatrix4d().SetTranslate(GfVec3f(0.f, 0.f, -10.f));
+    GfMatrix4d translate2 = GfMatrix4d().SetTranslate(GfVec3f(0.f, 0.f, 10.f));
     auto op = xformable.GetTransformOp();
     op.Set(scale * rotate * translate1, 1);
     op.Set(scale * rotate * translate2, 101);
   }
 }
 
-void TestRivet::InitExec(pxr::UsdStageRefPtr& stage)
+void TestRivet::InitExec(UsdStageRefPtr& stage)
 {
   if (!stage) return;
 
-  pxr::UsdPrim rootPrim = stage->GetDefaultPrim();
-  const pxr::SdfPath  rootId = rootPrim.GetPath();
+  UsdPrim rootPrim = stage->GetDefaultPrim();
+  const SdfPath  rootId = rootPrim.GetPath();
 
   // find meshes in the scene
   _TraverseStageFindingMeshes(stage);
@@ -247,42 +247,42 @@ void TestRivet::InitExec(pxr::UsdStageRefPtr& stage)
     std::cout << "build grid : " << ((double)gridBuildT * 1e-6) << " seconds" << std::endl;
     
 
-    _gridId = rootId.AppendChild(pxr::TfToken("grid"));
+    _gridId = rootId.AppendChild(TfToken("grid"));
     _leaves = _SetupGridInstancer(stage, _gridId, &_grid);
     _scene.AddGeometry(_gridId, (Geometry*)_leaves );
-    _scene.MarkPrimDirty(_gridId, pxr::HdChangeTracker::AllDirty);
+    _scene.MarkPrimDirty(_gridId, HdChangeTracker::AllDirty);
   }
   
   // create mesh that will be source of rays
-  pxr::GfRotation rotation(pxr::GfVec3f(0.f, 0.f, 1.f), 180.f);
+  GfRotation rotation(GfVec3f(0.f, 0.f, 1.f), 180.f);
 
-  pxr::GfMatrix4d scale = pxr::GfMatrix4d().SetScale(pxr::GfVec3f(10.f, 10.f, 10.f));
-  pxr::GfMatrix4d rotate = pxr::GfMatrix4d().SetRotate(rotation);
-  pxr::GfMatrix4d translate = pxr::GfMatrix4d().SetTranslate(pxr::GfVec3f(0.f, 20.f, 0.f));
+  GfMatrix4d scale = GfMatrix4d().SetScale(GfVec3f(10.f, 10.f, 10.f));
+  GfMatrix4d rotate = GfMatrix4d().SetRotate(rotation);
+  GfMatrix4d translate = GfMatrix4d().SetTranslate(GfVec3f(0.f, 20.f, 0.f));
 
   const size_t n = 1024;
-  _meshId = rootId.AppendChild(pxr::TfToken("emitter"));
+  _meshId = rootId.AppendChild(TfToken("emitter"));
   _mesh = _CreateMeshGrid(stage, _meshId, n, scale * rotate * translate);
   _scene.AddGeometry(_meshId, _mesh);
 
   _AddAnimationSamples(stage, _meshId);
 
   // create rays
-  _raysId = rootId.AppendChild(pxr::TfToken("rays"));
-  _rays = (Curve*)_scene.AddGeometry(_raysId, Geometry::CURVE, pxr::GfMatrix4d(1.0));
+  _raysId = rootId.AppendChild(TfToken("rays"));
+  _rays = (Curve*)_scene.AddGeometry(_raysId, Geometry::CURVE, GfMatrix4d(1.0));
 
   _UpdateRays();
-  _scene.MarkPrimDirty(_raysId, pxr::HdChangeTracker ::AllDirty);
+  _scene.MarkPrimDirty(_raysId, HdChangeTracker ::AllDirty);
 
   // create hits
-  _hitsId = rootId.AppendChild(pxr::TfToken("hits"));
-  _hits = (Points*)_scene.AddGeometry(_hitsId, Geometry::POINT, pxr::GfMatrix4d(1.0));
+  _hitsId = rootId.AppendChild(TfToken("hits"));
+  _hits = (Points*)_scene.AddGeometry(_hitsId, Geometry::POINT, GfMatrix4d(1.0));
 
   UpdateExec(stage, 1);
 
 }
 
-void TestRivet::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
+void TestRivet::UpdateExec(UsdStageRefPtr& stage, float time)
 {
   _scene.Sync(stage, time);
   
@@ -297,22 +297,22 @@ void TestRivet::UpdateExec(pxr::UsdStageRefPtr& stage, float time)
     uint64_t gridUpdateT = CurrentTime() - startT;
     std::cout << "update grid : " << ((double)gridUpdateT * 1e-6) << " seconds" << std::endl;
     _UpdateGridInstancer(stage, _gridId, &_grid, time);
-    _scene.MarkPrimDirty(_gridId, pxr::HdChangeTracker::DirtyInstancer);
+    _scene.MarkPrimDirty(_gridId, HdChangeTracker::DirtyInstancer);
   }
 
   _UpdateRays();
   _scene.MarkPrimDirty(_raysId, 
-    pxr::HdChangeTracker::DirtyPoints);
+    HdChangeTracker::DirtyPoints);
 
   _scene.MarkPrimDirty(_meshId, 
-    pxr::HdChangeTracker::DirtyPoints|
-    pxr::HdChangeTracker::DirtyTransform);
+    HdChangeTracker::DirtyPoints|
+    HdChangeTracker::DirtyTransform);
 
   _UpdateHits();
-  _scene.MarkPrimDirty(_hitsId, pxr::HdChangeTracker::AllDirty);
+  _scene.MarkPrimDirty(_hitsId, HdChangeTracker::AllDirty);
 }
 
-void TestRivet::TerminateExec(pxr::UsdStageRefPtr& stage)
+void TestRivet::TerminateExec(UsdStageRefPtr& stage)
 {
   if (!stage) return;
 

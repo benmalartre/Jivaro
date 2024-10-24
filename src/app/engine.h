@@ -23,15 +23,15 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-class Engine : public pxr::UsdImagingGLEngine {
+class Engine : public UsdImagingGLEngine {
 public:
-  Engine(const pxr::HdDriver& driver);
-  Engine( const pxr::SdfPath& rootPath,
-          const pxr::SdfPathVector& excludedPaths,
-          const pxr::SdfPathVector& invisedPaths = pxr::SdfPathVector(),
-          const pxr::SdfPath& sceneDelegateID =
-          pxr::SdfPath::AbsoluteRootPath(),
-          const pxr::HdDriver& driver = pxr::HdDriver());
+  Engine(const HdDriver& driver);
+  Engine( const SdfPath& rootPath,
+          const SdfPathVector& excludedPaths,
+          const SdfPathVector& invisedPaths = SdfPathVector(),
+          const SdfPath& sceneDelegateID =
+          SdfPath::AbsoluteRootPath(),
+          const HdDriver& driver = HdDriver());
   ~Engine();
 
   inline bool IsDirty() { return _dirty;};
@@ -42,52 +42,52 @@ public:
   void TerminateExec();
 
   /*
-  pxr::HdSelectionSharedPtr _Pick(pxr::GfVec2i const& startPos, 
-    pxr::GfVec2i const& endPos, pxr::TfToken const& pickTarget);
+  HdSelectionSharedPtr _Pick(GfVec2i const& startPos, 
+    GfVec2i const& endPos, TfToken const& pickTarget);
     */
   bool TestIntersection(
-    const pxr::GfMatrix4d& viewMatrix,
-    const pxr::GfMatrix4d& projectionMatrix,
-    const pxr::UsdPrim& root,
-    const pxr::UsdImagingGLRenderParams& params,
-    pxr::GfVec3d* outHitPoint,
-    pxr::GfVec3d* outHitNormal,
-    pxr::SdfPath* outHitPrimPath = NULL,
-    pxr::SdfPath* outHitInstancerPath = NULL,
+    const GfMatrix4d& viewMatrix,
+    const GfMatrix4d& projectionMatrix,
+    const UsdPrim& root,
+    const UsdImagingGLRenderParams& params,
+    GfVec3d* outHitPoint,
+    GfVec3d* outHitNormal,
+    SdfPath* outHitPrimPath = NULL,
+    SdfPath* outHitInstancerPath = NULL,
     int* outHitInstanceIndex = NULL,
-    pxr::HdInstancerContext* outInstancerContext = NULL);
+    HdInstancerContext* outInstancerContext = NULL);
 
   /// Decodes a pick result given hydra prim ID/instance ID (like you'd get
   /// from an ID render).
   bool DecodeIntersection(
     unsigned char const primIdColor[4],
     unsigned char const instanceIdColor[4],
-    pxr::SdfPath* outHitPrimPath = NULL,
-    pxr::SdfPath* outHitInstancerPath = NULL,
+    SdfPath* outHitPrimPath = NULL,
+    SdfPath* outHitInstancerPath = NULL,
     int* outHitInstanceIndex = NULL,
-    pxr::HdInstancerContext* outInstancerContext = NULL);
+    HdInstancerContext* outInstancerContext = NULL);
 
   void SetHighlightSelection(bool state) { _highlightSelection = state; };
   bool GetHighlightSelection() { return _highlightSelection; };
 
-  void SetSceneColReprSelector(pxr::HdReprSelector const &reprSelector) {
+  void SetSceneColReprSelector(HdReprSelector const &reprSelector) {
     _collection.SetReprSelector(reprSelector);
-    pxr::SdfPath renderTask("/renderTask");
-    _delegate->SetTaskParam(renderTask, pxr::HdTokens->collection,
-        pxr::VtValue(_collection));
+    SdfPath renderTask("/renderTask");
+    _delegate->SetTaskParam(renderTask, HdTokens->collection,
+        VtValue(_collection));
   }
 
   Delegate* GetDelegate() { return _delegate; };
 
 protected:
-  const pxr::HdRprimCollection &_GetCollection() const { return _collection; };
-  bool _CheckPrimSelectable(const pxr::SdfPath &path);
+  const HdRprimCollection &_GetCollection() const { return _collection; };
+  bool _CheckPrimSelectable(const SdfPath &path);
 
 private:
   bool                    _dirty;
   bool                    _highlightSelection;
   Delegate*               _delegate;
-  pxr::HdRprimCollection  _collection;
+  HdRprimCollection  _collection;
   //std::vector<View*> _views;
 };
 

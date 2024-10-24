@@ -83,15 +83,15 @@ TimelineUI::_GetFrameUnderMouse(int x, int y)
   return RESCALE(x - parent->GetX(), 0.f, parent->GetWidth(), _minTime, _maxTime);
 }
 
-pxr::GfVec2f 
+GfVec2f 
 TimelineUI::_TimeToPosition(float time)
 {
-  return pxr::GfVec2f(RESCALE(time,_minTime, _maxTime, 
+  return GfVec2f(RESCALE(time,_minTime, _maxTime, 
     0.f, _parent->GetWidth()), 0.f);
 }
 
 float 
-TimelineUI::_PositionToTime(const pxr::GfVec2f& position)
+TimelineUI::_PositionToTime(const GfVec2f& position)
 {
   return RESCALE(position[0] - _parent->GetX(), 0.f, 
     _parent->GetWidth(), _minTime, _maxTime);
@@ -317,15 +317,15 @@ void TimelineUI::DrawTimeSlider()
 
   // draw background
   drawList->AddRectFilled(
-    pxr::GfVec2f(xmin, ymin),
-    pxr::GfVec2f(xmax, ymax),
+    GfVec2f(xmin, ymin),
+    GfVec2f(xmax, ymax),
     backColor, rounding, corners_none
   );
 
   // draw frames
   drawList->AddRectFilled(
-    pxr::GfVec2f(xmin, ymid),
-    pxr::GfVec2f(xmax, ymax),
+    GfVec2f(xmin, ymid),
+    GfVec2f(xmax, ymax),
     frontColor, rounding, corners_none);
 
   Time* time = Time::Get();
@@ -337,7 +337,7 @@ void TimelineUI::DrawTimeSlider()
   int numFrames = (time->GetEndTime() - time->GetStartTime());
   const float currentBlockWidth = (float)GetWidth() / (float)numFrames;
 
-  int numFramesToSkip = pxr::GfMax(1.f, pxr::GfFloor(minBlockWidth/currentBlockWidth));
+  int numFramesToSkip = GfMax(1.f, GfFloor(minBlockWidth/currentBlockWidth));
 
   float incr = 1.f / (float)numFrames; 
   for (int i = 0; i < numFrames; ++i)
@@ -346,14 +346,14 @@ void TimelineUI::DrawTimeSlider()
     float perc = i * incr;
     if (((int)(i - time->GetStartTime()) % (int)_fps) == 0)
     {
-      pxr::GfVec2f p1(xmin * (1 - perc) + xmax * perc, ymin);
-      pxr::GfVec2f p2(xmin * (1 - perc) + xmax * perc, ymid);
+      GfVec2f p1(xmin * (1 - perc) + xmax * perc, ymin);
+      GfVec2f p2(xmin * (1 - perc) + xmax * perc, ymid);
       drawList->AddLine(p1, p2, frameColor, 1);
     }
     else
     {
-      pxr::GfVec2f p1(xmin * (1 - perc) + xmax * perc, ymin * 0.30 + ymid * 0.70);
-      pxr::GfVec2f p2(xmin * (1 - perc) + xmax * perc, ymid);
+      GfVec2f p1(xmin * (1 - perc) + xmax * perc, ymin * 0.30 + ymid * 0.70);
+      GfVec2f p2(xmin * (1 - perc) + xmax * perc, ymid);
       drawList->AddLine(p1, p2, frameColor, 1);
     }
   }
@@ -364,17 +364,17 @@ void TimelineUI::DrawTimeSlider()
     (float)(time->GetEndTime() - time->GetStartTime());
   float sliderX = (xmin * (1 - sliderPerc) + xmax * sliderPerc);
   drawList->AddRectFilled(
-    pxr::GfVec2f(sliderX - TIMELINE_SLIDER_THICKNESS, ymin),
-    pxr::GfVec2f(sliderX + TIMELINE_SLIDER_THICKNESS, ymid),
+    GfVec2f(sliderX - TIMELINE_SLIDER_THICKNESS, ymin),
+    GfVec2f(sliderX + TIMELINE_SLIDER_THICKNESS, ymid),
     sliderColor, rounding, corners_all
   );
 
   // draw frame
   /*
-  const pxr::GfVec2f framePosition(_TimeToPosition(_frame));
+  const GfVec2f framePosition(_TimeToPosition(_frame));
   drawList->AddRectFilled(
-    pxr::GfVec2f(framePosition[0]- 2.f, 0.f),
-    pxr::GfVec2f(framePosition[0] + 2.f, ymid),
+    GfVec2f(framePosition[0]- 2.f, 0.f),
+    GfVec2f(framePosition[0] + 2.f, ymid),
     ImColor(255, 0, 0, 255), rounding, corners_none);
     */
 }

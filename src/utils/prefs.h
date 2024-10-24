@@ -23,7 +23,7 @@ public:
   }
 
 private:
-  pxr::VtDictionary       _data;
+  VtDictionary       _data;
   std::string             _root;
 };
 

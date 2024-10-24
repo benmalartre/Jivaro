@@ -58,12 +58,12 @@ RBF::_ComputeEpsilon(const Matrix& matrix)
   size_t size = 0;
   for(size_t i = 0; i < matrix.NumColumns(); ++i) {
     float edge = maximums[i] - minimums[i];
-    if(!pxr::GfIsClose(edge, 0, 0.000000001)) {
+    if(!GfIsClose(edge, 0, 0.000000001)) {
       product *= edge;
       size++;
     }
   }
-  _epsilon = pxr::GfPow(product / (float)numRows, 1.f / (float)size);
+  _epsilon = GfPow(product / (float)numRows, 1.f / (float)size);
 }
 
 // init
@@ -84,9 +84,9 @@ RBF::Init(const Matrix& keys, const Matrix& values)
     for(size_t j = 0; j < nbp; ++j) {
       r = 0.f;
       for(size_t k = 0; k < d; ++k) {
-        r += pxr::GfPow(keys.Get(i, k) - keys.Get(j, k), 2);
+        r += GfPow(keys.Get(i, k) - keys.Get(j, k), 2);
       }
-      r = pxr::GfSqrt(r);
+      r = GfSqrt(r);
       _A.Set(i, j, _kernel(r, _epsilon));
     }
   }
@@ -115,9 +115,9 @@ RBF::Interpolate(const Matrix& querys, Matrix* result)
       for(size_t j = 0; j < nd; ++j) {
         float r = 0.f;
         for(size_t k = 0; k < m; ++k) {
-          r += pxr::GfPow(querys.Get(i, k) - _keys.Get(j, k), 2);
+          r += GfPow(querys.Get(i, k) - _keys.Get(j, k), 2);
         }
-        r = pxr::GfSqrt(r);
+        r = GfSqrt(r);
         v[j] = _kernel(r, _epsilon);
       }
       results[i] = 0.f;

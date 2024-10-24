@@ -43,8 +43,8 @@ public:
 
 private:
   float _GetFrameUnderMouse(int x, int y);
-  pxr::GfVec2f _TimeToPosition(float time);
-  float _PositionToTime(const pxr::GfVec2f& position);
+  GfVec2f _TimeToPosition(float time);
+  float _PositionToTime(const GfVec2f& position);
   
   int                     _frame;
   int                     _lastFrame;

@@ -21,8 +21,8 @@ public:
   bool Draw()      override;
 
 private:
-  pxr::SdfLayerRefPtr           _layer;
-  pxr::SdfPrimSpecHandle        _prim;
+  SdfLayerRefPtr           _layer;
+  SdfPrimSpecHandle        _prim;
   static ImGuiWindowFlags       _flags;
 };
 

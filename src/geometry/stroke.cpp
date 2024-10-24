@@ -15,7 +15,7 @@ void StrokeInput::Update(float threshold)
 {
   size_t numRawPoints = raw_points.size();
   size_t numActivePoints = numRawPoints - baseIndex;
-  std::vector<pxr::GfVec3f> deltas;
+  std::vector<GfVec3f> deltas;
   std::vector<float> distances(numActivePoints - 1);
   std::vector<bool> preserve(numActivePoints);
   
@@ -31,7 +31,7 @@ Stroke::~Stroke()
 };
 
 Stroke::Stroke()
-  : Geometry(Geometry::STROKE, pxr::GfMatrix4d(1.0))
+  : Geometry(Geometry::STROKE, GfMatrix4d(1.0))
 {
   _numLines = 0;
   _type = STROKE;
@@ -90,7 +90,7 @@ void Stroke::EndLine(bool closed)
 
 }
 
-void Stroke::AddPoint(const pxr::GfVec3f& position)
+void Stroke::AddPoint(const GfVec3f& position)
 {
   if (_interacting == CREATE) {
     _input.raw_points.push_back(position);

@@ -8,7 +8,7 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-void Contact::Init(const pxr::GfVec3f &normal, const pxr::GfVec3f &velocity, const float depth)
+void Contact::Init(const GfVec3f &normal, const GfVec3f &velocity, const float depth)
 {
   _normal = normal;
   _velocity = velocity;
@@ -16,7 +16,7 @@ void Contact::Init(const pxr::GfVec3f &normal, const pxr::GfVec3f &velocity, con
   if(_initDepth > 0.f) _initDepth = 0.f;
 }
 
-void Contact::Update(const pxr::GfVec3f &normal, const pxr::GfVec3f &velocity, const float depth)
+void Contact::Update(const GfVec3f &normal, const GfVec3f &velocity, const float depth)
 {
   _normal = normal;
   _velocity = velocity;

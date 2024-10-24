@@ -44,14 +44,14 @@ HalfEdgeGraph::AllocateEdges(size_t num)
 }
 
 float
-HalfEdgeGraph::GetLength(const HalfEdge* edge, const pxr::GfVec3f* positions) const
+HalfEdgeGraph::GetLength(const HalfEdge* edge, const GfVec3f* positions) const
 {
   const HalfEdge* next = &_halfEdges[edge->next];
   return (positions[next->vertex] - positions[edge->vertex]).GetLength();
 }
 
 float
-HalfEdgeGraph::GetLengthSq(const HalfEdge* edge, const pxr::GfVec3f* positions) const
+HalfEdgeGraph::GetLengthSq(const HalfEdge* edge, const GfVec3f* positions) const
 {
   const HalfEdge* next = &_halfEdges[edge->next];
   return (positions[next->vertex] - positions[edge->vertex]).GetLengthSq();
@@ -140,8 +140,8 @@ bool
 HalfEdgeGraph::IsCollapsable(const HalfEdge* edge)
 {
   if (edge->twin >= 0) {
-    pxr::VtArray<int> edgeNeighbors;
-    pxr::VtArray<int> twinNeighbors;
+    VtArray<int> edgeNeighbors;
+    VtArray<int> twinNeighbors;
     size_t commonNeighbors = 0;
     const HalfEdge* twin = &_halfEdges[edge->twin];
     _ComputeVertexNeighbors(edge, edgeNeighbors);
@@ -203,8 +203,8 @@ void
 HalfEdgeGraph::ComputeGraph(Mesh* mesh)
 {
   const size_t numPoints = mesh->GetNumPoints();
-  const pxr::VtArray<int>& faceConnects = mesh->GetFaceConnects();
-  const pxr::VtArray<int>& faceVertexCounts = mesh->GetFaceCounts();
+  const VtArray<int>& faceConnects = mesh->GetFaceConnects();
+  const VtArray<int>& faceVertexCounts = mesh->GetFaceCounts();
 
   size_t numHalfEdges = 0;
   for (const auto& faceVertexCount : mesh->GetFaceCounts()) {
@@ -262,7 +262,7 @@ HalfEdgeGraph::ComputeGraph(Mesh* mesh)
   _boundary.resize(numPoints, false);
 
   // populate the twin pointers by parallel processing the key vector:
-  pxr::WorkParallelForEach(halfEdgesKeys.begin(), halfEdgesKeys.end(),
+  WorkParallelForEach(halfEdgesKeys.begin(), halfEdgesKeys.end(),
     [&](const HalfEdgeKey& halfEdge) {
       uint64_t edgeIndex = halfEdge.first;
       uint64_t twinIndex = ((edgeIndex & 0xffffffff) << 32) | (edgeIndex >> 32);
@@ -356,7 +356,7 @@ void
 HalfEdgeGraph::RemovePoint(size_t index, size_t replace)
 {
   _vertexHalfEdge.erase(_vertexHalfEdge.begin() + index);
-  pxr::WorkParallelForN(
+  WorkParallelForN(
     _halfEdges.size(),
     std::bind(&HalfEdgeGraph::_UpdatePoint, this, 
       std::placeholders::_1, std::placeholders::_2, index, replace)
@@ -518,7 +518,7 @@ void HalfEdgeGraph::ComputeAdjacents()
 
   std::vector<int> visited(numPoints, 0);
 
-  pxr::VtArray<int> adjacents;
+  VtArray<int> adjacents;
   size_t adjacentsOffset = 0;
 
   for (HalfEdge& halfEdge : _halfEdges) {
@@ -534,7 +534,7 @@ void HalfEdgeGraph::ComputeAdjacents()
 }
 
 void
-HalfEdgeGraph::ComputeAdjacents(const HalfEdge* edge, pxr::VtArray<int>& adjacents)
+HalfEdgeGraph::ComputeAdjacents(const HalfEdge* edge, VtArray<int>& adjacents)
 {
   _ComputeVertexNeighbors(edge, adjacents, true);
 }
@@ -548,7 +548,7 @@ void HalfEdgeGraph::ComputeNeighbors()
 
   std::vector<int> visited(numPoints, 0);
 
-  pxr::VtArray<int> neighbors;
+  VtArray<int> neighbors;
   size_t neighborsOffset = 0;
 
   for (HalfEdge& halfEdge : _halfEdges) {
@@ -564,13 +564,13 @@ void HalfEdgeGraph::ComputeNeighbors()
 }
 
 void
-HalfEdgeGraph::ComputeNeighbors(const HalfEdge* edge, pxr::VtArray<int>& neighbors)
+HalfEdgeGraph::ComputeNeighbors(const HalfEdge* edge, VtArray<int>& neighbors)
 {
   _ComputeVertexNeighbors(edge, neighbors, false);
 }
 
 void
-HalfEdgeGraph::_ComputeVertexNeighbors(const HalfEdge* edge, pxr::VtArray<int>& neighbors, bool connected)
+HalfEdgeGraph::_ComputeVertexNeighbors(const HalfEdge* edge, VtArray<int>& neighbors, bool connected)
 {
 
   if(connected) {
@@ -754,7 +754,7 @@ HalfEdgeGraph::CollapseEdge(HalfEdge* edge)
 }
 
 bool
-HalfEdgeGraph::CollapseStar(HalfEdge* edge, pxr::VtArray<int>& neighbors)
+HalfEdgeGraph::CollapseStar(HalfEdge* edge, VtArray<int>& neighbors)
 {
   std::cout << "collapse start begin .." << std::endl;
 
@@ -763,7 +763,7 @@ HalfEdgeGraph::CollapseStar(HalfEdge* edge, pxr::VtArray<int>& neighbors)
   _ComputeVertexNeighbors(edge, neighbors);
   std::sort(neighbors.begin(), neighbors.end(), std::greater<>());
   
-  pxr::VtArray<int> edgeIndices;
+  VtArray<int> edgeIndices;
   for (auto& neighbor : neighbors) {
     edgeIndices.push_back(_GetEdgeIndex(GetEdgeFromVertices(vertex, neighbor)));
   }
@@ -791,7 +791,7 @@ HalfEdgeGraph::CollapseStar(HalfEdge* edge, pxr::VtArray<int>& neighbors)
 
 
 void
-HalfEdgeGraph::ComputeTopology(pxr::VtArray<int>& faceCounts, pxr::VtArray<int>& faceConnects) const
+HalfEdgeGraph::ComputeTopology(VtArray<int>& faceCounts, VtArray<int>& faceConnects) const
 {
   faceCounts.clear();
   faceConnects.clear();

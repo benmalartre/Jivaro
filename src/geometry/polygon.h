@@ -16,23 +16,23 @@ struct Polygon : public Component {
 
   Polygon()
     : Component() {};
-  Polygon(uint32_t index, const pxr::VtArray<size_t>& vertices)
+  Polygon(uint32_t index, const VtArray<size_t>& vertices)
     : Component(index)
     , vertices(vertices){};
 
   std::vector<size_t> vertices;    
 
-  pxr::GfVec3f GetCenter(Deformable* geom);
-  pxr::GfVec3f GetPosition(Deformable* geom, short idx);
-  pxr::GfVec3f GetNormal(Deformable* geom);
+  GfVec3f GetCenter(Deformable* geom);
+  GfVec3f GetPosition(Deformable* geom, short idx);
+  GfVec3f GetNormal(Deformable* geom);
 
-  virtual bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit) const override;
-  virtual bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit) const override;
-  virtual bool Touch(const pxr::GfVec3f* points, const pxr::GfVec3f& center, const pxr::GfVec3f& halfSize) const override;
+  virtual bool Raycast(const GfVec3f* points, const GfRay& ray, Location* hit) const override;
+  virtual bool Closest(const GfVec3f* points, const GfVec3f& point, Location* hit) const override;
+  virtual bool Touch(const GfVec3f* points, const GfVec3f& center, const GfVec3f& halfSize) const override;
 
   virtual bool Intersect(const Edge& other, float epsilon=0.0001);
 
-  virtual pxr::GfRange3f GetBoundingBox(const pxr::GfVec3f* positions, const pxr::GfMatrix4d& m) const override;
+  virtual GfRange3f GetBoundingBox(const GfVec3f* positions, const GfMatrix4d& m) const override;
   virtual short GetType() const override { return Component::POLYGON; };
 
 };

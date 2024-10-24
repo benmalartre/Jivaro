@@ -33,7 +33,7 @@ ImGuiWindowFlags_NoScrollbar;/* |
   ImGuiWindowFlags_NoBackground;*/
 
 
-static void _BlitFramebufferFromTarget(pxr::GlfDrawTargetRefPtr target, 
+static void _BlitFramebufferFromTarget(GlfDrawTargetRefPtr target, 
   int x, int y, int width, int height)
 {
   glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
@@ -52,7 +52,7 @@ static void _BlitFramebufferFromTarget(pxr::GlfDrawTargetRefPtr target,
 ViewportUI::ViewportUI(View* parent)
   : BaseUI(parent, UIType::VIEWPORT)
   , _texture(0)
-  , _drawMode((int)pxr::UsdImagingGLDrawMode::DRAW_SHADED_SMOOTH)
+  , _drawMode((int)UsdImagingGLDrawMode::DRAW_SHADED_SMOOTH)
   , _camera(new Camera("Camera"))
   , _valid(true)
   , _interactionMode(INTERACTION_NONE)
@@ -61,13 +61,13 @@ ViewportUI::ViewportUI(View* parent)
   , _rendererNames(NULL)
   , _highlightSelection(true)
 {
-  _camera->Set(pxr::GfVec3d(12,24,12),
-              pxr::GfVec3d(0,0,0),
-              pxr::GfVec3d(0,1,0));
+  _camera->Set(GfVec3d(12,24,12),
+              GfVec3d(0,0,0),
+              GfVec3d(0,1,0));
   
-  const pxr::GfVec2i resolution(GetWindow()->GetResolution());
+  const GfVec2i resolution(GetWindow()->GetResolution());
   {
-    _drawTarget = pxr::GlfDrawTarget::New(resolution, false);
+    _drawTarget = GlfDrawTarget::New(resolution, false);
     _drawTarget->Bind();
     _drawTarget->AddAttachment("color", GL_RGBA, GL_FLOAT, GL_RGBA);
     _drawTarget->AddAttachment("depth", GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_COMPONENT32F);
@@ -77,7 +77,7 @@ ViewportUI::ViewportUI(View* parent)
   }
   
   {
-    _toolTarget = pxr::GlfDrawTarget::New(resolution, false);
+    _toolTarget = GlfDrawTarget::New(resolution, false);
     _toolTarget->Bind();
     _toolTarget->AddAttachment("color", GL_RGBA, GL_FLOAT, GL_RGBA);
     _toolTarget->AddAttachment("depth", GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_COMPONENT32F);
@@ -107,11 +107,11 @@ void ViewportUI::Init()
     app->RemoveEngine(_engine);
     delete _engine;
   }
-  pxr::SdfPathVector excludedPaths;
-  _engine = new Engine(pxr::SdfPath("/"), excludedPaths);
+  SdfPathVector excludedPaths;
+  _engine = new Engine(SdfPath("/"), excludedPaths);
   app->AddEngine(_engine);
 
-  pxr::TfTokenVector rendererTokens = _engine->GetRendererPlugins();
+  TfTokenVector rendererTokens = _engine->GetRendererPlugins();
   if (_rendererNames) delete[] _rendererNames;
   _numRenderers = rendererTokens.size();
   _rendererNames = new const char* [_numRenderers];
@@ -119,29 +119,29 @@ void ViewportUI::Init()
     _rendererNames[rendererIndex] = rendererTokens[rendererIndex].GetText();
   }
   if (LEGACY_OPENGL) {
-    _engine->SetRendererPlugin(pxr::TfToken("LoFiRendererPlugin"));
+    _engine->SetRendererPlugin(TfToken("LoFiRendererPlugin"));
   } else {
-    _engine->SetRendererPlugin(pxr::TfToken(_rendererNames[_rendererIndex]));
+    _engine->SetRendererPlugin(TfToken(_rendererNames[_rendererIndex]));
   }
 
-  pxr::GlfSimpleMaterial material;
-  pxr::GlfSimpleLight simpleLight;
+  GlfSimpleMaterial material;
+  GlfSimpleLight simpleLight;
   simpleLight.SetAmbient({ 0.5, 0.3, 0.4, 1.0 });
   simpleLight.SetDiffuse({ 1.0, 1.0, 1.0, 1.f });
   simpleLight.SetSpecular({ 0.2, 0.2, 0.2, 1.f });
   simpleLight.SetPosition({ 200, 200, 200, 1.0 });
   //simpleLight.SetIsDomeLight(true);
-  pxr::GlfSimpleLightVector lights;
+  GlfSimpleLightVector lights;
   lights.push_back(simpleLight);
 
   material.SetAmbient({ 0.2f, 0.2f, 0.2f, 1.f });
   material.SetDiffuse({ 1.0, 1.f, 1.f, 1.f });
   material.SetSpecular({ 0.5f, 0.5f, 0.5f, 1.f });
-  auto lightingContext = pxr::GlfSimpleLightingContext::New();
+  auto lightingContext = GlfSimpleLightingContext::New();
 
   _engine->SetLightingState(lights,
                             material,
-                            pxr::GfVec4f(0.5,0.5,0.5,1.0));
+                            GfVec4f(0.5,0.5,0.5,1.0));
 
   Resize();
 
@@ -150,9 +150,9 @@ void ViewportUI::Init()
   size_t imageWidth = 512;
   size_t imageHeight = 512;
   std::string imagePath = "E:/Projects/RnD/Amnesie/build/src/Release/";
-  pxr::GfVec2i renderResolution(imageWidth, imageHeight);
+  GfVec2i renderResolution(imageWidth, imageHeight);
 
-  pxr::GlfDrawTargetRefPtr drawTarget = pxr::GlfDrawTarget::New(renderResolution);
+  GlfDrawTargetRefPtr drawTarget = GlfDrawTarget::New(renderResolution);
   drawTarget->Bind();
 
   drawTarget->AddAttachment("color",
@@ -386,26 +386,26 @@ void ViewportUI::Render()
   const float& h = GetHeight();
   const float& w = GetWidth();
 
-  _engine->SetRendererAov(pxr::HdAovTokens->color);
+  _engine->SetRendererAov(HdAovTokens->color);
 
   _engine->SetRenderViewport(
-    pxr::GfVec4d(0, wh-(h), w, h));
+    GfVec4d(0, wh-(h), w, h));
 
   _engine->SetCameraState(
     _camera->GetViewMatrix(),
     _camera->GetProjectionMatrix()
   );
 
-  _engine->SetSelectionColor(pxr::GfVec4f(0.75, 0.75, 0, 0.5));
+  _engine->SetSelectionColor(GfVec4f(0.75, 0.75, 0, 0.5));
 
-  _renderParams.frame = pxr::UsdTimeCode(Time::Get()->GetActiveTime());
+  _renderParams.frame = UsdTimeCode(Time::Get()->GetActiveTime());
   _renderParams.complexity = 1.0f;
-  _renderParams.drawMode = (pxr::UsdImagingGLDrawMode)_drawMode;
+  _renderParams.drawMode = (UsdImagingGLDrawMode)_drawMode;
   _renderParams.showGuides = true;
   _renderParams.showRender = true;
   _renderParams.showProxy = true;
   _renderParams.forceRefresh = true;
-  _renderParams.cullStyle = pxr::UsdImagingGLCullStyle::CULL_STYLE_BACK_UNLESS_DOUBLE_SIDED;
+  _renderParams.cullStyle = UsdImagingGLCullStyle::CULL_STYLE_BACK_UNLESS_DOUBLE_SIDED;
   _renderParams.gammaCorrectColors = false;
   _renderParams.enableIdRender = false;
   _renderParams.enableSampleAlphaToCoverage = true;
@@ -413,7 +413,7 @@ void ViewportUI::Render()
   _renderParams.enableSceneMaterials = true;
   _renderParams.enableSceneLights = true;
   //_renderParams.colorCorrectionMode = ???
-  _renderParams.clearColor = pxr::GfVec4f(0.25,0.25,0.25,1.0);
+  _renderParams.clearColor = GfVec4f(0.25,0.25,0.25,1.0);
 
   if (_highlightSelection) {
     Selection* selection = app->GetSelection();
@@ -498,14 +498,14 @@ bool ViewportUI::Draw()
       const float& wh = window->GetHeight();
       const float& h = GetHeight();
       const float& w = GetWidth();
-      tool->SetViewport(pxr::GfVec4f(0, wh - (h), w, h));
+      tool->SetViewport(GfVec4f(0, wh - (h), w, h));
       tool->SetCamera(_camera);
       tool->Draw();
       _toolTarget->Unbind();
     }
     
-    const pxr::GfVec2f min(GetX(), GetY());
-    const pxr::GfVec2f size(GetWidth(), GetHeight());
+    const GfVec2f min(GetX(), GetY());
+    const GfVec2f size(GetWidth(), GetHeight());
     const float u = (float)GetWidth() / (float)window->GetWidth();
     const float v = 1.f - (float)GetHeight() / (float)window->GetHeight();
 
@@ -548,7 +548,7 @@ bool ViewportUI::Draw()
     
     // renderer
     ImGui::SetCursorPosX(0);
-    DiscardEventsIfMouseInsideBox(pxr::GfVec2f(0, 0), pxr::GfVec2f(GetWidth(), 24));
+    DiscardEventsIfMouseInsideBox(GfVec2f(0, 0), GfVec2f(GetWidth(), 24));
     if (ComboWidget("Renderer", this, _rendererNames, _numRenderers, _rendererIndex, 300)) {
       Init();
     }
@@ -599,7 +599,7 @@ bool ViewportUI::Draw()
 
 // Conform the camera viewport to the camera's aspect ratio,
 // and center the camera viewport in the window viewport.
-pxr::GfVec4f ViewportUI::ComputeCameraViewport(float cameraAspectRatio)
+GfVec4f ViewportUI::ComputeCameraViewport(float cameraAspectRatio)
 {
      /*   
   windowPolicy = CameraUtil.MatchVertically
@@ -618,7 +618,7 @@ pxr::GfVec4f ViewportUI::ComputeCameraViewport(float cameraAspectRatio)
 
   return viewport
   */
- return pxr::GfVec4f();
+ return GfVec4f();
 }
 
 void ViewportUI::Resize()
@@ -633,24 +633,24 @@ void ViewportUI::Resize()
   _camera->Get()->SetPerspectiveFromAspectRatioAndFieldOfView(
     aspectRatio,
     _camera->GetFov(),
-    pxr::GfCamera::FOVHorizontal
+    GfCamera::FOVHorizontal
   );
 
-  const pxr::GfVec2i& targetSize = _drawTarget->GetSize();
+  const GfVec2i& targetSize = _drawTarget->GetSize();
   if (window->GetWidth() != targetSize[0] || window->GetHeight() != targetSize[1]) {
     _drawTarget->Bind();
-    _drawTarget->SetSize(pxr::GfVec2i(window->GetWidth(), window->GetHeight()));
+    _drawTarget->SetSize(GfVec2i(window->GetWidth(), window->GetHeight()));
     _drawTarget->Unbind();
 
     _toolTarget->Bind();
-    _toolTarget->SetSize(pxr::GfVec2i(window->GetWidth(), window->GetHeight()));
+    _toolTarget->SetSize(GfVec2i(window->GetWidth(), window->GetHeight()));
     _toolTarget->Unbind();
   }
 
   _engine->SetDirty(true);
 }
 
-static pxr::GfVec4i _ViewportMakeCenteredIntegral(pxr::GfVec4f& viewport)
+static GfVec4i _ViewportMakeCenteredIntegral(GfVec4f& viewport)
 {
   // The values are initially integraland containing the
   // the given rect
@@ -677,32 +677,32 @@ static pxr::GfVec4i _ViewportMakeCenteredIntegral(pxr::GfVec4f& viewport)
     left += 1;
     width -= 2;
   }
-  return pxr::GfVec4i(left, bottom, width, height);
+  return GfVec4i(left, bottom, width, height);
 }
 
  
-pxr::GfFrustum 
+GfFrustum 
 ViewportUI::_ComputePickFrustum(int x, int y)
 {
-  const float targetAspectRatio = float(GetWidth()) / float(pxr::GfMax(1, GetHeight()));
+  const float targetAspectRatio = float(GetWidth()) / float(GfMax(1, GetHeight()));
   // normalize position and pick size by the viewport size
-  pxr::GfVec2d point(
+  GfVec2d point(
     (double)(x - GetX()) / (double)GetWidth(),
     (double)(y - GetY()) / (double)GetHeight());
 
   point[0] = (point[0] * 2.0 - 1.0);
   point[1] = -1.0 * (point[1] * 2.0 - 1.0);
 
-  pxr::GfVec2d size(1.0 / (double)GetWidth(), 1.0 / (double)GetHeight());
+  GfVec2d size(1.0 / (double)GetWidth(), 1.0 / (double)GetHeight());
 
-  pxr::GfCamera camera = *(_camera->Get());
-  pxr::CameraUtilConformWindow(
+  GfCamera camera = *(_camera->Get());
+  CameraUtilConformWindow(
     &camera,
-    pxr::CameraUtilConformWindowPolicy::CameraUtilFit,
+    CameraUtilConformWindowPolicy::CameraUtilFit,
     targetAspectRatio
   );
 
-  pxr::GfFrustum cameraFrustum = camera.GetFrustum();
+  GfFrustum cameraFrustum = camera.GetFrustum();
   return cameraFrustum.ComputeNarrowedFrustum(point, size);
 }
 
@@ -712,16 +712,16 @@ bool ViewportUI::Pick(int x, int y, int mods)
   if (y - GetY() < 32) return false;
   Application* app = Application::Get();
   Selection* selection = app->GetSelection();
-  pxr::UsdStageRefPtr stage = app->GetWorkStage();
+  UsdStageRefPtr stage = app->GetWorkStage();
   if (!stage)return false;
 
-  pxr::GfFrustum pickFrustum = _ComputePickFrustum(x, y);
-  pxr::GfVec3d outHitPoint;
-  pxr::GfVec3d outHitNormal;
-  pxr::SdfPath outHitPrimPath;
-  pxr::SdfPath outHitInstancerPath;
+  GfFrustum pickFrustum = _ComputePickFrustum(x, y);
+  GfVec3d outHitPoint;
+  GfVec3d outHitNormal;
+  SdfPath outHitPrimPath;
+  SdfPath outHitInstancerPath;
   int outHitInstanceIndex;
-  pxr::HdInstancerContext outInstancerContext;
+  HdInstancerContext outInstancerContext;
 
   if (_engine->TestIntersection(
     pickFrustum.ComputeViewMatrix(),

@@ -17,14 +17,14 @@ struct ViewEventData;
 class Execution {
 public:
   virtual ~Execution(){};
-  typedef std::pair<pxr::SdfPath, pxr::HdDirtyBits>           _Source;
-  typedef pxr::VtArray<_Source>                               _Sources;
+  typedef std::pair<SdfPath, HdDirtyBits>           _Source;
+  typedef VtArray<_Source>                               _Sources;
   
   friend class Scene;
 
-  virtual void InitExec(pxr::UsdStageRefPtr& stage) = 0;
-  virtual void UpdateExec(pxr::UsdStageRefPtr& stage, float time) = 0;
-  virtual void TerminateExec(pxr::UsdStageRefPtr& stage) = 0;
+  virtual void InitExec(UsdStageRefPtr& stage) = 0;
+  virtual void UpdateExec(UsdStageRefPtr& stage, float time) = 0;
+  virtual void TerminateExec(UsdStageRefPtr& stage) = 0;
 
   virtual void ViewEvent(const ViewEventData *data);
 
@@ -37,11 +37,11 @@ protected:
   virtual void _MouseMoveEvent(const ViewEventData *data);
   virtual void _KeyboardInputEvent(const ViewEventData *data);
 
-  void _GetRootPrim(pxr::UsdStageRefPtr& stage);
+  void _GetRootPrim(UsdStageRefPtr& stage);
 
   Scene         _scene;
-  pxr::SdfPath  _rootId;
-  pxr::UsdPrim  _rootPrim;
+  SdfPath  _rootId;
+  UsdPrim  _rootPrim;
   
 };
 

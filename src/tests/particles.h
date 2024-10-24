@@ -16,13 +16,13 @@ class TestParticles : public Execution {
 public:
   friend class Scene;
   TestParticles() : Execution(){};
-  void InitExec(pxr::UsdStageRefPtr& stage) override;
-  void UpdateExec(pxr::UsdStageRefPtr& stage, float time) override;
-  void TerminateExec(pxr::UsdStageRefPtr& stage) override;
+  void InitExec(UsdStageRefPtr& stage) override;
+  void UpdateExec(UsdStageRefPtr& stage, float time) override;
+  void TerminateExec(UsdStageRefPtr& stage) override;
 
 protected:
-  void _AddAnimationSamples(pxr::UsdStageRefPtr& stage, pxr::SdfPath& path);
-  void _TraverseStageFindingElements(pxr::UsdStageRefPtr& stage);
+  void _AddAnimationSamples(UsdStageRefPtr& stage, SdfPath& path);
+  void _TraverseStageFindingElements(UsdStageRefPtr& stage);
 
 private:
 
@@ -30,17 +30,17 @@ private:
   Plane*                    _ground;
   Voxels*                   _voxels;
 
-  pxr::SdfPath              _groundId;
-  pxr::SdfPath              _solverId;
-  pxr::SdfPath              _voxelsId;
+  SdfPath              _groundId;
+  SdfPath              _solverId;
+  SdfPath              _voxelsId;
 
   BVH                       _bvh;
 
   Mesh*                     _emitter;
-  pxr::SdfPath              _emitterId;
+  SdfPath              _emitterId;
 
   std::vector<Geometry*>    _colliders;
-  std::vector<pxr::SdfPath> _collidersId;
+  std::vector<SdfPath> _collidersId;
 
 };
 

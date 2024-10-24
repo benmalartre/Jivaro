@@ -39,39 +39,39 @@ ToolUI::~ToolUI()
 }
 
 static void
-_SetupBVHInstancer(pxr::UsdStageRefPtr& stage, BVH* bvh)
+_SetupBVHInstancer(UsdStageRefPtr& stage, BVH* bvh)
 {
   std::vector<const BVH::Cell*> cells;
   bvh->GetBranches(bvh->GetRoot(), cells);
   size_t numPoints = cells.size();
-  pxr::VtArray<pxr::GfVec3f> points(numPoints);
-  pxr::VtArray<pxr::GfVec3f> scales(numPoints);
-  pxr::VtArray<int64_t> indices(numPoints);
-  pxr::VtArray<int> protoIndices(numPoints);
-  pxr::VtArray<pxr::GfQuath> rotations(numPoints);
-  pxr::VtArray<pxr::GfVec3f> colors(numPoints);
-  pxr::VtArray<int> curveVertexCount(1);
+  VtArray<GfVec3f> points(numPoints);
+  VtArray<GfVec3f> scales(numPoints);
+  VtArray<int64_t> indices(numPoints);
+  VtArray<int> protoIndices(numPoints);
+  VtArray<GfQuath> rotations(numPoints);
+  VtArray<GfVec3f> colors(numPoints);
+  VtArray<int> curveVertexCount(1);
   curveVertexCount[0] = numPoints;
-  pxr::VtArray<float> widths(numPoints);
+  VtArray<float> widths(numPoints);
   widths[0] = 1.f;
 
   for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
-    points[pointIdx] = pxr::GfVec3f(cells[pointIdx]->GetMidpoint());
-    scales[pointIdx] = pxr::GfVec3f(cells[pointIdx]->GetSize());
+    points[pointIdx] = GfVec3f(cells[pointIdx]->GetMidpoint());
+    scales[pointIdx] = GfVec3f(cells[pointIdx]->GetSize());
     protoIndices[pointIdx] = 0;
     indices[pointIdx] = pointIdx;
-    colors[pointIdx] = bvh->GetMortonColor(pxr::GfVec3f(cells[pointIdx]->GetMidpoint()));
-    rotations[pointIdx] = pxr::GfQuath::GetIdentity();
+    colors[pointIdx] = bvh->GetMortonColor(GfVec3f(cells[pointIdx]->GetMidpoint()));
+    rotations[pointIdx] = GfQuath::GetIdentity();
     widths[pointIdx] = RANDOM_0_1;
   }
 
-  pxr::UsdGeomPointInstancer instancer =
-    pxr::UsdGeomPointInstancer::Define(stage,
-      stage->GetDefaultPrim().GetPath().AppendChild(pxr::TfToken("bvh_instancer")));
+  UsdGeomPointInstancer instancer =
+    UsdGeomPointInstancer::Define(stage,
+      stage->GetDefaultPrim().GetPath().AppendChild(TfToken("bvh_instancer")));
 
-  pxr::UsdGeomCube proto =
-    pxr::UsdGeomCube::Define(stage,
-      instancer.GetPath().AppendChild(pxr::TfToken("proto_cube")));
+  UsdGeomCube proto =
+    UsdGeomCube::Define(stage,
+      instancer.GetPath().AppendChild(TfToken("proto_cube")));
   proto.CreateSizeAttr().Set(1.0);
 
   instancer.CreatePositionsAttr().Set(points);
@@ -80,10 +80,10 @@ _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, BVH* bvh)
   instancer.CreateIdsAttr().Set(indices);
   instancer.CreateOrientationsAttr().Set(rotations);
   instancer.CreatePrototypesRel().AddTarget(proto.GetPath());
-  pxr::UsdGeomPrimvarsAPI primvarsApi(instancer);
-  pxr::UsdGeomPrimvar colorPrimvar =
-    primvarsApi.CreatePrimvar(pxr::UsdGeomTokens->primvarsDisplayColor, pxr::SdfValueTypeNames->Color3fArray);
-  colorPrimvar.SetInterpolation(pxr::UsdGeomTokens->varying);
+  UsdGeomPrimvarsAPI primvarsApi(instancer);
+  UsdGeomPrimvar colorPrimvar =
+    primvarsApi.CreatePrimvar(UsdGeomTokens->primvarsDisplayColor, SdfValueTypeNames->Color3fArray);
+  colorPrimvar.SetInterpolation(UsdGeomTokens->varying);
   colorPrimvar.SetElementSize(1);
   colorPrimvar.Set(colors);
 
@@ -91,42 +91,42 @@ _SetupBVHInstancer(pxr::UsdStageRefPtr& stage, BVH* bvh)
 
 }
 
-pxr::UsdGeomMesh _GetSelectedMesh()
+UsdGeomMesh _GetSelectedMesh()
 {
-  pxr::UsdStageRefPtr stage = Application::Get()->GetStage();
+  UsdStageRefPtr stage = Application::Get()->GetStage();
   Selection* selection = Application::Get()->GetSelection();
   if (selection->GetNumSelectedItems() > 0) {
     Selection::Item& item = selection->GetItem(0);
-    pxr::UsdPrim prim = stage->GetPrimAtPath(item.path);
-    if (prim.IsValid() && prim.IsA<pxr::UsdGeomMesh>()) {
-      return pxr::UsdGeomMesh(prim);
+    UsdPrim prim = stage->GetPrimAtPath(item.path);
+    if (prim.IsValid() && prim.IsA<UsdGeomMesh>()) {
+      return UsdGeomMesh(prim);
     }
   }
-  return pxr::UsdGeomMesh();
+  return UsdGeomMesh();
 }
 
-static void _SetMesh(pxr::UsdGeomMesh& mesh, const pxr::VtVec3fArray& points,
-  const pxr::VtIntArray& faceCounts, const pxr::VtIntArray& faceConnects)
+static void _SetMesh(UsdGeomMesh& mesh, const VtVec3fArray& points,
+  const VtIntArray& faceCounts, const VtIntArray& faceConnects)
 {
-  mesh.CreatePointsAttr().Set(pxr::VtValue(points));
-  mesh.CreateFaceVertexCountsAttr().Set(pxr::VtValue(faceCounts));
-  mesh.CreateFaceVertexIndicesAttr().Set(pxr::VtValue(faceConnects));
+  mesh.CreatePointsAttr().Set(VtValue(points));
+  mesh.CreateFaceVertexCountsAttr().Set(VtValue(faceCounts));
+  mesh.CreateFaceVertexIndicesAttr().Set(VtValue(faceConnects));
   SceneChangedNotice().Send();
 }
 
 static void _CollapseEdges(float factor) 
 {
-  pxr::UsdGeomMesh usdMesh = _GetSelectedMesh();
+  UsdGeomMesh usdMesh = _GetSelectedMesh();
   if (usdMesh.GetPrim().IsValid()) {
     UndoBlock block;
-    Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default()));
+    Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(UsdTimeCode::Default()));
     float l = mesh.ComputeAverageEdgeLength() * factor;
     std::cout << "average edge length = " << l << std::endl;
     Tesselator tesselator(&mesh);
     tesselator.Update(l);
 
-    pxr::VtArray<pxr::GfVec3f> positions;
-    pxr::VtArray<int> faceCounts, faceConnects;
+    VtArray<GfVec3f> positions;
+    VtArray<int> faceCounts, faceConnects;
     tesselator.GetPositions(positions);
     tesselator.GetTopology(faceCounts, faceConnects);
     _SetMesh(usdMesh, positions, faceCounts, faceConnects);
@@ -136,10 +136,10 @@ static void _CollapseEdges(float factor)
 
 static void _Voxelize(float radius, short axis)
 {
-  pxr::UsdGeomMesh usdMesh = _GetSelectedMesh();
+  UsdGeomMesh usdMesh = _GetSelectedMesh();
   if (usdMesh.GetPrim().IsValid()) {
     UndoBlock block;
-    Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default()));
+    Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(UsdTimeCode::Default()));
     Voxels voxels;
     voxels.Init(&mesh, radius);
     if(axis & 1) voxels.Trace(0);
@@ -149,8 +149,8 @@ static void _Voxelize(float radius, short axis)
     voxels.Build();
 
 
-    const pxr::VtArray<pxr::GfVec3f>& positions = voxels.GetPositions();
-    pxr::UsdStageRefPtr stage = Application::Get()->GetStage();
+    const VtArray<GfVec3f>& positions = voxels.GetPositions();
+    UsdStageRefPtr stage = Application::Get()->GetStage();
 
     _SetupBVHInstancer(stage, voxels.GetTree());
 
@@ -159,24 +159,24 @@ static void _Voxelize(float radius, short axis)
     //grid.Init({ (Geometry*)&voxels });
 
     size_t numPoints = positions.size();
-    pxr::UsdGeomPoints points =
-      pxr::UsdGeomPoints::Define(
+    UsdGeomPoints points =
+      UsdGeomPoints::Define(
         stage,
-        stage->GetDefaultPrim().GetPath().AppendChild(pxr::TfToken("Voxels")));
+        stage->GetDefaultPrim().GetPath().AppendChild(TfToken("Voxels")));
 
-    points.CreatePointsAttr().Set(pxr::VtValue(positions));
+    points.CreatePointsAttr().Set(VtValue(positions));
 
-    pxr::VtArray<float> widths(numPoints);
-    pxr::VtArray<pxr::GfVec3f> colors(numPoints);
+    VtArray<float> widths(numPoints);
+    VtArray<GfVec3f> colors(numPoints);
     for (size_t p = 0; p < numPoints; ++p) {
       widths[p] = radius * 0.9f;
       colors[p] = grid.GetColor(positions[p]);
     }
-    points.CreateWidthsAttr().Set(pxr::VtValue(widths));
-    points.SetWidthsInterpolation(pxr::UsdGeomTokens->varying);
-    //points.CreateNormalsAttr().Set(pxr::VtValue({pxr::GfVec3f(0, 1, 0)}));
-    points.CreateDisplayColorAttr().Set(pxr::VtValue(colors));
-    points.GetDisplayColorPrimvar().SetInterpolation(pxr::UsdGeomTokens->varying);
+    points.CreateWidthsAttr().Set(VtValue(widths));
+    points.SetWidthsInterpolation(UsdGeomTokens->varying);
+    //points.CreateNormalsAttr().Set(VtValue({GfVec3f(0, 1, 0)}));
+    points.CreateDisplayColorAttr().Set(VtValue(colors));
+    points.GetDisplayColorPrimvar().SetInterpolation(UsdGeomTokens->varying);
 
   }
 
@@ -184,19 +184,19 @@ static void _Voxelize(float radius, short axis)
 
 static void _Smooth(int smoothIterations)
 {
-  pxr::UsdGeomMesh usdMesh = _GetSelectedMesh();
+  UsdGeomMesh usdMesh = _GetSelectedMesh();
   if (usdMesh.GetPrim().IsValid()) {
-    pxr::TfStopwatch sw;
+    TfStopwatch sw;
     sw.Start();
-    Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default()), Mesh::ADJACENTS);
+    Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(UsdTimeCode::Default()), Mesh::ADJACENTS);
     sw.Stop();
 
     sw.Reset();
     sw.Start();
     size_t numPoints = mesh.GetNumPoints();
-    const pxr::GfVec3f* positions = mesh.GetPositionsCPtr();
-    pxr::VtFloatArray weights;
-    Smooth<pxr::GfVec3f> smooth(numPoints, weights);
+    const GfVec3f* positions = mesh.GetPositionsCPtr();
+    VtFloatArray weights;
+    Smooth<GfVec3f> smooth(numPoints, weights);
 
     for (size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx) {
       smooth.SetDatas(pointIdx, positions[pointIdx]);
@@ -211,7 +211,7 @@ static void _Smooth(int smoothIterations)
     sw.Stop();
 
 
-    pxr::VtArray<GfVec3f> smoothed(numPoints);
+    VtArray<GfVec3f> smoothed(numPoints);
     for(size_t pointIdx = 0; pointIdx < numPoints; ++pointIdx)
       smoothed[pointIdx] = smooth.GetDatas(pointIdx);
 
@@ -226,22 +226,22 @@ static void _Smooth(int smoothIterations)
 
 void _CreateVertexColor()
 {
-  pxr::UsdGeomMesh usdMesh = _GetSelectedMesh();
+  UsdGeomMesh usdMesh = _GetSelectedMesh();
   if (usdMesh.GetPrim().IsValid()) {
     UndoBlock block;
-    Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(pxr::UsdTimeCode::Default()));
+    Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(UsdTimeCode::Default()));
     size_t numPoints = mesh.GetNumPoints();
-    pxr::UsdGeomMesh usdMesh(mesh.GetPrim());
-    pxr::UsdGeomPrimvar colorPrimVar = usdMesh.GetDisplayColorPrimvar();
+    UsdGeomMesh usdMesh(mesh.GetPrim());
+    UsdGeomPrimvar colorPrimVar = usdMesh.GetDisplayColorPrimvar();
     if(!colorPrimVar) 
       colorPrimVar = usdMesh.CreateDisplayColorPrimvar(
-        pxr::UsdGeomTokens->vertex, numPoints);
+        UsdGeomTokens->vertex, numPoints);
 
-    colorPrimVar.SetInterpolation(pxr::UsdGeomTokens->vertex);
+    colorPrimVar.SetInterpolation(UsdGeomTokens->vertex);
 
-    pxr::VtArray<pxr::GfVec3f> colors(numPoints);
-    for(auto& color: colors)color = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
-    pxr::UsdAttribute colorsAttr = colorPrimVar.GetAttr();
+    VtArray<GfVec3f> colors(numPoints);
+    for(auto& color: colors)color = GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+    UsdAttribute colorsAttr = colorPrimVar.GetAttr();
     colorsAttr.Set(colors);
   }
 
@@ -250,10 +250,10 @@ void _CreateVertexColor()
 bool ToolUI::Draw()
 {
   static bool opened = false;
-  const pxr::GfVec2f pos(GetX(), GetY());
-  const pxr::GfVec2f size(GetWidth(), GetHeight());
+  const GfVec2f pos(GetX(), GetY());
+  const GfVec2f size(GetWidth(), GetHeight());
 
-  pxr::UsdStageRefPtr stage = Application::Get()->GetStage();
+  UsdStageRefPtr stage = Application::Get()->GetStage();
   Time* time = Time::Get();
   ImGui::SetNextWindowSize(size);
   ImGui::SetNextWindowPos(pos);
@@ -262,33 +262,33 @@ bool ToolUI::Draw()
 
   if (ImGui::Button("Create Root Prim")) {
     UndoBlock block;
-    pxr::UsdGeomXform root = pxr::UsdGeomXform::Define(stage, pxr::SdfPath("/Root"));
+    UsdGeomXform root = UsdGeomXform::Define(stage, SdfPath("/Root"));
     stage->SetDefaultPrim(root.GetPrim());
   } ImGui::SameLine();
   if (ImGui::Button("Create Random Mesh")) {
     Mesh mesh;
     mesh.Random2DPattern(32);
     UndoBlock block;
-    //mesh.PolygonSoup(666, pxr::GfVec3f(-10.f), pxr::GfVec3f(10.f));
-    pxr::UsdPrim defaultPrim = stage->GetDefaultPrim();
+    //mesh.PolygonSoup(666, GfVec3f(-10.f), GfVec3f(10.f));
+    UsdPrim defaultPrim = stage->GetDefaultPrim();
     if (defaultPrim.IsValid()) {
-      pxr::UsdGeomMesh usdMesh = 
-        pxr::UsdGeomMesh::Define(stage, 
-          defaultPrim.GetPath().AppendChild(pxr::TfToken("RandomMesh")));
+      UsdGeomMesh usdMesh = 
+        UsdGeomMesh::Define(stage, 
+          defaultPrim.GetPath().AppendChild(TfToken("RandomMesh")));
       _SetMesh(usdMesh, mesh.GetPositions(), mesh.GetFaceCounts(), mesh.GetFaceConnects());
     }
     else {
       UndoBlock block;
-      pxr::UsdGeomMesh usdMesh = pxr::UsdGeomMesh::Define(stage, pxr::SdfPath("/RandomMesh"));
+      UsdGeomMesh usdMesh = UsdGeomMesh::Define(stage, SdfPath("/RandomMesh"));
       _SetMesh(usdMesh, mesh.GetPositions(), mesh.GetFaceCounts(), mesh.GetFaceConnects());
       stage->SetDefaultPrim(usdMesh.GetPrim());
     }
   } 
 
   static float randFactor = 0.1f;
-  pxr::UsdTimeCode timeCode(time->GetActiveTime());
+  UsdTimeCode timeCode(time->GetActiveTime());
   if (ImGui::Button("Randomize")) {
-    pxr::UsdGeomMesh usdMesh = _GetSelectedMesh();
+    UsdGeomMesh usdMesh = _GetSelectedMesh();
     if (usdMesh.GetPrim().IsValid()) {
       UndoBlock block;
       Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(timeCode));
@@ -299,7 +299,7 @@ bool ToolUI::Draw()
   ImGui::InputFloat("Random", &randFactor);
 
   if (ImGui::Button("Smooth Mesh")) {
-    pxr::UsdGeomMesh usdMesh = _GetSelectedMesh();
+    UsdGeomMesh usdMesh = _GetSelectedMesh();
     if(usdMesh.GetPrim().IsValid()) {
       UndoBlock block;
       Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(timeCode));
@@ -315,7 +315,7 @@ bool ToolUI::Draw()
   }
 
   if (ImGui::Button("Triangulate Mesh")) {
-    pxr::UsdGeomMesh usdMesh = _GetSelectedMesh();
+    UsdGeomMesh usdMesh = _GetSelectedMesh();
     if (usdMesh.GetPrim().IsValid()) {
       UndoBlock block;
       Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(timeCode));
@@ -325,7 +325,7 @@ bool ToolUI::Draw()
   }
 
   if (ImGui::Button("Flip Edge")) {
-    pxr::UsdGeomMesh usdMesh = _GetSelectedMesh();
+    UsdGeomMesh usdMesh = _GetSelectedMesh();
     if (usdMesh.GetPrim().IsValid()) {
       UndoBlock block;
       Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(timeCode));
@@ -352,7 +352,7 @@ bool ToolUI::Draw()
 
 
   if (ImGui::Button("Triangulate Face")) {
-    pxr::UsdGeomMesh usdMesh = _GetSelectedMesh();
+    UsdGeomMesh usdMesh = _GetSelectedMesh();
     if (usdMesh.GetPrim().IsValid()) {
       UndoBlock block;
       Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(timeCode));
@@ -361,7 +361,7 @@ bool ToolUI::Draw()
   }
 
   if (ImGui::Button("Split Edge")) {
-    pxr::UsdGeomMesh usdMesh = _GetSelectedMesh();
+    UsdGeomMesh usdMesh = _GetSelectedMesh();
     if (usdMesh.GetPrim().IsValid()) {
       UndoBlock block;
       Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(timeCode));

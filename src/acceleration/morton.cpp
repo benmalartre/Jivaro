@@ -5,24 +5,24 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 
-pxr::GfVec3d MortonToWorld(const pxr::GfRange3d& range, const pxr::GfVec3i& p)
+GfVec3d MortonToWorld(const GfRange3d& range, const GfVec3i& p)
 {
-  const pxr::GfVec3d scale(range.GetSize() / (float)MORTON_MAX_L);
-  const pxr::GfVec3d min(range.GetMin());
-  return pxr::GfVec3d(
+  const GfVec3d scale(range.GetSize() / (float)MORTON_MAX_L);
+  const GfVec3d min(range.GetMin());
+  return GfVec3d(
     scale[0] * p[0] + min[0],
     scale[1] * p[1] + min[1],
     scale[2] * p[2] + min[2]
   );
 }
 
-pxr::GfVec3i WorldToMorton(const pxr::GfRange3d& range, const pxr::GfVec3d& p)
+GfVec3i WorldToMorton(const GfRange3d& range, const GfVec3d& p)
 {
-  const pxr::GfVec3d scale(range.GetSize() / (float)MORTON_MAX_L);
-  const pxr::GfVec3d min(range.GetMin());
-  const pxr::GfVec3d invScale(1.0 / scale[0], 1.0 / scale[1], 1.0 / scale[2]);
+  const GfVec3d scale(range.GetSize() / (float)MORTON_MAX_L);
+  const GfVec3d min(range.GetMin());
+  const GfVec3d invScale(1.0 / scale[0], 1.0 / scale[1], 1.0 / scale[2]);
 
-  pxr::GfVec3i r({
+  GfVec3i r({
     (int)(invScale[0] * (p[0] - min[0])),
     (int)(invScale[1] * (p[1] - min[1])),
     (int)(invScale[2] * (p[2] - min[2]))
@@ -30,7 +30,7 @@ pxr::GfVec3i WorldToMorton(const pxr::GfRange3d& range, const pxr::GfVec3d& p)
   return MortonClamp(r);
 }
 
-pxr::GfVec3i& MortonClamp(pxr::GfVec3i& p)
+GfVec3i& MortonClamp(GfVec3i& p)
 {
   for (size_t axis = 0; axis < 3; ++axis) {
     if (p[axis] < 0)p[axis] = 0;
@@ -60,7 +60,7 @@ static inline uint64_t _SplitBy2bits(const uint32_t a) {
   return x;
 }
 
-uint32_t MortonEncode2D(const pxr::GfVec2i& p)
+uint32_t MortonEncode2D(const GfVec2i& p)
 {
   return 0l | _SplitBy2bits(p[0]) | (_SplitBy2bits(p[1]) << 1);
 }
@@ -85,7 +85,7 @@ static inline uint64_t _SplitBy3bits(const uint32_t a) {
   return x;
 }
 
-uint64_t MortonEncode3D(const pxr::GfVec3i& p)
+uint64_t MortonEncode3D(const GfVec3i& p)
 {
   return 0ul | _SplitBy3bits(p[0]) | (_SplitBy3bits(p[1]) << 1) | (_SplitBy3bits(p[2]) << 2);
 }
@@ -110,11 +110,11 @@ static inline uint32_t _GetSecondBits(const uint64_t m) {
   return x;
 }
 
-pxr::GfVec2i MortonDecode2D(uint32_t code)
+GfVec2i MortonDecode2D(uint32_t code)
 {
   uint32_t x = _GetSecondBits(code);
   uint32_t y = _GetSecondBits(code >> 1);
-  return pxr::GfVec2i(x, y);
+  return GfVec2i(x, y);
 }
 
 static uint64_t MORTON_DECODE_3D_MASK[6] = { 
@@ -137,12 +137,12 @@ static inline uint32_t _GetThirdBits(const uint64_t m) {
   return x;
 }
 
-pxr::GfVec3i MortonDecode3D(uint64_t code)
+GfVec3i MortonDecode3D(uint64_t code)
 {
   uint32_t x = _GetThirdBits(code);
   uint32_t y = _GetThirdBits(code >> 1);
   uint32_t z = _GetThirdBits(code >> 2);
-  return pxr::GfVec3i(x, y, z);
+  return GfVec3i(x, y, z);
 }
 
 uint32_t MortonLeadingZeros(const uint64_t x)
@@ -218,7 +218,7 @@ uint32_t MortonUpperBound(const Morton* mortons, int first, int last, uint64_t c
   return last;
 }
 
-inline pxr::GfVec3f _MortonColor(double value)
+inline GfVec3f _MortonColor(double value)
 {
   static const int NUM_COLORS = 3;
   static float color[NUM_COLORS][3] = { 
@@ -236,16 +236,16 @@ inline pxr::GfVec3f _MortonColor(double value)
   idx2  = idx1 + 1;
   fraction = value - float(idx1);
   
-  return pxr::GfVec3f(color[idx1]) * (1.f-fraction) + pxr::GfVec3f(color[idx2]) * fraction;
+  return GfVec3f(color[idx1]) * (1.f-fraction) + GfVec3f(color[idx2]) * fraction;
 }
 
-pxr::GfVec3f MortonColor(const pxr::GfRange3d& range, const pxr::GfVec3d &p)
+GfVec3f MortonColor(const GfRange3d& range, const GfVec3d &p)
 {
   uint64_t code = MortonEncode3D(WorldToMorton(range, p));
   return _MortonColor((double)code / (double) 0x7fffffffffffffff);
 }
 
-pxr::GfVec3f MortonColor(const Morton& morton)
+GfVec3f MortonColor(const Morton& morton)
 {
   return _MortonColor((double)morton.code / (double) 0x7fffffffffffffff);
 }

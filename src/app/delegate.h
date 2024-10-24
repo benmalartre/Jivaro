@@ -13,32 +13,32 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 class Scene;
 class Geometry;
-class Delegate : public pxr::HdSceneDelegate {
+class Delegate : public HdSceneDelegate {
 public:
 
-  Delegate(pxr::HdRenderIndex* parentIndex, pxr::SdfPath const& delegateID);
+  Delegate(HdRenderIndex* parentIndex, SdfPath const& delegateID);
   ~Delegate();
 
   // -----------------------------------------------------------------------//
   /// \name Tasks
   // -----------------------------------------------------------------------//
-  void AddRenderTask(pxr::SdfPath const &id);
-  void AddRenderSetupTask(pxr::SdfPath const &id);
-  void AddSimpleLightTask(pxr::SdfPath const &id);
-  void AddShadowTask(pxr::SdfPath const &id);
-  void AddSelectionTask(pxr::SdfPath const &id);
-  void AddDrawTargetTask(pxr::SdfPath const &id);
-  void AddPickTask(pxr::SdfPath const &id);
+  void AddRenderTask(SdfPath const &id);
+  void AddRenderSetupTask(SdfPath const &id);
+  void AddSimpleLightTask(SdfPath const &id);
+  void AddShadowTask(SdfPath const &id);
+  void AddSelectionTask(SdfPath const &id);
+  void AddDrawTargetTask(SdfPath const &id);
+  void AddPickTask(SdfPath const &id);
 
-  void SetTaskParam(pxr::SdfPath const &id, pxr::TfToken const &name, pxr::VtValue val);
-  pxr::VtValue GetTaskParam(pxr::SdfPath const &id, pxr::TfToken const &name);
+  void SetTaskParam(SdfPath const &id, TfToken const &name, VtValue val);
+  VtValue GetTaskParam(SdfPath const &id, TfToken const &name);
 
   // -----------------------------------------------------------------------//
   /// \name Options
   // -----------------------------------------------------------------------//
 
   /// Returns true if the named option is enabled by the delegate.
-  virtual bool IsEnabled(pxr::TfToken const& option) const override;
+  virtual bool IsEnabled(TfToken const& option) const override;
 
 
   // -----------------------------------------------------------------------//
@@ -46,13 +46,13 @@ public:
   // -----------------------------------------------------------------------//
 
   /// Gets the topological mesh data for a given prim.
-  virtual pxr::HdMeshTopology GetMeshTopology(pxr::SdfPath const& id) override;
+  virtual HdMeshTopology GetMeshTopology(SdfPath const& id) override;
 
   /// Gets the topological curve data for a given prim.
-  virtual pxr::HdBasisCurvesTopology GetBasisCurvesTopology(pxr::SdfPath const& id) override;
+  virtual HdBasisCurvesTopology GetBasisCurvesTopology(SdfPath const& id) override;
 
   /// Gets the subdivision surface tags (sharpness, holes, etc).
-  virtual pxr::PxOsdSubdivTags GetSubdivTags(pxr::SdfPath const& id) override;
+  virtual PxOsdSubdivTags GetSubdivTags(SdfPath const& id) override;
 
 
   /// Gets the axis aligned bounds of a prim.
@@ -62,86 +62,86 @@ public:
   ///
   /// The returned bounds does not include any displacement that
   /// might occur as the result of running shaders on the prim.
-  virtual pxr::GfRange3d GetExtent(pxr::SdfPath const & id) override;
+  virtual GfRange3d GetExtent(SdfPath const & id) override;
 
   /// Returns the object space transform, including all parent transforms.
-  virtual pxr::GfMatrix4d GetTransform(pxr::SdfPath const & id) override;
+  virtual GfMatrix4d GetTransform(SdfPath const & id) override;
 
   /// Returns the authored visible state of the prim.
-  virtual bool GetVisible(pxr::SdfPath const & id) override;
+  virtual bool GetVisible(SdfPath const & id) override;
 
   /// Returns the doubleSided state for the given prim.
-  virtual bool GetDoubleSided(pxr::SdfPath const & id) override;
+  virtual bool GetDoubleSided(SdfPath const & id) override;
 
   /// Returns the cullstyle for the given prim.
-  virtual pxr::HdCullStyle GetCullStyle(pxr::SdfPath const &id) override;
+  virtual HdCullStyle GetCullStyle(SdfPath const &id) override;
 
   /// Returns the shading style for the given prim.
-  virtual pxr::VtValue GetShadingStyle(pxr::SdfPath const &id) override;
+  virtual VtValue GetShadingStyle(SdfPath const &id) override;
 
   /// Returns the refinement level for the given prim in the range [0,8].
   ///
   /// The refinement level indicates how many iterations to apply when
   /// subdividing subdivision surfaces or other refinable primitives.
-  virtual pxr::HdDisplayStyle GetDisplayStyle(pxr::SdfPath const& id) override;
+  virtual HdDisplayStyle GetDisplayStyle(SdfPath const& id) override;
 
-  virtual pxr::TfToken GetRenderTag(pxr::SdfPath const& id) override;
+  virtual TfToken GetRenderTag(SdfPath const& id) override;
     
   /// Returns a named value.
-  virtual pxr::VtValue Get(pxr::SdfPath const& id, pxr::TfToken const& key) override;
+  virtual VtValue Get(SdfPath const& id, TfToken const& key) override;
 
   /// Returns a named primvar value. If \a *outIndices is not nullptr and the 
   /// primvar has indices, it will return the unflattened primvar and set 
   /// \a *outIndices to the primvar's associated indices, clearing the array
   /// if the primvar is not indexed.
-  virtual pxr::VtValue GetIndexedPrimvar(pxr::SdfPath const& id, 
-                                    pxr::TfToken const& key, 
-                                    pxr::VtIntArray *outIndices) override;
+  virtual VtValue GetIndexedPrimvar(SdfPath const& id, 
+                                    TfToken const& key, 
+                                    VtIntArray *outIndices) override;
 
   /// Returns the prim categories.
-  virtual pxr::VtArray<pxr::TfToken> GetCategories(pxr::SdfPath const& id) override;
+  virtual VtArray<TfToken> GetCategories(SdfPath const& id) override;
 
   /// Returns the categories for all instances in the instancer.
-  virtual std::vector<pxr::VtArray<pxr::TfToken>>
-  GetInstanceCategories(pxr::SdfPath const &instancerId) override;
+  virtual std::vector<VtArray<TfToken>>
+  GetInstanceCategories(SdfPath const &instancerId) override;
 
   /// Returns the coordinate system bindings, or a nullptr if none are bound.
-  virtual pxr::HdIdVectorSharedPtr GetCoordSysBindings(pxr::SdfPath const& id) override;
+  virtual HdIdVectorSharedPtr GetCoordSysBindings(SdfPath const& id) override;
 
-  virtual pxr::HdPrimvarDescriptorVector GetPrimvarDescriptors(pxr::SdfPath const& id,
-    pxr::HdInterpolation interpolation) override;
+  virtual HdPrimvarDescriptorVector GetPrimvarDescriptors(SdfPath const& id,
+    HdInterpolation interpolation) override;
 
-  virtual pxr::VtIntArray GetInstanceIndices(pxr::SdfPath const &instancerId,
-                                             pxr::SdfPath const &prototypeId) override;
+  virtual VtIntArray GetInstanceIndices(SdfPath const &instancerId,
+                                             SdfPath const &prototypeId) override;
 
-  virtual pxr::SdfPathVector GetInstancerPrototypes(pxr::SdfPath const& instancerId)override;
-  virtual pxr::GfMatrix4d GetInstancerTransform(pxr::SdfPath const& instancerId)override;
+  virtual SdfPathVector GetInstancerPrototypes(SdfPath const& instancerId)override;
+  virtual GfMatrix4d GetInstancerTransform(SdfPath const& instancerId)override;
 
-  virtual pxr::SdfPath GetInstancerId(pxr::SdfPath const& primId) override;
+  virtual SdfPath GetInstancerId(SdfPath const& primId) override;
   // Motion samples
   /*
   virtual size_t
-  SampleTransform(pxr::SdfPath const& id, size_t maxNumSamples,
-    float* times, pxr::GfMatrix4d* samples) override;
+  SampleTransform(SdfPath const& id, size_t maxNumSamples,
+    float* times, GfMatrix4d* samples) override;
   
   virtual size_t
-  SampleInstancerTransform(pxr::SdfPath const& instancerId,
-    size_t maxSampleCount, float* times, pxr::GfMatrix4d* samples) override;*/
+  SampleInstancerTransform(SdfPath const& instancerId,
+    size_t maxSampleCount, float* times, GfMatrix4d* samples) override;*/
 
   virtual size_t
-  SamplePrimvar(pxr::SdfPath const& id, pxr::TfToken const& key,
+  SamplePrimvar(SdfPath const& id, TfToken const& key,
     size_t maxNumSamples, float* times,
-    pxr::VtValue* samples) override;
+    VtValue* samples) override;
 
   virtual size_t
-  SampleIndexedPrimvar(pxr::SdfPath const& id, pxr::TfToken const& key,
+  SampleIndexedPrimvar(SdfPath const& id, TfToken const& key,
     size_t maxNumSamples, float* times,
-    pxr::VtValue* samples, pxr::VtIntArray* indices) override;
+    VtValue* samples, VtIntArray* indices) override;
 
 
   // Materials
-  pxr::SdfPath GetMaterialId(pxr::SdfPath const &rprimId) override;
-  pxr::VtValue GetMaterialResource(pxr::SdfPath const &materialId) override;
+  SdfPath GetMaterialId(SdfPath const &rprimId) override;
+  VtValue GetMaterialResource(SdfPath const &materialId) override;
 
   void SetScene(Scene* scene);
   void RemoveScene();
@@ -150,16 +150,16 @@ public:
 
 private:
   Scene* _scene;
-  pxr::SdfPath _instancerId;
+  SdfPath _instancerId;
 
-  std::map<pxr::SdfPath, pxr::VtValue> _materials;
-  std::map<pxr::SdfPath, pxr::SdfPath> _materialBindings;
+  std::map<SdfPath, VtValue> _materials;
+  std::map<SdfPath, SdfPath> _materialBindings;
 
-  using _ValueCache = pxr::TfHashMap<pxr::TfToken, pxr::VtValue, pxr::TfToken::HashFunctor>;
-  using _ValueCacheMap = pxr::TfHashMap<pxr::SdfPath, _ValueCache, pxr::SdfPath::Hash>;
+  using _ValueCache = TfHashMap<TfToken, VtValue, TfToken::HashFunctor>;
+  using _ValueCacheMap = TfHashMap<SdfPath, _ValueCache, SdfPath::Hash>;
   _ValueCacheMap _valueCacheMap;
 
-  pxr::SdfPath _cameraId;
+  SdfPath _cameraId;
 
 };
 

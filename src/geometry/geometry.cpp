@@ -31,45 +31,45 @@ float Geometry::FrameDuration = 1.f / 24.f;
 Geometry::Geometry()
   : _type(INVALID)
   , _mode(OUTPUT)
-  , _wirecolor(pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1))
+  , _wirecolor(GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1))
   , _prim()
 {
-  SetMatrix(pxr::GfMatrix4d(1.0));
+  SetMatrix(GfMatrix4d(1.0));
 }
 
-Geometry::Geometry(int type, const pxr::GfMatrix4d& world)
+Geometry::Geometry(int type, const GfMatrix4d& world)
   : _type(type)
   , _mode(OUTPUT)
-  , _wirecolor(pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1))
+  , _wirecolor(GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1))
   , _prim()
 {
   SetMatrix(world);
 }
 
-Geometry::Geometry(const pxr::UsdPrim& prim, const pxr::GfMatrix4d& world)
+Geometry::Geometry(const UsdPrim& prim, const GfMatrix4d& world)
   : _type(INVALID)
   , _mode(INPUT)
-  , _wirecolor(pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1))
+  , _wirecolor(GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1))
   , _prim(prim)
 {
-  if(prim.IsA<pxr::UsdGeomXform>())_type = Geometry::XFORM;
-  else if(prim.IsA<pxr::UsdGeomPlane>())_type = Geometry::PLANE;
-  else if(prim.IsA<pxr::UsdGeomSphere>())_type = Geometry::SPHERE;
-  else if(prim.IsA<pxr::UsdGeomCapsule>())_type = Geometry::CAPSULE;
-  else if(prim.IsA<pxr::UsdGeomCone>())_type = Geometry::CONE;
-  else if(prim.IsA<pxr::UsdGeomCylinder>())_type = Geometry::CYLINDER;
-  else if(prim.IsA<pxr::UsdGeomCube>())_type = Geometry::CUBE;
-  else if(prim.IsA<pxr::UsdGeomBasisCurves>())_type = Geometry::CURVE;
-  else if(prim.IsA<pxr::UsdGeomMesh>())_type = Geometry::MESH;
-  else if(prim.IsA<pxr::UsdGeomPoints>())_type = Geometry::POINT;
-  else if(prim.IsA<pxr::UsdGeomPointInstancer>())_type = Geometry::INSTANCER;
+  if(prim.IsA<UsdGeomXform>())_type = Geometry::XFORM;
+  else if(prim.IsA<UsdGeomPlane>())_type = Geometry::PLANE;
+  else if(prim.IsA<UsdGeomSphere>())_type = Geometry::SPHERE;
+  else if(prim.IsA<UsdGeomCapsule>())_type = Geometry::CAPSULE;
+  else if(prim.IsA<UsdGeomCone>())_type = Geometry::CONE;
+  else if(prim.IsA<UsdGeomCylinder>())_type = Geometry::CYLINDER;
+  else if(prim.IsA<UsdGeomCube>())_type = Geometry::CUBE;
+  else if(prim.IsA<UsdGeomBasisCurves>())_type = Geometry::CURVE;
+  else if(prim.IsA<UsdGeomMesh>())_type = Geometry::MESH;
+  else if(prim.IsA<UsdGeomPoints>())_type = Geometry::POINT;
+  else if(prim.IsA<UsdGeomPointInstancer>())_type = Geometry::INSTANCER;
   else _type = Geometry::INVALID;
   SetMatrix(world);
 }
 
 
 void 
-Geometry::SetMatrix(const pxr::GfMatrix4d& matrix) 
+Geometry::SetMatrix(const GfMatrix4d& matrix) 
 { 
   _prevMatrix = _matrix;
   _matrix = matrix; 
@@ -80,77 +80,77 @@ Geometry::SetMatrix(const pxr::GfMatrix4d& matrix)
 
 void Geometry::_ComputeVelocity()
 {
-  const pxr::GfVec3f deltaP(_matrix.GetRow3(3) -_prevMatrix.GetRow3(3));
-  _velocity = pxr::GfVec3f(deltaP / Geometry::FrameDuration);
+  const GfVec3f deltaP(_matrix.GetRow3(3) -_prevMatrix.GetRow3(3));
+  _velocity = GfVec3f(deltaP / Geometry::FrameDuration);
 
-  const pxr::GfQuatd rotation = _matrix.ExtractRotationQuat();
-  const pxr::GfQuatd previous = _prevMatrix.ExtractRotationQuat();
-  const pxr::GfQuatd deltaR = (previous * rotation.GetInverse());
+  const GfQuatd rotation = _matrix.ExtractRotationQuat();
+  const GfQuatd previous = _prevMatrix.ExtractRotationQuat();
+  const GfQuatd deltaR = (previous * rotation.GetInverse());
   
-  _torque = pxr::GfVec3f(deltaR.GetImaginary() * (deltaR.GetReal() / Geometry::FrameDuration));
+  _torque = GfVec3f(deltaR.GetImaginary() * (deltaR.GetReal() / Geometry::FrameDuration));
 
 }
 
-const pxr::GfVec3d 
+const GfVec3d 
 Geometry::GetTranslate()
 {
   return _matrix.ExtractTranslation();
 }
 
-const pxr::GfVec3d
+const GfVec3d
 Geometry::GetScale()
 {
-  pxr::GfTransform transform(_matrix);
+  GfTransform transform(_matrix);
   return transform.GetScale();
 }
 
-const pxr::GfQuatd
+const GfQuatd
 Geometry::GetRotation()
 {
   return _matrix.ExtractRotationQuat();
 }
 
-const pxr::GfVec3f Geometry::GetTorque() const
+const GfVec3f Geometry::GetTorque() const
 {
   return _torque;
 }
 
-const pxr::GfVec3f Geometry::GetVelocity() const
+const GfVec3f Geometry::GetVelocity() const
 {
   return _velocity;
 }
 
 Geometry::DirtyState 
-Geometry::Sync(const pxr::GfMatrix4d& matrix, const pxr::UsdTimeCode& time)
+Geometry::Sync(const GfMatrix4d& matrix, const UsdTimeCode& time)
 {
   SetMatrix(matrix);
   return _Sync(matrix, time);
 }
 
-void Geometry::Inject(const pxr::GfMatrix4d& parent,
-  const pxr::UsdTimeCode& time)
+void Geometry::Inject(const GfMatrix4d& parent,
+  const UsdTimeCode& time)
 {
-  pxr::UsdGeomXformable xformable(_prim);
-  pxr::UsdGeomXformOp op = xformable.MakeMatrixXform();
+  UsdGeomXformable xformable(_prim);
+  UsdGeomXformOp op = xformable.MakeMatrixXform();
 
-  pxr::GfMatrix4d local = parent.GetInverse() * GetMatrix();
+  GfMatrix4d local = parent.GetInverse() * GetMatrix();
   op.Set(local, time);
 
-  pxr::UsdGeomBoundable usdBoundable(_prim);
-  pxr::VtArray<pxr::GfVec3f> bounds(2);
-  bounds[0] = pxr::GfVec3f(_bbox.GetRange().GetMin());
-  bounds[1] = pxr::GfVec3f(_bbox.GetRange().GetMax());
+  UsdGeomBoundable usdBoundable(_prim);
+  VtArray<GfVec3f> bounds(2);
+  bounds[0] = GfVec3f(_bbox.GetRange().GetMin());
+  bounds[1] = GfVec3f(_bbox.GetRange().GetMax());
   usdBoundable.CreateExtentAttr().Set(bounds, time);
 
   _Inject(parent, time);
 }
 
-const pxr::GfBBox3d 
+const GfBBox3d 
 Geometry::GetBoundingBox(bool worldSpace) const 
 { 
   if(!worldSpace)return _bbox;
 
-  pxr::GfBBox3d worldBBox( _bbox.ComputeAlignedRange());
+  GfBBox3d worldBBox( _bbox.ComputeAlignedRange());
   return worldBBox;
 };
 

@@ -6,18 +6,18 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 size_t GravityForce::TYPE_ID = Force::GRAVITY;
 
-GravityForce::GravityForce(const pxr::GfVec3f& gravity) 
+GravityForce::GravityForce(const GfVec3f& gravity) 
   : Force()
   , _gravity(gravity)
   , _attr()
 {
 }
 
-GravityForce::GravityForce(const pxr::UsdAttribute& attribute) 
+GravityForce::GravityForce(const UsdAttribute& attribute) 
   : Force()
   , _attr(attribute)
 {
-  _attr.Get(&_gravity, pxr::UsdTimeCode::Default());
+  _attr.Get(&_gravity, UsdTimeCode::Default());
 }
 
 void GravityForce::Update(float time)
@@ -29,7 +29,7 @@ void GravityForce::Apply(size_t begin, size_t end, Particles* particles, float d
 {
   const float* mass = &particles->mass[0];
   const float* invMass = &particles->invMass[0];
-  pxr::GfVec3f* velocity = &particles->velocity[0];
+  GfVec3f* velocity = &particles->velocity[0];
   const short* state = &particles->state[0];
 
 
@@ -50,11 +50,11 @@ void GravityForce::Apply(size_t begin, size_t end, Particles* particles, float d
 
 size_t DampForce::TYPE_ID = Force::DAMP;
 
-DampForce::DampForce(const pxr::UsdAttribute& attr)
+DampForce::DampForce(const UsdAttribute& attr)
   : Force()
   , _attr(attr)
 {
-  _attr.Get(&_damp, pxr::UsdTimeCode::Default());
+  _attr.Get(&_damp, UsdTimeCode::Default());
 }
 
 DampForce::DampForce(float damp)
@@ -73,7 +73,7 @@ void DampForce::Apply(size_t begin, size_t end, Particles* particles, float dt) 
 {
   const float* mass = &particles->mass[0];
   const float* invMass = &particles->invMass[0];
-  pxr::GfVec3f* velocity = &particles->velocity[0];
+  GfVec3f* velocity = &particles->velocity[0];
 
   if(HaveWeights())
     for(size_t index = begin; index < end; ++index) {

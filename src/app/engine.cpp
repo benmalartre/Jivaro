@@ -37,11 +37,11 @@ TF_DEFINE_ENV_SETTING(JVR_ENGINE_EXEC_SCENE_DELEGATE_ID, "/",
 TF_DEFINE_ENV_SETTING(JVR_ENGINE_ENABLE_SCENE_INDEX, false,
   "Use Scene Index API for imaging scene input");
 
-pxr::SdfPath const&
+SdfPath const&
 _GetUsdImagingDelegateId()
 {
-  static pxr::SdfPath const delegateId =
-    pxr::SdfPath(pxr::TfGetEnvSetting(JVR_ENGINE_EXEC_SCENE_DELEGATE_ID));
+  static SdfPath const delegateId =
+    SdfPath(TfGetEnvSetting(JVR_ENGINE_EXEC_SCENE_DELEGATE_ID));
 
   return delegateId;
 }
@@ -60,8 +60,8 @@ _GetUseSceneIndices()
   return useSceneIndices;
 }
 
-Engine::Engine(const pxr::HdDriver& driver)
-  : Engine(pxr::SdfPath::AbsoluteRootPath(), {}, {}, 
+Engine::Engine(const HdDriver& driver)
+  : Engine(SdfPath::AbsoluteRootPath(), {}, {}, 
     _GetUsdImagingDelegateId(), driver)
 {
   //SetRendererAov()
@@ -96,12 +96,12 @@ void Engine::TerminateExec()
 
 
 Engine::Engine(
-  const pxr::SdfPath& rootPath,
-  const pxr::SdfPathVector& excludedPaths,
-  const pxr::SdfPathVector& invisedPaths,
-  const pxr::SdfPath& sceneDelegateID,
-  const pxr::HdDriver& driver)
-  : pxr::UsdImagingGLEngine(
+  const SdfPath& rootPath,
+  const SdfPathVector& excludedPaths,
+  const SdfPathVector& invisedPaths,
+  const SdfPath& sceneDelegateID,
+  const HdDriver& driver)
+  : UsdImagingGLEngine(
     rootPath,
     excludedPaths,
     invisedPaths,
@@ -119,16 +119,16 @@ Engine::~Engine() = default;
 
 bool
 Engine::TestIntersection(
-  const pxr::GfMatrix4d& viewMatrix,
-  const pxr::GfMatrix4d& projectionMatrix,
-  const pxr::UsdPrim& root,
-  const pxr::UsdImagingGLRenderParams& params,
-  pxr::GfVec3d* outHitPoint,
-  pxr::GfVec3d* outHitNormal,
-  pxr::SdfPath* outHitPrimPath,
-  pxr::SdfPath* outHitInstancerPath,
+  const GfMatrix4d& viewMatrix,
+  const GfMatrix4d& projectionMatrix,
+  const UsdPrim& root,
+  const UsdImagingGLRenderParams& params,
+  GfVec3d* outHitPoint,
+  GfVec3d* outHitNormal,
+  SdfPath* outHitPrimPath,
+  SdfPath* outHitInstancerPath,
   int* outHitInstanceIndex,
-  pxr::HdInstancerContext* outInstancerContext)
+  HdInstancerContext* outInstancerContext)
 {
 
   if (_GetUseSceneIndices()) {
@@ -180,17 +180,17 @@ Engine::TestIntersection(
   
   */
 
-  pxr::HdxPickHitVector allHits;
-  pxr::HdxPickTaskContextParams pickParams;
-  pickParams.resolveMode = pxr::HdxPickTokens->resolveNearestToCenter;
+  HdxPickHitVector allHits;
+  HdxPickTaskContextParams pickParams;
+  pickParams.resolveMode = HdxPickTokens->resolveNearestToCenter;
   pickParams.viewMatrix = viewMatrix;
   pickParams.projectionMatrix = projectionMatrix;
   pickParams.clipPlanes = params.clipPlanes;
   pickParams.collection = _intersectCollection;
   pickParams.outHits = &allHits;
-  const pxr::VtValue vtPickParams(pickParams);
+  const VtValue vtPickParams(pickParams);
 
-  _GetHdEngine()->SetTaskContextData(pxr::HdxPickTokens->pickParams, vtPickParams);
+  _GetHdEngine()->SetTaskContextData(HdxPickTokens->pickParams, vtPickParams);
   _Execute(params, _taskController->GetPickingTasks());
 
   // Since we are in nearest-hit mode, we expect allHits to have
@@ -199,7 +199,7 @@ Engine::TestIntersection(
     return false;
   }
 
-  pxr::HdxPickHit& hit = allHits[0];
+  HdxPickHit& hit = allHits[0];
 
   if (outHitPoint) {
     *outHitPoint = hit.worldSpaceHitPoint;
@@ -233,10 +233,10 @@ bool
 Engine::DecodeIntersection(
   unsigned char const primIdColor[4],
   unsigned char const instanceIdColor[4],
-  pxr::SdfPath* outHitPrimPath,
-  pxr::SdfPath* outHitInstancerPath,
+  SdfPath* outHitPrimPath,
+  SdfPath* outHitInstancerPath,
   int* outHitInstanceIndex,
-  pxr::HdInstancerContext* outInstancerContext)
+  HdInstancerContext* outInstancerContext)
 {
 
   if (_GetUseSceneIndices()) {
@@ -246,16 +246,16 @@ Engine::DecodeIntersection(
 
   TF_VERIFY(_GetSceneDelegate());
 
-  const int primId = pxr::HdxPickTask::DecodeIDRenderColor(primIdColor);
-  const int instanceIdx = pxr::HdxPickTask::DecodeIDRenderColor(instanceIdColor);
-  pxr::SdfPath primPath =
+  const int primId = HdxPickTask::DecodeIDRenderColor(primIdColor);
+  const int instanceIdx = HdxPickTask::DecodeIDRenderColor(instanceIdColor);
+  SdfPath primPath =
     _GetSceneDelegate()->GetRenderIndex().GetRprimPathFromPrimId(primId);
 
   if (primPath.IsEmpty()) {
     return false;
   }
 
-  pxr::SdfPath delegateId, instancerId;
+  SdfPath delegateId, instancerId;
   _GetSceneDelegate()->GetRenderIndex().GetSceneDelegateAndInstancerIds(
     primPath, &delegateId, &instancerId);
 
@@ -278,7 +278,7 @@ Engine::DecodeIntersection(
 }
 
 bool
-Engine::_CheckPrimSelectable(const pxr::SdfPath &path)
+Engine::_CheckPrimSelectable(const SdfPath &path)
 {
   Scene* scene = _delegate->GetScene();
   if(!scene->GetPrim(path)->geom->IsInput())return false;

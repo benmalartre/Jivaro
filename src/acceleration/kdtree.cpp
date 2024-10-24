@@ -52,18 +52,18 @@ KDTree::Init(const std::vector<Geometry*> &geometries)
 
   std::cout << "init kd tree with " << totalNumPoints << " points..." << std::endl;
 
-  pxr::GfRange3d range;
+  GfRange3d range;
   size_t offset = 0;
   for(size_t g = 0; g < geometries.size(); ++g) {
     const Deformable* deformable = static_cast<const Deformable*>(geometries[g]);
 
     size_t numPoints = deformable->GetNumPoints();
     
-    const pxr::GfMatrix4d& matrix = deformable->GetMatrix();
-    const pxr::GfVec3f* positions = deformable->GetPositionsCPtr();
+    const GfMatrix4d& matrix = deformable->GetMatrix();
+    const GfVec3f* positions = deformable->GetPositionsCPtr();
     for (size_t i = 0; i < numPoints; ++i)
     {
-      const pxr::GfVec3f worldPoint(matrix.Transform(positions[i]));
+      const GfVec3f worldPoint(matrix.Transform(positions[i]));
       range.UnionWith(worldPoint);
       _points.push_back(KDTree::IndexPoint(i + offset, worldPoint));
     }
@@ -94,14 +94,14 @@ KDTree::Update()
 }
 
 bool 
-KDTree::Raycast(const pxr::GfRay& ray, Location* hit,
+KDTree::Raycast(const GfRay& ray, Location* hit,
   double maxDistance, double* minDistance) const
 {
   return false;
 }
 
 bool 
-KDTree::Closest(const pxr::GfVec3f& point, Location* hit, double maxDistance) const
+KDTree::Closest(const GfVec3f& point, Location* hit, double maxDistance) const
 {
   double minDistanceSq = DBL_MAX;
   KDTree::Cell *nearest = nullptr;
@@ -119,7 +119,7 @@ KDTree::Closest(const pxr::GfVec3f& point, Location* hit, double maxDistance) co
     std::cout << "component = " << pntIndex << std::endl;
     hit->SetComponentIndex(pntIndex);
     hit->SetGeometryIndex(geomIndex);
-    hit->SetCoordinates(pxr::GfVec3f(1.f, 0.f, 0.f));
+    hit->SetCoordinates(GfVec3f(1.f, 0.f, 0.f));
     //hit->SetCoordinates(((Deformable*)geometry)->GetPosition(pntIndex));
     return true;
   }
@@ -127,7 +127,7 @@ KDTree::Closest(const pxr::GfVec3f& point, Location* hit, double maxDistance) co
 }
 
 size_t 
-KDTree::_BuildTreeRecursively(const pxr::GfRange3d& range, size_t depth, size_t begin, size_t end)
+KDTree::_BuildTreeRecursively(const GfRange3d& range, size_t depth, size_t begin, size_t end)
 {
   size_t index = AddCell();
   KDTree::Cell* cell = GetCell(index);
@@ -144,14 +144,14 @@ KDTree::_BuildTreeRecursively(const pxr::GfRange3d& range, size_t depth, size_t 
     cell->point = _points[middle];
 
     if (middle - begin > 0) {
-      pxr::GfVec3d maximum(range.GetMax());
+      GfVec3d maximum(range.GetMax());
       maximum[cell->axis] = _points[middle].position[cell->axis];
-      cell->left = _BuildTreeRecursively(pxr::GfRange3d(range.GetMin(), maximum), depth + 1, begin, middle);
+      cell->left = _BuildTreeRecursively(GfRange3d(range.GetMin(), maximum), depth + 1, begin, middle);
     }
     if (end - middle > 1) {
-      pxr::GfVec3d minimum(range.GetMin());
+      GfVec3d minimum(range.GetMin());
       minimum[cell->axis] = _points[middle].position[cell->axis];
-      cell->right = _BuildTreeRecursively(pxr::GfRange3d(minimum, range.GetMax()), depth + 1, middle + 1, end);
+      cell->right = _BuildTreeRecursively(GfRange3d(minimum, range.GetMax()), depth + 1, middle + 1, end);
     }
   }
 
@@ -159,13 +159,13 @@ KDTree::_BuildTreeRecursively(const pxr::GfRange3d& range, size_t depth, size_t 
 }
 
 void
-KDTree::_RecurseClosest(const KDTree::Cell *cell, const pxr::GfVec3f &point, size_t index, 
+KDTree::_RecurseClosest(const KDTree::Cell *cell, const GfVec3f &point, size_t index, 
   double &minDistanceSq, KDTree::Cell *&nearest) const
 {
   
   double curDist, dist;
 
-  curDist = _distance->Compute(point, pxr::GfVec3f(cell->GetMidpoint()));
+  curDist = _distance->Compute(point, GfVec3f(cell->GetMidpoint()));
   /*
   if (!(searchpredicate && !(*searchpredicate)(allnodes[node->dataindex]))) {
     if (neighborheap->size() < k) {
@@ -246,10 +246,10 @@ KDTree::GetGeometryIndexFromCell(const KDTree::Cell* cell) const
 }
 
 bool
-KDTree::_IntersectSphere(const pxr::GfVec3f& center, double radius, KDTree::Cell *cell) 
+KDTree::_IntersectSphere(const GfVec3f& center, double radius, KDTree::Cell *cell) 
 {
-  const pxr::GfVec3d& minimum = cell->GetMin();
-  const pxr::GfVec3d& maximum = cell->GetMax();
+  const GfVec3d& minimum = cell->GetMin();
+  const GfVec3d& maximum = cell->GetMax();
 
   // maximum distance needs different treatment
   if (_distanceType == DistanceType::CHEBYSHEV) {
@@ -287,10 +287,10 @@ KDTree::_IntersectSphere(const pxr::GfVec3f& center, double radius, KDTree::Cell
 // returns true when the bounds of *node* completely contain the
 // ball with radius *dist* around *point*
 bool 
-KDTree::_ContainsSphere(const pxr::GfVec3f& center, double radius, KDTree::Cell *cell) 
+KDTree::_ContainsSphere(const GfVec3f& center, double radius, KDTree::Cell *cell) 
 {
-  const pxr::GfVec3d& minimum = cell->GetMin();
-  const pxr::GfVec3d& maximum = cell->GetMax();
+  const GfVec3d& minimum = cell->GetMin();
+  const GfVec3d& maximum = cell->GetMax();
 
   for (size_t i = 0; i < 3; ++i)
     if (_distance->Compute1D(center[i], minimum[i], i) <= radius ||

@@ -30,27 +30,27 @@ DebugUI::_DrawTraceReporter()
   static std::string reportStr;
 
   if (ImGui::Button("Start Tracing")) {
-    pxr::TraceCollector::GetInstance().SetEnabled(true);
+    TraceCollector::GetInstance().SetEnabled(true);
   }
   ImGui::SameLine();
   if (ImGui::Button("Stop Tracing")) {
-    pxr::TraceCollector::GetInstance().SetEnabled(false);
+    TraceCollector::GetInstance().SetEnabled(false);
   }
   ImGui::SameLine();
   if (ImGui::Button("Reset counters")) {
     std::ostringstream report;
-    pxr::TraceReporter::GetGlobalReporter()->Report(report);
+    TraceReporter::GetGlobalReporter()->Report(report);
     reportStr = report.str();
   }
   ImGui::SameLine();
 
   if (ImGui::Button("Update tree")) {
-    pxr::TraceReporter::GetGlobalReporter()->UpdateTraceTrees();
+    TraceReporter::GetGlobalReporter()->UpdateTraceTrees();
   }
-  if (pxr::TraceCollector::IsEnabled()) {
+  if (TraceCollector::IsEnabled()) {
     std::ostringstream report;
     
-    reportStr = pxr::TraceCollector::GetInstance().GetLabel();
+    reportStr = TraceCollector::GetInstance().GetLabel();
   }
   ImGuiIO& io = ImGui::GetIO();
   ImGui::PushFont(io.Fonts->Fonts[1]);
@@ -65,10 +65,10 @@ DebugUI::_DrawDebugCodes()
   // TfDebug::IsCompileTimeEnabled()
   ImVec2 listBoxSize(-FLT_MIN, -10);
   if (ImGui::BeginListBox("##DebugCodes", listBoxSize)) {
-    for (auto& code : pxr::TfDebug::GetDebugSymbolNames()) {
-      bool isEnabled = pxr::TfDebug::IsDebugSymbolNameEnabled(code);
+    for (auto& code : TfDebug::GetDebugSymbolNames()) {
+      bool isEnabled = TfDebug::IsDebugSymbolNameEnabled(code);
       if (ImGui::Checkbox(code.c_str(), &isEnabled)) {
-        pxr::TfDebug::SetDebugSymbolsByName(code, isEnabled);
+        TfDebug::SetDebugSymbolsByName(code, isEnabled);
       }
     }
     ImGui::EndListBox();
@@ -90,8 +90,8 @@ bool DebugUI::Draw()
   };
   static int current_item = 0;
 
-  const pxr::GfVec2f min(GetX(), GetY());
-  const pxr::GfVec2f size(GetWidth(), GetHeight());
+  const GfVec2f min(GetX(), GetY());
+  const GfVec2f size(GetWidth(), GetHeight());
 
   ImGui::SetNextWindowPos(min);
   ImGui::SetNextWindowSize(size);

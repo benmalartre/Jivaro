@@ -50,7 +50,7 @@ void UndoRouter::AddInverse(std::function<bool()> inverse) {
 }
 
 UndoRouter& UndoRouter::Get() {
-    return pxr::TfSingleton<UndoRouter>::GetInstance();
+    return TfSingleton<UndoRouter>::GetInstance();
 }
 
 bool UndoRouter::TransferEdits(UndoInverse* inverse){

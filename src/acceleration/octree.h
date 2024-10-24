@@ -34,7 +34,7 @@ public:
       for (int i = 0; i < 8; i++) _child[i] = NULL;
     };
 
-    Cell(const pxr::GfVec3f& minp, const pxr::GfVec3f& maxp, int depth = 0) :
+    Cell(const GfVec3f& minp, const GfVec3f& maxp, int depth = 0) :
       _depth(depth), _isLeaf(true), _min(minp), _max(maxp)
     {
       for (int i = 0; i < 8; i++) _child[i] = NULL;
@@ -46,8 +46,8 @@ public:
     int GetDepth() const { return _depth; };
 
     // center
-    pxr::GfVec3f GetCenter() { return (pxr::GfVec3f((_min + _max) * 0.5f)); };
-    pxr::GfVec3f GetHalfSize() { return (pxr::GfVec3f((_max - _min) * 0.5f)); };
+    GfVec3f GetCenter() { return (GfVec3f((_min + _max) * 0.5f)); };
+    GfVec3f GetHalfSize() { return (GfVec3f((_max - _min) * 0.5f)); };
 
     // distance
     inline float _Squared(float v) const { return v * v; };
@@ -57,10 +57,10 @@ public:
       if (p > upper)return p - upper;
       return fmin(p - lower, upper - p);
     };
-    float GetDistance(const pxr::GfVec3f& point) const;
+    float GetDistance(const GfVec3f& point) const;
 
     // intersect sphere
-    bool IntersectSphere(const pxr::GfVec3f& center, const float radius) const;
+    bool IntersectSphere(const GfVec3f& center, const float radius) const;
 
     // leaf
     bool IsLeaf() const { return _isLeaf; };
@@ -78,13 +78,13 @@ public:
     void Insert(Component* e) { _elements.push_back(e); };
 
     // split into 8
-    void Split(const pxr::GfVec3f* points);
+    void Split(const GfVec3f* points);
 
     // get bounding box
-    void GetBoundingBox(const pxr::GfVec3f* points, pxr::VtArray<int>& vertices);
+    void GetBoundingBox(const GfVec3f* points, VtArray<int>& vertices);
 
     // get furthest corner
-    void GetFurthestCorner(const pxr::GfVec3f& point, pxr::GfVec3f& corner);
+    void GetFurthestCorner(const GfVec3f& point, GfVec3f& corner);
 
     // build the tree
     void BuildTree(Component* comonents, size_t num, Geometry* geometry);
@@ -95,7 +95,7 @@ public:
     int _depth;
 
     // bounding box
-    pxr::GfVec3f _min, _max;
+    GfVec3f _min, _max;
 
     // leaf ?
     bool _isLeaf;
@@ -108,20 +108,20 @@ public:
   };
 
 protected:
-  void _GetClosestCell(const pxr::GfVec3f& point, Cell*& closestCell) const;
-  void _RecurseGetClosestCell(const pxr::GfVec3f& point, const Cell* cell, 
+  void _GetClosestCell(const GfVec3f& point, Cell*& closestCell) const;
+  void _RecurseGetClosestCell(const GfVec3f& point, const Cell* cell, 
     float& closestDistance, Cell*& closestCell) const;
-  void _GetNearbyCells(const pxr::GfVec3f& point, const Cell* cell, 
+  void _GetNearbyCells(const GfVec3f& point, const Cell* cell, 
     std::vector<Cell*>& cells, float closestDistance) const;
-  void _RecurseGetNearbyCells(const Cell* cell, const pxr::GfVec3f& center, 
+  void _RecurseGetNearbyCells(const Cell* cell, const GfVec3f& center, 
     const float radius, std::vector<Cell*>& cells) const;
 
 public:
   virtual void Init(const std::vector<Geometry*>& geometries) override;
   virtual void Update() override;
-  virtual bool Raycast(const pxr::GfRay& ray, Location* hit,
+  virtual bool Raycast(const GfRay& ray, Location* hit,
     double maxDistance=DBL_MAX, double* minDistance=NULL) const override;
-  virtual bool Closest(const pxr::GfVec3f& point, Location* hit,
+  virtual bool Closest(const GfVec3f& point, Location* hit,
     double maxDistance=DBL_MAX) const override;
 
 private:

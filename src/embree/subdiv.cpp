@@ -9,8 +9,8 @@ JVR_NAMESPACE_OPEN_SCOPE
 UsdEmbreeSubdiv* 
 TranslateSubdiv(
   UsdEmbreeContext* ctxt, 
-  const pxr::UsdGeomMesh& usdMesh,
-  const pxr::GfMatrix4d& worldMatrix,
+  const UsdGeomMesh& usdMesh,
+  const GfMatrix4d& worldMatrix,
   RTCScene scene
 )
 {
@@ -23,7 +23,7 @@ TranslateSubdiv(
   result->_geom = rtcNewGeometry(ctxt->_device, RTC_GEOMETRY_TYPE_SUBDIVISION);
   result->_name = usdMesh.GetPrim().GetPrimPath().GetString();
   bool hasPoints = false;
-  pxr::UsdAttribute pointsAttr = usdMesh.GetPointsAttr();
+  UsdAttribute pointsAttr = usdMesh.GetPointsAttr();
   if(pointsAttr && pointsAttr.HasAuthoredValue())
   {
     // get datas from usd
@@ -33,7 +33,7 @@ TranslateSubdiv(
     // world transform points
     for(auto& p: result->_vertices)
     {
-      pxr::GfVec4d tmp = pxr::GfVec4d(p[0],p[1],p[2], 1.f) * worldMatrix;
+      GfVec4d tmp = GfVec4d(p[0],p[1],p[2], 1.f) * worldMatrix;
       p[0] = tmp[0];p[1] = tmp[1];p[2] = tmp[2];
     }
 
@@ -44,7 +44,7 @@ TranslateSubdiv(
                               RTC_FORMAT_FLOAT3,          // RTCFormat
                               result->_vertices.cdata(), // Datas Ptr
                               0,                          // Offset
-                              sizeof(pxr::GfVec3f),       // Stride
+                              sizeof(GfVec3f),       // Stride
                               num_vertices);              // Num Elements*/
     hasPoints = true;
   }
@@ -59,10 +59,10 @@ TranslateSubdiv(
   }
 
   bool hasTopo = false;
-  pxr::UsdAttribute countsAttr = usdMesh.GetFaceVertexCountsAttr();
-  pxr::UsdAttribute indicesAttr = usdMesh.GetFaceVertexIndicesAttr();
-  //pxr::VtArray<int> counts;
-  //pxr::VtArray<int> indices;
+  UsdAttribute countsAttr = usdMesh.GetFaceVertexCountsAttr();
+  UsdAttribute indicesAttr = usdMesh.GetFaceVertexIndicesAttr();
+  //VtArray<int> counts;
+  //VtArray<int> indices;
   if(countsAttr && countsAttr.HasAuthoredValue() &&
     indicesAttr && indicesAttr.HasAuthoredValue())
   {
@@ -126,7 +126,7 @@ TranslateSubdiv(
     // world transform normals
     for(auto& n: result->_normals)
     {
-      pxr::GfVec4d tmp = pxr::GfVec4d(n[0],n[1],n[2], 0.f) * worldMatrix;
+      GfVec4d tmp = GfVec4d(n[0],n[1],n[2], 0.f) * worldMatrix;
       n[0] = tmp[0];n[1] = tmp[1];n[2] = tmp[2];
     }
     
@@ -166,39 +166,39 @@ TranslateSubdiv(
 // check usd file for authored normals
 //------------------------------------------------------------------------------
 bool 
-CheckNormals(const pxr::UsdGeomMesh& usdMesh,
-            const pxr::UsdTimeCode& time,
+CheckNormals(const UsdGeomMesh& usdMesh,
+            const UsdTimeCode& time,
             UsdEmbreeSubdiv* subdiv)
 {
   /*
   subdiv->_hasNormals = false;
-  pxr::UsdAttribute normalsAttr = usdMesh.GetNormalsAttr();
+  UsdAttribute normalsAttr = usdMesh.GetNormalsAttr();
   if(normalsAttr && normalsAttr.HasAuthoredValue())
   {
-    pxr::VtArray<pxr::GfVec3f> normals;
+    VtArray<GfVec3f> normals;
     normalsAttr.Get(&normals, time);
     int num_normals = normals.size();
 
-    pxr::TfToken normalsInterpolation = usdMesh.GetNormalsInterpolation();
-    if(normalsInterpolation == pxr::UsdGeomTokens->constant)
+    TfToken normalsInterpolation = usdMesh.GetNormalsInterpolation();
+    if(normalsInterpolation == UsdGeomTokens->constant)
     {
       mesh->_normalsInterpolationType = CONSTANT;
     }
-    else if(normalsInterpolation == pxr::UsdGeomTokens->uniform)
+    else if(normalsInterpolation == UsdGeomTokens->uniform)
     {
       mesh->_normalsInterpolationType = UNIFORM;
     }
-    else if(normalsInterpolation == pxr::UsdGeomTokens->varying)
+    else if(normalsInterpolation == UsdGeomTokens->varying)
     {
       mesh->_normalsInterpolationType = VARYING;
     }
 
     // vertex varying normals
-    else if(normalsInterpolation == pxr::UsdGeomTokens->vertex)
+    else if(normalsInterpolation == UsdGeomTokens->vertex)
     {
       if(num_normals == mesh->_vertices.size())
       {
-        TriangulateData<pxr::GfVec3f>(mesh->_triangles, 
+        TriangulateData<GfVec3f>(mesh->_triangles, 
                                       normals,
                                       mesh->_normals);
         mesh->_hasNormals = true;
@@ -211,12 +211,12 @@ CheckNormals(const pxr::UsdGeomMesh& usdMesh,
       }
     }
     // face varying normals (per face-vertex)
-    else if(normalsInterpolation == pxr::UsdGeomTokens->faceVarying)
+    else if(normalsInterpolation == UsdGeomTokens->faceVarying)
     {
       std::cout << "FACE VARYING NORMALS INTERPOLATION :D" << std::endl;
       if(num_normals == mesh->_numOriginalSamples)
       {
-        TriangulateData<pxr::GfVec3f>(mesh->_samples, 
+        TriangulateData<GfVec3f>(mesh->_samples, 
                                       normals,
                                       mesh->_normals);
         mesh->_hasNormals = true;
@@ -238,7 +238,7 @@ CheckNormals(const pxr::UsdGeomMesh& usdMesh,
                                 RTC_FORMAT_FLOAT3,          // RTCFormat
                                 mesh->_normals.cdata(),     // Datas Ptr
                                 0,                          // Offset
-                                sizeof(pxr::GfVec3f),       // Stride
+                                sizeof(GfVec3f),       // Stride
                                 mesh->_normals.size());     // Num Elements
     }
   }
@@ -248,32 +248,32 @@ CheckNormals(const pxr::UsdGeomMesh& usdMesh,
 }
 
 bool 
-CheckColors(const pxr::UsdGeomMesh& usdMesh,
-            const pxr::UsdTimeCode& time,
+CheckColors(const UsdGeomMesh& usdMesh,
+            const UsdTimeCode& time,
             UsdEmbreeSubdiv* mesh)
 {
   mesh->_hasColors = false;
 
-  pxr::UsdGeomPrimvar colorPrimVar = usdMesh.GetDisplayColorPrimvar();
+  UsdGeomPrimvar colorPrimVar = usdMesh.GetDisplayColorPrimvar();
   if(colorPrimVar) 
   {
-    pxr::UsdAttribute colorsAttr = colorPrimVar.GetAttr();
+    UsdAttribute colorsAttr = colorPrimVar.GetAttr();
     colorsAttr.Get(&mesh->_colors, time);
     int num_colors = mesh->_colors.size();
     
-    pxr::TfToken interpolation = colorPrimVar.GetInterpolation();
-    if(interpolation == pxr::UsdGeomTokens->constant)
+    TfToken interpolation = colorPrimVar.GetInterpolation();
+    if(interpolation == UsdGeomTokens->constant)
     {
       mesh->_hasColors = true;
       mesh->_colorsInterpolationType = CONSTANT;
     }
-    else if(interpolation == pxr::UsdGeomTokens->uniform)
+    else if(interpolation == UsdGeomTokens->uniform)
     {
     }
-    else if(interpolation == pxr::UsdGeomTokens->varying)
+    else if(interpolation == UsdGeomTokens->varying)
     {
     }
-    else if(interpolation == pxr::UsdGeomTokens->vertex)
+    else if(interpolation == UsdGeomTokens->vertex)
     {
       if(num_colors == mesh->_vertices.size())
       {
@@ -286,7 +286,7 @@ CheckColors(const pxr::UsdGeomMesh& usdMesh,
             usdMesh.GetPath().GetText() << " >>> fallback to compute them...";
       }
     }
-    else if(interpolation == pxr::UsdGeomTokens->faceVarying)
+    else if(interpolation == UsdGeomTokens->faceVarying)
     {
       //if(num_colors == mesh->_numOriginalSamples)
       {
@@ -311,7 +311,7 @@ CheckColors(const pxr::UsdGeomMesh& usdMesh,
                                 RTC_FORMAT_FLOAT3,          // RTCFormat
                                 mesh->_colors.cdata(),     // Datas Ptr
                                 0,                          // Offset
-                                sizeof(pxr::GfVec3f),       // Stride
+                                sizeof(GfVec3f),       // Stride
                                 mesh->_colors.size());     // Num Elements
     }
   

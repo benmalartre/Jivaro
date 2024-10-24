@@ -3,7 +3,7 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-Delaunay::Delaunay(const std::vector<pxr::GfVec2d>& inCoords)
+Delaunay::Delaunay(const std::vector<GfVec2d>& inCoords)
   : _coords(inCoords)
   , _triangles()
   , _halfEdges()
@@ -18,21 +18,21 @@ Delaunay::Delaunay(const std::vector<pxr::GfVec2d>& inCoords)
 {
   size_t n = _coords.size() >> 1;
 
-  pxr::GfVec2d maxCoord(std::numeric_limits<double>::min());
-  pxr::GfVec2d minCoord(std::numeric_limits<double>::max());
+  GfVec2d maxCoord(std::numeric_limits<double>::min());
+  GfVec2d minCoord(std::numeric_limits<double>::max());
 
   std::vector<size_t> ids;
   ids.reserve(n);
 
   for (size_t i = 0; i < n; i++) {
-    const pxr::GfVec2d& coord = _coords[i];
+    const GfVec2d& coord = _coords[i];
     if (coord[0] < minCoord[0]) minCoord[0] = coord[0];
     if (coord[1] < minCoord[1]) minCoord[1] = coord[1];
     if (coord[0] > maxCoord[0]) maxCoord[0] = coord[0];
     if (coord[1] > maxCoord[1]) maxCoord[1] = coord[1];
     ids.push_back(i);
   }
-  const pxr::GfVec2d center((minCoord + maxCoord) * 0.5);
+  const GfVec2d center((minCoord + maxCoord) * 0.5);
 
   double minDist = std::numeric_limits<double>::max();
 
@@ -49,7 +49,7 @@ Delaunay::Delaunay(const std::vector<pxr::GfVec2d>& inCoords)
     }
   }
 
-  const pxr::GfVec2d& coord0 = _coords[i0];
+  const GfVec2d& coord0 = _coords[i0];
 
   minDist = std::numeric_limits<double>::max();
 
@@ -63,7 +63,7 @@ Delaunay::Delaunay(const std::vector<pxr::GfVec2d>& inCoords)
     }
   }
 
-  pxr::GfVec2d coord1 = _coords[i1];
+  GfVec2d coord1 = _coords[i1];
 
   double minRadius = std::numeric_limits<double>::max();
 
@@ -84,7 +84,7 @@ Delaunay::Delaunay(const std::vector<pxr::GfVec2d>& inCoords)
     throw std::runtime_error("not triangulation");
   }
 
-  pxr::GfVec2d coord2 = _coords[i2];
+  GfVec2d coord2 = _coords[i2];
 
   if(_Orient(coord0, coord1, coord2)) {
     std::swap(i1, i2);
@@ -127,21 +127,21 @@ Delaunay::Delaunay(const std::vector<pxr::GfVec2d>& inCoords)
   _halfEdges.reserve(maxTriangles * 3);
   _AddTriangle(i0, i1, i2, INVALID_INDEX, INVALID_INDEX, INVALID_INDEX);
 
-  pxr::GfVec2d coord(std::numeric_limits<double>::quiet_NaN());
+  GfVec2d coord(std::numeric_limits<double>::quiet_NaN());
 
   for (size_t k = 0; k < n; ++k) {
     const size_t i = ids[k];
-    const pxr::GfVec2d current = _coords[i];
+    const GfVec2d current = _coords[i];
 
     // skip near-duplicate points
-    if (k > 0 && CheckPointsEquals<pxr::GfVec2d>(coord, current)) continue;
+    if (k > 0 && CheckPointsEquals<GfVec2d>(coord, current)) continue;
     coord = current;
 
     // skip seed triangle points
     if (
-      CheckPointsEquals<pxr::GfVec2d>(coord, coord0) ||
-      CheckPointsEquals<pxr::GfVec2d>(coord, coord1) ||
-      CheckPointsEquals<pxr::GfVec2d>(coord, coord2)) continue;
+      CheckPointsEquals<GfVec2d>(coord, coord0) ||
+      CheckPointsEquals<GfVec2d>(coord, coord1) ||
+      CheckPointsEquals<GfVec2d>(coord, coord2)) continue;
 
     // find a visible edge on the convex hull using edge hash
     size_t start = 0;
@@ -324,9 +324,9 @@ Delaunay::_Legalize(size_t a)
 }
 
 size_t 
-Delaunay::_ComputeHash(const pxr::GfVec2d& coord) const
+Delaunay::_ComputeHash(const GfVec2d& coord) const
 {
-  const pxr::GfVec2d delta(coord - _center);
+  const GfVec2d delta(coord - _center);
   return _FastMod(
     static_cast<size_t>(std::llround(std::floor(_PseudoAngle(delta) * static_cast<double>(_hashSize)))),
     _hashSize);

@@ -33,15 +33,15 @@ public:
   Voxels(Geometry* geometry, float radius);
   void Init();
   void Trace(short axis);
-  void Build(pxr::VtArray<pxr::GfVec3f>& points);
+  void Build(VtArray<GfVec3f>& points);
 
   size_t GetNumCells();
-  pxr::GfVec3f GetCellPosition(size_t cellIdx);
+  GfVec3f GetCellPosition(size_t cellIdx);
 
 private:
   size_t _ComputeFlatIndex(size_t x, size_t y, size_t z, short axis);
 
-  pxr::GfVec3i                _resolution;
+  GfVec3i                _resolution;
   std::vector<uint32_t>       _data;
   std::vector<uint32_t>       _neighbors;
   Geometry*                   _geometry;

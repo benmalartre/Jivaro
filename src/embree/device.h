@@ -47,12 +47,12 @@ RTCScene DeviceInit (Camera* camera);
 void CommitScene ();
 void DeviceCleanup ();
 
-inline pxr::GfVec2f _GetDeviceRatio(int width, int height)
+inline GfVec2f _GetDeviceRatio(int width, int height)
 {
   if(width>height)
-    return pxr::GfVec2f(1.f, (float)height / (float)width);
+    return GfVec2f(1.f, (float)height / (float)width);
   else
-    return pxr::GfVec2f((float)width / (float)height, 1.f);
+    return GfVec2f((float)width / (float)height, 1.f);
 }
 
 inline float _GetNormalizedDeviceX(int x, int width, float ratio)

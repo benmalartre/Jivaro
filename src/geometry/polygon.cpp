@@ -7,11 +7,11 @@ JVR_NAMESPACE_OPEN_SCOPE
 //-------------------------------------------------------
 // Polygon Center
 //-------------------------------------------------------
-pxr::GfVec3f 
+GfVec3f 
 Polygon::GetCenter(Deformable* geom)
 {
-  const pxr::GfVec3f* points = geom->GetPositionsCPtr();
-  pxr::GfVec3f accum = points[triangles[t]->vertices[]];
+  const GfVec3f* points = geom->GetPositionsCPtr();
+  GfVec3f accum = points[triangles[t]->vertices[]];
   size_t numTriangles = triangles.size();
   for(size_t t = 0; t < numTriangles; ++t) {
     accum += points[triangles[t]->vertices[1]];
@@ -23,7 +23,7 @@ Polygon::GetCenter(Deformable* geom)
 //-------------------------------------------------------
 // Polygon Point Position
 //-------------------------------------------------------
-pxr::GfVec3f 
+GfVec3f 
 Polygon::GetPosition(Deformable* geom, short idx)
 {
   return geom->GetPosition(vertices[idx]%2);
@@ -32,17 +32,17 @@ Polygon::GetPosition(Deformable* geom, short idx)
 //-------------------------------------------------------
 // Point Normal
 //-------------------------------------------------------
-pxr::GfVec3f 
+GfVec3f 
 Polygon::GetNormal(Deformable* geom)
 {
-  pxr::GfVec3f normal(0.f,1.f,0.f);
+  GfVec3f normal(0.f,1.f,0.f);
   switch(geom->GetType()) {
     case Geometry::MESH:
     case Geometry::CURVE:
     {
       // get points normals
-      pxr::GfVec3f norm0 = geom->GetNormal(vertices[0]);
-      pxr::GfVec3f norm1 = geom->GetNormal(vertices[1]);
+      GfVec3f norm0 = geom->GetNormal(vertices[0]);
+      GfVec3f norm1 = geom->GetNormal(vertices[1]);
   
       // average
       normal = (norm0 + norm1).GetNormalized();
@@ -64,7 +64,7 @@ Polygon::GetNormal(Deformable* geom)
 // Polygon raycast
 //-------------------------------------------------------
 bool
-Polygon::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hit) const
+Polygon::Raycast(const GfVec3f* points, const GfRay& ray, Location* hit) const
 {
   bool hitSometing = false;
   for(i = 1; i < vertices.size() - 1; ++i) {
@@ -79,7 +79,7 @@ Polygon::Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Location* hi
 // Polygon closest point
 //-------------------------------------------------------
 bool 
-Polygon::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location* hit) const
+Polygon::Closest(const GfVec3f* points, const GfVec3f& point, Location* hit) const
 {
   bool hitSometing = false;
   if (left && left->Closest(points, point, hit))hitSometing = true;
@@ -91,18 +91,18 @@ Polygon::Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Location
 // Polygon touch box
 //-------------------------------------------------------
 bool 
-Polygon::Touch(const pxr::GfVec3f* points, const pxr::GfVec3f& center, 
-  const pxr::GfVec3f& boxhalfsize) const
+Polygon::Touch(const GfVec3f* points, const GfVec3f& center, 
+  const GfVec3f& boxhalfsize) const
 {
   return false;
 }
 
-pxr::GfRange3f 
-Edge::GetBoundingBox(const pxr::GfVec3f* positions, const pxr::GfMatrix4d& m) const
+GfRange3f 
+Edge::GetBoundingBox(const GfVec3f* positions, const GfMatrix4d& m) const
 {
-  const pxr::GfVec3f extent(radius);
+  const GfVec3f extent(radius);
 
-  pxr::GfRange3f range;
+  GfRange3f range;
   range.UnionWith(m.Transform(positions[vertices[0]] - extent));
   range.UnionWith(m.Transform(positions[vertices[0]] + extent));
   range.UnionWith(m.Transform(positions[vertices[1]] - extent));

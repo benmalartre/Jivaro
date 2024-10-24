@@ -19,34 +19,34 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-static const pxr::GfMatrix4f HANDLE_X_MATRIX = {
+static const GfMatrix4f HANDLE_X_MATRIX = {
   0.f, 1.f, 0.f, 0.f,
   1.f, 0.f, 0.f, 0.f,
   0.f, 0.f, 1.f, 0.f,
   0.f, 0.f, 0.f, 1.f
 };
 
-static const pxr::GfMatrix4f HANDLE_Y_MATRIX = {
+static const GfMatrix4f HANDLE_Y_MATRIX = {
   1.f, 0.f, 0.f, 0.f,
   0.f, 1.f, 0.f, 0.f,
   0.f, 0.f, 1.f, 0.f,
   0.f, 0.f, 0.f, 1.f
 };
 
-static const pxr::GfMatrix4f HANDLE_Z_MATRIX = {
+static const GfMatrix4f HANDLE_Z_MATRIX = {
   1.f, 0.f, 0.f, 0.f,
   0.f, 0.f, 1.f, 0.f,
   0.f, 1.f, 0.f, 0.f,
   0.f, 0.f, 0.f, 1.f
 };
 
-static const pxr::GfVec4f HANDLE_X_COLOR =  {1.f, 0.25f, 0.5f, 1.f};
-static const pxr::GfVec4f HANDLE_Y_COLOR =  {0.5f, 1.f, 0.25f, 1.f};
-static const pxr::GfVec4f HANDLE_Z_COLOR =  {0.25f, 0.5f, 1.f, 1.f}; 
-static const pxr::GfVec4f HANDLE_HELP_COLOR = {0.66f, 0.66f, 0.66f, 0.5f};
-static const pxr::GfVec4f HANDLE_HOVERED_COLOR = {1.f, 0.5f, 0.0f, 1.f};
-static const pxr::GfVec4f HANDLE_ACTIVE_COLOR = {1.f, 0.75f, 0.25f, 1.f};
-static const pxr::GfVec4f HANDLE_MASK_COLOR = {0.f, 0.f, 0.f, 0.f};
+static const GfVec4f HANDLE_X_COLOR =  {1.f, 0.25f, 0.5f, 1.f};
+static const GfVec4f HANDLE_Y_COLOR =  {0.5f, 1.f, 0.25f, 1.f};
+static const GfVec4f HANDLE_Z_COLOR =  {0.25f, 0.5f, 1.f, 1.f}; 
+static const GfVec4f HANDLE_HELP_COLOR = {0.66f, 0.66f, 0.66f, 0.5f};
+static const GfVec4f HANDLE_HOVERED_COLOR = {1.f, 0.5f, 0.0f, 1.f};
+static const GfVec4f HANDLE_ACTIVE_COLOR = {1.f, 0.75f, 0.25f, 1.f};
+static const GfVec4f HANDLE_MASK_COLOR = {0.f, 0.f, 0.f, 0.f};
 static float HANDLE_SIZE = 100.f;
 
 class Camera;
@@ -61,7 +61,7 @@ struct HandleTargetGeometryDesc {
 typedef std::vector<HandleTargetGeometryDesc> HandleTargetGeometryDescList;
 
 
-void _EnsureXformCommonAPI(pxr::UsdPrim& prim, const pxr::UsdTimeCode& timeCode);
+void _EnsureXformCommonAPI(UsdPrim& prim, const UsdTimeCode& timeCode);
 
 
 class BaseHandle {
@@ -110,12 +110,12 @@ public:
     , _interacting(false)
     , _compensate(compensate)
     , _mode(MODE_LOCAL | MODE_COG)
-    , _position(pxr::GfVec3d(0.f))
-    , _rotation(pxr::GfQuatf(1.f))
-    , _scale(pxr::GfVec3d(1.f))
-    , _matrix(pxr::GfMatrix4f(1.f))
-    , _startMatrix(pxr::GfMatrix4f(1.f))
-    , _viewPlaneMatrix(pxr::GfMatrix4f(1.f)) {};
+    , _position(GfVec3d(0.f))
+    , _rotation(GfQuatf(1.f))
+    , _scale(GfVec3d(1.f))
+    , _matrix(GfMatrix4f(1.f))
+    , _startMatrix(GfMatrix4f(1.f))
+    , _viewPlaneMatrix(GfMatrix4f(1.f)) {};
   virtual ~BaseHandle(){};
   
   void SetActiveAxis(short axis);
@@ -131,14 +131,14 @@ public:
   void AddXYZComponents(Shape::Component& component);
   void AddYZXZXYComponents(Shape::Component& component);
   void AddHelperComponent(Shape::Component& component);
-  void UpdateCamera(const pxr::GfMatrix4f& view,
-    const pxr::GfMatrix4f& proj);
+  void UpdateCamera(const GfMatrix4f& view,
+    const GfMatrix4f& proj);
   void UpdatePickingPlane(short axis=NORMAL_CAMERA);
   void ComputeSizeMatrix(float width, float height);
   void ComputeViewPlaneMatrix();
   void ComputePickFrustum();
   
-  const pxr::GfVec4f& GetColor(const Shape::Component& comp);
+  const GfVec4f& GetColor(const Shape::Component& comp);
   short GetActiveAxis(){return _activeAxis;};
 
   virtual void SetVisibility(short axis, short mask);
@@ -152,14 +152,14 @@ public:
   virtual void EndUpdate();
 
 protected:
-  virtual void _DrawShape(Shape* shape, const pxr::GfMatrix4f& m = pxr::GfMatrix4f(1.f));
+  virtual void _DrawShape(Shape* shape, const GfMatrix4f& m = GfMatrix4f(1.f));
   virtual void _ComputeCOGMatrix();
   virtual void _UpdateTargets(bool interacting) = 0;
-  pxr::GfVec3f _ConstraintPointToAxis(const pxr::GfVec3f& point, short axis);
-  pxr::GfVec3f _ConstraintPointToPlane(const pxr::GfVec3f& point, short axis);
-  pxr::GfVec3f _ConstraintPointToCircle(const pxr::GfVec3f& center, const pxr::GfVec3f& normal,
-    const pxr::GfRay& ray, short axis, float radius);
-  pxr::GfMatrix4f _ExtractRotationAndTranslateFromMatrix();
+  GfVec3f _ConstraintPointToAxis(const GfVec3f& point, short axis);
+  GfVec3f _ConstraintPointToPlane(const GfVec3f& point, short axis);
+  GfVec3f _ConstraintPointToCircle(const GfVec3f& center, const GfVec3f& normal,
+    const GfRay& ray, short axis, float radius);
+  GfMatrix4f _ExtractRotationAndTranslateFromMatrix();
   virtual void _UpdateActiveMask();
 
   // handle transformation flags
@@ -186,21 +186,21 @@ protected:
   bool                    _compensate;
   bool                    _interacting;
   bool                    _needUpdate;
-  pxr::UsdGeomXformCache  _xformCache;
+  UsdGeomXformCache  _xformCache;
 
   // data
-  pxr::GfVec3f            _scale;
-  pxr::GfVec3f            _position;
-  pxr::GfVec3f            _offset;
-  pxr::GfVec3f            _normal;
-  pxr::GfQuatf            _rotation;
-  pxr::GfPlane            _plane;
-  pxr::GfMatrix4f         _matrix;
-  pxr::GfMatrix4f         _displayMatrix;
-  pxr::GfMatrix4f         _startMatrix;
-  pxr::GfMatrix4f         _viewPlaneMatrix;
-  pxr::GfMatrix4f         _normalPlaneMatrix;
-  pxr::GfMatrix4f         _sizeMatrix;
+  GfVec3f            _scale;
+  GfVec3f            _position;
+  GfVec3f            _offset;
+  GfVec3f            _normal;
+  GfQuatf            _rotation;
+  GfPlane            _plane;
+  GfMatrix4f         _matrix;
+  GfMatrix4f         _displayMatrix;
+  GfMatrix4f         _startMatrix;
+  GfMatrix4f         _viewPlaneMatrix;
+  GfMatrix4f         _normalPlaneMatrix;
+  GfMatrix4f         _sizeMatrix;
 };
 
 class SelectHandle : public BaseHandle {
@@ -215,7 +215,7 @@ public:
   void BeginUpdate(float x, float y, float width, float height) override;
   void Update(float x, float y, float width, float height) override;
   void EndUpdate() override;
-  void _DrawShape(Shape* shape, const pxr::GfMatrix4f& m = pxr::GfMatrix4f(1.f)) override;
+  void _DrawShape(Shape* shape, const GfMatrix4f& m = GfMatrix4f(1.f)) override;
   void SetVisibility(short axis, short mask) override;
 
 protected:
@@ -232,20 +232,20 @@ public:
   void BeginUpdate(float x, float y, float width, float height) override;
   void Update(float x, float y, float width, float height) override;
   void EndUpdate() override;
-  void _DrawShape(Shape* shape, const pxr::GfMatrix4f& m = pxr::GfMatrix4f(1.f)) override;
+  void _DrawShape(Shape* shape, const GfMatrix4f& m = GfMatrix4f(1.f)) override;
   void SetVisibility(short axis, short mask) override;
 
 protected:
   void _UpdateTargets(bool interacting) override;
 
 private:
-  pxr::GfVec3f _GetScaleOffset(size_t axis);
-  pxr::GfVec3f _GetTranslateOffset(size_t axis);
+  GfVec3f _GetScaleOffset(size_t axis);
+  GfVec3f _GetTranslateOffset(size_t axis);
   void         _SetMaskMatrix(size_t axis);
 
-  pxr::GfVec3f    _offsetScale;
-  pxr::GfVec3f    _baseScale;
-  pxr::GfMatrix4f _maskMatrix;
+  GfVec3f    _offsetScale;
+  GfVec3f    _baseScale;
+  GfMatrix4f _maskMatrix;
 };
 
 class RotateHandle : public BaseHandle {
@@ -260,9 +260,9 @@ protected:
   void _UpdateTargets(bool interacting) override;
 
 private:
-  pxr::GfVec3f      _ContraintPointToRotationPlane(const pxr::GfRay& ray);
+  GfVec3f      _ContraintPointToRotationPlane(const GfRay& ray);
   float             _radius;
-  pxr::GfQuatf      _base;
+  GfQuatf      _base;
 };
 
 class TranslateHandle : public BaseHandle {
@@ -327,8 +327,8 @@ private:
   float                         _minRadius;
   float                         _maxRadius;
   HandleTargetGeometryDescList  _geometries;
-  std::vector<pxr::GfVec3f>     _path;
-  pxr::GfVec4f                  _color;
+  std::vector<GfVec3f>     _path;
+  GfVec4f                  _color;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

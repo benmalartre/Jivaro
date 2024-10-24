@@ -17,7 +17,7 @@ class Engine;
 class Window;
 class Scene;
 
-class Application : public pxr::TfWeakBase
+class Application : public TfWeakBase
 {
 public:
   static const char* name;
@@ -31,10 +31,10 @@ public:
   static Window* CreateFullScreenWindow(const std::string& name);
 
   // create a standard window of specified size
-  static Window* CreateStandardWindow(const std::string& name, const pxr::GfVec4i& dimension);
+  static Window* CreateStandardWindow(const std::string& name, const GfVec4i& dimension);
 
   // create a child window
-  static Window* CreateChildWindow(const std::string& name, const pxr::GfVec4i& dimension, Window* parent);
+  static Window* CreateChildWindow(const std::string& name, const GfVec4i& dimension, Window* parent);
 
   // browse file
   std::string BrowseFile(int x, int y, const char* folder, const char* filters[], 
@@ -54,13 +54,13 @@ public:
 
   // selection
   Selection* GetSelection(){return &_selection;};
-  void SetSelection(const pxr::SdfPathVector& selection);
-  void ToggleSelection(const pxr::SdfPathVector& selection);
-  void AddToSelection(const pxr::SdfPathVector& path);
-  void RemoveFromSelection(const pxr::SdfPathVector& path);
+  void SetSelection(const SdfPathVector& selection);
+  void ToggleSelection(const SdfPathVector& selection);
+  void AddToSelection(const SdfPathVector& path);
+  void RemoveFromSelection(const SdfPathVector& path);
   void ClearSelection();
-  pxr::GfBBox3d GetSelectionBoundingBox();
-  pxr::GfBBox3d GetStageBoundingBox();
+  GfBBox3d GetSelectionBoundingBox();
+  GfBBox3d GetStageBoundingBox();
 
   // notices callback
   void SelectionChangedCallback(const SelectionChangedNotice& n);
@@ -106,28 +106,28 @@ public:
 
   // stage cache
   UsdStageRefPtr& GetStage(){return _stage;};
-  void SetStage(pxr::UsdStageRefPtr& stage);
-  pxr::UsdStageCache& GetStageCache() { return _stageCache; }
+  void SetStage(UsdStageRefPtr& stage);
+  UsdStageCache& GetStageCache() { return _stageCache; }
 
   // execution
   void ToggleExec();
   void SetExec(bool state);
   bool GetExec();
 
-  virtual void InitExec(pxr::UsdStageRefPtr& stage);
-  virtual void UpdateExec(pxr::UsdStageRefPtr& stage, float time);
-  virtual void TerminateExec(pxr::UsdStageRefPtr& stage);
+  virtual void InitExec(UsdStageRefPtr& stage);
+  virtual void UpdateExec(UsdStageRefPtr& stage, float time);
+  virtual void TerminateExec(UsdStageRefPtr& stage);
   virtual void SendExecViewEvent(const ViewEventData *data);
 
   // singleton 
   static Application *Get();
 
   // usd stages
-  //std::vector<pxr::UsdStageRefPtr>& GetStages(){return _stages;};
-  pxr::UsdStageRefPtr GetDisplayStage();
-  pxr::UsdStageRefPtr GetWorkStage();
+  //std::vector<UsdStageRefPtr>& GetStages(){return _stages;};
+  UsdStageRefPtr GetDisplayStage();
+  UsdStageRefPtr GetWorkStage();
 
-  pxr::SdfLayerRefPtr GetCurrentLayer();
+  SdfLayerRefPtr GetCurrentLayer();
 
 protected:
   Execution*                        _exec;
@@ -152,9 +152,9 @@ private:
   std::vector<CALLBACK_FN>          _deferred;
 
   // engines
-  pxr::UsdStageCache                _stageCache;
-  pxr::UsdStageRefPtr               _stage;
-  pxr::SdfLayerRefPtr               _layer;
+  UsdStageCache                _stageCache;
+  UsdStageRefPtr               _stage;
+  SdfLayerRefPtr               _layer;
   std::vector<Engine*>              _engines;
   Engine*                           _activeEngine;
   bool                              _execute;

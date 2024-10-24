@@ -46,7 +46,7 @@ private:
   double                        _t;
   SparseMatrix<double>::Vector  _kronecker;
   Eigen::VectorXd               _solvedU;
-  pxr::VtArray<pxr::GfVec3d>    _gradient;
+  VtArray<GfVec3d>    _gradient;
   Eigen::VectorXd               _divergence;
 
   SimplicialSolver              _la;

@@ -57,7 +57,7 @@ SplitterUI::BuildMap(int width, int height)
     View* current = views[viewIdx];
     if (current->GetFlag(View::LEAF))continue;
     if (current->GetFlag(View::LFIXED | View::RFIXED)) continue;
-    pxr::GfVec2f sMin, sMax;
+    GfVec2f sMin, sMax;
     current->GetSplitInfos(sMin, sMax, _width, _height);
     for (int y = sMin[1]; y < sMax[1]; ++y)
       for (int x = sMin[0]; x < sMax[0]; ++x)

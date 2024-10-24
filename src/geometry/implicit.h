@@ -15,44 +15,44 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 class Xform : public Geometry {
 public:
-  Xform(const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
-  Xform(const pxr::UsdGeomXform& xform, const pxr::GfMatrix4d& world);
+  Xform(const GfMatrix4d& xfo=GfMatrix4d(1.0));
+  Xform(const UsdGeomXform& xform, const GfMatrix4d& world);
   virtual ~Xform() {};
 
-  void _Inject(const pxr::GfMatrix4d& parent,
-    const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override{};
+  void _Inject(const GfMatrix4d& parent,
+    const UsdTimeCode& code=UsdTimeCode::Default()) override{};
 
 };
 
 class Plane : public Geometry {
 public:
-  Plane(const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
-  Plane(const pxr::UsdGeomPlane& plane, const pxr::GfMatrix4d& world);
+  Plane(const GfMatrix4d& xfo=GfMatrix4d(1.0));
+  Plane(const UsdGeomPlane& plane, const GfMatrix4d& world);
   virtual ~Plane() {};
 
 
-  pxr::GfVec3f GetNormal();
-  pxr::GfVec3f GetOrigin();
+  GfVec3f GetNormal();
+  GfVec3f GetOrigin();
 
-  pxr::GfPlane Get();
+  GfPlane Get();
 
   // query 3d position on geometry
-  bool Raycast(const pxr::GfRay& ray, Location* hit,
+  bool Raycast(const GfRay& ray, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;
-  bool Closest(const pxr::GfVec3f& point, Location* hit,
+  bool Closest(const GfVec3f& point, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;
-  float SignedDistance(const pxr::GfVec3f& point) const override;
+  float SignedDistance(const GfVec3f& point) const override;
 
 protected:
-  Geometry::DirtyState _Sync(const pxr::GfMatrix4d& matrix, 
-    const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override;
+  Geometry::DirtyState _Sync(const GfMatrix4d& matrix, 
+    const UsdTimeCode& code=UsdTimeCode::Default()) override;
 
-  void _Inject(const pxr::GfMatrix4d& parent,
-    const pxr::UsdTimeCode& time=pxr::UsdTimeCode::Default()) override;
+  void _Inject(const GfMatrix4d& parent,
+    const UsdTimeCode& time=UsdTimeCode::Default()) override;
 
 private:
-  pxr::TfToken                _axis;
-  pxr::GfVec3f                _normal;
+  TfToken                _axis;
+  GfVec3f                _normal;
   double                      _width;
   double                      _length;
   bool                        _doubleSided;
@@ -60,27 +60,27 @@ private:
 
 class Sphere : public Geometry {
 public:
-  Sphere(const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
-  Sphere(const pxr::UsdGeomSphere& sphere, const pxr::GfMatrix4d& world);
+  Sphere(const GfMatrix4d& xfo=GfMatrix4d(1.0));
+  Sphere(const UsdGeomSphere& sphere, const GfMatrix4d& world);
   virtual ~Sphere() {};
 
   void SetRadius(double radius){_radius = radius;};
   double GetRadius() {return _radius;};
-  pxr::GfVec3f GetCenter(){return pxr::GfVec3f(GetMatrix().GetRow3(3));};
+  GfVec3f GetCenter(){return GfVec3f(GetMatrix().GetRow3(3));};
 
   // query 3d position on geometry
-  bool Raycast(const pxr::GfRay& ray, Location* hit,
+  bool Raycast(const GfRay& ray, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;
-  bool Closest(const pxr::GfVec3f& point, Location* hit,
+  bool Closest(const GfVec3f& point, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;
-  float SignedDistance(const pxr::GfVec3f& point) const override;
+  float SignedDistance(const GfVec3f& point) const override;
 
 protected:
-  Geometry::DirtyState _Sync(const pxr::GfMatrix4d& matrix, 
-    const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override;
+  Geometry::DirtyState _Sync(const GfMatrix4d& matrix, 
+    const UsdTimeCode& code=UsdTimeCode::Default()) override;
 
-  void _Inject(const pxr::GfMatrix4d& parent,
-    const pxr::UsdTimeCode& time=pxr::UsdTimeCode::Default()) override;
+  void _Inject(const GfMatrix4d& parent,
+    const UsdTimeCode& time=UsdTimeCode::Default()) override;
 
 private:
   double                    _radius;  
@@ -89,26 +89,26 @@ private:
 
 class Cube : public Geometry {
 public:
-  Cube(const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
-  Cube(const pxr::UsdGeomCube& sphere, const pxr::GfMatrix4d& world);
+  Cube(const GfMatrix4d& xfo=GfMatrix4d(1.0));
+  Cube(const UsdGeomCube& sphere, const GfMatrix4d& world);
   virtual ~Cube() {};
 
   void SetSize(double size){_size = size;};
   double GetSize() {return _size;};
 
   // query 3d position on geometry
-  bool Raycast(const pxr::GfRay& ray, Location* hit,
+  bool Raycast(const GfRay& ray, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;
-  bool Closest(const pxr::GfVec3f& point, Location* hit,
+  bool Closest(const GfVec3f& point, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;
-  float SignedDistance(const pxr::GfVec3f& point) const override;
+  float SignedDistance(const GfVec3f& point) const override;
 
 protected:
-  Geometry::DirtyState _Sync(const pxr::GfMatrix4d& matrix, 
-    const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override;
+  Geometry::DirtyState _Sync(const GfMatrix4d& matrix, 
+    const UsdTimeCode& code=UsdTimeCode::Default()) override;
 
-  void _Inject(const pxr::GfMatrix4d& parent,
-    const pxr::UsdTimeCode& time=pxr::UsdTimeCode::Default()) override;
+  void _Inject(const GfMatrix4d& parent,
+    const UsdTimeCode& time=UsdTimeCode::Default()) override;
 
 private:
   double                    _size;  
@@ -117,98 +117,98 @@ private:
 
 class Cone : public Geometry {
 public:
-  Cone(const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
-  Cone(const pxr::UsdGeomCone& cone, const pxr::GfMatrix4d& world);
+  Cone(const GfMatrix4d& xfo=GfMatrix4d(1.0));
+  Cone(const UsdGeomCone& cone, const GfMatrix4d& world);
   virtual ~Cone() {};
 
   void SetRadius(double radius){_radius = radius;};
   double GetRadius() {return _radius;};
   void SetHeight(double height){_height = height;};
   double GetHeight() {return _height;};
-  void SetAxis(const pxr::TfToken &axis){_axis = axis;};
-  const pxr::TfToken& GetAxis() {return _axis;};
+  void SetAxis(const TfToken &axis){_axis = axis;};
+  const TfToken& GetAxis() {return _axis;};
 
   // query 3d position on geometry
-  bool Raycast(const pxr::GfRay& ray, Location* hit,
+  bool Raycast(const GfRay& ray, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;
-  bool Closest(const pxr::GfVec3f& point, Location* hit,
+  bool Closest(const GfVec3f& point, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;
 
 protected:
-  Geometry::DirtyState _Sync(const pxr::GfMatrix4d& matrix, 
-    const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override;
-  void _Inject(const pxr::GfMatrix4d& parent,
-    const pxr::UsdTimeCode& time=pxr::UsdTimeCode::Default()) override;
+  Geometry::DirtyState _Sync(const GfMatrix4d& matrix, 
+    const UsdTimeCode& code=UsdTimeCode::Default()) override;
+  void _Inject(const GfMatrix4d& parent,
+    const UsdTimeCode& time=UsdTimeCode::Default()) override;
 
 private:
   double                   _radius;  
   double                   _height;
-  pxr::TfToken             _axis;
+  TfToken             _axis;
 
 };
 
 class Cylinder : public Geometry {
 public:
-  Cylinder(const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
-  Cylinder(const pxr::UsdGeomCylinder& cylinder, const pxr::GfMatrix4d& world);
+  Cylinder(const GfMatrix4d& xfo=GfMatrix4d(1.0));
+  Cylinder(const UsdGeomCylinder& cylinder, const GfMatrix4d& world);
   virtual ~Cylinder() {};
 
   void SetRadius(double radius){_radius = radius;};
   double GetRadius() {return _radius;};
   void SetHeight(double height){_height = height;};
   double GetHeight() {return _height;};
-  void SetAxis(const pxr::TfToken &axis){_axis = axis;};
-  const pxr::TfToken& GetAxis() {return _axis;};
+  void SetAxis(const TfToken &axis){_axis = axis;};
+  const TfToken& GetAxis() {return _axis;};
 
   // query 3d position on geometry
-  bool Raycast(const pxr::GfRay& ray, Location* hit,
+  bool Raycast(const GfRay& ray, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;
-  bool Closest(const pxr::GfVec3f& point, Location* hit,
+  bool Closest(const GfVec3f& point, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;
 
 protected:
-  Geometry::DirtyState _Sync(const pxr::GfMatrix4d& matrix, 
-    const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override;
-  void _Inject(const pxr::GfMatrix4d& parent,
-    const pxr::UsdTimeCode& time=pxr::UsdTimeCode::Default()) override;
+  Geometry::DirtyState _Sync(const GfMatrix4d& matrix, 
+    const UsdTimeCode& code=UsdTimeCode::Default()) override;
+  void _Inject(const GfMatrix4d& parent,
+    const UsdTimeCode& time=UsdTimeCode::Default()) override;
 
 private:
   double                    _radius;  
   double                    _height;
-  pxr::TfToken             _axis;
+  TfToken             _axis;
 };
 
 class Capsule : public Geometry {
 public:
-  Capsule(const pxr::GfMatrix4d& xfo=pxr::GfMatrix4d(1.0));
-  Capsule(const pxr::UsdGeomCapsule& sphere, const pxr::GfMatrix4d& world);
+  Capsule(const GfMatrix4d& xfo=GfMatrix4d(1.0));
+  Capsule(const UsdGeomCapsule& sphere, const GfMatrix4d& world);
   virtual ~Capsule() {};
 
   void SetRadius(double radius){_radius = radius;};
   double GetRadius() {return _radius;};
   void SetHeight(double height){_height = height;};
   double GetHeight() {return _height;};
-  void SetAxis(const pxr::TfToken &axis){_axis = axis;};
-  const pxr::TfToken& GetAxis() {return _axis;};
+  void SetAxis(const TfToken &axis){_axis = axis;};
+  const TfToken& GetAxis() {return _axis;};
 
   // query 3d position on geometry
-  bool Raycast(const pxr::GfRay& ray, Location* hit,
+  bool Raycast(const GfRay& ray, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;
-  bool Closest(const pxr::GfVec3f& point, Location* hit,
+  bool Closest(const GfVec3f& point, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override;
-  float SignedDistance(const pxr::GfVec3f& point) const override;
+  float SignedDistance(const GfVec3f& point) const override;
 
 protected:
-  Geometry::DirtyState _Sync(const pxr::GfMatrix4d& matrix, 
-    const pxr::UsdTimeCode& code=pxr::UsdTimeCode::Default()) override;
-  void _Inject(const pxr::GfMatrix4d& parent,
-    const pxr::UsdTimeCode& time=pxr::UsdTimeCode::Default()) override;
+  Geometry::DirtyState _Sync(const GfMatrix4d& matrix, 
+    const UsdTimeCode& code=UsdTimeCode::Default()) override;
+  void _Inject(const GfMatrix4d& parent,
+    const UsdTimeCode& time=UsdTimeCode::Default()) override;
   
 
 private:
   double                   _radius;  
   double                   _height;
-  pxr::TfToken             _axis;
+  TfToken             _axis;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

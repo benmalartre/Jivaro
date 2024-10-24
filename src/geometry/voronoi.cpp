@@ -3,7 +3,7 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-static void _GetDistances(const pxr::VtArray<pxr::GfVec3f>& points, pxr::VtArray<float>* distances)
+static void _GetDistances(const VtArray<GfVec3f>& points, VtArray<float>* distances)
 {
   size_t numPoints = points.size();
   distances->resize(numPoints * (numPoints - 1));
@@ -35,7 +35,7 @@ int Voronoi2D::GetNumSurroundingSites(size_t x, size_t y)
   return 0;
 }
 
-void Voronoi2D::Build(pxr::UsdStageRefPtr& stage, const pxr::VtArray<pxr::GfVec3f>& seeds)
+void Voronoi2D::Build(UsdStageRefPtr& stage, const VtArray<GfVec3f>& seeds)
 {
   _resolutionX = 1024;
   _resolutionY = 1024;

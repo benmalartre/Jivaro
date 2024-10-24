@@ -10,8 +10,8 @@ class Geometry;
 
 class Skeleton : public Geometry {
   struct Joint {
-    pxr::GfVec3f origin;
-    pxr::GfQuaternionf rotation;
+    GfVec3f origin;
+    GfQuaternionf rotation;
     float length;
   };
   using Chain = std::vector<Joint>;
@@ -20,11 +20,11 @@ public:
   Skeleton();
 
   // query 3d position on geometry
-  bool Raycast(const pxr::GfRay& ray, Location* hit,
+  bool Raycast(const GfRay& ray, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override {
     return false;
   };
-  bool Closest(const pxr::GfVec3f& point, Location* hit,
+  bool Closest(const GfVec3f& point, Location* hit,
     double maxDistance = -1.0, double* minDistance = NULL) const override {
     return false;
   };

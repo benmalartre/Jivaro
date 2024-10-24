@@ -1,46 +1,46 @@
-static pxr::UsdPrim TestUsdShadeAPI()
+static UsdPrim TestUsdShadeAPI()
 {
   UndoBlock editBlock;
-  pxr::UsdStageRefPtr stage = Application::Get()->GetWorkStage();
+  UsdStageRefPtr stage = Application::Get()->GetWorkStage();
 
-  const pxr::SdfPath GRAPH_PATH("/graph");
-  const pxr::TfToken GET("get");
-  const pxr::TfToken MUL("multiply");
-  const pxr::TfToken SET("set");
+  const SdfPath GRAPH_PATH("/graph");
+  const TfToken GET("get");
+  const TfToken MUL("multiply");
+  const TfToken SET("set");
 
-  pxr::UsdExecGraph graph = pxr::UsdExecGraph::Define(stage, GRAPH_PATH);
+  UsdExecGraph graph = UsdExecGraph::Define(stage, GRAPH_PATH);
   
-  pxr::UsdExecNode get = pxr::UsdExecNode::Define(stage, GRAPH_PATH.AppendChild(GET));
-  pxr::UsdUINodeGraphNodeAPI api(get);
-  api.CreatePosAttr().Set(pxr::GfVec2f(0, 0));
-  pxr::UsdExecInput inPrim = get.CreateInput(pxr::TfToken("Primitive"), pxr::SdfValueTypeNames->Asset);
+  UsdExecNode get = UsdExecNode::Define(stage, GRAPH_PATH.AppendChild(GET));
+  UsdUINodeGraphNodeAPI api(get);
+  api.CreatePosAttr().Set(GfVec2f(0, 0));
+  UsdExecInput inPrim = get.CreateInput(TfToken("Primitive"), SdfValueTypeNames->Asset);
   inPrim.SetConnectability(UsdShadeTokens->interfaceOnly);
-  pxr::UsdExecInput inAttr = get.CreateInput(pxr::TfToken("Attribute"), pxr::SdfValueTypeNames->Token);
+  UsdExecInput inAttr = get.CreateInput(TfToken("Attribute"), SdfValueTypeNames->Token);
   inAttr.SetConnectability(UsdShadeTokens->interfaceOnly);
-  pxr::UsdExecOutput inVal = get.CreateOutput(pxr::TfToken("Value"), pxr::SdfValueTypeNames->Vector3f);
-  inVal.Set(pxr::VtValue(pxr::GfVec3f(0.f)));
+  UsdExecOutput inVal = get.CreateOutput(TfToken("Value"), SdfValueTypeNames->Vector3f);
+  inVal.Set(VtValue(GfVec3f(0.f)));
 
-  pxr::UsdExecNode mul = pxr::UsdExecNode::Define(stage, GRAPH_PATH.AppendChild(MUL));
-  api = pxr::UsdUINodeGraphNodeAPI(mul);
-  api.CreatePosAttr().Set(pxr::GfVec2f(120, 0));
-  pxr::UsdExecInput factor = mul.CreateInput(pxr::TfToken("Factor"), pxr::SdfValueTypeNames->Float);
-  factor.Set(pxr::VtValue(1.f));
-  pxr::UsdExecInput input = mul.CreateInput(pxr::TfToken("Input"), pxr::SdfValueTypeNames->Vector3f);
-  pxr::UsdExecOutput output = mul.CreateOutput(pxr::TfToken("Output"), pxr::SdfValueTypeNames->Vector3f);
+  UsdExecNode mul = UsdExecNode::Define(stage, GRAPH_PATH.AppendChild(MUL));
+  api = UsdUINodeGraphNodeAPI(mul);
+  api.CreatePosAttr().Set(GfVec2f(120, 0));
+  UsdExecInput factor = mul.CreateInput(TfToken("Factor"), SdfValueTypeNames->Float);
+  factor.Set(VtValue(1.f));
+  UsdExecInput input = mul.CreateInput(TfToken("Input"), SdfValueTypeNames->Vector3f);
+  UsdExecOutput output = mul.CreateOutput(TfToken("Output"), SdfValueTypeNames->Vector3f);
 
-  pxr::UsdExecNode set = pxr::UsdExecNode::Define(stage, GRAPH_PATH.AppendChild(SET));
-  api = pxr::UsdUINodeGraphNodeAPI(set);
-  api.CreatePosAttr().Set(pxr::GfVec2f(240, 0));
-  pxr::UsdExecInput outPrim = set.CreateInput(pxr::TfToken("Primitive"), pxr::SdfValueTypeNames->Asset);
+  UsdExecNode set = UsdExecNode::Define(stage, GRAPH_PATH.AppendChild(SET));
+  api = UsdUINodeGraphNodeAPI(set);
+  api.CreatePosAttr().Set(GfVec2f(240, 0));
+  UsdExecInput outPrim = set.CreateInput(TfToken("Primitive"), SdfValueTypeNames->Asset);
   outPrim.SetConnectability(UsdShadeTokens->interfaceOnly);
-  pxr::UsdExecInput outAttr = set.CreateInput(pxr::TfToken("Attribute"), pxr::SdfValueTypeNames->Token);
+  UsdExecInput outAttr = set.CreateInput(TfToken("Attribute"), SdfValueTypeNames->Token);
   outAttr.SetConnectability(UsdShadeTokens->interfaceOnly);
-  pxr::UsdExecInput outVal0 = set.CreateInput(pxr::TfToken("Value0"), pxr::SdfValueTypeNames->Vector3f);
-  outVal0.Set(pxr::VtValue(pxr::GfVec3f(0.f)));
-  pxr::UsdExecInput outVal1 = set.CreateInput(pxr::TfToken("Value1"), pxr::SdfValueTypeNames->Vector3f);
-  outVal1.Set(pxr::VtValue(pxr::GfVec3f(0.f)));
-  pxr::UsdExecInput outVal2 = set.CreateInput(pxr::TfToken("Value2"), pxr::SdfValueTypeNames->Vector3f);
-  outVal2.Set(pxr::VtValue(pxr::GfVec3f(0.f)));
+  UsdExecInput outVal0 = set.CreateInput(TfToken("Value0"), SdfValueTypeNames->Vector3f);
+  outVal0.Set(VtValue(GfVec3f(0.f)));
+  UsdExecInput outVal1 = set.CreateInput(TfToken("Value1"), SdfValueTypeNames->Vector3f);
+  outVal1.Set(VtValue(GfVec3f(0.f)));
+  UsdExecInput outVal2 = set.CreateInput(TfToken("Value2"), SdfValueTypeNames->Vector3f);
+  outVal2.Set(VtValue(GfVec3f(0.f)));
 
 
   input.ConnectToSource(inVal);

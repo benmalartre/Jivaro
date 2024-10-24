@@ -10,46 +10,46 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 class UsdEmbreeContext;
 struct UsdEmbreeSubdiv  : public UsdEmbreePrim {
-  pxr::VtArray<pxr::GfVec3f>  _vertices;
+  VtArray<GfVec3f>  _vertices;
 
-  pxr::VtArray<int>           _indices;
-  pxr::VtArray<int>           _counts;
+  VtArray<int>           _indices;
+  VtArray<int>           _counts;
 
   bool                        _hasVertexCreaseWeights;
-  pxr::VtArray<float>         _vertexCreaseWeights;
-  pxr::VtArray<int>           _vertexCreaseIndices;
+  VtArray<float>         _vertexCreaseWeights;
+  VtArray<int>           _vertexCreaseIndices;
 
   bool                        _hasEdgeCreaseWeights;
-  pxr::VtArray<float>         _edgeCreaseWeights;
-  pxr::VtArray<int>           _edgeCreaseIndices;
+  VtArray<float>         _edgeCreaseWeights;
+  VtArray<int>           _edgeCreaseIndices;
 
   bool                        _hasUVs;
   JVR_INTERPOLATION_TYPE      _uvsInterpolationType;
-  pxr::VtArray<pxr::GfVec2f>  _uvs;
+  VtArray<GfVec2f>  _uvs;
 
   bool                        _hasColors;
   JVR_INTERPOLATION_TYPE      _colorsInterpolationType;
-  pxr::VtArray<pxr::GfVec3f>  _colors;
+  VtArray<GfVec3f>  _colors;
 
   //std::vector<UsdEmbreeMeshDatas> _extraDatas;
 };
 
 UsdEmbreeSubdiv* TranslateSubdiv( 
   UsdEmbreeContext* ctxt, 
-  const pxr::UsdGeomMesh& usdMesh,
-  const pxr::GfMatrix4d& worldMatrix,
+  const UsdGeomMesh& usdMesh,
+  const GfMatrix4d& worldMatrix,
   RTCScene scene
 );
 
 bool CheckNormals(
-  const pxr::UsdGeomMesh& usdMesh,
-  const pxr::UsdTimeCode& time,
+  const UsdGeomMesh& usdMesh,
+  const UsdTimeCode& time,
   UsdEmbreeSubdiv* subdiv
 );
 
 bool 
-CheckColors(const pxr::UsdGeomMesh& usdMesh,
-            const pxr::UsdTimeCode& time,
+CheckColors(const UsdGeomMesh& usdMesh,
+            const UsdTimeCode& time,
             UsdEmbreeSubdiv* mesh);
 
 JVR_NAMESPACE_CLOSE_SCOPE
