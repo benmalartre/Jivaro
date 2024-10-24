@@ -105,7 +105,7 @@ public:
   void DirtyAllEngines();
 
   // stage cache
-  pxr::UsdStageRefPtr& GetStage(){return _stage;};
+  UsdStageRefPtr& GetStage(){return _stage;};
   void SetStage(pxr::UsdStageRefPtr& stage);
   pxr::UsdStageCache& GetStageCache() { return _stageCache; }
 
@@ -117,7 +117,7 @@ public:
   virtual void InitExec(pxr::UsdStageRefPtr& stage);
   virtual void UpdateExec(pxr::UsdStageRefPtr& stage, float time);
   virtual void TerminateExec(pxr::UsdStageRefPtr& stage);
-  virtual void SendExecViewEvent(const ExecViewEventData& data);
+  virtual void SendExecViewEvent(const ViewEventData *data);
 
   // singleton 
   static Application *Get();

@@ -2,6 +2,10 @@
 #define JVR_APPLICATION_DELEGATE_H
 
 #include "../common.h"
+#include "pxr/imaging/hd/sceneDelegate.h"
+#include "pxr/imaging/hd/tokens.h"
+#include "pxr/imaging/glf/simpleLight.h"
+
 #include <pxr/usdImaging/usdImaging/delegate.h>
 
 
@@ -15,7 +19,19 @@ public:
   Delegate(pxr::HdRenderIndex* parentIndex, pxr::SdfPath const& delegateID);
   ~Delegate();
 
-  
+  // -----------------------------------------------------------------------//
+  /// \name Tasks
+  // -----------------------------------------------------------------------//
+  void AddRenderTask(pxr::SdfPath const &id);
+  void AddRenderSetupTask(pxr::SdfPath const &id);
+  void AddSimpleLightTask(pxr::SdfPath const &id);
+  void AddShadowTask(pxr::SdfPath const &id);
+  void AddSelectionTask(pxr::SdfPath const &id);
+  void AddDrawTargetTask(pxr::SdfPath const &id);
+  void AddPickTask(pxr::SdfPath const &id);
+
+  void SetTaskParam(pxr::SdfPath const &id, pxr::TfToken const &name, pxr::VtValue val);
+  pxr::VtValue GetTaskParam(pxr::SdfPath const &id, pxr::TfToken const &name);
 
   // -----------------------------------------------------------------------//
   /// \name Options
@@ -138,6 +154,12 @@ private:
 
   std::map<pxr::SdfPath, pxr::VtValue> _materials;
   std::map<pxr::SdfPath, pxr::SdfPath> _materialBindings;
+
+  using _ValueCache = pxr::TfHashMap<pxr::TfToken, pxr::VtValue, pxr::TfToken::HashFunctor>;
+  using _ValueCacheMap = pxr::TfHashMap<pxr::SdfPath, _ValueCache, pxr::SdfPath::Hash>;
+  _ValueCacheMap _valueCacheMap;
+
+  pxr::SdfPath _cameraId;
 
 };
 

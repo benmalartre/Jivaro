@@ -81,8 +81,7 @@ class ViewportUI : public BaseUI
     /*
     pxr::HdSelectionSharedPtr _Pick(pxr::GfVec2i const& startPos,
       pxr::GfVec2i const& endPos, pxr::TfToken const& pickTarget);*/
-    
-    
+
   private:
     void                                _DrawPickMode();
     GLuint                              _texture;

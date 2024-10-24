@@ -163,4 +163,33 @@ void BaseUI::AttachTooltip(const char* tooltip)
   GetWindow()->DirtyViewsUnderBox(min, pxr::GfVec2i(size.x, size.y));
 }
 
+
+ViewEventData 
+BaseUI::_MouseButtonEventData(int button, int action, int mods, int x, int y)
+{
+  ViewEventData data;
+  data.type = ViewEventData::MOUSE_BUTTON;
+  data.button = button;
+  data.action = action;
+  data.mods = mods;
+  data.x = x - GetX();
+  data.y = y - GetY();
+  data.width = GetWidth();
+  data.height = GetHeight();
+  return data;
+}
+
+ViewEventData 
+BaseUI::_MouseMoveEventData(int x, int y)
+{
+  ViewEventData data;
+  data.type = ViewEventData::MOUSE_MOVE;
+
+  data.x = x - GetX();
+  data.y = y - GetY();
+  data.width = GetWidth();
+  data.height = GetHeight();
+  return data;
+}
+
 JVR_NAMESPACE_CLOSE_SCOPE

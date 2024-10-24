@@ -25,6 +25,12 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
+TF_DEFINE_PRIVATE_TOKENS(
+  _tokens,
+  (meshPoints)
+  (pickables)
+);
+
 TF_DEFINE_ENV_SETTING(JVR_ENGINE_EXEC_SCENE_DELEGATE_ID, "/",
   "Default Jivaro scene delegate id");
 
@@ -65,6 +71,14 @@ void Engine::InitExec(Scene* scene)
 {
   _delegate = new Delegate(_GetRenderIndex(), _GetUsdImagingDelegateId());
   _delegate->SetScene(scene);
+  // Add a meshPoints repr since it isn't populated in 
+    // HdRenderIndex::_ConfigureReprs
+    HdMesh::ConfigureRepr(_tokens->meshPoints,
+                          HdMeshReprDesc(HdMeshGeomStylePoints,
+                                         HdCullStyleNothing,
+                                         HdMeshReprDescTokens->pointColor,
+                                         /*flatShadingEnabled=*/true,
+                                         /*blendWireframeColor=*/false));
 }
 
 
@@ -138,6 +152,34 @@ Engine::TestIntersection(
 
   _PrepareRender(params);
 
+
+
+  /*
+  
+  HdxPickHitVector allHits;
+    HdxPickTaskContextParams p;
+    p.resolution = HdxUnitTestUtils::CalculatePickResolution(
+        startPos, endPos, GfVec2i(4,4));
+    p.pickTarget = pickTarget;
+    p.resolveMode = HdxPickTokens->resolveUnique;
+    p.viewMatrix = viewMatrix;
+    p.projectionMatrix = HdxUnitTestUtils::ComputePickingProjectionMatrix(
+        startPos, endPos, GfVec2i(width, height), frustum);
+    p.collection = _pickablesCol;
+    p.outHits = &allHits;
+
+    HdTaskSharedPtrVector tasks;
+    tasks.push_back(GetDelegate().GetRenderIndex().GetTask(
+        SdfPath("/pickTask")));
+    VtValue pickParams(p);
+    _GetEngine()->SetTaskContextData(HdxPickTokens->pickParams, pickParams);
+    _GetEngine()->Execute(&GetDelegate().GetRenderIndex(), &tasks);
+
+    return HdxUnitTestUtils::TranslateHitsToSelection(
+        p.pickTarget, HdSelection::HighlightModeSelect, allHits);
+  
+  */
+
   pxr::HdxPickHitVector allHits;
   pxr::HdxPickTaskContextParams pickParams;
   pickParams.resolveMode = pxr::HdxPickTokens->resolveNearestToCenter;
@@ -166,6 +208,8 @@ Engine::TestIntersection(
   if (outHitNormal) {
     *outHitNormal = hit.worldSpaceHitNormal;
   }
+
+  if(!hit.objectId.IsEmpty() && !_CheckPrimSelectable(hit.objectId)) return false;
 
   hit.objectId = _GetSceneDelegate()->GetScenePrimPath(
     hit.objectId, hit.instanceIndex, outInstancerContext);
@@ -230,6 +274,14 @@ Engine::DecodeIntersection(
     *outHitInstanceIndex = instanceIdx;
   }
 
+  return true;
+}
+
+bool
+Engine::_CheckPrimSelectable(const pxr::SdfPath &path)
+{
+  Scene* scene = _delegate->GetScene();
+  if(!scene->GetPrim(path)->geom->IsInput())return false;
   return true;
 }
 

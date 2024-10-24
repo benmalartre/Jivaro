@@ -330,7 +330,7 @@ Application::TerminateExec(pxr::UsdStageRefPtr& stage)
 }
 
 void 
-Application::SendExecViewEvent(const ExecViewEventData& data)
+Application::SendExecViewEvent(const ViewEventData *data)
 {
   _exec->ViewEvent(data);
 }

@@ -30,7 +30,7 @@ float Geometry::FrameDuration = 1.f / 24.f;
 
 Geometry::Geometry()
   : _type(INVALID)
-  , _mode(INPUT|OUTPUT)
+  , _mode(OUTPUT)
   , _wirecolor(pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1))
   , _prim()
 {
@@ -39,7 +39,7 @@ Geometry::Geometry()
 
 Geometry::Geometry(int type, const pxr::GfMatrix4d& world)
   : _type(type)
-  , _mode(INPUT|OUTPUT)
+  , _mode(OUTPUT)
   , _wirecolor(pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1))
   , _prim()
 {

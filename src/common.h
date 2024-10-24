@@ -84,5 +84,7 @@ constexpr const char * DecimalPrecision = "%.3f";
 // callback prototype
 using CALLBACK_FN = std::function<void()>;
 
+PXR_NAMESPACE_USING_DIRECTIVE
+
 #endif // JVR_COMMON_H
 

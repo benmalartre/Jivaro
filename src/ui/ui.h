@@ -72,6 +72,27 @@ typedef std::map<std::string, int> UITypeCounter;
 
 
 class HeadUI;
+
+struct ViewEventData {
+  enum Type {
+    NONE,
+    MOUSE_BUTTON,
+    MOUSE_MOVE,
+    KEYBOARD_INPUT
+  };
+
+  short type;
+  int button;
+  int action;
+  int mods;
+  int x;
+  int y;
+  int key;
+  int width;
+  int height;
+};
+
+
 class BaseUI : public pxr::TfWeakBase
 {
 public:
@@ -146,6 +167,10 @@ public:
   virtual void OnAllNotices(const pxr::TfNotice& n);
   
 protected:
+  // execution event
+  ViewEventData _MouseButtonEventData(int button, int action, int mods, int x, int y);
+  ViewEventData _MouseMoveEventData(int x, int y);
+
   short                   _type;
   bool                    _initialized;
   bool                    _interacting;

@@ -236,18 +236,9 @@ void ViewportUI::MouseButton(int button, int action, int mods)
   _parent->SetDirty();
 
   Application* app = Application::Get();
-  if(app->GetExec()) {
-    ExecViewEventData data;
-    data.type = ExecViewEventData::MOUSE_BUTTON;
-    data.button = button;
-    data.action = action;
-    data.mods = mods;
-    data.x = x - GetX();
-    data.y = y - GetY();
-    data.width = GetWidth();
-    data.height = GetHeight();
-    app->SendExecViewEvent(data);
-  }
+  if(app->GetExec()) 
+    app->SendExecViewEvent(&_MouseButtonEventData(button, action, mods, x, y));
+  
 }
 
 void ViewportUI::MouseMove(int x, int y) 
@@ -717,6 +708,7 @@ ViewportUI::_ComputePickFrustum(int x, int y)
 
 bool ViewportUI::Pick(int x, int y, int mods)
 {
+  std::cout << "Viewport UI PICK CALLED!!!" << std::endl;
   if (y - GetY() < 32) return false;
   Application* app = Application::Get();
   Selection* selection = app->GetSelection();
@@ -762,31 +754,4 @@ bool ViewportUI::Pick(int x, int y, int mods)
   }
 }
 
-/*
-pxr::HdSelectionSharedPtr
-ViewportUI::_Pick(pxr::GfVec2i const& startPos, pxr::GfVec2i const& endPos,
-  pxr::TfToken const& pickTarget)
-{
-  pxr::HdxPickHitVector allHits;
-  pxr::HdxPickTaskContextParams p;
-  p.resolution = pxr::HdxUnitTestUtils::CalculatePickResolution(
-    startPos, endPos, pxr::GfVec2i(4, 4));
-  p.pickTarget = pickTarget;
-  p.resolveMode = pxr::HdxPickTokens->resolveUnique;
-  p.viewMatrix = _camera->GetViewMatrix();
-  p.projectionMatrix = pxr::HdxUnitTestUtils::ComputePickingProjectionMatrix(
-    startPos, endPos, pxr::GfVec2i(GetWidth(), GetHeight()), _camera->_GetFrustum());
-  p.collection = _pickablesCol;
-  p.outHits = &allHits;
-
-  pxr::HdTaskSharedPtrVector tasks;
-  tasks.push_back(_renderIndex->GetTask(pxr::SdfPath("/pickTask")));
-  pxr::VtValue pickParams(p);
-  _engine->SetTaskContextData(HdxPickTokens->pickParams, pickParams);
-  _engine->Execute(_renderIndex.get(), &tasks);
-
-  return pxr::HdxUnitTestUtils::TranslateHitsToSelection(
-    p.pickTarget, pxr::HdSelection::HighlightModeSelect, allHits);
-}
-*/
 JVR_NAMESPACE_CLOSE_SCOPE

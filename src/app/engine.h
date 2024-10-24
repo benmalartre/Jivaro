@@ -70,12 +70,24 @@ public:
   void SetHighlightSelection(bool state) { _highlightSelection = state; };
   bool GetHighlightSelection() { return _highlightSelection; };
 
+  void SetSceneColReprSelector(pxr::HdReprSelector const &reprSelector) {
+    _collection.SetReprSelector(reprSelector);
+    pxr::SdfPath renderTask("/renderTask");
+    _delegate->SetTaskParam(renderTask, pxr::HdTokens->collection,
+        pxr::VtValue(_collection));
+  }
+
   Delegate* GetDelegate() { return _delegate; };
 
+protected:
+  const pxr::HdRprimCollection &_GetCollection() const { return _collection; };
+  bool _CheckPrimSelectable(const pxr::SdfPath &path);
+
 private:
-  bool        _dirty;
-  bool        _highlightSelection;
-  Delegate*   _delegate;
+  bool                    _dirty;
+  bool                    _highlightSelection;
+  Delegate*               _delegate;
+  pxr::HdRprimCollection  _collection;
   //std::vector<View*> _views;
 };
 

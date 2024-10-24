@@ -1,3 +1,10 @@
+#include "pxr/imaging/hdx/drawTargetTask.h"
+#include "pxr/imaging/hdx/pickTask.h"
+#include "pxr/imaging/hdx/renderTask.h"
+#include "pxr/imaging/hdx/selectionTask.h"
+#include "pxr/imaging/hdx/simpleLightTask.h"
+#include "pxr/imaging/hdx/shadowTask.h"
+#include "pxr/imaging/hdx/shadowMatrixComputation.h"
 
 #include "../app/delegate.h"
 #include "../geometry/deformable.h"
@@ -19,12 +26,112 @@ Delegate::~Delegate()
 bool
 Delegate::IsEnabled(pxr::TfToken const& option) const
 {
-    if (option == pxr::HdOptionTokens->parallelRprimSync) {
-        return true;
-    }
-
-    return false;
+  if (option == pxr::HdOptionTokens->parallelRprimSync)
+    return true;
+  return false;
 }
+
+
+void
+Delegate::AddRenderTask(pxr::SdfPath const &id)
+{
+  GetRenderIndex().InsertTask<pxr::HdxRenderTask>(this, id);
+  _ValueCache &cache = _valueCacheMap[id];
+  cache[pxr::HdTokens->collection]
+    = pxr::HdRprimCollection(pxr::HdTokens->geometry, 
+      pxr::HdReprSelector(pxr::HdReprTokens->smoothHull));
+
+  // Don't filter on render tag.
+  // XXX: However, this will mean no prim passes if any stage defines a tag
+  cache[pxr::HdTokens->renderTags] = pxr::TfTokenVector();
+}
+
+void
+Delegate::AddRenderSetupTask(pxr::SdfPath const &id)
+{
+  GetRenderIndex().InsertTask<pxr::HdxRenderSetupTask>(this, id);
+  _ValueCache &cache = _valueCacheMap[id];
+  pxr::HdxRenderTaskParams params;
+  params.camera = _cameraId;
+  params.viewport = pxr::GfVec4f(0, 0, 512, 512);
+  cache[pxr::HdTokens->params] = pxr::VtValue(params);
+}
+
+void
+Delegate::AddSimpleLightTask(pxr::SdfPath const &id)
+{
+  GetRenderIndex().InsertTask<pxr::HdxSimpleLightTask>(this, id);
+  _ValueCache &cache = _valueCacheMap[id];
+  pxr::HdxSimpleLightTaskParams params;
+  params.cameraPath = _cameraId;
+  params.viewport = pxr::GfVec4f(0,0,512,512);
+  params.enableShadows = true;
+  
+  cache[pxr::HdTokens->params] = pxr::VtValue(params);
+}
+
+void
+Delegate::AddShadowTask(pxr::SdfPath const &id)
+{
+  GetRenderIndex().InsertTask<pxr::HdxShadowTask>(this, id);
+  _ValueCache &cache = _valueCacheMap[id];
+  pxr::HdxShadowTaskParams params;
+  cache[pxr::HdTokens->params] = pxr::VtValue(params);
+}
+
+void
+Delegate::AddSelectionTask(pxr::SdfPath const &id)
+{
+  GetRenderIndex().InsertTask<pxr::HdxSelectionTask>(this, id);
+}
+
+void
+Delegate::AddDrawTargetTask(pxr::SdfPath const &id)
+{
+  GetRenderIndex().InsertTask<pxr::HdxDrawTargetTask>(this, id);
+  _ValueCache &cache = _valueCacheMap[id];
+
+  pxr::HdxDrawTargetTaskParams params;
+  params.enableLighting = true;
+  cache[pxr::HdTokens->params] = params;
+}
+
+void
+Delegate::AddPickTask(pxr::SdfPath const &id)
+{
+  GetRenderIndex().InsertTask<pxr::HdxPickTask>(this, id);
+  _ValueCache &cache = _valueCacheMap[id];
+
+  pxr::HdxPickTaskParams params;
+  cache[pxr::HdTokens->params] = params;
+
+  // Don't filter on render tag.
+  // XXX: However, this will mean no prim passes if any stage defines a tag
+  cache[pxr::HdTokens->renderTags] = pxr::TfTokenVector();
+}
+
+void
+Delegate::SetTaskParam(
+  pxr::SdfPath const &id, pxr::TfToken const &name, pxr::VtValue val)
+{
+  _ValueCache &cache = _valueCacheMap[id];
+  cache[name] = val;
+
+  if (name == pxr::HdTokens->collection) {
+    GetRenderIndex().GetChangeTracker().MarkTaskDirty(
+      id, pxr::HdChangeTracker::DirtyCollection);
+  } else if (name == pxr::HdTokens->params) {
+    GetRenderIndex().GetChangeTracker().MarkTaskDirty(
+      id, pxr::HdChangeTracker::DirtyParams);
+  }
+}
+
+pxr::VtValue
+Delegate::GetTaskParam(pxr::SdfPath const &id, pxr::TfToken const &name)
+{
+  return _valueCacheMap[id][name];
+}
+
 
 // -----------------------------------------------------------------------//
 /// \name Rprim Aspects

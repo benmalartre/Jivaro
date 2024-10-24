@@ -1,10 +1,11 @@
 #include <GLFW/glfw3.h>
 #include <pxr/usd/usdGeom/xform.h>
+#include "../ui/ui.h"
 #include "../exec/execution.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-void Execution::_GetRootPrim(pxr::UsdStageRefPtr& stage)
+void Execution::_GetRootPrim(pxr::UsdStageRefPtr &stage)
 {
   // get root prim
   _rootPrim = stage->GetDefaultPrim();
@@ -17,27 +18,27 @@ void Execution::_GetRootPrim(pxr::UsdStageRefPtr& stage)
 };
 
 
-void Execution::ViewEvent(const ExecViewEventData& data)
+void Execution::ViewEvent(const ViewEventData *data)
 {
-  switch(data.type) {
-    case ExecViewEventData::MOUSE_BUTTON:
+  switch(data->type) {
+    case ViewEventData::MOUSE_BUTTON:
       _MouseButtonEvent(data);
       break;
 
-    case ExecViewEventData::MOUSE_MOVE:
+    case ViewEventData::MOUSE_MOVE:
       _MouseMoveEvent(data);
       break;
 
-    case ExecViewEventData::KEYBOARD_INPUT:
+    case ViewEventData::KEYBOARD_INPUT:
       _KeyboardInputEvent(data);
       break;
   }
 }
 
-void Execution::_MouseButtonEvent(const ExecViewEventData &data)
+void Execution::_MouseButtonEvent(const ViewEventData *data)
 {
-  std::cout << "EXEC MOUSE BUTTON EVENT : " << data.button << " : " << " was ";
-  switch(data.action) {
+  std::cout << "EXEC MOUSE BUTTON EVENT : " << data->button << " : " << " was ";
+  switch(data->action) {
     case GLFW_PRESS:
       std::cout << "pressed!" << std::endl;
       break;
@@ -52,12 +53,12 @@ void Execution::_MouseButtonEvent(const ExecViewEventData &data)
   }
 }
 
-void Execution::_MouseMoveEvent(const ExecViewEventData &data)
+void Execution::_MouseMoveEvent(const ViewEventData *data)
 {
 
 }
 
-void Execution::_KeyboardInputEvent(const ExecViewEventData &data)
+void Execution::_KeyboardInputEvent(const ViewEventData *data)
 {
 
 }
