@@ -1,5 +1,5 @@
 //
-// Copyright 2023 Pixar
+// Copyright 2024 Pixar
 //
 // Licensed under the terms set forth in the LICENSE.txt file available at
 // https://openusd.org/license.
@@ -9,14 +9,14 @@
 #include "pxr/base/ts/tsTest_Types.h"
 #include "pxr/base/tf/pyContainerConversions.h"
 
-#include <boost/python.hpp>
+#include "pxr/external/boost/python/class.hpp"
 #include <sstream>
 #include <string>
 #include <cstdio>
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
-using namespace boost::python;
+using namespace pxr_boost::python;
 
 
 // Return a full-precision python repr for a double value.

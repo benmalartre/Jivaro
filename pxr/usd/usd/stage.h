@@ -22,6 +22,7 @@
 
 #include "pxr/base/tf/declarePtrs.h"
 #include "pxr/base/tf/hashmap.h"
+#include "pxr/base/tf/type.h"
 #include "pxr/base/tf/weakBase.h"
 
 #include "pxr/usd/ar/ar.h"
@@ -51,6 +52,7 @@ PXR_NAMESPACE_OPEN_SCOPE
 class ArResolverContext;
 class GfInterval;
 class SdfAbstractDataValue;
+class TsSpline;
 class Usd_AssetPathContext;
 class Usd_ClipCache;
 class Usd_InstanceCache;
@@ -1730,6 +1732,7 @@ private:
             std::is_same<T, SdfPathExpression>::value ||
             std::is_same<T, VtArray<SdfPathExpression>>::value ||
             std::is_same<T, SdfTimeSampleMap>::value ||
+            std::is_same<T, TsSpline>::value ||
             std::is_same<T, VtDictionary>::value;
     };
 
@@ -1753,6 +1756,9 @@ private:
     template <class T>
     bool _SetEditTargetMappedValue(
         UsdTimeCode time, const UsdAttribute &attr, const T &newValue);
+
+    TfType _GetAttributeValueType(
+        const UsdAttribute &attr) const;
 
     template <class T>
     bool _SetValueImpl(
@@ -1895,8 +1901,13 @@ private:
     // Returns the path of the Usd prim using the prim index at the given path.
     SdfPath _GetPrimPathUsingPrimIndexAtPath(const SdfPath& primIndexPath) const;
 
-    // Update stage contents in response to changes in scene description.
+    // Responds to LayersDidChangeSentPerLayer event and update stage contents 
+    // in response to changes in scene description.
     void _HandleLayersDidChange(const SdfNotice::LayersDidChangeSentPerLayer &);
+
+    // Pushes changes through PCP to determine invalidation based on 
+    // composition metadata.
+    void _ProcessChangeLists(const SdfLayerChangeListVec &);
 
     // Update stage contents in response to changes to the asset resolver.
     void _HandleResolverDidChange(const ArNotice::ResolverChanged &);
@@ -2015,6 +2026,7 @@ public:
             std::is_same<T, SdfPathExpression>::value ||
             std::is_same<T, VtArray<SdfPathExpression>>::value ||
             std::is_same<T, SdfTimeSampleMap>::value ||
+            std::is_same<T, TsSpline>::value ||
             std::is_same<T, VtDictionary>::value;
     };
 
@@ -2350,6 +2362,7 @@ private:
     friend class UsdAttributeQuery;
     friend class UsdEditTarget;
     friend class UsdInherits;
+    friend class UsdNamespaceEditor;
     friend class UsdObject;
     friend class UsdPrim;
     friend class UsdProperty;
@@ -2362,6 +2375,7 @@ private:
     friend class Usd_PcpCacheAccess;
     friend class Usd_PrimData;
     friend class Usd_StageOpenRequest;
+    friend class Usd_TypeQueryAccess;
     template <class T> friend struct Usd_AttrGetValueHelper;
     friend struct Usd_AttrGetUntypedValueHelper;
     template <class RefsOrPayloadsEditorType, class RefsOrPayloadsProxyType> 

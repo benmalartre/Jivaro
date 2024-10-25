@@ -75,6 +75,7 @@
 #include "pxr/base/tf/span.h"
 #include "pxr/base/tf/stl.h"
 #include "pxr/base/tf/stringUtils.h"
+#include "pxr/base/ts/spline.h"
 #include "pxr/base/work/dispatcher.h"
 #include "pxr/base/work/loops.h"
 #include "pxr/base/work/utils.h"
@@ -1818,6 +1819,94 @@ _SetMappedValueForEditTarget(UsdObject const &obj,
     return setValueImpl(in);
 }
 
+class Usd_TypeQueryAccess
+{
+public:
+    static TfType GetAttributeValueType(
+        const UsdAttribute &attr)
+    {
+        return attr.GetStage()->_GetAttributeValueType(attr);
+    }
+};
+
+// Set handler for splines.  Verifies that value types match, then applies layer
+// offsets to knot times, tangent widths, and (for timecode-valued attributes)
+// values.  Of these two jobs, type validation is unusual for a SetMappedValue
+// handler, but this is a convenient place for it.
+//
+template <typename Fn>
+static bool
+_SetMappedValueForEditTarget(UsdObject const &obj,
+                             const TsSpline &spline,
+                             const UsdEditTarget &editTarget,
+                             const Fn &setValueImpl)
+{
+    if (!obj.Is<UsdAttribute>()) {
+        TF_CODING_ERROR("Splines can only be set in attributes");
+        return false;
+    }
+
+    static const TfType doubleType = TfType::Find<double>();
+    static const TfType timecodeType = TfType::Find<SdfTimeCode>();
+
+    // Find the attribute's value type.
+    const UsdAttribute attr = obj.As<UsdAttribute>();
+    const TfType attrType = Usd_TypeQueryAccess::GetAttributeValueType(attr);
+    if (!attrType) {
+        return false;
+    }
+    const bool attrIsTimeValued = (attrType == timecodeType);
+
+    // Verify splines are supported for this value type.
+    if (!TsSpline::IsSupportedValueType(attrType)
+            && attrType != timecodeType) {
+        TF_CODING_ERROR("Can't set spline on <%s>: splines are only "
+                        "supported on scalar floating-point attributes",
+                        attr.GetPath().GetText());
+        return false;
+    }
+
+    // Verify a spline of the correct value type has been provided.
+    const TfType expectedSplineValueType =
+        (attrIsTimeValued ? doubleType : attrType);
+    if (spline.GetValueType() != expectedSplineValueType) {
+        TF_CODING_ERROR("Can't set spline of type '%s' on <%s>, "
+                        "which requires splines of type '%s'",
+                        spline.GetValueType().GetTypeName().c_str(),
+                        attr.GetPath().GetText(),
+                        expectedSplineValueType.GetTypeName().c_str());
+        return false;
+    }
+
+    // Verify we don't have a mismatch in time-valued-ness.
+    if (attrIsTimeValued && !spline.IsTimeValued()) {
+        TF_CODING_ERROR("Can't set non-time-valued spline on <%s>, "
+                        "which is time-valued",
+                        attr.GetPath().GetText());
+        return false;
+    }
+    if (!attrIsTimeValued && spline.IsTimeValued()) {
+        TF_CODING_ERROR("Can't non-time-valued spline on <%s>, "
+                        "which is not time-valued",
+                        attr.GetPath().GetText());
+        return false;
+    }
+
+    // Make a copy of the spline to modify.
+    TsSpline mappedSpline = spline;
+
+    // Apply layer offset.
+    const SdfLayerOffset &layerOffset =
+        editTarget.GetMapFunction().GetTimeOffset();
+    if (!layerOffset.IsIdentity()) {
+        Usd_ApplyLayerOffsetToValue(&mappedSpline, layerOffset.GetInverse());
+    }
+
+    // Pass to setter.
+    SdfAbstractDataConstTypedValue<TsSpline> splineValue(&mappedSpline);
+    return setValueImpl(splineValue);
+}
+
 template <class T>
 bool UsdStage::_SetEditTargetMappedMetadata(
     const UsdObject &obj, const TfToken& fieldName,
@@ -2084,6 +2173,7 @@ _IsPrivateFieldKey(const TfToken& fieldKey)
         // Value keys.
         ignoredKeys.insert(SdfFieldKeys->Default);
         ignoredKeys.insert(SdfFieldKeys->TimeSamples);
+        ignoredKeys.insert(SdfFieldKeys->Spline);
     });
 
     // First look-up the field in the exclude/ignore table.
@@ -3969,10 +4059,14 @@ UsdStage::MuteAndUnmuteLayers(const std::vector<std::string> &muteLayers,
     TRACE_FUNCTION();
     TfAutoMallocTag tag("Usd", _GetMallocTagId());
 
-    PcpChanges changes;
+    _PendingChanges localPendingChanges;
+    if (!_pendingChanges) {
+        _pendingChanges = &localPendingChanges;
+    }
+
     std::vector<std::string> newMutedLayers, newUnMutedLayers;
-    _cache->RequestLayerMuting(muteLayers, unmuteLayers, &changes, 
-            &newMutedLayers, &newUnMutedLayers);
+    _cache->RequestLayerMuting(muteLayers, unmuteLayers,
+            &_pendingChanges->pcpChanges, &newMutedLayers, &newUnMutedLayers);
 
     UsdStageWeakPtr self(this);
 
@@ -3983,21 +4077,15 @@ UsdStage::MuteAndUnmuteLayers(const std::vector<std::string> &muteLayers,
             .Send(self);
     }
 
-    if (changes.IsEmpty()) {
+    if (_pendingChanges->pcpChanges.IsEmpty()) {
+        _pendingChanges = nullptr;
         return;
     }
 
-    using _PathsToChangesMap = UsdNotice::ObjectsChanged::_PathsToChangesMap;
-    _PathsToChangesMap resyncChanges;
-    _Recompose(changes, &resyncChanges);
-
-    {
-        TRACE_FUNCTION_SCOPE("sending UsdNotice::ObjectsChanged");
-        UsdNotice::ObjectsChanged(self, &resyncChanges).Send(self);
-    }
-    {
-        TRACE_FUNCTION_SCOPE("sending UsdNotice::StageContentsChanged");
-        UsdNotice::StageContentsChanged(self).Send(self);
+    const auto& cacheChanges = _pendingChanges->pcpChanges.GetCacheChanges();
+    const auto result = cacheChanges.find(_cache.get());
+    if (result != cacheChanges.end()) {
+        _ProcessChangeLists(result->second.layerChangeListVec);
     }
 }
 
@@ -4281,13 +4369,26 @@ UsdStage::_HandleLayersDidChange(
     TF_DEBUG(USD_CHANGES).Msg(
         "\nHandleLayersDidChange received (%s)\n", UsdDescribe(this).c_str());
 
-    // If a function up the call stack has set up _PendingChanges, merge in
-    // all of the information from layer changes so it can be processed later.
-    // Otherwise, fill in our own _PendingChanges and process it at the end
-    // of this function.
     _PendingChanges localPendingChanges;
     if (!_pendingChanges) {
         _pendingChanges = &localPendingChanges;
+    }
+
+    // Push changes through Pcp to determine further invalidation based on 
+    // composition metadata (reference, inherits, variant selections, etc).
+    _pendingChanges->pcpChanges.DidChange(_cache.get(), n.GetChangeListVec());
+
+    _ProcessChangeLists(n.GetChangeListVec());
+}
+
+void UsdStage::_ProcessChangeLists(
+    const SdfLayerChangeListVec & changeListVec)
+{
+    // Callers of this function are expected to have  set up _PendingChanges.
+    // We will merge in all of the information from layer changes so it can 
+    // be processed later.
+    if (!TF_VERIFY(_pendingChanges)) {
+        return;
     }
 
     // Keep track of paths to USD objects that need to be recomposed or
@@ -4323,7 +4424,7 @@ UsdStage::_HandleLayersDidChange(
 
     // Add dependent paths for any PrimSpecs whose fields have changed that may
     // affect cached prim information.
-    for(const auto& layerAndChangelist : n.GetChangeListVec()) {
+    for(const auto& layerAndChangelist : changeListVec) {
         // If this layer does not pertain to us, skip.
         const SdfLayerHandle &layer = layerAndChangelist.first;
         if (_cache->FindAllLayerStacksUsingLayer(layer).empty()) {
@@ -4429,19 +4530,13 @@ UsdStage::_HandleLayersDidChange(
             // changes.
             if (!willRecompose) {
                 _AddAffectedStagePaths(layer, sdfPath, 
-                                  *_cache, &otherInfoChanges, &entry);
+                        *_cache, &otherInfoChanges, &entry);
             }
         }
     }
 
-    // Now we have collected the affected paths in UsdStage namespace in
-    // recomposeChanges, otherResyncChanges, otherInfoChanges and
-    // changedActivePaths.  Push changes through Pcp to determine further
-    // invalidation based on composition metadata (reference, inherits, variant
-    // selections, etc).
-    PcpChanges& changes = _pendingChanges->pcpChanges;
     const PcpCache *cache = _cache.get();
-    changes.DidChange(cache, n.GetChangeListVec());
+    PcpChanges& changes = _pendingChanges->pcpChanges;
 
     // Pcp does not consider activation changes to be significant since
     // it doesn't look at activation during composition. However, UsdStage
@@ -4539,6 +4634,23 @@ UsdStage::_ProcessPendingChanges()
     remapChangesToPrototypes(&assetPathResyncChanges);
     remapChangesToPrototypes(&otherResyncChanges);
     remapChangesToPrototypes(&otherInfoChanges);
+
+    // XXX: Check Pcp Changes to see if a sublayer was added / removed or a
+    // layer was muted / unmuted
+    // If so, we will trigger a resync on `/`. This preserves existing 
+    // notification behavior and insulates third party clients from the finer
+    // grained changes that Pcp is now generating. This will be removed in a 
+    // future change.
+
+    const PcpCacheChanges* cacheChanges = 
+        TfMapLookupPtr(changes.GetCacheChanges(), _cache.get());
+
+    if (cacheChanges && 
+        (cacheChanges->didAddOrRemoveNonEmptySublayer ||
+        cacheChanges->didMuteOrUnmuteNonEmptyLayer))
+    {
+        recomposeChanges[SdfPath::AbsoluteRootPath()];
+    }
 
     // Before processing any prim type info changes, remove any that would
     // already have been covered by the recomposed prims.
@@ -5792,7 +5904,12 @@ static const T &_UncheckedGet(const VtValue *val) {
 template <class T>
 void _UncheckedSwap(SdfAbstractDataValue *dv, T& val) {
     using namespace std;
-    swap(*static_cast<T*>(dv->value), val);
+    // Move the stored value aside, then swap, and move the result back by way
+    // of StoreValue() -- this lets us pick up StoreValue()'s type-mismatch and
+    // value-block detection logic.
+    T tmp = std::move(*static_cast<T*>(dv->value));
+    swap(tmp, val);
+    dv->StoreValue(std::move(tmp));
 }
 template <class T>
 void _UncheckedSwap(VtValue *value, T& val) {
@@ -5951,24 +6068,30 @@ _TryResolvePathExprs(Storage storage, UsdObject const &obj,
 {
     // Resolve.
     if (_IsHolding<SdfPathExpression>(storage)) {
-        SdfPathExpression expr;
-        _UncheckedSwap(storage, expr);
-        expr = _MapPathExpressionToPrim(
-            expr, node.GetMapToRoot().Evaluate(),
-            Usd_StageImplAccess::GetPrimProtoToInstancePathMap(obj.GetPrim()));
-        _UncheckedSwap(storage, expr);
+        if (node) {
+            SdfPathExpression expr;
+            _UncheckedSwap(storage, expr);
+            expr = _MapPathExpressionToPrim(
+                expr, node.GetMapToRoot().Evaluate(),
+                Usd_StageImplAccess::GetPrimProtoToInstancePathMap(
+                    obj.GetPrim()));
+            _UncheckedSwap(storage, expr);
+        }
         return true;
     }
     else if (_IsHolding<VtArray<SdfPathExpression>>(storage)) {
-        VtArray<SdfPathExpression> exprs;
-        _UncheckedSwap(storage, exprs);
-        auto protoToInstMap =
-            Usd_StageImplAccess::GetPrimProtoToInstancePathMap(obj.GetPrim());
-        PcpMapFunction const &mapFn = node.GetMapToRoot().Evaluate();
-        for (SdfPathExpression &expr: exprs) {
-            expr = _MapPathExpressionToPrim(expr, mapFn, protoToInstMap);
+        if (node) {
+            VtArray<SdfPathExpression> exprs;
+            _UncheckedSwap(storage, exprs);
+            auto protoToInstMap =
+                Usd_StageImplAccess::GetPrimProtoToInstancePathMap(
+                    obj.GetPrim());
+            PcpMapFunction const &mapFn = node.GetMapToRoot().Evaluate();
+            for (SdfPathExpression &expr: exprs) {
+                expr = _MapPathExpressionToPrim(expr, mapFn, protoToInstMap);
+            }
+            _UncheckedSwap(storage, exprs);
         }
-        _UncheckedSwap(storage, exprs);
         return true;
     }
     return false;
@@ -6055,6 +6178,7 @@ protected:
                       bool forFlattening = false)
         : _value(s)
         , _object(object)
+        , _foundAComposingValue(false)
         , _done(false)
         , _forFlattening(forFlattening) 
         {}
@@ -6107,10 +6231,13 @@ protected:
                     _object, _value, { &stage, layer, specPath, node },
                     context, &layerOffsetAccess, _forFlattening)) {
                 // Merge the resolved dictionary.
-                VtDictionaryOverRecursive(
-                    &tmpDict, _UncheckedGet<VtDictionary>(_value));
-                _UncheckedSwap(_value, tmpDict);
-            } 
+                if (_foundAComposingValue) {
+                    VtDictionaryOverRecursive(
+                        &tmpDict, _UncheckedGet<VtDictionary>(_value));
+                    _UncheckedSwap(_value, tmpDict);
+                }
+            }
+            _foundAComposingValue = true;
             return true;
         }
         return false;
@@ -6132,22 +6259,21 @@ protected:
         if (_GetFallbackValue(primDef, propName, fieldName, keyPath)) {
             // Always done after reading the fallback value.
             _done = true;
-            if (_IsHolding<VtDictionary>(_value)) {
+            if (_IsHolding<VtDictionary>(_value) && _foundAComposingValue) {
                 // Merge dictionaries: _value is weaker, tmpDict stronger.
                 VtDictionaryOverRecursive(&tmpDict, 
                                           _UncheckedGet<VtDictionary>(_value));
                 _UncheckedSwap(_value, tmpDict);
             }
+            _foundAComposingValue = true;
         }
     }
 
-    // Consumes an authored pathExpression value and merges it into the current
-    // strongest pathExpression value.
-    bool _ConsumeAndMergeAuthoredPathExpressions(const PcpNodeRef &node,
-                                                 const SdfLayerRefPtr &layer,
-                                                 const SdfPath &specPath,
-                                                 const TfToken &fieldName,
-                                                 const TfToken &keyPath) {
+    // Consumes an authored or fallback pathExpression value and merges it into
+    // the current strongest pathExpression value.
+    template <class GetValueFn>
+    bool _ConsumeAndMergePathExpressionsImpl(GetValueFn &&getValue,
+                                             PcpNodeRef node) {
         SdfPathExpression tmpExpr;
         VtArray<SdfPathExpression> tmpExprs;
         bool array = false;
@@ -6163,13 +6289,23 @@ protected:
         }
 
         // Try to read value from scene description.
-        if (_GetValue(layer, specPath, fieldName, keyPath)) {
-            // Try resolving the values in the dictionary.
-            if (_TryResolvePathExprs(_value, _object, node)) {
+        if (std::forward<GetValueFn>(getValue)()) {
+            // If this is a value block, set _done to stop composing, and
+            // swap back the composed value so far.
+            if (Usd_ValueContainsBlock(_value)) {
+                if (array) {
+                    _UncheckedSwap(_value, tmpExprs);
+                }
+                else {
+                    _UncheckedSwap(_value, tmpExpr);
+                }
+                _done = true;
+            } // Otherwise try resolving the path expressions.
+            else if (_TryResolvePathExprs(_value, _object, node)) {
                 // Merge the resolved expr.
                 if (array) {
                     // If the arrays are the same size, merge index-wise.
-                    // Otherwise just take the strongest?
+                    // Otherwise take the strongest.
                     VtArray<SdfPathExpression> weaker =
                         _UncheckedGet<VtArray<SdfPathExpression>>(_value);
                     if (weaker.size() == tmpExprs.size()) {
@@ -6184,14 +6320,31 @@ protected:
                     _UncheckedSwap(_value, tmpExprs);
                 }
                 else {
-                    tmpExpr = std::move(tmpExpr)
-                        .ComposeOver(_UncheckedGet<SdfPathExpression>(_value));
-                    _UncheckedSwap(_value, tmpExpr);
+                    if (_foundAComposingValue) {
+                        tmpExpr = std::move(tmpExpr).ComposeOver(
+                            _UncheckedGet<SdfPathExpression>(_value));
+                        _UncheckedSwap(_value, tmpExpr);
+                    }
                 }
             }
+            _foundAComposingValue = true;
             return true;
         }
         return false;
+    }
+
+    // Consumes an authored pathExpression value and merges it into the current
+    // strongest pathExpression value.
+    bool _ConsumeAndMergeAuthoredPathExpressions(const PcpNodeRef &node,
+                                                 const SdfLayerRefPtr &layer,
+                                                 const SdfPath &specPath,
+                                                 const TfToken &fieldName,
+                                                 const TfToken &keyPath) {
+
+        return _ConsumeAndMergePathExpressionsImpl(
+            [&]() {
+                return _GetValue(layer, specPath, fieldName, keyPath);
+            }, node);
     }
 
     // Consumes the fallback pathExpression value and merges it into the current
@@ -6200,54 +6353,17 @@ protected:
         const UsdPrimDefinition &primDef,
         const TfToken &propName,
         const TfToken &fieldName,
-        const TfToken &keyPath) 
-    {
-        SdfPathExpression tmpExpr;
-        VtArray<SdfPathExpression> tmpExprs;
-        bool array = false;
-        
-        // Copy to the side since we'll have to merge if the next opinion is
-        // also an expression.
-        if (_IsHolding<SdfPathExpression>(_value)) {
-            tmpExpr = _UncheckedGet<SdfPathExpression>(_value);
-        }
-        else {
-            array = true;
-            tmpExprs = _UncheckedGet<VtArray<SdfPathExpression>>(_value);
-        }
+        const TfToken &keyPath) {
 
-        // Try to read value from scene description.
-        if (_GetFallbackValue(primDef, propName, fieldName, keyPath)) {
-            // Always done after reading fallback value.
-            _done = true;
-            // No need to resolve a fallback value...
-            // Merge the resolved expr.
-            if (array) {
-                // If the arrays are the same size, merge index-wise.
-                // Otherwise just take the strongest?
-                VtArray<SdfPathExpression> weaker =
-                    _UncheckedGet<VtArray<SdfPathExpression>>(_value);
-                if (weaker.size() == tmpExprs.size()) {
-                    std::transform(
-                        tmpExprs.begin(), tmpExprs.end(), weaker.begin(),
-                        tmpExprs.begin(),
-                        [](SdfPathExpression const &stronger,
-                           SdfPathExpression const &weaker) {
-                            return stronger.ComposeOver(weaker);
-                        });
-                }
-                _UncheckedSwap(_value, tmpExprs);
-            }
-            else {
-                tmpExpr = std::move(tmpExpr)
-                    .ComposeOver(_UncheckedGet<SdfPathExpression>(_value));
-                _UncheckedSwap(_value, tmpExpr);
-            }
-        }
+        _ConsumeAndMergePathExpressionsImpl(
+            [&]() {
+                return _GetFallbackValue(primDef, propName, fieldName, keyPath);
+            }, /*node=*/{});
     }
 
     Storage _value;
     UsdObject _object;
+    bool _foundAComposingValue;
     bool _done;
     bool _forFlattening;
 };
@@ -6289,7 +6405,10 @@ struct UntypedValueComposer : public ValueComposerBase<VtValue *>
                 // We're done if we got value and it's not a dictionary or path
                 // expressions. For those types we'll continue to merge in
                 // weaker opinions.
-                if (!_IsHoldingDictionary() && !_IsHoldingPathExpressions()) {
+                if (_IsHoldingDictionary() || _IsHoldingPathExpressions()) {
+                    this->_foundAComposingValue = true;
+                }
+                else {
                     this->_done = true;
                 }
                 _ResolveValue(stage, node, layer, specPath);
@@ -6361,6 +6480,8 @@ protected:
             // Otherwise try resolving each of the the other resolvable 
             // types.
             _TryApplyLayerOffsetToValue<SdfTimeSampleMap>(
+                this->_value, layerOffsetAccess) ||
+            _TryApplyLayerOffsetToValue<TsSpline>(
                 this->_value, layerOffsetAccess) ||
             _TryResolveAssetPaths(
                 this->_value, context,
@@ -6541,6 +6662,18 @@ TypeSpecificValueComposer<SdfTimeSampleMap>::_ResolveValue(
     _UncheckedApplyLayerOffsetToValue<SdfTimeSampleMap>(_value, offset);
 }
 
+template <>
+void 
+TypeSpecificValueComposer<TsSpline>::_ResolveValue(
+    const UsdStage &stage,
+    const PcpNodeRef &node,
+    const SdfLayerRefPtr &layer,
+    const SdfPath &specPath)
+{
+    SdfLayerOffset offset = _GetLayerToStageOffset(node, layer);
+    _UncheckedApplyLayerOffsetToValue<TsSpline>(_value, offset);
+}
+
 // The TypeSpecificValueComposer for SdfPathExpression has additional
 // specialization for consuming values as it merges in weaker values unlike most
 // types that only consume the strongest value.
@@ -6701,6 +6834,34 @@ protected:
 
 }
 
+TfType
+UsdStage::_GetAttributeValueType(
+    const UsdAttribute &attr) const
+{
+    // Obtain typeName.
+    TfToken typeName;
+    SdfAbstractDataTypedValue<TfToken> abstrToken(&typeName);
+    TypeSpecificValueComposer<TfToken> composer(&abstrToken, attr);
+    _GetMetadataImpl(attr, SdfFieldKeys->TypeName, TfToken(),
+                     /*useFallbacks=*/true, &composer);
+
+    if (typeName.IsEmpty()) {
+        TF_RUNTIME_ERROR("Empty typeName for <%s>",
+                         attr.GetPath().GetText());
+        return TfType();
+    }
+
+    // Emit an error if this typeName is not known to our schema.
+    const TfType valType =
+        SdfSchema::GetInstance().FindType(typeName).GetType();
+    if (valType.IsUnknown()) {
+        TF_RUNTIME_ERROR("Unknown typename for <%s>: '%s'",
+                         typeName.GetText(), attr.GetPath().GetText());
+    }
+
+    return valType;
+}
+
 template <class T>
 bool
 UsdStage::_SetValueImpl(
@@ -6708,30 +6869,16 @@ UsdStage::_SetValueImpl(
 {
     // if we are setting a value block, we don't want type checking
     if (!Usd_ValueContainsBlock(&newValue)) {
-        // Do a type check.  Obtain typeName.
-        TfToken typeName;
-        SdfAbstractDataTypedValue<TfToken> abstrToken(&typeName);
-        TypeSpecificValueComposer<TfToken> composer(&abstrToken, attr);
-        _GetMetadataImpl(attr, SdfFieldKeys->TypeName, TfToken(), 
-                         /*useFallbacks=*/true, &composer);
-
-        if (typeName.IsEmpty()) {
-                TF_RUNTIME_ERROR("Empty typeName for <%s>", 
-                                 attr.GetPath().GetText());
-            return false;
-        }
-        // Ensure this typeName is known to our schema.
-        TfType valType = SdfSchema::GetInstance().FindType(typeName).GetType();
-        if (valType.IsUnknown()) {
-            TF_RUNTIME_ERROR("Unknown typename for <%s>: '%s'",
-                             typeName.GetText(), attr.GetPath().GetText());
+        // Find the attribute's value type.
+        const TfType valType = _GetAttributeValueType(attr);
+        if (!valType) {
             return false;
         }
         static const TfType opaqueType = TfType::Find<SdfOpaqueValue>();
         if (valType == opaqueType) {
-            TF_CODING_ERROR("Can't set value on <%s>: %s-typed attributes "
+            TF_CODING_ERROR("Can't set value on <%s>: opaque-typed attributes "
                             "cannot have an authored default value",
-                            attr.GetPath().GetText(), typeName.GetText());
+                            attr.GetPath().GetText());
             return false;
         }
         // Check that the passed value is the expected type.
@@ -9787,6 +9934,7 @@ INSTANTIATE_GET_TYPE_RESOLVED_AND_SET_MAPPED_METADATA(
 // SdfTimeSampleMap because we provide a specialization instead.
 INSTANTIATE_SET_MAPPED_METADATA(SdfTimeSampleMap);
 INSTANTIATE_GET_TYPE_RESOLVED_AND_SET_MAPPED_METADATA(VtDictionary);
+INSTANTIATE_GET_TYPE_RESOLVED_AND_SET_MAPPED_METADATA(TsSpline);
 
 #undef INSTANTIATE_GET_TYPE_RESOLVED_AND_SET_MAPPED_METADATA
 #undef INSTANTIATE_GET_TYPE_RESOLVED_METADATA

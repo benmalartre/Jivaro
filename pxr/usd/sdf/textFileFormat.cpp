@@ -22,6 +22,7 @@
 #include "pxr/base/tf/fileUtils.h"
 #include "pxr/base/tf/registryManager.h"
 #include "pxr/base/tf/staticData.h"
+#include "pxr/base/tf/stringUtils.h"
 #include "pxr/base/arch/fileSystem.h"
 
 #include <ostream>
@@ -37,9 +38,7 @@ TF_DEFINE_ENV_SETTING(
     "Warn when reading a text file larger than this number of MB "
     "(no warnings if set to 0)");
 
-PXR_NAMESPACE_CLOSE_SCOPE
-
-// Our interface to the YACC layer parser for parsing to SdfData.
+// Our interface to the parser for parsing to SdfData.
 extern bool Sdf_ParseLayer(
     const string& context, 
     const std::shared_ptr<PXR_NS::ArAsset>& asset,
@@ -55,8 +54,6 @@ extern bool Sdf_ParseLayerFromString(
     const string& version,
     PXR_NS::SdfDataRefPtr data,
     PXR_NS::SdfLayerHints *hints);
-
-PXR_NAMESPACE_OPEN_SCOPE
 
 TF_REGISTRY_FUNCTION(TfType)
 {
@@ -357,8 +354,17 @@ SdfTextFileFormat::ReadFromString(
 {
     SdfLayerHints hints;
     SdfAbstractDataRefPtr data = InitData(layer->GetFileFormatArguments());
+
+    // XXX: Its possible that str has leading whitespace, owing to in-code layer
+    // constructions. This is currently allowed in flex+bison parser, but will
+    // be tightened with the pegtl parser. Note that this whitespace trimming 
+    // code will eventually be removed, it's being put in place so as to provide 
+    // backward compatibility for in-code layer constructs to work with pegtl 
+    // parser also. This code should be removed when (USD-9838) gets worked on.
+    const std::string trimmedStr = TfStringTrimLeft(str);
+    
     if (!Sdf_ParseLayerFromString(
-            str, GetFormatId(), GetVersionString(),
+            trimmedStr, GetFormatId(), GetVersionString(),
             TfDynamic_cast<SdfDataRefPtr>(data), &hints)) {
         return false;
     }

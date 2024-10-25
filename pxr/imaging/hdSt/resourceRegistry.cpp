@@ -519,7 +519,8 @@ HdStBufferResourceSharedPtr
 HdStResourceRegistry::RegisterBufferResource(
     TfToken const &role, 
     HdTupleType tupleType,
-    HgiBufferUsage bufferUsage)
+    HgiBufferUsage bufferUsage,
+    std::string debugName)
 {
     HdStBufferResourceSharedPtr const result =
         std::make_shared<HdStBufferResource>(
@@ -530,6 +531,7 @@ HdStResourceRegistry::RegisterBufferResource(
     HgiBufferDesc bufDesc;
     bufDesc.usage = bufferUsage;
     bufDesc.byteSize = byteSize;
+    bufDesc.debugName = std::move(debugName);
     HgiBufferHandle buffer = _hgi->CreateBuffer(bufDesc);
 
     result->SetAllocation(buffer, byteSize);
@@ -1101,6 +1103,8 @@ HdStResourceRegistry::_GarbageCollect()
     _materialXShaderRegistry.GarbageCollect();
 #endif
 
+    _textureHandleRegistry->GarbageCollect();
+    
     // Cleanup Hgi resources
     _resourceBindingsRegistry.GarbageCollect(
         std::bind(&_DestroyResourceBindings, _hgi, std::placeholders::_1));

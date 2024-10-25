@@ -36,7 +36,6 @@ Some examples:
 cmake                                       \
 -DTBB_ROOT_DIR=/path/to/tbb                 \
 -DOPENSUBDIV_ROOT_DIR=/path/to/opensubdiv   \
--DBOOST_ROOT=/path/to/boost                 \
 /path/to/USD/source
 
 cmake --build . --target install -- -j <NUM_CORES>
@@ -51,7 +50,6 @@ cmake                                       \
 -G "Xcode"                                  \
 -DTBB_ROOT_DIR=/path/to/tbb                 \
 -DOPENSUBDIV_ROOT_DIR=/path/to/opensubdiv   \
--DBOOST_ROOT=/path/to/boost                 \
 /path/to/USD/source
 
 cmake --build . --target install -- -j <NUM_CORES>
@@ -67,7 +65,6 @@ build USD.
 -G "Visual Studio 15 2017 Win64"            ^
 -DTBB_ROOT_DIR=C:\path\to\tbb               ^
 -DOPENSUBDIV_ROOT_DIR=C:\path\to\opensubdiv ^
--DBOOST_ROOT=C:\path\to\boost               ^
 \path\to\USD\source
 
 cmake --build . --target install -- /m:%NUMBER_OF_PROCESSORS%
@@ -695,16 +692,34 @@ Note that this flag has no effect on Windows, see
 [here for more info](https://docs.python.org/3/extending/windows.html)
     
 
+## Spline Options
+
+Splines (keyframe animation) are implemented by the library `pxr/base/ts`.
+
+#### Default Anti-Regression Authoring Mode
+
+A `Ts` spline provides a function from time to attribute value.  Bezier math
+permits long tangents to create shapes that go backwards in time, resulting in
+non-functions.  This is typically prevented at authoring time, and there are
+several strategies available.  See
+[pxr/base/ts/doxygen/regression.md](./pxr/base/ts/doxygen/regression.md) for
+details of the different choices.
+
+The hard-coded default is `TsAntiRegressionKeepRatio`.  To set a different
+default:
+
+* With `build_usd.py`:
+`--build-args USD,"-DPXR_TS_DEFAULT_ANTI_REGRESSION_AUTHORING_MODE=TsAntiRegression..."`
+
+* With cmake:
+`-DPXR_TS_DEFAULT_ANTI_REGRESSION_AUTHORING_MODE=TsAntiRegression...`
+
+Client code can also override the default as needed.
+
+
 ## Build Issues FAQ
 
-1. Boost_NO_BOOST_CMAKE: 
-We currently set Boost_NO_BOOST_CMAKE=ON explicitly in USD builds for all 
-platforms to avoid issues with Boost config files (introduced in Boost version 
-1.70) and python, program options component requirements. If the user wants 
-to use Boost specified config files for their USD build, specify 
--DBoost_NO_BOOST_CMAKE=OFF when running cmake.
-
-2. Windows and Python 3.8+ (non-Anaconda)
+1. Windows and Python 3.8+ (non-Anaconda)
 Python 3.8 and later on Windows will no longer search PATH for DLL dependencies.
 Instead, clients can call `os.add_dll_directory(p)` to set paths to search.
 By default on that platform USD will iterate over PATH and add all paths using
