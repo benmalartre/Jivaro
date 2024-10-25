@@ -125,6 +125,7 @@ add_executable(${TARGET}
   app/notice.cpp
   app/handle.cpp
   app/camera.cpp
+  app/model.cpp
   app/view.cpp
   app/window.cpp
   app/modal.cpp

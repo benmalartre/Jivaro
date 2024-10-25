@@ -52,13 +52,14 @@ void AddPbdMenu(MenuUI* menu)
 void CreateSolverCallback()
 {
   Application* app = Application::Get();
-  Selection* selection = app->GetSelection();
+  Model* model = app->GetModel();
+  Selection* selection = model->GetSelection();
 
   UndoBlock block;
   if(selection->GetNumSelectedItems())
-    UsdPbdSolver::Define(app->GetStage(), (*selection)[0].path.AppendChild(TfToken("Solver")));
+    UsdPbdSolver::Define(model->GetStage(), (*selection)[0].path.AppendChild(TfToken("Solver")));
   else
-    UsdPbdSolver::Define(app->GetStage(), SdfPath(TfToken("/Solver")));
+    UsdPbdSolver::Define(model->GetStage(), SdfPath(TfToken("/Solver")));
   
 }
 
@@ -66,12 +67,13 @@ void AddClothCallback()
 {
   static const float spacing = 0.01f;
   Application* app = Application::Get();
-  UsdStageRefPtr stage = app->GetStage();
+  Model* model = app->GetModel();
+  UsdStageRefPtr stage = model->GetStage();
 
   UndoBlock editBlock;
   UsdPrim prim;
 
-  Selection* selection = app->GetSelection();
+  Selection* selection = model->GetSelection();
   if(!selection->GetNumSelectedItems()) {
     Mesh mesh;
     mesh.TriangularGrid2D(spacing);
@@ -118,11 +120,12 @@ void AddClothCallback()
 void AddBodyAPICallback()
 {
   Application* app = Application::Get();
-  UsdStageRefPtr stage = app->GetStage();
+  Model* model = app->GetModel();
+  UsdStageRefPtr stage = model->GetStage();
 
   UsdPrim prim;
 
-  Selection* selection = app->GetSelection();
+  Selection* selection = model->GetSelection();
   size_t numSelected = selection->GetNumSelectedItems();
   if(!numSelected)return;
 
@@ -140,11 +143,12 @@ void AddBodyAPICallback()
 void AddCollisionAPICallback()
 {
   Application* app = Application::Get();
-  UsdStageRefPtr stage = app->GetStage();
+  Model* model = app->GetModel();
+  UsdStageRefPtr stage = model->GetStage();
 
   UsdPrim prim;
 
-  Selection* selection = app->GetSelection();
+  Selection* selection = model->GetSelection();
   size_t numSelected = selection->GetNumSelectedItems();
   if(!numSelected)return;
 
@@ -161,12 +165,13 @@ void AddCollisionAPICallback()
 void RemoveClothCallback()
 {
   Application* app = Application::Get();
-  UsdStageRefPtr stage = app->GetStage();
+  Model* model = app->GetModel();
+  UsdStageRefPtr stage = model->GetStage();
 
   UndoBlock editBlock;
   UsdPrim prim;
 
-  Selection* selection = app->GetSelection();
+  Selection* selection = model->GetSelection();
 
   for(size_t s = 0; s < selection->GetNumSelectedItems(); ++s) {
     prim = stage->GetPrimAtPath((*selection)[0].path);

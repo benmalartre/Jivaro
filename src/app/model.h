@@ -57,20 +57,8 @@ public:
   GfBBox3d GetSelectionBoundingBox();
   GfBBox3d GetStageBoundingBox();
 
-  // notices callback
-  void SelectionChangedCallback(const SelectionChangedNotice& n);
-  void NewSceneCallback(const NewSceneNotice& n); 
-  void SceneChangedCallback(const SceneChangedNotice& n);
-  void AttributeChangedCallback(const AttributeChangedNotice& n);
-  void TimeChangedCallback(const TimeChangedNotice& n);
-  void UndoStackNoticeCallback(const UndoStackNotice& n);
-
   // commands
   void AddCommand(std::shared_ptr<Command> command);
-  void Undo();
-  void Redo();
-  void Duplicate();
-  void Delete();
   void AddDeferredCommand(CALLBACK_FN fn);
   void ExecuteDeferredCommands();
 
@@ -146,7 +134,7 @@ private:
   HdMergingSceneIndexRefPtr         _finalSceneIndex;
 
   Execution*                        _exec;
-  double                            _lastTime;
+  float                             _lastTime;
 
 };
 

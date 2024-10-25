@@ -43,9 +43,9 @@ Application* Application::_singleton=nullptr;
 
 Application* Application::Get() { 
   if(_singleton==nullptr){
-        _singleton = new Application();
-    }
-    return _singleton; 
+    _singleton = new Application();
+  }
+  return _singleton; 
 };
 
 // constructor
@@ -178,6 +178,15 @@ Application::Init(unsigned width, unsigned height, bool fullscreen)
   
   _activeWindow = _mainWindow;
   Time::Get()->Init(1, 101, 24);
+
+  // setup notifications
+  TfNotice::Register(TfCreateWeakPtr(this), &Application::SelectionChangedCallback);
+  TfNotice::Register(TfCreateWeakPtr(this), &Application::NewSceneCallback);
+  TfNotice::Register(TfCreateWeakPtr(this), &Application::SceneChangedCallback);
+  TfNotice::Register(TfCreateWeakPtr(this), &Application::AttributeChangedCallback);
+  TfNotice::Register(TfCreateWeakPtr(this), &Application::TimeChangedCallback);
+  TfNotice::Register(TfCreateWeakPtr(this), &Application::UndoStackNoticeCallback);
+
   
   //TfDebug::Enable(HD_MDI);
   //TfDebug::Enable(HD_ENGINE_PHASE_INFO);
@@ -287,7 +296,19 @@ Application::Update()
   static int playback;
   Time* time = Time::Get();
   float currentTime(time->GetActiveTime());
+  float previousTime(time->GetPreviousTime());
+  time->SetPreviousTime(currentTime);
 
+
+  // execution if needed
+  if (Time::Get()->IsPlaying()) {
+    playback = time->Playback();
+    if (playback != Time::PLAYBACK_WAITING)
+      if (_model->GetExec()) _model->UpdateExec(_model->GetStage(), currentTime);
+  
+  else if (currentTime != previousTime || Application::Get()->IsToolInteracting())
+      if (_model->GetExec()) _model->UpdateExec(_model->GetStage(), currentTime);
+  
   _model->Update(currentTime);
 
 
@@ -357,18 +378,25 @@ Application::SetActiveTool(size_t t)
   }
 }
 
+bool
+Application::IsToolInteracting()
+{
+  Tool* tool = _mainWindow->GetTool();
+  return tool->IsInteracting();
+}
+
 void 
 Application::Undo()
 {
   CommandManager::Get()->Undo();
-  _model->Update();
+  _model->Update(Time::Get()->GetActiveTime());
 }
 
 void 
 Application::Redo()
 {
   CommandManager::Get()->Redo();
-  _model->Update();
+  _model->Update(Time::Get()->GetActiveTime());
 }
 
 void 
@@ -417,6 +445,83 @@ Application::DirtyAllEngines()
 {
   _model->DirtyAllEngines();
 }
+
+// ---------------------------------------------------------------------------------------------
+// Notices Callbacks
+//----------------------------------------------------------------------------------------------
+void 
+Application::SelectionChangedCallback(const SelectionChangedNotice& n)
+{  
+  if(_mainWindow->GetTool()->IsActive())
+    _mainWindow->GetTool()->ResetSelection();
+  _mainWindow->ForceRedraw();
+  for (auto& window : _childWindows) {
+    if(window->GetTool()->IsActive())
+      window->GetTool()->ResetSelection();
+    window->ForceRedraw();
+  }
+  DirtyAllEngines();
+  
+}
+
+void 
+Application::NewSceneCallback(const NewSceneNotice& n)
+{
+  if(_model->GetExec()) _model->TerminateExec(_model->GetStage());
+
+  _model->ClearSelection();
+  DirtyAllEngines();
+}
+
+void 
+Application::SceneChangedCallback(const SceneChangedNotice& n)
+{
+  Application::Get()->
+  _mainWindow->GetTool()->ResetSelection();
+  _mainWindow->ForceRedraw();
+  for (auto& window : _childWindows) {
+    window->GetTool()->ResetSelection();
+    window->ForceRedraw();
+  }
+  
+  DirtyAllEngines();
+}
+
+void
+Application::AttributeChangedCallback(const AttributeChangedNotice& n)
+{
+  if (_model->GetExec()) {
+    _model->UpdateExec(_model->GetStage(), Time::Get()->GetActiveTime());
+  }
+  _mainWindow->ForceRedraw();
+  _mainWindow->GetTool()->ResetSelection();
+  for (auto& window : _childWindows) {
+    window->ForceRedraw();
+    window->GetTool()->ResetSelection();
+  }
+  DirtyAllEngines();
+}
+
+void
+Application::TimeChangedCallback(const TimeChangedNotice& n)
+{
+  if (_model->GetExec()) {
+    _model->UpdateExec(_model->GetStage(), Time::Get()->GetActiveTime());
+    
+  }
+  _mainWindow->ForceRedraw();
+  for (auto& window : _childWindows) {
+    window->ForceRedraw();
+  }
+  DirtyAllEngines();
+}
+
+void
+Application::UndoStackNoticeCallback(const UndoStackNotice& n)
+{
+  ADD_COMMAND(UsdGenericCommand);
+}
+
 
 
 JVR_NAMESPACE_CLOSE_SCOPE

@@ -72,6 +72,8 @@ public:
 
   // tools
   void SetActiveTool(size_t tool);
+  bool IsToolInteracting();
+  
   void AddDeferredCommand(CALLBACK_FN fn);
   void ExecuteDeferredCommands();
 
@@ -87,6 +89,14 @@ public:
   std::vector<Engine*> GetEngines() { return _engines; };
   */
   void DirtyAllEngines();
+
+  // notices callback
+  void SelectionChangedCallback(const SelectionChangedNotice& n);
+  void NewSceneCallback(const NewSceneNotice& n); 
+  void SceneChangedCallback(const SceneChangedNotice& n);
+  void AttributeChangedCallback(const AttributeChangedNotice& n);
+  void TimeChangedCallback(const TimeChangedNotice& n);
+  void UndoStackNoticeCallback(const UndoStackNotice& n);
 
   // singleton 
   static Application *Get();

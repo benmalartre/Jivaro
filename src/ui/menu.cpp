@@ -302,16 +302,16 @@ static void SetLayoutCallback(Window* window, short layout)
 static void CreatePrimCallback(short type)
 {
   Application* app = Application::Get();
-  UsdStageRefPtr stage = app->GetStage();
+  UsdStageRefPtr stage = app->GetModel()->GetStage();
   const UsdPrim root = stage->GetPseudoRoot();
   SdfLayerHandle layer = stage->GetSessionLayer();
 
   SdfPath name(RandomString(6));
 
-  Selection* selection = app->GetSelection();
+  Selection* selection = app->GetModel()->GetSelection();
 
   if(selection->GetNumSelectedItems()) {
-    SdfPrimSpecHandle spec = app->GetStage()->GetEditTarget().GetLayer()->GetPrimAtPath((*selection)[0].path);
+    SdfPrimSpecHandle spec = app->GetModel()->GetStage()->GetEditTarget().GetLayer()->GetPrimAtPath((*selection)[0].path);
     ADD_COMMAND(CreatePrimCommand, spec, name, type);
   } else {
     ADD_COMMAND(CreatePrimCommand, layer, name, type);
@@ -323,7 +323,7 @@ static void TriangulateCallback()
 {
   Application* app = Application::Get();
   const UsdStageRefPtr& stage = app->GetModel()->GetStage();
-  Selection* selection = app->GetSelection();
+  Selection* selection = app->GetModel()->GetSelection();
   for (size_t i = 0; i < selection->GetNumSelectedItems(); ++i) {
     Selection::Item& item = selection->GetItem(i);
     UsdPrim prim = stage->GetPrimAtPath(item.path);
@@ -345,7 +345,7 @@ static void FlattenGeometryCallback()
 {
   Application* app = Application::Get();
   const UsdStageRefPtr& stage = app->GetModel()->GetStage();
-  Selection* selection = app->GetSelection();
+  Selection* selection = app->GetModel()->GetSelection();
   for (size_t i = 0; i < selection->GetNumSelectedItems(); ++i) {
     Selection::Item& item = selection->GetItem(i);
     UsdPrim prim = stage->GetPrimAtPath(item.path);

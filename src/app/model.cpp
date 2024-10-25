@@ -5,6 +5,7 @@
 #include "../utils/timer.h"
 #include "../utils/prefs.h"
 #include "../ui/popup.h"
+#include "../command/manager.h"
 #include "../geometry/scene.h"
 #include "../app/model.h"
 #include "../app/notice.h"
@@ -13,8 +14,11 @@
 #include "../app/selection.h"
 #include "../app/window.h"
 #include "../app/view.h"
+#include "../app/time.h"
+#include "../app/commands.h"
 #include "../app/camera.h"
 #include "../app/tools.h"
+#include "../app/application.h"
 
 #include "../tests/grid.h"
 #include "../tests/raycast.h"
@@ -58,30 +62,6 @@ Model::Model()
 Model::~Model()
 {
 };
-
-// browse for file
-//----------------------------------------------------------------------------
-std::string
-Model::BrowseFile(int x, int y, const char* folder, const char* filters[], 
-  const int numFilters, const char* name, bool readOrWrite)
-{
-  std::string result = 
-    "/Users/malartrebenjamin/Documents/RnD/Jivaro/assets/Kitchen_set 3/Kitchen_set.usd";
-  
-  ModalFileBrowser::Mode mode = readOrWrite ? 
-    ModalFileBrowser::Mode::SAVE : ModalFileBrowser::Mode::OPEN;
-
-  const std::string label = readOrWrite ? "New" : "Open";
-
-  ModalFileBrowser browser(x, y, label, mode);
-  browser.Loop();
-  if(browser.GetStatus() == ModalBase::Status::OK) {
-    result = browser.GetResult();
-  }
-  browser.Term();  
-
-  return result;
-}
 
 bool
 Model::_IsAnyEngineDirty()
@@ -136,15 +116,6 @@ Model::_LoadUsdStage(const std::string usdFilePath)
 void 
 Model::Init()
 {
-
-  // setup notifications
-  TfNotice::Register(TfCreateWeakPtr(this), &Model::SelectionChangedCallback);
-  TfNotice::Register(TfCreateWeakPtr(this), &Model::NewSceneCallback);
-  TfNotice::Register(TfCreateWeakPtr(this), &Model::SceneChangedCallback);
-  TfNotice::Register(TfCreateWeakPtr(this), &Model::AttributeChangedCallback);
-  TfNotice::Register(TfCreateWeakPtr(this), &Model::TimeChangedCallback);
-  TfNotice::Register(TfCreateWeakPtr(this), &Model::UndoStackNoticeCallback);
-
   // scene indices
   _sceneIndexBases = HdMergingSceneIndex::New();
   _finalSceneIndex = HdMergingSceneIndex::New();
@@ -162,28 +133,13 @@ Model::Init()
 void
 Model::Update(const float time)
 {
-
   if(_stageSceneIndex) {
     _stageSceneIndex->ApplyPendingUpdates();
-    _stageSceneIndex->SetTime(currentTime);
-  }
-  
-  Time* time = Time::Get();
-  // execution if needed
-  if (time->IsPlaying()) {
-    playback = time->Playback();
-    if (playback != Time::PLAYBACK_WAITING) {
-      if(_execute) UpdateExec(_stage, currentTime);
-      _model->GetActiveEngine()->SetDirty(true);
-      _lastTime = currentTime;
-    }
-  } else {
-    if (currentTime != _lastTime || _mainWindow->GetTool()->IsInteracting()) {
-      _lastTime = currentTime;
-      if (_execute) UpdateExec(_stage, currentTime);
-    }
+    _stageSceneIndex->SetTime(time);
   }
 }
+
+
 
 void 
 Model::InitExec(UsdStageRefPtr& stage)
@@ -240,36 +196,6 @@ Model::SendExecViewEvent(const ViewEventData *data)
 
 
 
-void
-Model::Term()
-{
-  std::cout << "Jivaro Application Terminate!!" << std::endl;
-}
-
-bool
-Model::Update()
-{
-  static int playback;
-  Time* time = Time::Get();
-  float currentTime(time->GetActiveTime());
-  
-  // execution if needed
-  if (time->IsPlaying()) {
-    playback = time->Playback();
-    if (playback != Time::PLAYBACK_WAITING) {
-      if(_execute) UpdateExec(_stage, currentTime);
-      GetActiveEngine()->SetDirty(true);
-      _lastTime = currentTime;
-    }
-  } else {
-    if (currentTime != _lastTime || _mainWindow->GetTool()->IsInteracting()) {
-      _lastTime = currentTime;
-      if (_execute) UpdateExec(_stage, currentTime);
-    }
-  }
-
-  return true;
-}
 
 // ---------------------------------------------------------------------------------------------
 // Scene Indices
@@ -366,168 +292,12 @@ Model::SetActiveEngine(Engine* engine)
   _activeEngine = engine;
 }
 
-// ---------------------------------------------------------------------------------------------
-// Active Tool
-//----------------------------------------------------------------------------------------------
-void 
-Model::SetActiveTool(size_t t)
-{
-  Tool* tool = _mainWindow->GetTool();
-  size_t lastActiveTool = tool->GetActiveTool();
-  if(t != lastActiveTool) {
-    tool->SetActiveTool(t);
-    for (auto& window : _childWindows) {
-      window->GetTool()->SetActiveTool(t);
-    }
-  }
-}
-
-// ---------------------------------------------------------------------------------------------
-// Notices Callbacks
-//----------------------------------------------------------------------------------------------
-void 
-Model::SelectionChangedCallback(const SelectionChangedNotice& n)
-{
-  for (auto& engine : _engines) {
-    if (!_selection.IsEmpty() && _selection.IsObject()) {
-      //engine->SetSelected(_selection.GetSelectedPaths());
-    } else {
-      //engine->ClearSelected();
-    }
-  }
-  /*
-  if(_mainWindow->GetTool()->IsActive())
-    _mainWindow->GetTool()->ResetSelection();
-  _mainWindow->ForceRedraw();
-  for (auto& window : _childWindows) {
-    if(window->GetTool()->IsActive())
-      window->GetTool()->ResetSelection();
-    window->ForceRedraw();
-  }
-  DirtyAllEngines();
-  */
-}
-
-void 
-Model::NewSceneCallback(const NewSceneNotice& n)
-{
-  if(_exec) TerminateExec(_stage);
-
-  _selection.Clear();
-  DirtyAllEngines();
-}
-
-void 
-Model::SceneChangedCallback(const SceneChangedNotice& n)
-{
-  if(_exec) TerminateExec(_stage);
-
-  _mainWindow->GetTool()->ResetSelection();
-  _mainWindow->ForceRedraw();
-  for (auto& window : _childWindows) {
-    window->GetTool()->ResetSelection();
-    window->ForceRedraw();
-  }
-  
-  DirtyAllEngines();
-}
-
-void
-Model::AttributeChangedCallback(const AttributeChangedNotice& n)
-{
-  if (_exec && _execute) {
-    UpdateExec(_stage, Time::Get()->GetActiveTime());
-  }
-  _mainWindow->ForceRedraw();
-  _mainWindow->GetTool()->ResetSelection();
-  for (auto& window : _childWindows) {
-    window->ForceRedraw();
-    window->GetTool()->ResetSelection();
-  }
-  DirtyAllEngines();
-}
-
-void
-Model::TimeChangedCallback(const TimeChangedNotice& n)
-{
-  if (_exec && _execute) {
-    UpdateExec(_stage, Time::Get()->GetActiveTime());
-    
-  }
-  _mainWindow->ForceRedraw();
-  for (auto& window : _childWindows) {
-    window->ForceRedraw();
-  }
-  DirtyAllEngines();
-  _lastTime = Time::Get()->GetActiveTime();
-}
-
-void
-Model::UndoStackNoticeCallback(const UndoStackNotice& n)
-{
-  ADD_COMMAND(UsdGenericCommand);
-}
-
 
 void 
 Model::AddCommand(std::shared_ptr<Command> command)
 {
-  _manager.AddCommand(command);
-  _manager.ExecuteCommands();
-  GetMainWindow()->ForceRedraw();
-}
-
-void 
-Model::Undo()
-{
-  _manager.Undo();
-}
-
-void 
-Model::Redo()
-{
-  _manager.Redo();
-}
-
-void 
-Model::Delete()
-{
-  Selection* selection = GetSelection();
-  const SdfPathVector& paths = selection->GetSelectedPaths();
-  selection->Clear();
-  ADD_COMMAND(DeletePrimCommand, GetWorkStage(), paths);
-}
-
-void
-Model::Duplicate()
-{
-  Selection* selection = GetSelection();
-  if (!selection->IsEmpty()) {
-    const Selection::Item& item = selection->GetItem(0);
-    ADD_COMMAND(DuplicatePrimCommand, GetWorkStage(), item.path);
-  }
-}
-
-void 
-Model::OpenScene(const std::string& filename)
-{
-  ADD_COMMAND(OpenSceneCommand, filename);
-}
-
-void
-Model::NewScene(const std::string& filename)
-{
-  ADD_COMMAND(NewSceneCommand, filename);
-}
-
-void Model::SaveScene()
-{
-  GetWorkStage()->GetRootLayer()->Save(true);
-}
-
-void Model::SaveSceneAs(const std::string& filename)
-{
-  GetWorkStage()->GetRootLayer()->Save(true);
+  CommandManager::Get()->AddCommand(command);
+  CommandManager::Get()->ExecuteCommands();
 }
 
 // execution
