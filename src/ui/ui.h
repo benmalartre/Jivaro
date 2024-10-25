@@ -20,6 +20,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 #define UI_HEADER_HEIGHT 32
 
+class Model;
 class View;
 class Window;
 class Application;
@@ -35,11 +36,9 @@ enum UIType {
   VIEWPORT,
   EXPLORER,
   PROPERTYEDITOR,
+  ATTRIBUTEEDITOR,
   CURVEEDITOR,
   GRAPHEDITOR,
-  LAYEREDITOR,
-  TEXTEDITOR,
-  CONTENTBROWSER,
   DEBUG,
   DEMO,
   ICON,
@@ -57,11 +56,9 @@ static const char* UITypeName[UIType::COUNT] = {
   "viewport",
   "explorer",
   "propertyEditor",
+  "attributeEditor",
   "curveEditor",
   "graphEditor", 
-  "layerEditor",
-  "textEditor",
-  "contentBrowser",
   "debug",
   "demo",
   "icon",
@@ -98,6 +95,9 @@ class BaseUI : public TfWeakBase
 public:
   BaseUI(View* parent, short type, bool popup=false);
   virtual ~BaseUI(){};
+
+  // set model
+  void SetModel(Model* model);
 
   // get ui type
   short GetType() { return _type; };
@@ -174,6 +174,7 @@ protected:
   short                   _type;
   bool                    _initialized;
   bool                    _interacting;
+  Model*                  _model;
   View*                   _parent;
   std::string             _name;
   static ImGuiWindowFlags _flags;

@@ -108,6 +108,7 @@ class ViewportUI : public BaseUI
     GlfDrawTargetRefPtr                 _toolTarget;
     GLuint                              _toolTexId = 0;
     int                                 _drawMode;
+    int                                 _pickMode;
     int                                 _rendererIndex;
     static ImGuiWindowFlags             _flags;
 

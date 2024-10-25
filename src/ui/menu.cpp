@@ -322,7 +322,7 @@ static void CreatePrimCallback(short type)
 static void TriangulateCallback()
 {
   Application* app = Application::Get();
-  const UsdStageRefPtr& stage = app->GetWorkStage();
+  const UsdStageRefPtr& stage = app->GetModel()->GetStage();
   Selection* selection = app->GetSelection();
   for (size_t i = 0; i < selection->GetNumSelectedItems(); ++i) {
     Selection::Item& item = selection->GetItem(i);
@@ -344,7 +344,7 @@ static void TriangulateCallback()
 static void FlattenGeometryCallback()
 {
   Application* app = Application::Get();
-  const UsdStageRefPtr& stage = app->GetWorkStage();
+  const UsdStageRefPtr& stage = app->GetModel()->GetStage();
   Selection* selection = app->GetSelection();
   for (size_t i = 0; i < selection->GetNumSelectedItems(); ++i) {
     Selection::Item& item = selection->GetItem(i);

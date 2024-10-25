@@ -37,8 +37,20 @@ JVR_NAMESPACE_OPEN_SCOPE
 //----------------------------------------------------------------------------
 Model::Model()
   : _execute(false)
+  , _activeEngine(nullptr)
   , _exec(nullptr)
 {  
+  // scene indices
+  _sceneIndexBases = HdMergingSceneIndex::New();
+  _finalSceneIndex = HdMergingSceneIndex::New();
+  _editableSceneIndex = _sceneIndexBases;
+  SetEditableSceneIndex(_editableSceneIndex);
+
+  UsdImagingCreateSceneIndicesInfo info;
+  info.displayUnloadedPrimsWithBounds = true;
+  const UsdImagingSceneIndices sceneIndices = UsdImagingCreateSceneIndices(info);
+  _stageSceneIndex = sceneIndices.stageSceneIndex;
+  AddSceneIndexBase(_stageSceneIndex);
 };
 
 // destructor
@@ -69,6 +81,15 @@ Model::BrowseFile(int x, int y, const char* folder, const char* filters[],
   browser.Term();  
 
   return result;
+}
+
+bool
+Model::_IsAnyEngineDirty()
+{
+  for (auto& engine : _engines) {
+    if (engine->IsDirty())return true;
+  }
+  return false;
 }
 
 void
@@ -115,7 +136,7 @@ Model::_LoadUsdStage(const std::string usdFilePath)
 void 
 Model::Init()
 {
- 
+
   // setup notifications
   TfNotice::Register(TfCreateWeakPtr(this), &Model::SelectionChangedCallback);
   TfNotice::Register(TfCreateWeakPtr(this), &Model::NewSceneCallback);
@@ -136,6 +157,32 @@ Model::Init()
   _stageSceneIndex = sceneIndices.stageSceneIndex;
   AddSceneIndexBase(_stageSceneIndex);
   
+}
+
+void
+Model::Update(const float time)
+{
+
+  if(_stageSceneIndex) {
+    _stageSceneIndex->ApplyPendingUpdates();
+    _stageSceneIndex->SetTime(currentTime);
+  }
+  
+  Time* time = Time::Get();
+  // execution if needed
+  if (time->IsPlaying()) {
+    playback = time->Playback();
+    if (playback != Time::PLAYBACK_WAITING) {
+      if(_execute) UpdateExec(_stage, currentTime);
+      _model->GetActiveEngine()->SetDirty(true);
+      _lastTime = currentTime;
+    }
+  } else {
+    if (currentTime != _lastTime || _mainWindow->GetTool()->IsInteracting()) {
+      _lastTime = currentTime;
+      if (_execute) UpdateExec(_stage, currentTime);
+    }
+  }
 }
 
 void 
@@ -225,7 +272,7 @@ Model::Update()
 }
 
 // ---------------------------------------------------------------------------------------------
-// Model
+// Scene Indices
 //----------------------------------------------------------------------------------------------
 void 
 Model::AddSceneIndexBase(HdSceneIndexBaseRefPtr sceneIndex)
@@ -277,6 +324,10 @@ Model::GetAllPrims()
   return _stage->Traverse();
 }
 
+
+// ---------------------------------------------------------------------------------------------
+// Engines
+//----------------------------------------------------------------------------------------------
 void 
 Model::AddEngine(Engine* engine)
 {
@@ -315,6 +366,9 @@ Model::SetActiveEngine(Engine* engine)
   _activeEngine = engine;
 }
 
+// ---------------------------------------------------------------------------------------------
+// Active Tool
+//----------------------------------------------------------------------------------------------
 void 
 Model::SetActiveTool(size_t t)
 {
@@ -328,6 +382,9 @@ Model::SetActiveTool(size_t t)
   }
 }
 
+// ---------------------------------------------------------------------------------------------
+// Notices Callbacks
+//----------------------------------------------------------------------------------------------
 void 
 Model::SelectionChangedCallback(const SelectionChangedNotice& n)
 {

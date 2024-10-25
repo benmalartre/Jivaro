@@ -1,5 +1,6 @@
 #include <functional>
 #include "../utils/icons.h"
+#include "../ui/utils.h"
 #include "../ui/timeline.h"
 #include "../app/application.h"
 #include "../app/time.h"
@@ -143,7 +144,7 @@ void TimelineUI::DrawButtons()
 {
   Time* time = Time::Get();
   _playing = time->IsPlaying();
-  UIUtils::AddIconButton(0, ICON_FA_BACKWARD_FAST , ICON_DEFAULT,
+  UI::AddIconButton(0, ICON_FA_BACKWARD_FAST , ICON_DEFAULT,
     [&](){
       _currentTime = _startTime;
       time->SetActiveTime(_currentTime);
@@ -151,7 +152,7 @@ void TimelineUI::DrawButtons()
     });
   ImGui::SameLine();
 
-  UIUtils::AddIconButton(1, ICON_FA_BACKWARD_STEP, ICON_DEFAULT,
+  UI::AddIconButton(1, ICON_FA_BACKWARD_STEP, ICON_DEFAULT,
     [&](){
       time->PreviousFrame();
       Application::Get()->DirtyAllEngines();
@@ -159,13 +160,13 @@ void TimelineUI::DrawButtons()
   ImGui::SameLine();
 
   if (!_playing) {
-    UIUtils::AddCheckableIconButton(2, ICON_FA_PLAY , ICON_DEFAULT,
+    UI::AddCheckableIconButton(2, ICON_FA_PLAY , ICON_DEFAULT,
     [&](){
       _playing = 1 - _playing;
       time->StartPlayback();
     });
   } else {
-    UIUtils::AddCheckableIconButton(2, ICON_FA_STOP , ICON_SELECTED,
+    UI::AddCheckableIconButton(2, ICON_FA_STOP , ICON_SELECTED,
     [&](){
       _playing = 1 - _playing;
       time->StopPlayback();
@@ -173,14 +174,14 @@ void TimelineUI::DrawButtons()
   }
   ImGui::SameLine();
 
-  UIUtils::AddIconButton(3, ICON_FA_FORWARD_STEP, ICON_DEFAULT,
+  UI::AddIconButton(3, ICON_FA_FORWARD_STEP, ICON_DEFAULT,
     [&](){
       time->NextFrame();
       Application::Get()->DirtyAllEngines();
     });
   ImGui::SameLine();
 
-  UIUtils::AddIconButton(4, ICON_FA_FORWARD_FAST, ICON_DEFAULT,
+  UI::AddIconButton(4, ICON_FA_FORWARD_FAST, ICON_DEFAULT,
     [&](){
       _currentTime = _endTime;
       time->SetActiveTime(_currentTime);
@@ -188,7 +189,7 @@ void TimelineUI::DrawButtons()
     });
   ImGui::SameLine();
 
-  UIUtils::AddCheckableIconButton(5, ICON_FA_ROTATE,
+  UI::AddCheckableIconButton(5, ICON_FA_ROTATE,
     _loop ? ICON_SELECTED : ICON_DEFAULT,
     [&](){
       _loop = 1 - _loop;

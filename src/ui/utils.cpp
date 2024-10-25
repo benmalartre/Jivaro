@@ -12,27 +12,24 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-void
-UIUtils::IconButton(const char* icon, short state, CALLBACK_FN func)
+namespace UI
+{
+bool
+AddIconButton(const char* icon, short state, CALLBACK_FN func)
 {
   ImGui::BeginGroup();
-  if (ImGui::Button(icon, BUTTON_NORMAL_SIZE))func();
-  ImGui::EndGroup();
-}
-
-bool
-UIUtils::AddIconButton(const char* icon, short state, CALLBACK_FN func)
-{
   if (ImGui::Button(icon, BUTTON_NORMAL_SIZE))
   {
     func();
+    ImGui::EndGroup();
     return true;
   }
+  ImGui::EndGroup();
   return false;
 }
 
 bool
-UIUtils::AddIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN func)
+AddIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN func)
 {
   ImGui::PushID(id);
   if (ImGui::Button(icon, BUTTON_NORMAL_SIZE)) {
@@ -46,7 +43,7 @@ UIUtils::AddIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN fu
 }
 
 bool
-UIUtils::AddTransparentIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN func)
+AddTransparentIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN func)
 {
   ImGui::PushStyleColor(ImGuiCol_Button, TRANSPARENT_COLOR);
   ImGui::PushID(id);
@@ -62,7 +59,7 @@ UIUtils::AddTransparentIconButton(ImGuiID id, const char* icon, short state, CAL
 }
 
 bool
-UIUtils::AddCheckableIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN func)
+AddCheckableIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN func)
 {
   ImGuiStyle* style = &ImGui::GetStyle();
   ImVec4* colors = style->Colors;
@@ -84,7 +81,7 @@ UIUtils::AddCheckableIconButton(ImGuiID id, const char* icon, short state, CALLB
 }
 
 void 
-UIUtils::HelpMarker(const char* desc)
+HelpMarker(const char* desc)
 {
   ImGui::TextDisabled("(?)");
   if (ImGui::IsItemHovered())
@@ -97,8 +94,64 @@ UIUtils::HelpMarker(const char* desc)
   }
 }
 
+bool 
+AddComboWidget(const char* label, const char** names, const size_t count, int &last, size_t width)
+{
+  bool changed(false);
+  size_t lw = width / 3;
+  ImGui::SetNextItemWidth(lw);
+  ImGui::Text("%s", label);
+  ImGui::SameLine();
+  ImGui::SetNextItemWidth( width - (lw + 10));
+  if (ImGui::BeginCombo(HiddenLabel(label).c_str(), names[last], ImGuiComboFlags_PopupAlignLeft))
+  {
+    for (int n = 0; n < count; ++n)
+    {
+      const bool isSelected = (last == n);
+      if (ImGui::Selectable(names[n], isSelected)) {
+        last = n;
+        changed = true;
+      }
+
+      if (isSelected)
+        ImGui::SetItemDefaultFocus();
+    }
+    ImGui::EndCombo();
+  }
+  return changed;
+}
+
+bool 
+AddComboWidget(const char* label, const TfToken* tokens, const size_t count, TfToken &token, size_t width)
+{
+  bool changed(false);
+  size_t lw = width / 3;
+  ImGui::SetNextItemWidth(lw);
+  ImGui::Text("%s", label);
+  ImGui::SameLine();
+
+  ImGui::SetNextItemWidth( width - (lw + 10));
+  if (ImGui::BeginCombo(HiddenLabel(label).c_str(), token.GetString().c_str(), ImGuiComboFlags_PopupAlignLeft))
+  {
+    for (int n = 0; n < count; ++n)
+    {
+      const bool isSelected = (tokens[n] == token);
+      if (ImGui::Selectable(tokens[n].GetString().c_str(), isSelected)){
+        token = tokens[n]; 
+        changed = true;
+      }
+
+      if (isSelected) 
+        ImGui::SetItemDefaultFocus();
+    }
+
+    ImGui::EndCombo();
+  }
+  return changed;
+}
+
 VtValue 
-UIUtils::AddTokenWidget(const UsdAttribute& attribute, const UsdTimeCode& timeCode)
+AddTokenWidget(const UsdAttribute& attribute, const UsdTimeCode& timeCode)
 {
   VtValue allowedTokens;
   attribute.GetMetadata(TfToken("allowedTokens"), &allowedTokens);
@@ -128,7 +181,7 @@ UIUtils::AddTokenWidget(const UsdAttribute& attribute, const UsdTimeCode& timeCo
 }
 
 VtValue 
-UIUtils::AddAttributeWidget(const UsdAttribute& attribute, const UsdTimeCode& timeCode) 
+AddAttributeWidget(const UsdAttribute& attribute, const UsdTimeCode& timeCode) 
 {
   VtValue value;
   attribute.Get(&value, timeCode);
@@ -223,7 +276,7 @@ UIUtils::AddAttributeWidget(const UsdAttribute& attribute, const UsdTimeCode& ti
 }
 
 VtValue 
-UIUtils::AddColorWidget(const UsdAttribute& attribute, const UsdTimeCode& timeCode)
+AddColorWidget(const UsdAttribute& attribute, const UsdTimeCode& timeCode)
 {
   GfVec3f buffer;
   bool isArrayValued = false;
@@ -278,7 +331,7 @@ UIUtils::AddColorWidget(const UsdAttribute& attribute, const UsdTimeCode& timeCo
 // TODO Share code as we want to share the style of the button, but not necessarily the behaviour
 // DrawMiniButton ?? in a specific file ? OptionButton ??? OptionMenuButton ??
 void 
-UIUtils::AddPropertyMiniButton(const char* btnStr, int rowId, const ImVec4& btnColor) {
+AddPropertyMiniButton(const char* btnStr, int rowId, const ImVec4& btnColor) {
   ImGui::PushID(rowId);
   ImGui::PushStyleColor(ImGuiCol_Text, btnColor);
   ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyleColorVec4(ImGuiCol_WindowBg));
@@ -289,24 +342,24 @@ UIUtils::AddPropertyMiniButton(const char* btnStr, int rowId, const ImVec4& btnC
 }
 
 void 
-UIUtils::AddAttributeDisplayName(const UsdAttribute& attribute) {
+AddAttributeDisplayName(const UsdAttribute& attribute) {
   ImGui::Text("%s", attribute.GetName().GetText());
 }
 
 void 
-UIUtils::AddPrimKind(const SdfPrimSpecHandle& primSpec)
+AddPrimKind(const SdfPrimSpecHandle& primSpec)
 {
 
 }
 
 void 
-UIUtils::AddPrimType(const SdfPrimSpecHandle& primSpec, ImGuiComboFlags comboFlags)
+AddPrimType(const SdfPrimSpecHandle& primSpec, ImGuiComboFlags comboFlags)
 {
 
 }
 
 void
-UIUtils::AddPrimSpecifier(const SdfPrimSpecHandle& primSpec, ImGuiComboFlags comboFlags)
+AddPrimSpecifier(const SdfPrimSpecHandle& primSpec, ImGuiComboFlags comboFlags)
 {
   const SdfSpecifier current = primSpec->GetSpecifier();
   SdfSpecifier selected = current;
@@ -332,7 +385,7 @@ UIUtils::AddPrimSpecifier(const SdfPrimSpecHandle& primSpec, ImGuiComboFlags com
 }
 
 void 
-UIUtils::AddPrimInstanceable(const SdfPrimSpecHandle& primSpec)
+AddPrimInstanceable(const SdfPrimSpecHandle& primSpec)
 {
   if (!primSpec)return;
   bool isInstanceable = primSpec->GetInstanceable();
@@ -342,7 +395,7 @@ UIUtils::AddPrimInstanceable(const SdfPrimSpecHandle& primSpec)
   }
 }
 
-void UIUtils::AddPrimHidden(const SdfPrimSpecHandle& primSpec)
+void AddPrimHidden(const SdfPrimSpecHandle& primSpec)
 {
   if (!primSpec)return;
   bool isHidden = primSpec->GetHidden();
@@ -352,7 +405,7 @@ void UIUtils::AddPrimHidden(const SdfPrimSpecHandle& primSpec)
   }
 }
 
-void UIUtils::AddPrimActive(const SdfPrimSpecHandle& primSpec)
+void AddPrimActive(const SdfPrimSpecHandle& primSpec)
 {
   if (!primSpec)return;
   bool isActive = primSpec->GetActive();
@@ -362,7 +415,7 @@ void UIUtils::AddPrimActive(const SdfPrimSpecHandle& primSpec)
   }
 }
 
-void UIUtils::AddPrimName(const SdfPrimSpecHandle& primSpec)
+void AddPrimName(const SdfPrimSpecHandle& primSpec)
 {
   std::string nameBuffer = primSpec->GetName();
   ImGui::InputText("Prim Name", &nameBuffer);
@@ -374,285 +427,8 @@ void UIUtils::AddPrimName(const SdfPrimSpecHandle& primSpec)
     }
   }
 }
-
-
-
-/*
-/// Create a standard UI for entering a SdfPath.
-/// This is used for inherit and specialize
-struct CreateSdfPathModalDialog : public ModalDialog {
-
-    CreateSdfPathModalDialog(const SdfPrimSpecHandle &primSpec) : _primSpec(primSpec){};
-    ~CreateSdfPathModalDialog() override {}
-
-    void Draw() override {
-        if (!_primSpec) {
-            CloseModal();
-            return;
-        }
-        // TODO: We will probably want to browse in the scene hierarchy to select the path
-        //   create a selection tree, one day
-        ImGui::Text("%s", _primSpec->GetPath().GetString().c_str());
-        if (ImGui::BeginCombo("Operation", GetListEditorOperationName(_operation))) {
-            for (int n = 0; n < GetListEditorOperationSize(); n++) {
-                if (ImGui::Selectable(GetListEditorOperationName(n))) {
-                    _operation = n;
-                }
-            }
-            ImGui::EndCombo();
-        }
-        ImGui::InputText("Target prim path", &_primPath);
-        DrawOkCancelModal([=]() { OnOkCallBack(); });
-    }
-
-    virtual void OnOkCallBack() = 0;
-
-    const char *DialogId() const override { return "Sdf path"; }
-
-    SdfPrimSpecHandle _primSpec;
-    std::string _primPath;
-    int _operation = 0;
-};
-
-/// UI used to create an AssetPath having a file path to a layer and a
-/// target prim path.
-/// This is used by References and Payloads which share the same interface
-struct CreateAssetPathModalDialog : public ModalDialog {
-
-    CreateAssetPathModalDialog(const SdfPrimSpecHandle &primSpec) : _primSpec(primSpec){};
-    ~CreateAssetPathModalDialog() override {}
-
-    void Draw() override {
-        if (!_primSpec) {
-            CloseModal();
-            return;
-        }
-        ImGui::Text("%s", _primSpec->GetPath().GetString().c_str());
-
-        if (ImGui::BeginCombo("Operation", GetListEditorOperationName(_operation))) {
-            for (int n = 0; n < GetListEditorOperationSize(); n++) {
-                if (ImGui::Selectable(GetListEditorOperationName(n))) {
-                    _operation = n;
-                }
-            }
-            ImGui::EndCombo();
-        }
-        ImGui::InputText("File path", &_assetPath);
-        ImGui::SameLine();
-        if (ImGui::Button(ICON_FA_FILE)) {
-            ImGui::OpenPopup("Asset path browser");
-        }
-        if (ImGui::BeginPopupModal("Asset path browser")) {
-            DrawFileBrowser();
-            ImGui::Checkbox("Use relative path", &_relative);
-            ImGui::Checkbox("Unix compatible", &_unixify);
-            if (ImGui::Button("Use selected file")) {
-                if (_relative) {
-                    _assetPath = GetFileBrowserFilePathRelativeTo(_primSpec->GetLayer()->GetRealPath(), _unixify);
-                } else {
-                    _assetPath = GetFileBrowserFilePath();
-                }
-                ImGui::CloseCurrentPopup();
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Close")) {
-                ImGui::CloseCurrentPopup();
-            }
-            ImGui::EndPopup();
-        }
-        ImGui::InputText("Target prim path", &_primPath);
-        ImGui::InputDouble("Layer time offset", &_timeOffset);
-        ImGui::InputDouble("Layer time scale", &_timeScale);
-        DrawOkCancelModal([=]() { OnOkCallBack(); });
-    }
-
-    virtual void OnOkCallBack() = 0;
-
-    const char *DialogId() const override { return "Asset path"; }
-
-    SdfLayerOffset GetLayerOffset() const {
-        return (_timeScale != 1.0 || _timeOffset != 0.0) ? SdfLayerOffset(_timeOffset, _timeScale) : SdfLayerOffset();
-    }
-
-    SdfPrimSpecHandle _primSpec;
-    std::string _assetPath;
-    std::string _primPath;
-    int _operation = 0;
-
-    bool _relative = false;
-    bool _unixify = false;
-    double _timeScale = 1.0;
-    double _timeOffset = 0.0;
-};
-*/
-/*
-// Inheriting, but could also be done with templates, would the code be cleaner ?
-struct CreateReferenceModalDialog : public CreateAssetPathModalDialog {
-    CreateReferenceModalDialog(const SdfPrimSpecHandle &primSpec) : CreateAssetPathModalDialog(primSpec) {}
-    const char *DialogId() const override { return "Create reference"; }
-    void OnOkCallBack() override {
-        SdfReference reference(_assetPath, SdfPath(_primPath), GetLayerOffset());
-        ExecuteAfterDraw<PrimCreateReference>(_primSpec, _operation, reference);
-    }
-};
-
-struct CreatePayloadModalDialog : public CreateAssetPathModalDialog {
-    CreatePayloadModalDialog(const SdfPrimSpecHandle &primSpec) : CreateAssetPathModalDialog(primSpec) {}
-    const char *DialogId() const override { return "Create payload"; }
-    void OnOkCallBack() override {
-        SdfPayload payload(_assetPath, SdfPath(_primPath), GetLayerOffset());
-        ExecuteAfterDraw<PrimCreatePayload>(_primSpec, _operation, payload);
-    }
-};
-
-struct CreateInheritModalDialog : public CreateSdfPathModalDialog {
-    CreateInheritModalDialog(const SdfPrimSpecHandle &primSpec) : CreateSdfPathModalDialog(primSpec) {}
-    const char *DialogId() const override { return "Create inherit"; }
-    void OnOkCallBack() override { ExecuteAfterDraw<PrimCreateInherit>(_primSpec, _operation, SdfPath(_primPath)); }
-};
-
-struct CreateSpecializeModalDialog : public CreateSdfPathModalDialog {
-    CreateSpecializeModalDialog(const SdfPrimSpecHandle &primSpec) : CreateSdfPathModalDialog(primSpec) {}
-    const char *DialogId() const override { return "Create specialize"; }
-    void OnOkCallBack() override { ExecuteAfterDraw<PrimCreateSpecialize>(_primSpec, _operation, SdfPath(_primPath)); }
-};
-*/
-void AddPrimCreateReference(const SdfPrimSpecHandle &primSpec) 
-{ 
-  //DrawModalDialog<CreateReferenceModalDialog>(primSpec); 
-}
-
-void AddPrimCreatePayload(const SdfPrimSpecHandle &primSpec) 
-{ 
-  //DrawModalDialog<CreatePayloadModalDialog>(primSpec); 
-}
-
-void AddPrimCreateInherit(const SdfPrimSpecHandle &primSpec) 
-{ 
-  //DrawModalDialog<CreateInheritModalDialog>(primSpec); 
-}
-void AddPrimCreateSpecialize(const SdfPrimSpecHandle &primSpec) 
-{ 
-  //DrawModalDialog<CreateSpecializeModalDialog>(primSpec); 
-  }
-
-/// Remove a Asset Path from a primspec
-inline void RemoveAssetPathFromList(SdfPrimSpecHandle primSpec, 
-  const SdfReference &item) 
-{
-    primSpec->GetReferenceList().RemoveItemEdits(item);
-}
-
-inline void RemoveAssetPathFromList(SdfPrimSpecHandle primSpec, 
-  const SdfPayload &item) 
-  {
-    primSpec->GetPayloadList().RemoveItemEdits(item);
-}
-
-/////////////// Summaries used in the layer scene editor
-template <typename ArcT>
-inline void AddSdfPathSummary(std::string &&header, SdfListOpType operation, const SdfPath &path,
-                               const SdfPrimSpecHandle &primSpec, int &menuItemId) 
-{
-  ImGui::PushStyleColor(ImGuiCol_Button, 0);
-  ImGui::PushID(menuItemId++);
-  if (ImGui::Button(ICON_FA_TRASH)) {
-    RemoveArc(primSpec, ArcT(path));
-  }
-  ImGui::SameLine();
-  std::string summary = path.GetString();
-  if (ImGui::SmallButton(summary.c_str())) {
-    SelectArcType(primSpec, path);
-  }
-  if (ImGui::BeginPopupContextItem()) {
-    AddSdfPathMenuItems<ArcT>(primSpec, path);
-    ImGui::EndPopup();
-  }
-  ImGui::PopID();
-  ImGui::PopStyleColor();
-}
-
-template <typename AssetPathT>
-inline void AddAssetPathSummary(std::string &&header, SdfListOpType operation, const AssetPathT &assetPath,
-                                 const SdfPrimSpecHandle &primSpec, int &menuItemId) 
-{
-  ImGui::PushStyleColor(ImGuiCol_Button, 0);
-  ImGui::PushID(menuItemId++);
-  if (ImGui::Button(ICON_FA_TRASH)) {
-    RemoveArc(primSpec, assetPath);
-  }
-  ImGui::PopID();
-  ImGui::SameLine();
-  std::string summary = GetListEditorOperationName(operation);
-  summary += " ";
-  summary += assetPath.GetAssetPath().empty() ? "" : "@" + assetPath.GetAssetPath() + "@";
-  summary += assetPath.GetPrimPath().GetString().empty() ? "" : "<" + assetPath.GetPrimPath().GetString() + ">";
-  ImGui::PushID(menuItemId++);
-  if(ImGui::Button(summary.c_str())) {
-    SelectArcType(primSpec, assetPath);
-  }
-  if (ImGui::BeginPopupContextItem("###AssetPathMenuItems")) {
-    AddAssetPathMenuItems<AssetPathT>(primSpec, assetPath);
-    ImGui::EndPopup();
-  }
-  ImGui::PopID();
-  ImGui::PopStyleColor();
-}
-
-void AddReferenceSummary(SdfListOpType operation, const SdfReference &assetPath, 
-  const SdfPrimSpecHandle &primSpec, int &menuItemId) 
-{
-  AddAssetPathSummary("References", operation, assetPath, primSpec, menuItemId);
-}
-
-void AddPayloadSummary(SdfListOpType operation, const SdfPayload &assetPath, 
-  const SdfPrimSpecHandle &primSpec, int &menuItemId) 
-{
-  AddAssetPathSummary("Payloads", operation, assetPath, primSpec, menuItemId);
-}
-
-void AddInheritPathSummary(SdfListOpType operation, const SdfPath &path, 
-  const SdfPrimSpecHandle &primSpec, int &menuItemId) 
-{
-  AddSdfPathSummary<SdfInherit>("Inherits", operation, path, primSpec, menuItemId);
-}
-
-void AddSpecializesSummary(SdfListOpType operation, const SdfPath &path, 
-  const SdfPrimSpecHandle &primSpec, int &menuItemId) 
-{
-  AddSdfPathSummary<SdfSpecialize>("Specializes", operation, path, primSpec, menuItemId);
 }
 
 
-void 
-AddPrimCompositionSummary(const SdfPrimSpecHandle &primSpec) {
-  if (!primSpec || !HasComposition(primSpec))
-    return;
-  ImGui::PushStyleColor(ImGuiCol_Button, 0);
-  
-  // Buttons are too far appart
-  ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.f, -FLT_MIN));
-  int buttonId = 0;
-  // First draw the Buttons, Ref, Pay etc
-  constexpr ImGuiPopupFlags buttonFlags = ImGuiPopupFlags_MouseButtonLeft;
-  
-  CREATE_COMPOSITION_BUTTON(Reference, Ref, Reference)
-  CREATE_COMPOSITION_BUTTON(Payload, Pay, Payload)
-  CREATE_COMPOSITION_BUTTON(InheritPath, Inh, InheritPath)
-  CREATE_COMPOSITION_BUTTON(Specialize, Inh, Specializes)
-
-  // TODO: stretch each paths to match the cell size. Add ellipsis at the beginning if they are too short
-  // The idea is to see the relevant informations, and be able to quicly click on them
-  // - another thought ... replace the common prefix by an ellipsis ? (only for asset paths)
-  int itemId = 0;
-
-  IterateListEditorItems(primSpec->GetReferenceList(), AddPathInRow<SdfReference>, primSpec, &itemId);
-  IterateListEditorItems(primSpec->GetPayloadList(), AddPathInRow<SdfPayload>, primSpec, &itemId);
-  IterateListEditorItems(primSpec->GetInheritPathList(), AddPathInRow<SdfInherit>, primSpec, &itemId);
-  IterateListEditorItems(primSpec->GetSpecializesList(), AddPathInRow<SdfSpecialize>, primSpec, &itemId);
-
-  ImGui::PopStyleVar();
-  ImGui::PopStyleColor();
-}
 
 JVR_NAMESPACE_CLOSE_SCOPE

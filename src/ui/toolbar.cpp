@@ -50,7 +50,7 @@ static void OnBrushCallback()
 static void OnPlayCallback()
 {
   _SetActiveTool(Tool::NONE);
-  Application::Get()->ToggleExec();
+  Application::Get()->GetModel()->ToggleExec();
 }
 
 
@@ -87,12 +87,12 @@ bool ToolbarButton::Draw()
   //ImGui::PushFont(window->GetRegularFont(0));
   bool clicked = false;
   if(toggable) {
-    if (UIUtils::AddCheckableIconButton(
+    if (UI::AddCheckableIconButton(
       0, icon, enabled ? ICON_SELECTED : ICON_DEFAULT, func)) {
       enabled = 1 - enabled;
     }
   } else {
-    clicked = UIUtils::AddCheckableIconButton(
+    clicked = UI::AddCheckableIconButton(
       0, icon, (window->GetActiveTool() == tool) ? ICON_SELECTED : ICON_DEFAULT, func);
   }
   //ImGui::PopFont();

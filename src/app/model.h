@@ -35,6 +35,9 @@ public:
   // destructor
   ~Model();
 
+  void Init();
+  void Update(const float time);
+
   // browse file
   std::string BrowseFile(int x, int y, const char* folder, const char* filters[], 
     const int numFilters, const char* name="Browse", bool readOrWrite=false);
@@ -79,9 +82,6 @@ public:
   std::vector<Engine*> GetEngines() { return _engines; };
   void DirtyAllEngines();
 
-  // tools
-  void SetActiveTool(size_t tool);
-
   // stage cache
   UsdStageRefPtr& GetStage(){return _stage;};
   void SetStage(UsdStageRefPtr& stage);
@@ -97,11 +97,13 @@ public:
   virtual void TerminateExec(UsdStageRefPtr& stage);
   virtual void SendExecViewEvent(const ViewEventData *data);
 
-  // stage
-  UsdStageRefPtr GetStage();
+    // usd stages
+  //std::vector<UsdStageRefPtr>& GetStages(){return _stages;};
+  UsdStageRefPtr GetDisplayStage();
+  UsdStageRefPtr GetWorkStage();
+
   SdfLayerRefPtr GetCurrentLayer();
 
-  // scene indices
   void AddSceneIndexBase(HdSceneIndexBaseRefPtr sceneIndex);
   HdSceneIndexBaseRefPtr GetEditableSceneIndex();
 
@@ -113,13 +115,16 @@ public:
   UsdPrimRange GetAllPrims();
 
 protected:
+  bool _IsAnyEngineDirty();
   void _SetEmptyStage();
   void _LoadUsdStage(const std::string usdFilePath);
+
 
 private:
 
   // filename
   std::string                       _filename;
+
   // selection 
   Selection                         _selection;
 

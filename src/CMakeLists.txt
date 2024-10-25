@@ -32,19 +32,17 @@ add_executable(${TARGET}
   ui/popup.cpp
   ui/debug.cpp
   ui/fileBrowser.cpp
-  ui/contentBrowser.cpp
   ui/splitter.cpp
   ui/tab.cpp
   ui/menu.cpp
   ui/tool.cpp
-  ui/textEditor.cpp
   ui/graphEditor.cpp
   ui/viewport.cpp
   ui/timeline.cpp
   ui/toolbar.cpp
-  ui/layerEditor.cpp
   ui/explorer.cpp
   ui/propertyEditor.cpp
+  ui/attributeEditor.cpp
   #ui/curveEditor.cpp
 
   graph/graph.cpp

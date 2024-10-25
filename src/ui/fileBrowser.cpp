@@ -154,7 +154,7 @@ void FileBrowserUI::_SelectNext(int mods)
 
 void FileBrowserUI::_DrawPath()
 {
-  UIUtils::AddIconButton(0, ICON_FA_TRASH, ICON_DEFAULT,
+  UI::AddIconButton(0, ICON_FA_TRASH, ICON_DEFAULT,
     std::bind(&FileBrowserUI::SetPath, this, ""));
 
   ImGui::SameLine();

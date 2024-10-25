@@ -40,7 +40,7 @@ void CurveEditorUI::Init()
 
 void CurveEditorUI::Update()
 {
-  if (Application::Get()->GetWorkStage()) {
+  if (Application::Get()->GetModel()->GetStage()) {
     //RecurseStage();
   }
 }

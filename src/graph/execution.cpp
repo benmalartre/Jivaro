@@ -16,7 +16,7 @@ ExecutionGraph* TestUsdExecAPI()
 {
   /*
   UndoBlock editBlock;
-  UsdStageRefPtr stage = Application::Get()->GetWorkStage();
+  UsdStageRefPtr stage = Application::Get()->GetModel()->GetStage();
 
   const SdfPath GRAPH_PATH("/graph");
   const TfToken GET("get");

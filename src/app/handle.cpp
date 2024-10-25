@@ -183,9 +183,9 @@ void
 BaseHandle::ResetSelection()
 {
   Application* app = Application::Get();
-  
-  Selection* selection = app->GetSelection();
-  UsdStageRefPtr stage = app->GetWorkStage();
+  Model* model = app->GetModel();
+  Selection* selection = model->GetSelection();
+  UsdStageRefPtr stage = model->GetWorkStage();
   if (!stage)return;
   UsdTimeCode activeTime = Time::Get()->GetActiveTime();
   UsdGeomXformCache xformCache(activeTime);
@@ -697,9 +697,10 @@ void
 TranslateHandle::_UpdateTargets(bool interacting)
 {
   Application* app = Application::Get();
-  UsdStageRefPtr stage = app->GetWorkStage();
+  Model* model = app->GetModel();
+  UsdStageRefPtr stage = model->GetStage();
   UsdTimeCode activeTime = UsdTimeCode::Default();
-  Selection* selection = app->GetSelection();
+  Selection* selection = model->GetSelection();
   if (interacting) {
     for (auto& target : _targets) {
       UsdPrim targetPrim = stage->GetPrimAtPath(target.path);
@@ -718,7 +719,7 @@ TranslateHandle::_UpdateTargets(bool interacting)
       GfMatrix4d xformMatrix((target.offset * _matrix) * invParentMatrix);
       target.current.translation = GfVec3f(xformMatrix.GetRow3(3)) - target.previous.pivot;
     }
-    ADD_COMMAND(TranslateCommand, Application::Get()->GetWorkStage(), _targets, activeTime);
+    ADD_COMMAND(TranslateCommand, Application::Get()->GetModel()->GetStage(), _targets, activeTime);
   }
 }
 
@@ -935,9 +936,10 @@ void
 RotateHandle::_UpdateTargets(bool interacting)
 {
   Application* app = Application::Get();
-  UsdStageRefPtr stage = app->GetWorkStage();
+  Model* model = app->GetModel();
+  UsdStageRefPtr stage = model->GetStage();
   UsdTimeCode activeTime = UsdTimeCode::Default();
-  Selection* selection = app->GetSelection();
+  Selection* selection = app->GetModel()->GetSelection();
   if (interacting) {
     for (auto& target : _targets) {
       UsdPrim targetPrim = stage->GetPrimAtPath(target.path);
@@ -966,7 +968,7 @@ RotateHandle::_UpdateTargets(bool interacting)
       target.current.rotOrder = rotation.second;
     }
     
-    ADD_COMMAND(RotateCommand, Application::Get()->GetWorkStage(), _targets, activeTime);
+    ADD_COMMAND(RotateCommand, Application::Get()->GetModel()->GetStage(), _targets, activeTime);
   }
 }
 
@@ -1343,9 +1345,10 @@ void
 ScaleHandle::_UpdateTargets(bool interacting)
 {
   Application* app = Application::Get();
-  UsdStageRefPtr stage = app->GetWorkStage();
+  Model* model = app->GetModel();
+  UsdStageRefPtr stage = model->GetWorkStage();
   UsdTimeCode activeTime = UsdTimeCode::Default();
-  Selection* selection = app->GetSelection();
+  Selection* selection = app->GetModel()->GetSelection();
   if (interacting) {
     for (auto& target : _targets) {
       UsdPrim targetPrim = stage->GetPrimAtPath(target.path);
@@ -1367,7 +1370,7 @@ ScaleHandle::_UpdateTargets(bool interacting)
         GfVec3f(xformMatrix[0][0], xformMatrix[1][1], xformMatrix[2][2]);
     }
 
-    ADD_COMMAND(ScaleCommand, Application::Get()->GetWorkStage(), _targets, activeTime);
+    ADD_COMMAND(ScaleCommand, Application::Get()->GetModel()->GetStage(), _targets, activeTime);
   }
 }
 

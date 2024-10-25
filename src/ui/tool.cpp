@@ -93,8 +93,8 @@ _SetupBVHInstancer(UsdStageRefPtr& stage, BVH* bvh)
 
 UsdGeomMesh _GetSelectedMesh()
 {
-  UsdStageRefPtr stage = Application::Get()->GetStage();
-  Selection* selection = Application::Get()->GetSelection();
+  UsdStageRefPtr stage = Application::Get()->GetModel()->GetStage();
+  Selection* selection = Application::Get()->GetModel()->GetSelection();
   if (selection->GetNumSelectedItems() > 0) {
     Selection::Item& item = selection->GetItem(0);
     UsdPrim prim = stage->GetPrimAtPath(item.path);
@@ -150,7 +150,7 @@ static void _Voxelize(float radius, short axis)
 
 
     const VtArray<GfVec3f>& positions = voxels.GetPositions();
-    UsdStageRefPtr stage = Application::Get()->GetStage();
+    UsdStageRefPtr stage = Application::Get()->GetModel()->GetStage();
 
     _SetupBVHInstancer(stage, voxels.GetTree());
 
@@ -253,7 +253,7 @@ bool ToolUI::Draw()
   const GfVec2f pos(GetX(), GetY());
   const GfVec2f size(GetWidth(), GetHeight());
 
-  UsdStageRefPtr stage = Application::Get()->GetStage();
+  UsdStageRefPtr stage = Application::Get()->GetModel()->GetStage();
   Time* time = Time::Get();
   ImGui::SetNextWindowSize(size);
   ImGui::SetNextWindowPos(pos);

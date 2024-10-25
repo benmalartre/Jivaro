@@ -55,7 +55,8 @@ static void _BlitFramebufferFromTarget(GlfDrawTargetRefPtr target,
 ViewportUI::ViewportUI(View* parent)
   : BaseUI(parent, UIType::VIEWPORT)
   , _texture(0)
-  , _drawMode((int)0)
+  , _drawMode(0)
+  , _pickMode(2)
   , _camera(new Camera("Camera"))
   , _valid(true)
   , _interactionMode(INTERACTION_NONE)
@@ -99,7 +100,7 @@ ViewportUI::~ViewportUI()
   if(_texture) glDeleteTextures(1, &_texture);
   if(_camera) delete _camera;
   if (_engine) {
-    app->RemoveEngine(_engine);
+    app->GetModel()->RemoveEngine(_engine);
     delete _engine;
   }
 }
@@ -138,7 +139,7 @@ void ViewportUI::Init()
 {
   Application* app = Application::Get();
   if (_engine) {
-    app->RemoveEngine(_engine);
+    app->GetModel()->RemoveEngine(_engine);
     delete _engine;
   }
 
@@ -150,13 +151,13 @@ void ViewportUI::Init()
     _rendererNames[rendererIndex] = rendererTokens[rendererIndex].GetText();
   }
 
-    auto editableSceneIndex = app->GetEditableSceneIndex();
+  auto editableSceneIndex = app->GetModel()->GetEditableSceneIndex();
 
   //TfToken plugin = Engine::GetDefaultRendererPlugin();
   TfToken plugin = TfToken(_rendererNames[_rendererIndex]);
-  _engine = new Engine(app->GetFinalSceneIndex(), plugin);
+  _engine = new Engine(app->GetModel()->GetFinalSceneIndex(), plugin);
 
-  app->AddEngine(_engine);
+  app->GetModel()->AddEngine(_engine);
 
   //_engine->SetRendererPlugin(TfToken(_rendererNames[_rendererIndex]));
 
@@ -220,7 +221,7 @@ void ViewportUI::MouseButton(int button, int action, int mods)
   {
     _lastX = (int)x;
     _lastY = (int)y;
-    Application::Get()->SetActiveEngine(_engine);
+    Application::Get()->GetModel()->SetActiveEngine(_engine);
     SetInteracting(true);
     if (mods & GLFW_MOD_ALT) {
       if (button == GLFW_MOUSE_BUTTON_LEFT) {
@@ -257,8 +258,9 @@ void ViewportUI::MouseButton(int button, int action, int mods)
   _parent->SetDirty();
 
   Application* app = Application::Get();
-  if(app->GetExec()) 
-    app->SendExecViewEvent(&_MouseButtonEventData(button, action, mods, x, y));
+  Model* model = app->GetModel();
+  if(model->GetExec()) 
+    model->SendExecViewEvent(&_MouseButtonEventData(button, action, mods, x, y));
   
 }
 
@@ -332,14 +334,15 @@ void ViewportUI::Keyboard(int key, int scancode, int action, int mods)
     switch (mappedKey) {
       case GLFW_KEY_A:
       {
-        _camera->FrameSelection(Application::Get()->GetStageBoundingBox());
+        _camera->FrameSelection(Application::Get()->GetModel()->GetStageBoundingBox());
         _engine->SetDirty(true);
         break;
       }
       case GLFW_KEY_F:
       {
-        if (app->GetSelection()->IsEmpty())return;
-        _camera->FrameSelection(Application::Get()->GetSelectionBoundingBox());
+        Model* model = app->GetModel();
+        if (model->GetSelection()->IsEmpty())return;
+        _camera->FrameSelection(model->GetSelectionBoundingBox());
         _engine->SetDirty(true);
         break;
       }
@@ -360,42 +363,6 @@ void ViewportUI::Keyboard(int key, int scancode, int action, int mods)
       }
     }
   }
-}
-
-static bool ComboWidget(const char* label, BaseUI* ui, 
-  const char** names, const size_t count, int& last, size_t width=300)
-{
-  int current = last;
-  ImGui::Text("%s", label);
-  ImGui::SameLine();
-  ImGui::SetNextItemWidth(300);
-  std::string name("##");
-  name += label;
-  if (ImGui::BeginCombo(name.c_str(), names[current], ImGuiComboFlags_PopupAlignLeft))
-  {
-    for (int n = 0; n < count; ++n)
-    {
-      const bool is_selected = (current == n);
-      if (ImGui::Selectable(names[n], is_selected))
-      {
-        current = n;
-      }
-
-      if (is_selected) {
-        ImGui::SetItemDefaultFocus();
-      }
-    }
-    ui->GetView()->SetFlag(View::DISCARDMOUSEBUTTON);
-    ImGui::EndCombo();
-  }
-  if (current != last) {
-    last = current;
-    ui->GetView()->ClearFlag(View::DISCARDMOUSEBUTTON);
-    ImGui::SameLine();
-    return true;
-  }
-  ImGui::SameLine();
-  return false;
 }
 
 void ViewportUI::Render()
@@ -419,7 +386,6 @@ void ViewportUI::Render()
   for (auto&& prim : GetModel()->GetSelection())
       paths.push_back(prim.GetPrimPath());*/
   //_engine->SetRendererAov(_aov);
-
 
   _engine->Prepare();
 
@@ -447,52 +413,50 @@ void ViewportUI::Render()
   glClearColor(0.5,0.5,0.5,1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  if (app->GetDisplayStage()->HasDefaultPrim())
+  if (_model->GetStage()->HasDefaultPrim())
     _engine->Render();
 
   _drawTarget->Unbind();
   
   _engine->SetDirty(false);
-  std::cout << "viewport DRaw done..." << std::endl;
 }
 
 void 
 ViewportUI::_DrawPickMode()
 { 
-  ImGui::SameLine();
-  static const char *pickModeStr[5] = {
-    ICON_FA_HAND_POINTER "    Assembly",
-    ICON_FA_HAND_POINTER "       Model",
-    ICON_FA_HAND_POINTER "       Group",
-    ICON_FA_HAND_POINTER "   Component",
-    ICON_FA_HAND_POINTER "SubComponent",
+  static const size_t numPickModes = 3;
+  static const char *pickModeStr[numPickModes] = {
+    ICON_FA_HAND_POINTER " Assembly",
+    ICON_FA_HAND_POINTER " Model",
+    ICON_FA_HAND_POINTER " Component"
   };
-  Selection* selection = Application::Get()->GetSelection();
-  if (ImGui::BeginCombo("##Pick mode", pickModeStr[int(selection->GetMode())], ImGuiComboFlags_NoArrowButton)) {
-    if (ImGui::Selectable(pickModeStr[0])) {
-      selection->SetMode(Selection::Mode::ASSEMBLY);
+
+  Selection* selection = Application::Get()->GetModel()->GetSelection();
+  int pickModeIdx = 0;
+  if (UI::AddComboWidget("Pick", pickModeStr, numPickModes, _pickMode, 250)) {
+    switch(_pickMode) {
+      case 0:
+        selection->SetMode(Selection::Mode::ASSEMBLY);
+        break;
+      
+      case 1:
+        selection->SetMode(Selection::Mode::MODEL);
+        break;
+
+      case 2:
+        selection->SetMode(Selection::Mode::COMPONENT);
+        break;
     }
-    if (ImGui::Selectable(pickModeStr[1])) {
-      selection->SetMode(Selection::Mode::MODEL);
-    }
-    if (ImGui::Selectable(pickModeStr[2])) {
-      selection->SetMode(Selection::Mode::GROUP);
-    }
-    if (ImGui::Selectable(pickModeStr[3])) {
-      selection->SetMode(Selection::Mode::COMPONENT);
-    }
-    if (ImGui::Selectable(pickModeStr[4])) {
-      selection->SetMode(Selection::Mode::SUBCOMPONENT);
-    }
-    ImGui::EndCombo();
+    GetView()->SetFlag(View::DISCARDMOUSEBUTTON);
   }
+  ImGui::SameLine();
 }
 
 
 void 
 ViewportUI::_DrawAov()
 { 
-  ImGui::SameLine();
+  ImGui::SetNextItemWidth(32);
   const size_t numAovs = 6;
   static const TfToken aovTokens[numAovs] = {
     HdAovTokens->color,
@@ -503,13 +467,11 @@ ViewportUI::_DrawAov()
     HdAovTokens->instanceId
   };
   
-  if (ImGui::BeginCombo("Aov", _aov.GetString().c_str(), ImGuiComboFlags_NoArrowButton)) {
-    for(size_t i = 0; i < numAovs; ++i) 
-      if (ImGui::Selectable(aovTokens[i].GetString().c_str())) 
-        _aov = aovTokens[i];
-    ImGui::EndCombo();
+  if (UI::AddComboWidget("Aov", aovTokens, numAovs, _aov, 140)) {
+    Init();
+    GetView()->SetFlag(View::DISCARDMOUSEBUTTON);
   }
- 
+  ImGui::SameLine();
 }
 
 
@@ -520,7 +482,7 @@ bool ViewportUI::Draw()
   if (!_initialized)Init();
   if(!_valid)return false;  
   
-  if (app->GetDisplayStage() != nullptr) {
+  if (_model->GetStage() != nullptr) {
     if ( _engine->IsDirty() || !_engine->IsConverged()) {
       Render();
     }
@@ -586,27 +548,25 @@ bool ViewportUI::Draw()
     
     // renderer
     ImGui::SetCursorPosX(0);
-    ImGui::SetNextItemWidth(64);
     DiscardEventsIfMouseInsideBox(GfVec2f(0, 0), GfVec2f(GetWidth(), 24));
-    if (ComboWidget("Renderer", this, _rendererNames, _numRenderers, _rendererIndex, 300)) {
+    if (UI::AddComboWidget("Renderer", _rendererNames, _numRenderers, _rendererIndex, 250)) {
       Init();
+      GetView()->SetFlag(View::DISCARDMOUSEBUTTON);
     }
+    ImGui::SameLine();
 
     // shaded mode
-    if (ComboWidget("Mode", this, DRAW_MODE_NAMES, IM_ARRAYSIZE(DRAW_MODE_NAMES), _drawMode, 300)) {
+    if (UI::AddComboWidget("DrawMode", DRAW_MODE_NAMES, IM_ARRAYSIZE(DRAW_MODE_NAMES), _drawMode, 250)) {
       _engine->SetDirty(true);
+      GetView()->SetFlag(View::DISCARDMOUSEBUTTON);
     }
+    ImGui::SameLine();
 
-    ImGui::SetNextItemWidth(64);
     _DrawPickMode();
-
-
-    ImGui::SetNextItemWidth(32);
     _DrawAov();
 
     // engine
-    //ImGui::Text("%s", _engine->GetRendererDisplayName(
-    //  _engine->GetCurrentRendererId()).c_str());
+    //ImGui::Text("%s", _engine->GetRendererDisplayName(_engine->GetCurrentRendererId()).c_str());
     
 
     //ImGui::PopFont();
@@ -754,8 +714,9 @@ bool ViewportUI::Pick(int x, int y, int mods)
 {
   if (y - GetY() < 32) return false;
   Application* app = Application::Get();
-  Selection* selection = app->GetSelection();
-  UsdStageRefPtr stage = app->GetWorkStage();
+  Model* model = app->GetModel();
+  Selection* selection = model->GetSelection();
+  UsdStageRefPtr stage = model->GetWorkStage();
   if (!stage)return false;
 
   GfFrustum pickFrustum = _ComputePickFrustum(x, y);

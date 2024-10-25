@@ -234,7 +234,7 @@ ExplorerUI::DrawVisibility(const UsdPrim& prim, bool visible, bool selected)
   Application* app = Application::Get();
   if (ImGui::Button(visible ? visibleIcon : invisibleIcon)) {
     _current = prim.GetPath();
-    SdfPathVector paths = app->GetSelection()->GetSelectedPaths();
+    SdfPathVector paths = _model->GetSelection()->GetSelectedPaths();
     _PushCurrentPath(_current, paths);
     ADD_COMMAND(ShowHideCommand, paths, ShowHideCommand::TOGGLE);
   }
@@ -256,7 +256,7 @@ ExplorerUI::DrawActive(const UsdPrim& prim, bool selected)
   const char* inactiveIcon = ICON_FA_PAUSE;
 
   Application* app = Application::Get();
-  Selection* selection = app->GetSelection();
+  Selection* selection = _model->GetSelection();
   
  
   if (ImGui::Button(selected ? activeIcon : inactiveIcon)) {
@@ -308,7 +308,7 @@ static ImVec4 GetPrimColor(const UsdPrim& prim) {
       if (!item) return;
 
       _current = item->path;
-      if (app->GetWorkStage()->GetPrimAtPath(_current).IsValid()) {
+      if (app->GetModel()->GetStage()->GetPrimAtPath(_current).IsValid()) {
         if (mods & GLFW_MOD_CONTROL) {
           app->ToggleSelection({ _current });
         }
@@ -350,12 +350,12 @@ ExplorerUI::DrawPrim(const UsdPrim& prim, Selection* selection)
     Application* app = Application::Get();
     ImGuiIO& io = ImGui::GetIO();
 
-    if (app->GetWorkStage()->GetPrimAtPath(_current).IsValid()) {
+    if (app->GetModel()->GetStage()->GetPrimAtPath(_current).IsValid()) {
       if (io.KeysDown[GLFW_KEY_LEFT_CONTROL] || io.KeysDown[GLFW_KEY_RIGHT_CONTROL]) {
-        app->ToggleSelection({ _current });
+        app->GetModel()->ToggleSelection({ _current });
       }
       else {
-        app->SetSelection({ _current });
+        app->GetModel()->SetSelection({ _current });
       }
     }
   }
@@ -396,8 +396,9 @@ ExplorerUI::Draw()
 {
   /// Draw the hierarchy of the stage
   Application* app = Application::Get();
-  Selection* selection = app->GetSelection();
-  UsdStageRefPtr stage = app->GetWorkStage();
+  Model* model = app->GetModel();
+  Selection* selection = model->GetSelection();
+  UsdStageRefPtr stage = model->GetWorkStage();
   const ImGuiStyle& style = ImGui::GetStyle();
   if (!stage) return false;
 

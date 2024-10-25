@@ -2,7 +2,7 @@
 #include "../ui/tab.h"
 #include "../app/window.h"
 #include "../app/view.h"
-
+#include "../app/application.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -16,6 +16,7 @@ BaseUI::BaseUI(View* parent, short type, bool popup)
   , _name(ComputeUniqueName(type))
   , _initialized(false)
   , _interacting(false)
+  , _model(Application::Get()->GetModel())
 {
   if (_parent && !popup)
   {
@@ -32,6 +33,13 @@ BaseUI::BaseUI(View* parent, short type, bool popup)
   TfNotice::Register(me, &BaseUI::OnSelectionChangedNotice);
   TfNotice::Register(me, &BaseUI::OnAttributeChangedNotice);
 };
+
+void
+BaseUI::SetModel(Model* model)
+{
+  _model = model;
+  _initialized = false;
+}
 
 std::string 
 BaseUI::ComputeUniqueName(short type)

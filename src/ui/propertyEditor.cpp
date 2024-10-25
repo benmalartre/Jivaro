@@ -44,9 +44,9 @@ void
 PropertyEditorUI::OnSelectionChangedNotice(const SelectionChangedNotice& n)
 {
   Application* app = Application::Get();
-  Selection* selection = app->GetSelection();
+  Selection* selection = app->GetModel()->GetSelection();
   if (selection->GetNumSelectedItems()) {
-    UsdPrim prim = app->GetWorkStage()->GetPrimAtPath(selection->GetSelectedPaths().back());
+    UsdPrim prim = app->GetModel()->GetStage()->GetPrimAtPath(selection->GetSelectedPaths().back());
     SetPrim(prim);
   }
   else {
@@ -77,7 +77,7 @@ PropertyEditorUI::_DrawAssetInfo(const UsdPrim& prim)
       ImGui::TableSetColumnIndex(2);
       ImGui::PushItemWidth(-FLT_MIN);
       UsdAttribute attribute = prim.GetAttribute(TfToken(keyValue->first));
-      VtValue modified = UIUtils::AddAttributeWidget(attribute, UsdTimeCode::Default());
+      VtValue modified = UI::AddAttributeWidget(attribute, UsdTimeCode::Default());
       if (!modified.IsEmpty()) {
         UndoBlock editBlock;
         prim.SetAssetInfoByKey(TfToken(keyValue->first), modified);
@@ -97,7 +97,7 @@ void _XXX_CALLBACK__(int index)
 // TODO Share the code,
 static void DrawPropertyMiniButton(ImGuiID id=0)
 {
-  UIUtils::AddIconButton(
+  UI::AddIconButton(
     id, ICON_FA_GEAR, ICON_DEFAULT,
     std::bind(_XXX_CALLBACK__, id));
   ImGui::SameLine();
@@ -152,7 +152,7 @@ PropertyEditorUI::_DrawXformsCommon(UsdTimeCode time)
         target.current.translation.data(), 3, NULL, NULL, DecimalPrecision);
       
       if (ImGui::IsItemDeactivatedAfterEdit() || (ImGui::IsItemActive() && ImGui::IsKeyPressed(ImGuiKey_Tab))) {
-        ADD_COMMAND(TranslateCommand, Application::Get()->GetWorkStage(), targets, time);
+        ADD_COMMAND(TranslateCommand, Application::Get()->GetModel()->GetStage(), targets, time);
       }
 
       // Rotation
@@ -167,7 +167,7 @@ PropertyEditorUI::_DrawXformsCommon(UsdTimeCode time)
       ImGui::PushItemWidth(-FLT_MIN);
       ImGui::InputFloat3("Rotation", target.current.rotation.data(), DecimalPrecision);
       if (ImGui::IsItemDeactivatedAfterEdit() || (ImGui::IsItemActive() && ImGui::IsKeyPressed(ImGuiKey_Tab))) {
-        ADD_COMMAND(RotateCommand, Application::Get()->GetWorkStage(), targets, time);
+        ADD_COMMAND(RotateCommand, Application::Get()->GetModel()->GetStage(), targets, time);
       }
       // Scale
       ImGui::TableNextRow();
@@ -181,7 +181,7 @@ PropertyEditorUI::_DrawXformsCommon(UsdTimeCode time)
       ImGui::PushItemWidth(-FLT_MIN);
       ImGui::InputFloat3("Scale", target.current.scale.data(), DecimalPrecision);
       if (ImGui::IsItemDeactivatedAfterEdit() || (ImGui::IsItemActive() && ImGui::IsKeyPressed(ImGuiKey_Tab))) {
-        ADD_COMMAND(ScaleCommand, Application::Get()->GetWorkStage(), targets, time);
+        ADD_COMMAND(ScaleCommand, Application::Get()->GetModel()->GetStage(), targets, time);
       }
 
       ImGui::TableNextRow();
@@ -194,7 +194,7 @@ PropertyEditorUI::_DrawXformsCommon(UsdTimeCode time)
       ImGui::TableSetColumnIndex(2);
       ImGui::InputFloat3("Pivot", target.current.pivot.data(), DecimalPrecision);
       if (ImGui::IsItemDeactivatedAfterEdit() || (ImGui::IsItemActive() && ImGui::IsKeyPressed(ImGuiKey_Tab))) {
-        ADD_COMMAND(PivotCommand, Application::Get()->GetWorkStage(), targets, time);
+        ADD_COMMAND(PivotCommand, Application::Get()->GetModel()->GetStage(), targets, time);
       }
 
       // TODO rotation order
@@ -215,11 +215,11 @@ PropertyEditorUI::_DrawAttributeValue(const UsdAttribute& attribute,
   VtValue value;
   attribute.Get(&value, timeCode);
   if(value.IsHolding<TfToken>()) {
-    return UIUtils::AddTokenWidget(attribute, timeCode);
+    return UI::AddTokenWidget(attribute, timeCode);
   } else if (attribute.GetRoleName() == TfToken("Color")) {
-    return UIUtils::AddColorWidget(attribute, timeCode);
+    return UI::AddColorWidget(attribute, timeCode);
   }
-  return UIUtils::AddAttributeWidget(attribute, timeCode);
+  return UI::AddAttributeWidget(attribute, timeCode);
 }
 
 void 
@@ -375,7 +375,7 @@ PropertyEditorUI::Draw()
         ImGui::PopID();
 
         ImGui::TableSetColumnIndex(1);
-        UIUtils::AddAttributeDisplayName(attribute);
+        UI::AddAttributeDisplayName(attribute);
 
         ImGui::TableSetColumnIndex(2);
         ImGui::PushItemWidth(-FLT_MIN);

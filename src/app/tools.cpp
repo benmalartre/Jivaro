@@ -115,7 +115,7 @@ short Tool::GetActiveTool(){
 
 void Tool::Draw()
 {
-  Selection* selection = Application::Get()->GetSelection();
+  Selection* selection = Application::Get()->GetModel()->GetSelection();
   if(_active && selection->GetNumSelectedItems()) {
     glClear(GL_DEPTH_BUFFER_BIT);
     _active->Draw(_viewport[2] , _viewport[3]);
@@ -124,7 +124,7 @@ void Tool::Draw()
 
 void Tool::Select(float x, float y, float width, float height, bool lock)
 {
-  Selection* selection = Application::Get()->GetSelection();
+  Selection* selection = Application::Get()->GetModel()->GetSelection();
   if(_active  && selection->GetNumSelectedItems()) {
     _activeAxis = _active->Select(x, y, width, height, lock);
   }
@@ -139,7 +139,7 @@ void Tool::Pick(float x, float y, float width, float height)
 
 void Tool::BeginUpdate(float x, float y, float width, float height)
 {
-  Selection* selection = Application::Get()->GetSelection();
+  Selection* selection = Application::Get()->GetModel()->GetSelection();
   if(_active && selection->GetNumSelectedItems()) {
     if (_activeAxis != BaseHandle::AXIS_NONE) {
       _active->BeginUpdate(x, y, width, height);
@@ -163,7 +163,7 @@ void Tool::EndUpdate(float x, float y, float width, float height)
 void Tool::Update(float x, float y, float width, float height)
 {
   Application* app = Application::Get();
-  Selection* selection = app->GetSelection();
+  Selection* selection = app->GetModel()->GetSelection();
   if(_active && selection->GetNumSelectedItems()) {
     _active->Update(x, y, width, height);
   }

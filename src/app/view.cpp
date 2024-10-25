@@ -9,12 +9,10 @@
 #include "../ui/splitter.h"
 #include "../ui/menu.h"
 #include "../ui/viewport.h"
-#include "../ui/contentBrowser.h"
 #include "../ui/graphEditor.h"
 #include "../ui/propertyEditor.h"
+#include "../ui/attributeEditor.h"
 //#include "../ui/curveEditor.h"
-#include "../ui/layerEditor.h"
-#include "../ui/textEditor.h"
 #include "../ui/debug.h"
 #include "../ui/demo.h"
 #include "../ui/icon.h"
@@ -104,26 +102,20 @@ View::CreateUI(UIType type)
   case UIType::VIEWPORT:
     _current = new ViewportUI(this);
     break;
-  case UIType::CONTENTBROWSER:
-    _current = new ContentBrowserUI(this);
-    break;
   case UIType::GRAPHEDITOR:
-    _current = new GraphEditorUI(this);
+    _current = new AttributeEditorUI(this);
     break;
   //case UIType::CURVEEDITOR:
   //  _current = new CurveEditorUI(this);
   //  break;
-  case UIType::LAYEREDITOR:
-    _current = new LayerEditorUI(this);
-    break;
   case UIType::DEMO:
     _current = new DemoUI(this);
     break;
   case UIType::PROPERTYEDITOR:
     _current = new PropertyEditorUI(this);
     break;
-  case UIType::TEXTEDITOR:
-    _current = new TextEditorUI(this);
+  case UIType::ATTRIBUTEEDITOR:
+    _current = new AttributeEditorUI(this);
     break;
   case UIType::DEBUG:
     _current = new DebugUI(this);

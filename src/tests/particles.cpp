@@ -140,7 +140,7 @@ void TestParticles::InitExec(UsdStageRefPtr& stage)
 
 
   Application* app = Application::Get();
-  Selection* selection = app->GetSelection();
+  Selection* selection = app->GetModel()->GetSelection();
   Mesh* emitter = NULL;
 
   if(selection->GetNumSelectedItems()) {

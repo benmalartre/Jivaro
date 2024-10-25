@@ -473,19 +473,7 @@ SdfPathPopupUI::Draw()
 
   ImGui::Begin(_name.c_str(), &opened, _flags);
 
-  
-
-  // TODO: We will probably want to browse in the scene hierarchy to select the path
-    //   create a selection tree, one day
-  ImGui::Text("%s", _primSpec->GetPath().GetString().c_str());
-  if (ImGui::BeginCombo("Operation", GetListEditorOperationName(_operation))) {
-    for (int n = 0; n < GetListEditorOperationSize(); n++) {
-      if (ImGui::Selectable(GetListEditorOperationName(n))) {
-        _operation = n;
-      }
-    }
-    ImGui::EndCombo();
-  }
+ 
   ImGui::InputText("Target prim path", &_primPath);
 
   ImGui::End();

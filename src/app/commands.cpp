@@ -44,7 +44,7 @@ OpenSceneCommand::OpenSceneCommand(const std::string& filename)
     SdfPath path("/" + name);
     UndoBlock editBlock;
     UsdStageRefPtr stage = UsdStage::Open(filename);
-    app->SetStage(stage);
+    app->GetModel()->SetStage(stage);
     UndoRouter::Get().TrackLayer(stage->GetRootLayer());
   }
 
@@ -66,7 +66,7 @@ NewSceneCommand::NewSceneCommand(const std::string& filename)
   if (layer) {
     UsdStageRefPtr stage = UsdStage::Open(layer);
     if (stage) {
-      app->SetStage(stage);
+      app->GetModel()->SetStage(stage);
       UndoRouter::Get().TrackLayer(stage->GetRootLayer());
     }
   }
@@ -299,7 +299,7 @@ SelectCommand::SelectCommand(short type,
   const SdfPathVector& paths, int mode)
   : Command(true)
 {
-  Selection* selection = Application::Get()->GetSelection();
+  Selection* selection = Application::Get()->GetModel()->GetSelection();
   _previous = selection->GetSelectedPaths();
   switch (mode) {
   case SET:
@@ -321,7 +321,7 @@ SelectCommand::SelectCommand(short type,
 
 void SelectCommand::Do()
 {
-  Selection* selection = Application::Get()->GetSelection();
+  Selection* selection = Application::Get()->GetModel()->GetSelection();
   std::vector<Selection::Item> previous = selection->GetItems();
   //election->SetItems(_previous);
   //_previous = previous;
@@ -335,7 +335,7 @@ ShowHideCommand::ShowHideCommand(SdfPathVector& paths, Mode mode)
   : Command(true)
 {
   Application* app = Application::Get();
-  UsdStageRefPtr stage = app->GetWorkStage();
+  UsdStageRefPtr stage = app->GetModel()->GetWorkStage();
   switch (mode) {
   case SHOW:
     for (auto& path : paths) {
@@ -390,7 +390,7 @@ ActivateCommand::ActivateCommand(SdfPathVector& paths, Mode mode)
   : Command(true)
 {
   Application* app = Application::Get();
-  UsdStageRefPtr stage = app->GetWorkStage();
+  UsdStageRefPtr stage = app->GetModel()->GetStage();
   switch (mode) {
   case ACTIVATE:
     for (auto& path : paths) {
@@ -620,7 +620,7 @@ MoveNodeCommand::MoveNodeCommand(
   , _offset(offset)
 {
   Application* app = Application::Get();
-  UsdStageRefPtr stage = app->GetWorkStage();
+  UsdStageRefPtr stage = app->GetModel()->GetStage();
   for (auto& node : nodes) {
     UsdPrim prim = stage->GetPrimAtPath(node);
     if (!prim.IsValid()) {
@@ -663,7 +663,7 @@ ExpendNodeCommand::ExpendNodeCommand(
   , _nodes(nodes)
 {
   Application* app = Application::Get();
-  UsdStageRefPtr stage = app->GetWorkStage();
+  UsdStageRefPtr stage = app->GetModel()->GetStage();
   for (auto& node : nodes) {
     UsdUINodeGraphNodeAPI api(stage->GetPrimAtPath(node));
     UsdAttribute expandAttr = api.CreateExpansionStateAttr();
@@ -690,7 +690,7 @@ ConnectNodeCommand::ConnectNodeCommand(const SdfPath& source, const SdfPath& des
   , _source(source)
   , _destination(destination)
 {
-  UsdStageRefPtr stage = Application::Get()->GetWorkStage();
+  UsdStageRefPtr stage = Application::Get()->GetModel()->GetStage();
   UsdPrim lhsPrim = stage->GetPrimAtPath(source.GetPrimPath());
   UsdPrim rhsPrim = stage->GetPrimAtPath(destination.GetPrimPath());
   if (!lhsPrim.IsValid() || !rhsPrim.IsValid()) {

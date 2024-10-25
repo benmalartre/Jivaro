@@ -32,7 +32,6 @@
 #include "../ui/toolbar.h"
 #include "../ui/tool.h"
 #include "../ui/explorer.h"
-#include "../ui/layerEditor.h"
 #include "../ui/propertyEditor.h"
 //#include "../ui/curveEditor.h"
 
@@ -278,9 +277,9 @@ static void _StandardLayout(Window* window)
   new PropertyEditorUI(propertyView);
   Ts[6] = CurrentTime();
   new ToolUI(graphView);
-  //new GraphEditorUI(graphView);
+  //AttributeEditorUIditorUI(graphView);
   Ts[7] = CurrentTime();
-  Application::Get()->SetActiveEngine(viewport->GetEngine());
+  Application::Get()->GetModel()->SetActiveEngine(viewport->GetEngine());
 
   std::string names[7] = { "viewport", "timeline", "menu", "toolbar", "explorer", "property", "graph" };
 
@@ -766,7 +765,7 @@ Window::DrawPopup(PopupUI* popup)
       ImVec2(0, 0), ImVec2(1, 1), ImColor(100, 100, 100, 255));
     ImGui::End();
   } else {
-    for (Engine* engine : Application::Get()->GetEngines()) {
+    for (Engine* engine : Application::Get()->GetModel()->GetEngines()) {
       engine->SetHighlightSelection(false);
       engine->SetDirty(true);
     }
