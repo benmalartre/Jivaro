@@ -1110,12 +1110,15 @@ class TestPcpChanges(unittest.TestCase):
             self.assertFalse(_FindPrimIndex(overAndDefInSublayers))
             self.assertFalse(_FindPrimIndex(overInRootDefInSublayer))
 
-            # This prim index does not need to be recomputed, it just has an
-            # updated prim stack.
-            self.assertTrue(_FindPrimIndex(overInSublayerAndRoot))
-            self.assertEqual(
-                overInSublayerAndRoot[0].primStack,
-                [rootLayer.GetPrimAtPath('/Parent/OverInSublayerAndRoot')])
+            if INCREMENTAL_CHANGES:
+                # This prim index does not need to be recomputed, it just has an
+                # updated prim stack.
+                self.assertTrue(_FindPrimIndex(overInSublayerAndRoot))
+                self.assertEqual(
+                    overInSublayerAndRoot[0].primStack,
+                    [rootLayer.GetPrimAtPath('/Parent/OverInSublayerAndRoot')])
+            else:
+                self.assertFalse(_FindPrimIndex(overInSublayerAndRoot))
 
         # Test cases for muting a sublayer that itself has sublayers.
         def _MuteSublayer(pcp):
