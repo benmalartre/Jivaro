@@ -142,7 +142,7 @@ Model::Update(const float time)
 
 
 void 
-Model::InitExec(UsdStageRefPtr& stage)
+Model::InitExec()
 {
   //_exec = new TestPendulum();
   //_exec = new TestVelocity();
@@ -156,7 +156,7 @@ Model::InitExec(UsdStageRefPtr& stage)
   //_exec = new TestHair();
   //_exec = new TestGeodesic();
   //_exec = new TestBVH();
-  _exec->InitExec(stage);
+  _exec->InitExec(_stage);
 
   for(auto& engine: _engines) {
     engine->InitExec(_exec->GetScene());
@@ -165,9 +165,9 @@ Model::InitExec(UsdStageRefPtr& stage)
 }
 
 void
-Model::UpdateExec(UsdStageRefPtr& stage, float time)
+Model::UpdateExec(float time)
 {
-  _exec->UpdateExec(stage, time);
+  _exec->UpdateExec(_stage, time);
 
   for (auto& engine : _engines) {
     engine->UpdateExec(time);
@@ -176,12 +176,12 @@ Model::UpdateExec(UsdStageRefPtr& stage, float time)
 }
 
 void
-Model::TerminateExec(UsdStageRefPtr& stage)
+Model::TerminateExec()
 {
   for (auto& engine : _engines) {
     engine->TerminateExec();
   }
-  _exec->TerminateExec(stage);
+  _exec->TerminateExec(_stage);
   delete _exec;
   _exec = NULL;  
   _execute = false;
@@ -305,8 +305,8 @@ void
 Model::ToggleExec() 
 {
   _execute = 1 - _execute; 
-  if (_execute)InitExec(_stage);
-  else TerminateExec(_stage);
+  if (_execute)InitExec();
+  else TerminateExec();
   DirtyAllEngines();
 };
 

@@ -301,12 +301,12 @@ Application::Update()
 
 
   // execution if needed
-  if (Time::Get()->IsPlaying())
-    if (time->Playback() != Time::PLAYBACK_WAITING)
-      if (_model->GetExec()) _model->UpdateExec(_model->GetStage(), currentTime);
+  if (_model->GetExec())
+    if (Time::Get()->IsPlaying() &&time->Playback() != Time::PLAYBACK_WAITING)
+        _model->UpdateExec(currentTime);
   
-  else if (currentTime != previousTime || Application::Get()->IsToolInteracting())
-      if (_model->GetExec()) _model->UpdateExec(_model->GetStage(), currentTime);
+    else if (currentTime != previousTime || Application::Get()->IsToolInteracting())
+        _model->UpdateExec(currentTime);
   
   _model->Update(currentTime);
 
@@ -466,7 +466,7 @@ Application::SelectionChangedCallback(const SelectionChangedNotice& n)
 void 
 Application::NewSceneCallback(const NewSceneNotice& n)
 {
-  if(_model->GetExec()) _model->TerminateExec(_model->GetStage());
+  if(_model->GetExec()) _model->TerminateExec();
 
   _model->ClearSelection();
   DirtyAllEngines();
@@ -489,9 +489,9 @@ Application::SceneChangedCallback(const SceneChangedNotice& n)
 void
 Application::AttributeChangedCallback(const AttributeChangedNotice& n)
 {
-  if (_model->GetExec()) {
-    _model->UpdateExec(_model->GetStage(), Time::Get()->GetActiveTime());
-  }
+  if (_model->GetExec()) 
+    _model->UpdateExec(Time::Get()->GetActiveTime());
+  
   _mainWindow->ForceRedraw();
   _mainWindow->GetTool()->ResetSelection();
   for (auto& window : _childWindows) {
@@ -504,10 +504,10 @@ Application::AttributeChangedCallback(const AttributeChangedNotice& n)
 void
 Application::TimeChangedCallback(const TimeChangedNotice& n)
 {
-  if (_model->GetExec()) {
-    _model->UpdateExec(_model->GetStage(), Time::Get()->GetActiveTime());
+  if (_model->GetExec()) 
+    _model->UpdateExec(Time::Get()->GetActiveTime());
     
-  }
+  
   _mainWindow->ForceRedraw();
   for (auto& window : _childWindows) {
     window->ForceRedraw();

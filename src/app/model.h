@@ -80,9 +80,9 @@ public:
   void SetExec(bool state);
   bool GetExec();
 
-  virtual void InitExec(UsdStageRefPtr& stage);
-  virtual void UpdateExec(UsdStageRefPtr& stage, float time);
-  virtual void TerminateExec(UsdStageRefPtr& stage);
+  virtual void InitExec();
+  virtual void UpdateExec(float time);
+  virtual void TerminateExec();
   virtual void SendExecViewEvent(const ViewEventData *data);
 
     // usd stages
