@@ -301,9 +301,8 @@ Application::Update()
 
 
   // execution if needed
-  if (Time::Get()->IsPlaying()) {
-    playback = time->Playback();
-    if (playback != Time::PLAYBACK_WAITING)
+  if (Time::Get()->IsPlaying())
+    if (time->Playback() != Time::PLAYBACK_WAITING)
       if (_model->GetExec()) _model->UpdateExec(_model->GetStage(), currentTime);
   
   else if (currentTime != previousTime || Application::Get()->IsToolInteracting())
