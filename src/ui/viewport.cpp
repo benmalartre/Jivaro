@@ -1,3 +1,6 @@
+#include <pxr/imaging/hd/light.h>
+#include <pxr/imaging/cameraUtil/conformWindow.h>
+#include "pxr/imaging/hdx/shadowTask.h"
 
 #include "../utils/strings.h"
 #include "../utils/glutils.h"
@@ -14,8 +17,6 @@
 #include "../app/tools.h"
 #include "../app/handle.h"
 #include "../app/application.h"
-
-#include <pxr/imaging/cameraUtil/conformWindow.h>
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -60,6 +61,7 @@ ViewportUI::ViewportUI(View* parent)
   , _rendererIndex(0)
   , _rendererNames(NULL)
   , _highlightSelection(true)
+  , _lightingContext(nullptr)
 {
   _camera->Set(GfVec3d(12,24,12),
               GfVec3d(0,0,0),
@@ -100,6 +102,36 @@ ViewportUI::~ViewportUI()
   }
 }
 
+void ViewportUI::UpdateLighting()
+{
+  /*
+  if(!_lightingContext) 
+    _lightingContext = GlfSimpleLightingContext::New();
+
+  GlfSimpleLight light;
+  light.SetHasShadow(true);
+  light.SetDiffuse(GfVec4f(1,1,1,1));
+  light.SetAmbient(GfVec4f(0,0,0,1));
+  light.SetSpecular(GfVec4f(1,1,1,1));
+
+  const float t = Time::Get()->GetActiveTime();
+  light.SetPosition(GfVec4f(pxr::GfSin(t), 10.f, pxr::GfCos(t), 1));
+
+  GlfSimpleMaterial material;
+  material.SetAmbient(GfVec4f(0.2, 0.2, 0.2, 1.0));
+  material.SetDiffuse(GfVec4f(0.8, 0.8, 0.8, 1.0));
+  material.SetSpecular(GfVec4f(0,0,0,1));
+  material.SetShininess(0.0001f);
+
+  _lightingContext->SetLights({ light });
+  _lightingContext->SetMaterial(material);
+  _lightingContext->SetSceneAmbient(GfVec4f(0.2,0.2,0.2,1.0));
+  _engine->SetLightingState(_lightingContext);
+  */
+  //_engine->ActivateShadows(true);
+  
+}
+
 void ViewportUI::Init()
 {
   Application* app = Application::Get();
@@ -124,24 +156,7 @@ void ViewportUI::Init()
     _engine->SetRendererPlugin(TfToken(_rendererNames[_rendererIndex]));
   }
 
-  GlfSimpleMaterial material;
-  GlfSimpleLight simpleLight;
-  simpleLight.SetAmbient({ 0.5, 0.3, 0.4, 1.0 });
-  simpleLight.SetDiffuse({ 1.0, 1.0, 1.0, 1.f });
-  simpleLight.SetSpecular({ 0.2, 0.2, 0.2, 1.f });
-  simpleLight.SetPosition({ 200, 200, 200, 1.0 });
-  //simpleLight.SetIsDomeLight(true);
-  GlfSimpleLightVector lights;
-  lights.push_back(simpleLight);
-
-  material.SetAmbient({ 0.2f, 0.2f, 0.2f, 1.f });
-  material.SetDiffuse({ 1.0, 1.f, 1.f, 1.f });
-  material.SetSpecular({ 0.5f, 0.5f, 0.5f, 1.f });
-  auto lightingContext = GlfSimpleLightingContext::New();
-
-  _engine->SetLightingState(lights,
-                            material,
-                            GfVec4f(0.5,0.5,0.5,1.0));
+  UpdateLighting();
 
   Resize();
 
@@ -386,7 +401,7 @@ void ViewportUI::Render()
   const float& h = GetHeight();
   const float& w = GetWidth();
 
-  _engine->SetRendererAov(HdAovTokens->color);
+  _engine->SetRendererAov(_aov);
 
   _engine->SetRenderViewport(
     GfVec4d(0, wh-(h), w, h));
@@ -397,6 +412,7 @@ void ViewportUI::Render()
   );
 
   _engine->SetSelectionColor(GfVec4f(0.75, 0.75, 0, 0.5));
+  UpdateLighting();
 
   _renderParams.frame = UsdTimeCode(Time::Get()->GetActiveTime());
   _renderParams.complexity = 1.0f;
@@ -408,12 +424,15 @@ void ViewportUI::Render()
   _renderParams.cullStyle = UsdImagingGLCullStyle::CULL_STYLE_BACK_UNLESS_DOUBLE_SIDED;
   _renderParams.gammaCorrectColors = false;
   _renderParams.enableIdRender = false;
-  _renderParams.enableSampleAlphaToCoverage = true;
+  _renderParams.enableLighting = true;
+  _renderParams.enableSampleAlphaToCoverage = true; 
   _renderParams.highlight = true;
-  _renderParams.enableSceneMaterials = true;
-  _renderParams.enableSceneLights = true;
+  _renderParams.enableSceneMaterials = false;
+  
+
+  _renderParams.complexity = 1.3;
+  _renderParams.clearColor = GfVec4f{ 1.0f, .5f, 0.1f, 1.0f };
   //_renderParams.colorCorrectionMode = ???
-  _renderParams.clearColor = GfVec4f(0.25,0.25,0.25,1.0);
 
   if (_highlightSelection) {
     Selection* selection = app->GetSelection();
@@ -474,6 +493,31 @@ ViewportUI::_DrawPickMode()
     ImGui::EndCombo();
   }
 }
+
+
+void 
+ViewportUI::_DrawAov()
+{ 
+  ImGui::SameLine();
+  const size_t numAovs = 6;
+  static const TfToken aovTokens[numAovs] = {
+    HdAovTokens->color,
+    HdAovTokens->depth,
+    HdAovTokens->depthStencil,
+    HdAovTokens->cameraDepth,
+    HdAovTokens->primId,
+    HdAovTokens->instanceId
+  };
+  
+  if (ImGui::BeginCombo("Aov", _aov.GetString().c_str(), ImGuiComboFlags_NoArrowButton)) {
+    for(size_t i = 0; i < numAovs; ++i) 
+      if (ImGui::Selectable(aovTokens[i].GetString().c_str())) 
+        _aov = aovTokens[i];
+    ImGui::EndCombo();
+  }
+ 
+}
+
 
 bool ViewportUI::Draw()
 {    
@@ -548,6 +592,7 @@ bool ViewportUI::Draw()
     
     // renderer
     ImGui::SetCursorPosX(0);
+    ImGui::SetNextItemWidth(64);
     DiscardEventsIfMouseInsideBox(GfVec2f(0, 0), GfVec2f(GetWidth(), 24));
     if (ComboWidget("Renderer", this, _rendererNames, _numRenderers, _rendererIndex, 300)) {
       Init();
@@ -558,7 +603,12 @@ bool ViewportUI::Draw()
       _engine->SetDirty(true);
     }
 
+    ImGui::SetNextItemWidth(64);
     _DrawPickMode();
+
+
+    ImGui::SetNextItemWidth(32);
+    _DrawAov();
 
     // engine
     ImGui::Text("%s", _engine->GetRendererDisplayName(
@@ -708,7 +758,6 @@ ViewportUI::_ComputePickFrustum(int x, int y)
 
 bool ViewportUI::Pick(int x, int y, int mods)
 {
-  std::cout << "Viewport UI PICK CALLED!!!" << std::endl;
   if (y - GetY() < 32) return false;
   Application* app = Application::Get();
   Selection* selection = app->GetSelection();

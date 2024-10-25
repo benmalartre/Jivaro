@@ -1,20 +1,23 @@
-#include "pxr/imaging/garch/glApi.h"
-#include "pxr/imaging/glf/contextCaps.h"
-#include "pxr/imaging/glf/glContext.h"
-#include "pxr/imaging/hdx/taskController.h"
-#include "pxr/imaging/hd/mesh.h"
-#include "pxr/usdImaging/usdImagingGL/engine.h"
-#include "pxr/usdImaging/usdImaging/delegate.h"
-#include "pxr/usdImaging/usdImaging/stageSceneIndex.h"
-#include "pxr/imaging/hd/flatteningSceneIndex.h"
-#include "pxr/imaging/hdx/pickTask.h"
-#include "pxr/imaging/hdx/taskController.h"
-#include "pxr/imaging/hdx/tokens.h"
-#include "pxr/base/tf/envSetting.h"
-#include "pxr/base/tf/diagnostic.h"
-#include "pxr/base/tf/callContext.h"
+#include <pxr/imaging/garch/glApi.h>
+#include <pxr/imaging/glf/contextCaps.h>
+#include <pxr/imaging/glf/glContext.h>
+#include <pxr/imaging/hdx/taskController.h>
+#include <pxr/imaging/hdx/simpleLightTask.h>
+#include <pxr/imaging/hd/mesh.h>
+#include <pxr/imaging/hd/light.h>
+#include <pxr/usdImaging/usdImagingGL/engine.h>
+#include <pxr/usdImaging/usdImaging/delegate.h>
+#include <pxr/usdImaging/usdImaging/stageSceneIndex.h>
+#include <pxr/imaging/hd/flatteningSceneIndex.h>
+#include <pxr/imaging/hdx/pickTask.h>
+#include <pxr/imaging/hdx/tokens.h>
+#include <pxr/base/tf/envSetting.h>
+#include <pxr/base/tf/diagnostic.h>
+#include <pxr/base/tf/callContext.h>
+
 #include "../app/engine.h"
 #include "../app/application.h"
+#include "../app/picking.h"
 #include "../geometry/geometry.h"
 #include "../geometry/mesh.h"
 #include "../geometry/sampler.h"
@@ -61,16 +64,46 @@ _GetUseSceneIndices()
 }
 
 Engine::Engine(const HdDriver& driver)
-  : Engine(SdfPath::AbsoluteRootPath(), {}, {}, 
+  : UsdImagingGLEngine(SdfPath::AbsoluteRootPath(), {}, {}, 
     _GetUsdImagingDelegateId(), driver)
+  , _delegate(nullptr)
 {
   //SetRendererAov()
 }
+
+Engine::Engine(
+  const SdfPath& rootPath,
+  const SdfPathVector& excludedPaths,
+  const SdfPathVector& invisedPaths,
+  const SdfPath& sceneDelegateID,
+  const HdDriver& driver)
+  : UsdImagingGLEngine(
+    rootPath,
+    excludedPaths,
+    invisedPaths,
+    sceneDelegateID,
+    driver)
+  , _dirty(true)
+  , _delegate(nullptr)
+{
+}
+
+Engine::~Engine() = default;
 
 void Engine::InitExec(Scene* scene)
 {
   _delegate = new Delegate(_GetRenderIndex(), _GetUsdImagingDelegateId());
   _delegate->SetScene(scene);
+
+  GlfSimpleLight light;
+  light.SetDiffuse(GfVec4f(0.5, 0.5, 0.5, 1.0));
+  light.SetPosition(GfVec4f(1,0.5,1,0));
+  light.SetHasShadow(true);
+  _delegate->AddLight(SdfPath("/light1"), light);
+  _delegate->SetLight(SdfPath("/light1"), HdLightTokens->shadowCollection,
+                      VtValue(HdRprimCollection(HdTokens->geometry,
+                                        HdReprSelector(HdReprTokens->hull))));
+
   // Add a meshPoints repr since it isn't populated in 
     // HdRenderIndex::_ConfigureReprs
     HdMesh::ConfigureRepr(_tokens->meshPoints,
@@ -94,24 +127,21 @@ void Engine::TerminateExec()
   _delegate = NULL;
 }
 
-
-Engine::Engine(
-  const SdfPath& rootPath,
-  const SdfPathVector& excludedPaths,
-  const SdfPathVector& invisedPaths,
-  const SdfPath& sceneDelegateID,
-  const HdDriver& driver)
-  : UsdImagingGLEngine(
-    rootPath,
-    excludedPaths,
-    invisedPaths,
-    sceneDelegateID,
-    driver)
-  , _dirty(true)
+void Engine::ActivateShadows(bool active)
 {
+  
+  _taskController->SetEnableShadows(active);
+  
+  if(active) {
+    HdxShadowTaskParams shadowParams;
+
+    shadowParams.enableLighting = true;
+    shadowParams.enableIdRender = false;
+    shadowParams.enableSceneMaterials = false;
+    _taskController->SetShadowParams(shadowParams);
+  }
 }
 
-Engine::~Engine() = default;
 
 //----------------------------------------------------------------------------
 // Picking
@@ -130,7 +160,6 @@ Engine::TestIntersection(
   int* outHitInstanceIndex,
   HdInstancerContext* outInstancerContext)
 {
-
   if (_GetUseSceneIndices()) {
     // XXX(HYD-2299): picking support
     return false;
@@ -152,33 +181,6 @@ Engine::TestIntersection(
 
   _PrepareRender(params);
 
-
-
-  /*
-  
-  HdxPickHitVector allHits;
-    HdxPickTaskContextParams p;
-    p.resolution = HdxUnitTestUtils::CalculatePickResolution(
-        startPos, endPos, GfVec2i(4,4));
-    p.pickTarget = pickTarget;
-    p.resolveMode = HdxPickTokens->resolveUnique;
-    p.viewMatrix = viewMatrix;
-    p.projectionMatrix = HdxUnitTestUtils::ComputePickingProjectionMatrix(
-        startPos, endPos, GfVec2i(width, height), frustum);
-    p.collection = _pickablesCol;
-    p.outHits = &allHits;
-
-    HdTaskSharedPtrVector tasks;
-    tasks.push_back(GetDelegate().GetRenderIndex().GetTask(
-        SdfPath("/pickTask")));
-    VtValue pickParams(p);
-    _GetEngine()->SetTaskContextData(HdxPickTokens->pickParams, pickParams);
-    _GetEngine()->Execute(&GetDelegate().GetRenderIndex(), &tasks);
-
-    return HdxUnitTestUtils::TranslateHitsToSelection(
-        p.pickTarget, HdSelection::HighlightModeSelect, allHits);
-  
-  */
 
   HdxPickHitVector allHits;
   HdxPickTaskContextParams pickParams;
@@ -209,7 +211,8 @@ Engine::TestIntersection(
     *outHitNormal = hit.worldSpaceHitNormal;
   }
 
-  if(!hit.objectId.IsEmpty() && !_CheckPrimSelectable(hit.objectId)) return false;
+  if(Application::Get()->GetExec() && !hit.objectId.IsEmpty() && 
+    !_CheckPrimSelectable(hit.objectId)) return false;
 
   hit.objectId = _GetSceneDelegate()->GetScenePrimPath(
     hit.objectId, hit.instanceIndex, outInstancerContext);
@@ -227,6 +230,35 @@ Engine::TestIntersection(
   }
 
   return true;
+  
+}
+
+HdSelectionSharedPtr
+Engine::MarqueeSelect(
+  GfVec2i const &startPos, GfVec2i const &endPos,
+  TfToken const& pickTarget, int width, int height, 
+  GfFrustum const &frustum, GfMatrix4d const &viewMatrix)
+{
+  HdxPickHitVector allHits;
+  HdxPickTaskContextParams p;
+  p.resolution = Picking::CalculatePickResolution(startPos, endPos, GfVec2i(4,4));
+  p.pickTarget = pickTarget;
+  p.resolveMode = HdxPickTokens->resolveUnique;
+  p.viewMatrix = viewMatrix;
+  p.projectionMatrix = Picking::ComputePickingProjectionMatrix(
+    startPos, endPos, GfVec2i(width, height), frustum);
+  p.collection = _pickables;
+  p.outHits = &allHits;
+
+  HdTaskSharedPtrVector tasks;
+  tasks.push_back(_GetSceneDelegate()->GetRenderIndex().GetTask(
+    SdfPath("/pickTask")));
+  VtValue pickParams(p);
+  _GetHdEngine()->SetTaskContextData(HdxPickTokens->pickParams, pickParams);
+  _GetHdEngine()->Execute(&_GetSceneDelegate()->GetRenderIndex(), &tasks);
+
+  return Picking::TranslateHitsToSelection(
+    p.pickTarget, HdSelection::HighlightModeSelect, allHits);
 }
 
 bool

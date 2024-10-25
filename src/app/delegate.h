@@ -20,18 +20,12 @@ public:
   ~Delegate();
 
   // -----------------------------------------------------------------------//
-  /// \name Tasks
+  /// \name Options
   // -----------------------------------------------------------------------//
-  void AddRenderTask(SdfPath const &id);
-  void AddRenderSetupTask(SdfPath const &id);
-  void AddSimpleLightTask(SdfPath const &id);
-  void AddShadowTask(SdfPath const &id);
-  void AddSelectionTask(SdfPath const &id);
-  void AddDrawTargetTask(SdfPath const &id);
-  void AddPickTask(SdfPath const &id);
-
-  void SetTaskParam(SdfPath const &id, TfToken const &name, VtValue val);
-  VtValue GetTaskParam(SdfPath const &id, TfToken const &name);
+  
+  void AddLight(SdfPath const &id, GlfSimpleLight const &light);
+  void SetLight(SdfPath const &id, TfToken const &key, VtValue value);
+  void RemoveLight(SdfPath const &id);
 
   // -----------------------------------------------------------------------//
   /// \name Options

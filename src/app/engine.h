@@ -41,6 +41,8 @@ public:
   void UpdateExec(double time);
   void TerminateExec();
 
+  void ActivateShadows(bool active);
+
   /*
   HdSelectionSharedPtr _Pick(GfVec2i const& startPos, 
     GfVec2i const& endPos, TfToken const& pickTarget);
@@ -67,17 +69,16 @@ public:
     int* outHitInstanceIndex = NULL,
     HdInstancerContext* outInstancerContext = NULL);
 
+  /// MarqueeSelect 
+  HdSelectionSharedPtr MarqueeSelect(GfVec2i const &startPos, GfVec2i const &endPos,
+    TfToken const& pickTarget, int width, int height, 
+    GfFrustum const &frustum, GfMatrix4d const &viewMatrix);
+
   void SetHighlightSelection(bool state) { _highlightSelection = state; };
   bool GetHighlightSelection() { return _highlightSelection; };
 
-  void SetSceneColReprSelector(HdReprSelector const &reprSelector) {
-    _collection.SetReprSelector(reprSelector);
-    SdfPath renderTask("/renderTask");
-    _delegate->SetTaskParam(renderTask, HdTokens->collection,
-        VtValue(_collection));
-  }
-
   Delegate* GetDelegate() { return _delegate; };
+
 
 protected:
   const HdRprimCollection &_GetCollection() const { return _collection; };
@@ -87,7 +88,8 @@ private:
   bool                    _dirty;
   bool                    _highlightSelection;
   Delegate*               _delegate;
-  HdRprimCollection  _collection;
+  HdRprimCollection       _collection;
+  HdRprimCollection       _pickables;
   //std::vector<View*> _views;
 };
 

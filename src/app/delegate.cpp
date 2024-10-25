@@ -1,10 +1,13 @@
-#include "pxr/imaging/hdx/drawTargetTask.h"
-#include "pxr/imaging/hdx/pickTask.h"
-#include "pxr/imaging/hdx/renderTask.h"
-#include "pxr/imaging/hdx/selectionTask.h"
-#include "pxr/imaging/hdx/simpleLightTask.h"
-#include "pxr/imaging/hdx/shadowTask.h"
-#include "pxr/imaging/hdx/shadowMatrixComputation.h"
+#include <pxr/base/gf/frustum.h>
+#include <pxr/imaging/hd/light.h>
+#include <pxr/imaging/hd/rprimCollection.h>
+#include <pxr/imaging/hdx/drawTargetTask.h>
+#include <pxr/imaging/hdx/pickTask.h>
+#include <pxr/imaging/hdx/renderTask.h>
+#include <pxr/imaging/hdx/selectionTask.h>
+#include <pxr/imaging/hdx/simpleLightTask.h>
+#include <pxr/imaging/hdx/shadowTask.h>
+#include <pxr/imaging/hdx/shadowMatrixComputation.h>
 
 #include "../app/delegate.h"
 #include "../geometry/deformable.h"
@@ -12,6 +15,43 @@
 #include "../geometry/scene.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
+
+
+namespace {
+class ShadowMatrix : public HdxShadowMatrixComputation
+{
+public:
+  ShadowMatrix(GlfSimpleLight const &light) {
+    GfFrustum frustum;
+    frustum.SetProjectionType(GfFrustum::Orthographic);
+    frustum.SetWindow(GfRange2d(GfVec2d(-10, -10), GfVec2d(10, 10)));
+    frustum.SetNearFar(GfRange1d(0, 100));
+    const GfVec4d pos = light.GetPosition();
+    frustum.SetPosition(GfVec3d(0, 0, 10));
+    frustum.SetRotation(GfRotation(GfVec3d(0, 0, 1),
+                                    GfVec3d(pos[0], pos[1], pos[2])));
+
+    _shadowMatrix =
+      frustum.ComputeViewMatrix() * frustum.ComputeProjectionMatrix();
+  }
+
+  std::vector<GfMatrix4d> Compute(
+      const GfVec4f &viewport,
+      CameraUtilConformWindowPolicy policy) override {
+    return { _shadowMatrix };
+  }
+
+  std::vector<GfMatrix4d> Compute(
+    const CameraUtilFraming &framing,
+    CameraUtilConformWindowPolicy policy) override {
+      return { _shadowMatrix };
+  }
+
+private:
+  GfMatrix4d _shadowMatrix;
+};
+
+}
 
 Delegate::Delegate(HdRenderIndex* parentIndex, SdfPath const& delegateID)
   : HdSceneDelegate(parentIndex, delegateID)
@@ -31,105 +71,63 @@ Delegate::IsEnabled(TfToken const& option) const
   return false;
 }
 
-
+// -----------------------------------------------------------------------//
+/// \name Lights
+// -----------------------------------------------------------------------//
 void
-Delegate::AddRenderTask(SdfPath const &id)
+Delegate::AddLight(SdfPath const &id, GlfSimpleLight const &light)
 {
-  GetRenderIndex().InsertTask<HdxRenderTask>(this, id);
+  // add light
+  GetRenderIndex().InsertSprim(HdPrimTypeTokens->simpleLight, this, id);
   _ValueCache &cache = _valueCacheMap[id];
-  cache[HdTokens->collection]
+
+  HdxShadowParams shadowParams;
+  shadowParams.enabled = light.HasShadow();
+  shadowParams.resolution = 512;
+  shadowParams.shadowMatrix
+    = HdxShadowMatrixComputationSharedPtr(new ShadowMatrix(light));
+  shadowParams.bias = -0.001;
+  shadowParams.blur = 0.1;
+
+  cache[HdLightTokens->params] = light;
+  cache[HdLightTokens->shadowParams] = shadowParams;
+  cache[HdLightTokens->shadowCollection]
     = HdRprimCollection(HdTokens->geometry, 
-      HdReprSelector(HdReprTokens->smoothHull));
-
-  // Don't filter on render tag.
-  // XXX: However, this will mean no prim passes if any stage defines a tag
-  cache[HdTokens->renderTags] = TfTokenVector();
+        HdReprSelector(HdReprTokens->refined));
 }
 
 void
-Delegate::AddRenderSetupTask(SdfPath const &id)
-{
-  GetRenderIndex().InsertTask<HdxRenderSetupTask>(this, id);
-  _ValueCache &cache = _valueCacheMap[id];
-  HdxRenderTaskParams params;
-  params.camera = _cameraId;
-  params.viewport = GfVec4f(0, 0, 512, 512);
-  cache[HdTokens->params] = VtValue(params);
-}
-
-void
-Delegate::AddSimpleLightTask(SdfPath const &id)
-{
-  GetRenderIndex().InsertTask<HdxSimpleLightTask>(this, id);
-  _ValueCache &cache = _valueCacheMap[id];
-  HdxSimpleLightTaskParams params;
-  params.cameraPath = _cameraId;
-  params.viewport = GfVec4f(0,0,512,512);
-  params.enableShadows = true;
-  
-  cache[HdTokens->params] = VtValue(params);
-}
-
-void
-Delegate::AddShadowTask(SdfPath const &id)
-{
-  GetRenderIndex().InsertTask<HdxShadowTask>(this, id);
-  _ValueCache &cache = _valueCacheMap[id];
-  HdxShadowTaskParams params;
-  cache[HdTokens->params] = VtValue(params);
-}
-
-void
-Delegate::AddSelectionTask(SdfPath const &id)
-{
-  GetRenderIndex().InsertTask<HdxSelectionTask>(this, id);
-}
-
-void
-Delegate::AddDrawTargetTask(SdfPath const &id)
-{
-  GetRenderIndex().InsertTask<HdxDrawTargetTask>(this, id);
-  _ValueCache &cache = _valueCacheMap[id];
-
-  HdxDrawTargetTaskParams params;
-  params.enableLighting = true;
-  cache[HdTokens->params] = params;
-}
-
-void
-Delegate::AddPickTask(SdfPath const &id)
-{
-  GetRenderIndex().InsertTask<HdxPickTask>(this, id);
-  _ValueCache &cache = _valueCacheMap[id];
-
-  HdxPickTaskParams params;
-  cache[HdTokens->params] = params;
-
-  // Don't filter on render tag.
-  // XXX: However, this will mean no prim passes if any stage defines a tag
-  cache[HdTokens->renderTags] = TfTokenVector();
-}
-
-void
-Delegate::SetTaskParam(
-  SdfPath const &id, TfToken const &name, VtValue val)
+Delegate::SetLight(SdfPath const &id, TfToken const &key,
+                               VtValue value)
 {
   _ValueCache &cache = _valueCacheMap[id];
-  cache[name] = val;
+  cache[key] = value;
+  if (key == HdLightTokens->params) {
+    // update shadow matrix too
+    GlfSimpleLight light = value.Get<GlfSimpleLight>();
+    HdxShadowParams shadowParams
+      = cache[HdLightTokens->shadowParams].Get<HdxShadowParams>();
+    shadowParams.shadowMatrix
+      = HdxShadowMatrixComputationSharedPtr(new ShadowMatrix(light));
 
-  if (name == HdTokens->collection) {
-    GetRenderIndex().GetChangeTracker().MarkTaskDirty(
-      id, HdChangeTracker::DirtyCollection);
-  } else if (name == HdTokens->params) {
-    GetRenderIndex().GetChangeTracker().MarkTaskDirty(
-      id, HdChangeTracker::DirtyParams);
+    GetRenderIndex().GetChangeTracker().MarkSprimDirty(
+      id, HdLight::DirtyParams|HdLight::DirtyShadowParams);
+    cache[HdLightTokens->shadowParams] = shadowParams;
+  } else if (key == HdTokens->transform) {
+    GetRenderIndex().GetChangeTracker().MarkSprimDirty(
+      id, HdLight::DirtyTransform);
+  } else if (key == HdLightTokens->shadowCollection) {
+    GetRenderIndex().GetChangeTracker().MarkSprimDirty(
+      id, HdLight::DirtyCollection);
   }
 }
 
-VtValue
-Delegate::GetTaskParam(SdfPath const &id, TfToken const &name)
+void
+Delegate::RemoveLight(SdfPath const &id)
 {
-  return _valueCacheMap[id][name];
+  // remove light
+  GetRenderIndex().RemoveSprim(HdPrimTypeTokens->simpleLight, id);
+  _valueCacheMap.erase(id);
 }
 
 

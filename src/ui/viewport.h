@@ -62,6 +62,7 @@ class ViewportUI : public BaseUI
     double GetLastMouseX(){return _lastX;};
     double GetLastMouseY(){return _lastY;};
 
+    void UpdateLighting();
     void Render();
 
     // overrides
@@ -83,6 +84,7 @@ class ViewportUI : public BaseUI
       GfVec2i const& endPos, TfToken const& pickTarget);*/
 
   private:
+    void                                _DrawAov();
     void                                _DrawPickMode();
     GLuint                              _texture;
     //int*                                _pixels;
@@ -96,13 +98,15 @@ class ViewportUI : public BaseUI
     bool                                _valid;
     bool                                _highlightSelection;
     // usd imaging engine
+    TfToken                             _aov;
     Engine*                             _engine;
-    UsdImagingGLRenderParams       _renderParams;
-    UsdPrim                        _root;
-    UsdLuxDomeLight                _light;
-    GlfDrawTargetRefPtr            _drawTarget;
+    UsdImagingGLRenderParams            _renderParams;
+    UsdPrim                             _root;
+    UsdLuxDomeLight                     _light;
+    GlfSimpleLightingContextRefPtr      _lightingContext;
+    GlfDrawTargetRefPtr                 _drawTarget;
     GLuint                              _drawTexId = 0;
-    GlfDrawTargetRefPtr            _toolTarget;
+    GlfDrawTargetRefPtr                 _toolTarget;
     GLuint                              _toolTexId = 0;
     int                                 _drawMode;
     int                                 _rendererIndex;
@@ -111,6 +115,8 @@ class ViewportUI : public BaseUI
     const char**                        _rendererNames;
     int                                 _numRenderers;
     CameraUtilConformWindowPolicy  _conformWindowPolicy;
+
+
 
     std::string                         _message;
 
