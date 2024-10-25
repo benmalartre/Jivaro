@@ -161,18 +161,16 @@ Model::InitExec()
   for(auto& engine: _engines) {
     engine->InitExec(_exec->GetScene());
   }
-  
 }
 
 void
 Model::UpdateExec(float time)
 {
   _exec->UpdateExec(_stage, time);
-
+  GetActiveEngine()->SetDirty(true);
   for (auto& engine : _engines) {
     engine->UpdateExec(time);
   }
-  
 }
 
 void

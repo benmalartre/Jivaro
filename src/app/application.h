@@ -73,7 +73,7 @@ public:
   // tools
   void SetActiveTool(size_t tool);
   bool IsToolInteracting();
-  
+
   void AddDeferredCommand(CALLBACK_FN fn);
   void ExecuteDeferredCommands();
 
@@ -111,6 +111,7 @@ private:
   Window*                           _activeWindow;
   Window*                           _focusWindow;
   Model*                            _model;
+  float                             _lastTime;
 
   // uis
   PopupUI*                          _popup;

@@ -23,7 +23,7 @@ public:
   inline float GetEndTime(){return _endTime;};
   inline float GetMaxTime(){return _maxTime;};
   inline float GetActiveTime(){return _activeTime;};
-  inline float GetPreviousTime(){return _previousTime;};
+  inline float GetLastTick(){return _lastTick;};
   inline float GetFPS(){return _fps;};
   inline float GetSpeed(){return _speed;};
   inline bool  GetLoop(){return _loop;};
@@ -34,7 +34,7 @@ public:
   inline void SetEndTime(float time){_endTime = time;};
   inline void SetMaxTime(float time){_maxTime = time;};
   inline void SetActiveTime(float time){_activeTime = time;};
-  inline void SetPreviousTime(float time){_previousTime = time;};
+  inline void SetLastTick(float time){_lastTick = time;};
   void SetFPS(float fps);
   inline void SetSpeed(float speed){_speed = speed;};
   inline void SetLoop(bool loop){_loop = loop;};
@@ -54,7 +54,7 @@ public:
 
 private:
   float                             _activeTime;
-  float                             _previousTime;
+  float                             _lastTick;
   float                             _startTime;
   float                             _endTime;
   float                             _minTime;

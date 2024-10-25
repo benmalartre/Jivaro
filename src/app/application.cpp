@@ -292,25 +292,20 @@ Application::Update()
   glfwPollEvents();
   //Time::Get()->ComputeFramerate();
 
-  static double refreshRate = 1.f / 60.f;
-  static int playback;
   Time* time = Time::Get();
   float currentTime(time->GetActiveTime());
-  float previousTime(time->GetPreviousTime());
-  time->SetPreviousTime(currentTime);
-
-
+  static int playback = time->Playback();
+  if(playback == Time::PLAYBACK_WAITING) return false; 
+  
   // execution if needed
-  if (_model->GetExec())
-    if (Time::Get()->IsPlaying() &&time->Playback() != Time::PLAYBACK_WAITING)
-        _model->UpdateExec(currentTime);
-  
-    else if (currentTime != previousTime || Application::Get()->IsToolInteracting())
-        _model->UpdateExec(currentTime);
-  
-  _model->Update(currentTime);
+  if ((time->IsPlaying() && (playback != Time::PLAYBACK_WAITING)) || Application::Get()->IsToolInteracting()) {
+    if(_model->GetExec() ) 
+      _model->UpdateExec(currentTime);
 
-
+    _model->Update(currentTime);
+    DirtyAllEngines();
+  }
+  
   // draw popup
   if (_popup) {
     Window* window = _popup->GetView()->GetWindow();
