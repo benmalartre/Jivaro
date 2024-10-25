@@ -5,11 +5,8 @@
 #include "../utils/timer.h"
 #include "../utils/prefs.h"
 #include "../ui/popup.h"
-#include "../command/manager.h"
 #include "../geometry/scene.h"
-#include "../app/application.h"
-#include "../app/commands.h"
-#include "../app/modal.h"
+#include "../app/model.h"
 #include "../app/notice.h"
 #include "../app/handle.h"
 #include "../app/engine.h"
@@ -35,118 +32,25 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-const char* Application::name = "Jivaro";
-
-// singleton
-//----------------------------------------------------------------------------
-Application* Application::_singleton=nullptr;
-
-Application* Application::Get() { 
-  if(_singleton==nullptr){
-        _singleton = new Application();
-    }
-    return _singleton; 
-};
 
 // constructor
 //----------------------------------------------------------------------------
-Application::Application()
-  : _mainWindow(nullptr)
-  , _activeWindow(nullptr)
-  , _popup(nullptr)
-  , _execute(false)
-  , _activeEngine(nullptr)
+Model::Model()
+  : _execute(false)
   , _exec(nullptr)
 {  
 };
 
 // destructor
 //----------------------------------------------------------------------------
-Application::~Application()
+Model::~Model()
 {
-  if(_mainWindow) delete _mainWindow;
 };
-
-// create full screen window
-//----------------------------------------------------------------------------
-Window*
-Application::CreateFullScreenWindow(const std::string& name)
-{
-  return Window::CreateFullScreenWindow(name);
-}
-
-// create child window
-//----------------------------------------------------------------------------
-Window*
-Application::CreateChildWindow(const std::string& name, const GfVec4i& dimension, Window* parent)
-{
-  return
-    Window::CreateChildWindow(name, dimension, parent);
-}
-
-// create standard window
-//----------------------------------------------------------------------------
-Window*
-Application::CreateStandardWindow(const std::string& name, const GfVec4i& dimension)
-{
-  return Window::CreateStandardWindow(name, dimension);
-}
-
-// popup
-//----------------------------------------------------------------------------
-void
-Application::SetPopup(PopupUI* popup)
-{
-  popup->SetParent(GetActiveWindow()->GetMainView());
-  _popup = popup;
-  _mainWindow->CaptureFramebuffer();
-  for (auto& childWindow : _childWindows)childWindow->CaptureFramebuffer();
-}
-
-/*
-void
-Application::SetPopupDeferred(PopupUI* popup)
-{
-  popup->SetParent(GetActiveWindow()->GetMainView());
-  _popup = popup;
-  _needCaptureFramebuffers = true;
-}
-*/
-
-void
-Application::UpdatePopup()
-{
-  if (_popup) {
-    if (!_popup->IsDone())return;
-    _popup->Terminate();
-    delete _popup;
-  }
-  _popup = nullptr;
-  _mainWindow->ForceRedraw();
-  for (auto& childWindow : _childWindows)childWindow->ForceRedraw();
-}
-
-void
-Application::AddDeferredCommand(CALLBACK_FN fn)
-{
-  _deferred.push_back(fn);
-}
-
-void
-Application::ExecuteDeferredCommands()
-{
-  // execute any registered command that could not been run during draw
-  if (_deferred.size()) {
-    for(int i = _deferred.size() - 1; i >= 0; --i) _deferred[i]();
-    _deferred.clear();
-  }
-}
-
 
 // browse for file
 //----------------------------------------------------------------------------
 std::string
-Application::BrowseFile(int x, int y, const char* folder, const char* filters[], 
+Model::BrowseFile(int x, int y, const char* folder, const char* filters[], 
   const int numFilters, const char* name, bool readOrWrite)
 {
   std::string result = 
@@ -167,24 +71,13 @@ Application::BrowseFile(int x, int y, const char* folder, const char* filters[],
   return result;
 }
 
-bool
-Application::_IsAnyEngineDirty()
-{
-  for (auto& engine : _engines) {
-    if (engine->IsDirty())return true;
-  }
-  return false;
-}
-
 void
-Application::SetStage(UsdStageRefPtr& stage)
+Model::SetStage(UsdStageRefPtr& stage)
 {
-
   _stageCache.Insert(stage);
   _stage = stage;
   _layer = stage->GetRootLayer();
     
-  std::cout << "stage scene index " << _stageSceneIndex << std::endl;
   _stageSceneIndex->SetStage(_stage);
   _stageSceneIndex->SetTime(UsdTimeCode::Default());
 
@@ -192,7 +85,7 @@ Application::SetStage(UsdStageRefPtr& stage)
 
 
 void 
-Application::_SetEmptyStage()
+Model::_SetEmptyStage()
 {
   _stage = UsdStage::CreateInMemory();
   UsdGeomSetStageUpAxis(_stage, UsdGeomTokens->y);
@@ -206,7 +99,7 @@ Application::_SetEmptyStage()
 }
 
 void 
-Application::_LoadUsdStage(const std::string usdFilePath)
+Model::_LoadUsdStage(const std::string usdFilePath)
 {
   _rootLayer = SdfLayer::FindOrOpen(usdFilePath);
   _sessionLayer = SdfLayer::CreateAnonymous();
@@ -220,35 +113,16 @@ Application::_LoadUsdStage(const std::string usdFilePath)
 // init application
 //----------------------------------------------------------------------------
 void 
-Application::Init(unsigned width, unsigned height, bool fullscreen)
+Model::Init()
 {
-  if(fullscreen) {
-    _mainWindow = CreateFullScreenWindow(name);
-  } else {
-    _mainWindow = CreateStandardWindow(name, GfVec4i(0,0,width, height));
-  }
-  
-  _activeWindow = _mainWindow;
-  Time::Get()->Init(1, 101, 24);
-  
-  //TfDebug::Enable(HD_MDI);
-  //TfDebug::Enable(HD_ENGINE_PHASE_INFO);
-  //TfDebug::Enable(GLF_DEBUG_CONTEXT_CAPS);
-  //TfDebug::Enable(HDST_DUMP_SHADER_SOURCEFILE);
-  //TfDebug::Enable(HD_DIRTY_LIST);
-  //TfDebug::Enable(HD_COLLECTION_CHANGED);
-  //TfDebug::Enable(LOFI_REGISTRY);
-
-    // setup notifications
-  TfNotice::Register(TfCreateWeakPtr(this), &Application::SelectionChangedCallback);
-  TfNotice::Register(TfCreateWeakPtr(this), &Application::NewSceneCallback);
-  TfNotice::Register(TfCreateWeakPtr(this), &Application::SceneChangedCallback);
-  TfNotice::Register(TfCreateWeakPtr(this), &Application::AttributeChangedCallback);
-  TfNotice::Register(TfCreateWeakPtr(this), &Application::TimeChangedCallback);
-  TfNotice::Register(TfCreateWeakPtr(this), &Application::UndoStackNoticeCallback);
-
-  // create window
-  _mainWindow->SetDesiredLayout(WINDOW_LAYOUT_STANDARD);
+ 
+  // setup notifications
+  TfNotice::Register(TfCreateWeakPtr(this), &Model::SelectionChangedCallback);
+  TfNotice::Register(TfCreateWeakPtr(this), &Model::NewSceneCallback);
+  TfNotice::Register(TfCreateWeakPtr(this), &Model::SceneChangedCallback);
+  TfNotice::Register(TfCreateWeakPtr(this), &Model::AttributeChangedCallback);
+  TfNotice::Register(TfCreateWeakPtr(this), &Model::TimeChangedCallback);
+  TfNotice::Register(TfCreateWeakPtr(this), &Model::UndoStackNoticeCallback);
 
   // scene indices
   _sceneIndexBases = HdMergingSceneIndex::New();
@@ -262,74 +136,10 @@ Application::Init(unsigned width, unsigned height, bool fullscreen)
   _stageSceneIndex = sceneIndices.stageSceneIndex;
   AddSceneIndexBase(_stageSceneIndex);
   
-  //_stage = TestAnimXFromFile(filename, editor);
-  //UsdStageRefPtr stage = TestAnimX(editor);
-  //_scene->GetRootStage()->GetRootLayer()->InsertSubLayerPath(stage->GetRootLayer()->GetIdentifier());
-
-  /*
-  // Create the layer to populate.
-  std::string shotFilePath = "E:/Projects/RnD/USD_BUILD/assets/AnimX/test.usda";
-  std::string animFilePath = "E:/Projects/RnD/USD_BUILD/assets/AnimX/anim.animx";
-  //SdfLayerRefPtr baseLayer = SdfLayer::FindOrOpen(shotFilePath);
-  
-  // Create a UsdStage with that root layer.
-  UsdStageRefPtr stage = UsdStage::Create(shotFilePath);
-  stage->SetStartTimeCode(1);
-  stage->SetEndTimeCode(100);
-  
-  UsdGeomCube cube =
-    UsdGeomCube::Define(stage, SdfPath("/Cube"));
-    
-
-  stage->GetRootLayer()->Save();
-
-  // we use Sdf, a lower level library, to obtain the 'anim' layer.
-  SdfLayerRefPtr animLayer = SdfLayer::FindOrOpen(animFilePath);
-  std::cout << "HAS LOCAL LAYER : " << stage->HasLocalLayer(animLayer) << std::endl;
-
-  stage->SetEditTarget(animLayer);
-  std::cout << "HAS LOCAL LAYER : " << stage->HasLocalLayer(animLayer) << std::endl;
-  */
-  
-  /*
-  // Create a mesh for the group.
-        UsdGeomMesh mesh =
-            UsdGeomMesh::Define(stage, SdfPath("/" + group.name));*/
-  
-  //_stage = UsdStage::CreateNew("test_stage");
-  //_stage = UsdStage::Open(filename);
-
-  //_stage = UsdStage::CreateNew("test.usda", TfNullPtr);
-  //_stage = UsdStage::CreateInMemory();
-
-  //_mesh = MakeColoredPolygonSoup(_scene->GetCurrentStage(), TfToken("/polygon_soup"));
-  //Mesh* vdbMesh = MakeOpenVDBSphere(_stage, TfToken("/openvdb_sphere"));
-/*
-  for(size_t i=0; i< 12; ++i) {
-    SdfPath path(TfToken("/cube_"+std::to_string(i)));
-    UsdGeomCube cube = UsdGeomCube::Define(_stage, path);
-    cube.AddTranslateOp().Set(GfVec3d(i * 3, 0, 0), UsdTimeCode::Default());
-  }
-*/
-  //_stages.push_back(stage1);
-  //TestStageUI(graph, _stages);
-
- 
-  //_mainWindow->CollectLeaves();
- 
-  /*Window* childWindow = CreateChildWindow(200, 200, 400, 400, _mainWindow);
-  AddWindow(childWindow);
-  
-  ViewportUI* viewport2 = new ViewportUI(childWindow->GetMainView());
-  
-  //DummyUI* dummy = new DummyUI(childWindow->GetMainView(), "Dummy");
-  
-  childWindow->CollectLeaves();*/
-
 }
 
 void 
-Application::InitExec(UsdStageRefPtr& stage)
+Model::InitExec(UsdStageRefPtr& stage)
 {
   //_exec = new TestPendulum();
   //_exec = new TestVelocity();
@@ -352,7 +162,7 @@ Application::InitExec(UsdStageRefPtr& stage)
 }
 
 void
-Application::UpdateExec(UsdStageRefPtr& stage, float time)
+Model::UpdateExec(UsdStageRefPtr& stage, float time)
 {
   _exec->UpdateExec(stage, time);
 
@@ -363,7 +173,7 @@ Application::UpdateExec(UsdStageRefPtr& stage, float time)
 }
 
 void
-Application::TerminateExec(UsdStageRefPtr& stage)
+Model::TerminateExec(UsdStageRefPtr& stage)
 {
   for (auto& engine : _engines) {
     engine->TerminateExec();
@@ -376,7 +186,7 @@ Application::TerminateExec(UsdStageRefPtr& stage)
 }
 
 void 
-Application::SendExecViewEvent(const ViewEventData *data)
+Model::SendExecViewEvent(const ViewEventData *data)
 {
   _exec->ViewEvent(data);
 }
@@ -384,31 +194,17 @@ Application::SendExecViewEvent(const ViewEventData *data)
 
 
 void
-Application::Term()
+Model::Term()
 {
   std::cout << "Jivaro Application Terminate!!" << std::endl;
 }
 
 bool
-Application::Update()
+Model::Update()
 {
-  ExecuteDeferredCommands();
-  /*
-  if (_needCaptureFramebuffers) {
-    _mainWindow->CaptureFramebuffer();
-    for (auto& childWindow : _childWindows)childWindow->CaptureFramebuffer();
-    _needCaptureFramebuffers = false;
-  }
-  */
-
-  glfwPollEvents();
-  //Time::Get()->ComputeFramerate();
-
-  static double refreshRate = 1.f / 60.f;
   static int playback;
   Time* time = Time::Get();
   float currentTime(time->GetActiveTime());
-  
   
   // execution if needed
   if (time->IsPlaying()) {
@@ -424,76 +220,27 @@ Application::Update()
       if (_execute) UpdateExec(_stage, currentTime);
     }
   }
-  
-  // draw popup
-  if (_popup) {
-    Window* window = _popup->GetView()->GetWindow();
-    window->DrawPopup(_popup);
-    if (_popup->IsDone() || _popup->IsCancel()) {
-      _popup->Terminate();
-      delete _popup;
-      _popup = nullptr;
-    }
-  } else {
-    if (!_mainWindow->Update()) return false;
-    for (auto& childWindow : _childWindows)childWindow->Update();
-  }
-
-  // playback if needed
-  if(time->IsPlaying() && playback != Time::PLAYBACK_WAITING) {
-    switch(playback) {
-      case Time::PLAYBACK_NEXT:
-        time->NextFrame(); break;
-      case Time::PLAYBACK_PREVIOUS:
-        time->PreviousFrame(); break;
-      case Time::PLAYBACK_FIRST:
-        time->FirstFrame(); break;
-      case Time::PLAYBACK_LAST:
-        time->LastFrame(); break;
-      case Time::PLAYBACK_STOP:
-        time->StopPlayback(); break;
-    }
-  }
 
   return true;
-}
-
-void
-Application::AddWindow(Window* window)
-{
- _childWindows.push_back(window);
-  window->Init();
-  window->SetGLContext();
-}
-
-void 
-Application::RemoveWindow(Window* window)
-{
-  std::vector<Window*>::iterator it = _childWindows.begin();
-  for (; it < _childWindows.end(); ++it) {
-    if(*it == window) {
-      _childWindows.erase(it);
-    }
-  }
 }
 
 // ---------------------------------------------------------------------------------------------
 // Model
 //----------------------------------------------------------------------------------------------
 void 
-Application::AddSceneIndexBase(HdSceneIndexBaseRefPtr sceneIndex)
+Model::AddSceneIndexBase(HdSceneIndexBaseRefPtr sceneIndex)
 {
   _sceneIndexBases->AddInputScene(sceneIndex, SdfPath::AbsoluteRootPath());
 }
 
 HdSceneIndexBaseRefPtr 
-Application::GetEditableSceneIndex()
+Model::GetEditableSceneIndex()
 {
   return _editableSceneIndex;
 }
 
 void 
-Application::SetEditableSceneIndex(HdSceneIndexBaseRefPtr sceneIndex)
+Model::SetEditableSceneIndex(HdSceneIndexBaseRefPtr sceneIndex)
 {
   std::cout << "Set Editable Scene Index" << sceneIndex << std::endl;
 
@@ -507,38 +254,38 @@ Application::SetEditableSceneIndex(HdSceneIndexBaseRefPtr sceneIndex)
 }
 
 HdSceneIndexBaseRefPtr 
-Application::GetFinalSceneIndex()
+Model::GetFinalSceneIndex()
 {
     return _finalSceneIndex;
 }
 
 HdSceneIndexPrim 
-Application::GetPrim(SdfPath primPath)
+Model::GetPrim(SdfPath primPath)
 {
   return _finalSceneIndex->GetPrim(primPath);
 }
 
 UsdPrim 
-Application::GetUsdPrim(SdfPath path)
+Model::GetUsdPrim(SdfPath path)
 {
   return _stage->GetPrimAtPath(path);
 }
 
 UsdPrimRange 
-Application::GetAllPrims()
+Model::GetAllPrims()
 {
   return _stage->Traverse();
 }
 
 void 
-Application::AddEngine(Engine* engine)
+Model::AddEngine(Engine* engine)
 {
   _engines.push_back(engine);
   _activeEngine = engine;
 }
 
 void 
-Application::RemoveEngine(Engine* engine)
+Model::RemoveEngine(Engine* engine)
 {
   if (engine == _activeEngine)  _activeEngine = NULL;
   for (size_t i = 0; i < _engines.size(); ++i) {
@@ -550,26 +297,26 @@ Application::RemoveEngine(Engine* engine)
 }
 
 void 
-Application::DirtyAllEngines()
+Model::DirtyAllEngines()
 {
   for (auto& engine : _engines) {
     engine->SetDirty(true);
   }
 }
 
-Engine* Application::GetActiveEngine()
+Engine* Model::GetActiveEngine()
 {
   return _activeEngine;
 }
 
 void 
-Application::SetActiveEngine(Engine* engine) 
+Model::SetActiveEngine(Engine* engine) 
 {
   _activeEngine = engine;
 }
 
 void 
-Application::SetActiveTool(size_t t)
+Model::SetActiveTool(size_t t)
 {
   Tool* tool = _mainWindow->GetTool();
   size_t lastActiveTool = tool->GetActiveTool();
@@ -582,7 +329,7 @@ Application::SetActiveTool(size_t t)
 }
 
 void 
-Application::SelectionChangedCallback(const SelectionChangedNotice& n)
+Model::SelectionChangedCallback(const SelectionChangedNotice& n)
 {
   for (auto& engine : _engines) {
     if (!_selection.IsEmpty() && _selection.IsObject()) {
@@ -591,6 +338,7 @@ Application::SelectionChangedCallback(const SelectionChangedNotice& n)
       //engine->ClearSelected();
     }
   }
+  /*
   if(_mainWindow->GetTool()->IsActive())
     _mainWindow->GetTool()->ResetSelection();
   _mainWindow->ForceRedraw();
@@ -600,20 +348,20 @@ Application::SelectionChangedCallback(const SelectionChangedNotice& n)
     window->ForceRedraw();
   }
   DirtyAllEngines();
+  */
 }
 
 void 
-Application::NewSceneCallback(const NewSceneNotice& n)
+Model::NewSceneCallback(const NewSceneNotice& n)
 {
   if(_exec) TerminateExec(_stage);
 
   _selection.Clear();
-  _manager.Clear();
   DirtyAllEngines();
 }
 
 void 
-Application::SceneChangedCallback(const SceneChangedNotice& n)
+Model::SceneChangedCallback(const SceneChangedNotice& n)
 {
   if(_exec) TerminateExec(_stage);
 
@@ -628,7 +376,7 @@ Application::SceneChangedCallback(const SceneChangedNotice& n)
 }
 
 void
-Application::AttributeChangedCallback(const AttributeChangedNotice& n)
+Model::AttributeChangedCallback(const AttributeChangedNotice& n)
 {
   if (_exec && _execute) {
     UpdateExec(_stage, Time::Get()->GetActiveTime());
@@ -643,7 +391,7 @@ Application::AttributeChangedCallback(const AttributeChangedNotice& n)
 }
 
 void
-Application::TimeChangedCallback(const TimeChangedNotice& n)
+Model::TimeChangedCallback(const TimeChangedNotice& n)
 {
   if (_exec && _execute) {
     UpdateExec(_stage, Time::Get()->GetActiveTime());
@@ -658,14 +406,14 @@ Application::TimeChangedCallback(const TimeChangedNotice& n)
 }
 
 void
-Application::UndoStackNoticeCallback(const UndoStackNotice& n)
+Model::UndoStackNoticeCallback(const UndoStackNotice& n)
 {
   ADD_COMMAND(UsdGenericCommand);
 }
 
 
 void 
-Application::AddCommand(std::shared_ptr<Command> command)
+Model::AddCommand(std::shared_ptr<Command> command)
 {
   _manager.AddCommand(command);
   _manager.ExecuteCommands();
@@ -673,19 +421,19 @@ Application::AddCommand(std::shared_ptr<Command> command)
 }
 
 void 
-Application::Undo()
+Model::Undo()
 {
   _manager.Undo();
 }
 
 void 
-Application::Redo()
+Model::Redo()
 {
   _manager.Redo();
 }
 
 void 
-Application::Delete()
+Model::Delete()
 {
   Selection* selection = GetSelection();
   const SdfPathVector& paths = selection->GetSelectedPaths();
@@ -694,7 +442,7 @@ Application::Delete()
 }
 
 void
-Application::Duplicate()
+Model::Duplicate()
 {
   Selection* selection = GetSelection();
   if (!selection->IsEmpty()) {
@@ -704,30 +452,30 @@ Application::Duplicate()
 }
 
 void 
-Application::OpenScene(const std::string& filename)
+Model::OpenScene(const std::string& filename)
 {
   ADD_COMMAND(OpenSceneCommand, filename);
 }
 
 void
-Application::NewScene(const std::string& filename)
+Model::NewScene(const std::string& filename)
 {
   ADD_COMMAND(NewSceneCommand, filename);
 }
 
-void Application::SaveScene()
+void Model::SaveScene()
 {
   GetWorkStage()->GetRootLayer()->Save(true);
 }
 
-void Application::SaveSceneAs(const std::string& filename)
+void Model::SaveSceneAs(const std::string& filename)
 {
   GetWorkStage()->GetRootLayer()->Save(true);
 }
 
 // execution
 void 
-Application::ToggleExec() 
+Model::ToggleExec() 
 {
   _execute = 1 - _execute; 
   if (_execute)InitExec(_stage);
@@ -736,71 +484,71 @@ Application::ToggleExec()
 };
 
 void 
-Application::SetExec(bool state) 
+Model::SetExec(bool state) 
 { 
   _execute = state; 
 };
 
 bool 
-Application::GetExec() 
+Model::GetExec() 
 { 
   return _execute; 
 };
 
 // get stage for display
 UsdStageRefPtr
-Application::GetDisplayStage()
+Model::GetDisplayStage()
 {
   return _stage;
 }
 
 // get stage for work
 UsdStageRefPtr
-Application::GetWorkStage()
+Model::GetWorkStage()
 {
   return _stage;
 }
 
 // get current layer
 SdfLayerRefPtr
-Application::GetCurrentLayer()
+Model::GetCurrentLayer()
 {
   return _layer;
 }
 
 // selection
 void 
-Application::SetSelection(const SdfPathVector& selection)
+Model::SetSelection(const SdfPathVector& selection)
 {
   ADD_COMMAND(SelectCommand, Selection::PRIM, selection, SelectCommand::SET);
 }
 
 void
-Application::ToggleSelection(const SdfPathVector& selection)
+Model::ToggleSelection(const SdfPathVector& selection)
 {
   ADD_COMMAND(SelectCommand, Selection::PRIM, selection, SelectCommand::TOGGLE);
 }
 
 void 
-Application::AddToSelection(const SdfPathVector& paths)
+Model::AddToSelection(const SdfPathVector& paths)
 {
   ADD_COMMAND(SelectCommand, Selection::PRIM, paths, SelectCommand::ADD);
 }
 
 void 
-Application::RemoveFromSelection(const SdfPathVector& paths)
+Model::RemoveFromSelection(const SdfPathVector& paths)
 {
   ADD_COMMAND(SelectCommand, Selection::PRIM, paths, SelectCommand::REMOVE);
 }
 
 void 
-Application::ClearSelection()
+Model::ClearSelection()
 {
   ADD_COMMAND(SelectCommand, Selection::PRIM, {}, SelectCommand::SET);
 }
 
 GfBBox3d
-Application::GetStageBoundingBox()
+Model::GetStageBoundingBox()
 {
   GfBBox3d bbox;
   TfTokenVector purposes = { UsdGeomTokens->default_ };
@@ -810,7 +558,7 @@ Application::GetStageBoundingBox()
 }
 
 GfBBox3d 
-Application::GetSelectionBoundingBox()
+Model::GetSelectionBoundingBox()
 {
   GfBBox3d bbox;
   static TfTokenVector purposes = {

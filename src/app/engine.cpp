@@ -1,117 +1,51 @@
-#include <pxr/imaging/garch/glApi.h>
-#include <pxr/imaging/glf/contextCaps.h>
-#include <pxr/imaging/glf/glContext.h>
-#include <pxr/imaging/hdx/taskController.h>
-#include <pxr/imaging/hdx/simpleLightTask.h>
-#include <pxr/imaging/hd/mesh.h>
-#include <pxr/imaging/hd/light.h>
-#include <pxr/usdImaging/usdImagingGL/engine.h>
-#include <pxr/usdImaging/usdImaging/delegate.h>
-#include <pxr/usdImaging/usdImaging/stageSceneIndex.h>
-#include <pxr/imaging/hd/flatteningSceneIndex.h>
+#include <pxr/base/gf/camera.h>
+#include <pxr/base/gf/frustum.h>
+#include <pxr/imaging/cameraUtil/conformWindow.h>
+#include <pxr/imaging/hd/rendererPlugin.h>
+#include <pxr/imaging/hd/rendererPluginRegistry.h>
 #include <pxr/imaging/hdx/pickTask.h>
-#include <pxr/imaging/hdx/tokens.h>
-#include <pxr/base/tf/envSetting.h>
-#include <pxr/base/tf/diagnostic.h>
-#include <pxr/base/tf/callContext.h>
+#include <pxr/imaging/hgi/tokens.h>
 
 #include "../app/engine.h"
-#include "../app/application.h"
-#include "../app/picking.h"
-#include "../geometry/geometry.h"
-#include "../geometry/mesh.h"
-#include "../geometry/sampler.h"
-
-#include <iostream>
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-PXR_NAMESPACE_USING_DIRECTIVE
-
-TF_DEFINE_PRIVATE_TOKENS(
-  _tokens,
-  (meshPoints)
-  (pickables)
-);
-
-TF_DEFINE_ENV_SETTING(JVR_ENGINE_EXEC_SCENE_DELEGATE_ID, "/",
-  "Default Jivaro scene delegate id");
-
-TF_DEFINE_ENV_SETTING(JVR_ENGINE_ENABLE_SCENE_INDEX, false,
-  "Use Scene Index API for imaging scene input");
-
-SdfPath const&
-_GetUsdImagingDelegateId()
+Engine::Engine(HdSceneIndexBaseRefPtr sceneIndex, TfToken plugin)
+  : _sceneIndex(sceneIndex),
+    _curRendererPlugin(plugin),
+    _hgi(Hgi::CreatePlatformDefaultHgi()),
+    _hgiDriver{HgiTokens->renderDriver, VtValue(_hgi.get())},
+    _engine(),
+    _renderDelegate(nullptr),
+    _renderIndex(nullptr),
+    _taskController(nullptr),
+    _taskControllerId("/defaultTaskController")
 {
-  static SdfPath const delegateId =
-    SdfPath(TfGetEnvSetting(JVR_ENGINE_EXEC_SCENE_DELEGATE_ID));
+  _width = 512;
+  _height = 512;
 
-  return delegateId;
+  _Initialize();
 }
 
-bool
-_GetUseSceneIndices()
+Engine::~Engine()
 {
-  // Use UsdImagingStageSceneIndex for input if:
-  // - USDIMAGINGGL_ENGINE_ENABLE_SCENE_INDEX is true (feature flag)
-  // - HdRenderIndex has scene index emulation enabled (otherwise,
-  //     AddInputScene won't work).
-  static bool useSceneIndices =
-    HdRenderIndex::IsSceneIndexEmulationEnabled() &&
-    (TfGetEnvSetting(JVR_ENGINE_ENABLE_SCENE_INDEX) == true);
+  // Destroy objects in opposite order of construction.
+  delete _taskController;
 
-  return useSceneIndices;
+  if (_renderIndex && _sceneIndex) {
+    _renderIndex->RemoveSceneIndex(_sceneIndex);
+    _sceneIndex = nullptr;
+  }
+
+  delete _renderIndex;
+  _renderDelegate = nullptr;
 }
-
-Engine::Engine(const HdDriver& driver)
-  : UsdImagingGLEngine(SdfPath::AbsoluteRootPath(), {}, {}, 
-    _GetUsdImagingDelegateId(), driver)
-  , _delegate(nullptr)
-{
-  //SetRendererAov()
-}
-
-Engine::Engine(
-  const SdfPath& rootPath,
-  const SdfPathVector& excludedPaths,
-  const SdfPathVector& invisedPaths,
-  const SdfPath& sceneDelegateID,
-  const HdDriver& driver)
-  : UsdImagingGLEngine(
-    rootPath,
-    excludedPaths,
-    invisedPaths,
-    sceneDelegateID,
-    driver)
-  , _dirty(true)
-  , _delegate(nullptr)
-{
-}
-
-Engine::~Engine() = default;
 
 void Engine::InitExec(Scene* scene)
 {
-  _delegate = new Delegate(_GetRenderIndex(), _GetUsdImagingDelegateId());
+  _Initialize();
+  _delegate = new Delegate(_renderIndex, SdfPath("/"));
   _delegate->SetScene(scene);
-
-  GlfSimpleLight light;
-  light.SetDiffuse(GfVec4f(0.5, 0.5, 0.5, 1.0));
-  light.SetPosition(GfVec4f(1,0.5,1,0));
-  light.SetHasShadow(true);
-  _delegate->AddLight(SdfPath("/light1"), light);
-  _delegate->SetLight(SdfPath("/light1"), HdLightTokens->shadowCollection,
-                      VtValue(HdRprimCollection(HdTokens->geometry,
-                                        HdReprSelector(HdReprTokens->hull))));
-
-  // Add a meshPoints repr since it isn't populated in 
-    // HdRenderIndex::_ConfigureReprs
-    HdMesh::ConfigureRepr(_tokens->meshPoints,
-                          HdMeshReprDesc(HdMeshGeomStylePoints,
-                                         HdCullStyleNothing,
-                                         HdMeshReprDescTokens->pointColor,
-                                         /*flatShadingEnabled=*/true,
-                                         /*blendWireframeColor=*/false));
 }
 
 
@@ -123,8 +57,9 @@ void Engine::UpdateExec(double time)
 void Engine::TerminateExec()
 {
   _delegate->RemoveScene();
-  delete(_delegate);
+  delete(_delegate);  
   _delegate = NULL;
+  _Initialize();
 }
 
 void Engine::ActivateShadows(bool active)
@@ -143,179 +78,282 @@ void Engine::ActivateShadows(bool active)
 }
 
 
-//----------------------------------------------------------------------------
-// Picking
-//----------------------------------------------------------------------------
-
-bool
-Engine::TestIntersection(
-  const GfMatrix4d& viewMatrix,
-  const GfMatrix4d& projectionMatrix,
-  const UsdPrim& root,
-  const UsdImagingGLRenderParams& params,
-  GfVec3d* outHitPoint,
-  GfVec3d* outHitNormal,
-  SdfPath* outHitPrimPath,
-  SdfPath* outHitInstancerPath,
-  int* outHitInstanceIndex,
-  HdInstancerContext* outInstancerContext)
+void Engine::_Initialize()
 {
-  if (_GetUseSceneIndices()) {
-    // XXX(HYD-2299): picking support
-    return false;
+
+  // init render delegate
+  _renderDelegate = _GetRenderDelegateFromPlugin(_curRendererPlugin);
+
+  // init render index
+  _renderIndex = HdRenderIndex::New(_renderDelegate.Get(), {&_hgiDriver});
+
+  _renderIndex->InsertSceneIndex(_sceneIndex, _taskControllerId);
+
+  // init task controller
+
+  _taskController = new HdxTaskController(_renderIndex, _taskControllerId);
+
+  // init render paramss
+  HdxRenderTaskParams params;
+  params.viewport = GfVec4f(0, 0, _width, _height);
+  params.enableLighting = true;
+  _taskController->SetRenderParams(params);
+
+  // init collection
+  _collection = HdRprimCollection(HdTokens->geometry,
+                                  HdReprSelector(HdReprTokens->smoothHull));
+  _taskController->SetCollection(_collection);
+
+  // init render tags
+  _taskController->SetRenderTags(TfTokenVector());
+
+  // init AOVs
+  TfTokenVector _aovOutputs{HdAovTokens->color};
+  _taskController->SetRenderOutputs(_aovOutputs);
+
+  GfVec4f clearColor = GfVec4f(.2f, .2f, .2f, 1.0f);
+  HdAovDescriptor colorAovDesc =
+      _taskController->GetRenderOutputSettings(HdAovTokens->color);
+  if (colorAovDesc.format != HdFormatInvalid) {
+    colorAovDesc.clearValue = VtValue(clearColor);
+    _taskController->SetRenderOutputSettings( HdAovTokens->color,
+                                              colorAovDesc);
   }
 
-  TF_VERIFY(_GetSceneDelegate());
-  TF_VERIFY(_GetTaskController());
+  // init selection
+  GfVec4f selectionColor = GfVec4f(1.f, 1.f, 0.f, .5f);
+  _selTracker = std::make_shared<HdxSelectionTracker>();
 
-  PrepareBatch(root, params);
+  _taskController->SetEnableSelection(true);
+  _taskController->SetSelectionColor(selectionColor);
 
-  // XXX(UsdImagingPaths): This is incorrect...  "Root" points to a USD
-  // subtree, but the subtree in the hydra namespace might be very different
-  // (e.g. for native instancing).  We need a translation step.
-  const SdfPathVector paths = {
-      root.GetPath().ReplacePrefix(
-          SdfPath::AbsoluteRootPath(), _sceneDelegateId)
-  };
-  _UpdateHydraCollection(&_intersectCollection, paths, params);
+  VtValue selectionValue(_selTracker);
+  _engine.SetTaskContextData(HdxTokens->selectionState, selectionValue);
 
-  _PrepareRender(params);
+  _taskController->SetOverrideWindowPolicy(CameraUtilFit);
+}
+
+TfTokenVector Engine::GetRendererPlugins()
+{
+  HfPluginDescVector pluginDescriptors;
+  HdRendererPluginRegistry::GetInstance().GetPluginDescs(&pluginDescriptors);
+
+  TfTokenVector plugins;
+  for (size_t i = 0; i < pluginDescriptors.size(); ++i) {
+      plugins.push_back(pluginDescriptors[i].id);
+  }
+  return plugins;
+}
+
+TfToken Engine::GetDefaultRendererPlugin()
+{
+    HdRendererPluginRegistry& registry =
+        HdRendererPluginRegistry::GetInstance();
+    return registry.GetDefaultPluginId(true);
+}
+
+TfToken Engine::GetCurrentRendererPlugin()
+{
+    return _curRendererPlugin;
+}
+
+HdPluginRenderDelegateUniqueHandle 
+Engine::_GetRenderDelegateFromPlugin(TfToken plugin)
+{
+  HdRendererPluginRegistry& registry =
+    HdRendererPluginRegistry::GetInstance();
+
+  TfToken resolvedId = registry.GetDefaultPluginId(true);
+
+  return registry.CreateRenderDelegate(plugin);
+}
+
+std::string 
+Engine::GetRendererPluginName(TfToken plugin)
+{
+  HfPluginDesc pluginDescriptor;
+  bool foundPlugin = HdRendererPluginRegistry::GetInstance().GetPluginDesc(
+    plugin, &pluginDescriptor);
+
+  if (!foundPlugin) { return std::string(); }
+
+  // TODO: fix that will be eventually delegate to Hgi
+#if defined(__APPLE__)
+  if (pluginDescriptor.id == TfToken("HdStormRendererPlugin")) {
+     =return "Metal";
+  }
+#endif
+
+  return pluginDescriptor.displayName;
+}
+
+void 
+Engine::SetCameraMatrices(GfMatrix4d view, GfMatrix4d proj)
+{
+  _camView = view;
+  _camProj = proj;
+}
+
+/*
+void 
+Engine::_SetSelection(SdfPathVector paths)
+{
+  HdSelectionSharedPtr const selection = std::make_shared<HdSelection>();
+
+  HdSelection::HighlightMode mode = HdSelection::HighlightModeSelect;
+
+  for (auto&& path : paths) {
+    SdfPath realPath =
+      path.ReplacePrefix(SdfPath::AbsoluteRootPath(), _taskControllerId);
+    selection->AddRprim(mode, realPath);
+  }
+
+  _selTracker->SetSelection(selection);
+}
+*/
+
+void
+Engine::SetRenderSize(int width, int height)
+{
+  _width = width;
+  _height = height;
+
+  _taskController->SetRenderViewport(GfVec4f(0, 0, width, height));
+  _taskController->SetRenderBufferSize(GfVec2i(width, height));
+
+  GfRange2f displayWindow(GfVec2f(0, 0), GfVec2f(width, height));
+  GfRect2i renderBufferRect(GfVec2i(0, 0), width, height);
+  GfRect2i dataWindow = renderBufferRect.GetIntersection(renderBufferRect);
+  CameraUtilFraming framing(displayWindow, dataWindow);
+
+  _taskController->SetFraming(framing);
+}
+
+void
+Engine::SetRenderViewport(const pxr::GfVec4d &viewport)
+{
+  _taskController->SetRenderViewport(viewport);
+}
+
+void 
+Engine::Present()
+{
+  VtValue aov;
+  HgiTextureHandle aovTexture;
+
+  if (_engine.GetTaskContextData(HdAovTokens->color, &aov)) {
+    if (aov.IsHolding<HgiTextureHandle>()) {
+      aovTexture = aov.Get<HgiTextureHandle>();
+    }
+  }
+
+  uint32_t framebuffer = 0;
+  _interop.TransferToApp(_hgi.get(), aovTexture,
+                          HgiTextureHandle(), HgiTokens->OpenGL,
+                          VtValue(framebuffer),
+                          GfVec4i(0, 0, _width, _height));
+}
+
+void 
+Engine::_PrepareDefaultLighting()
+{
+  // set a spot light to the camera position
+  GfVec3d camPos = _camView.GetInverse().ExtractTranslation();
+  GlfSimpleLight l;
+  l.SetAmbient(GfVec4f(0, 0, 0, 0));
+  l.SetPosition(GfVec4f(camPos[0], camPos[1], camPos[2], 1));
+  l.SetHasShadow(true);
+
+  GlfSimpleMaterial material;
+  material.SetAmbient(GfVec4f(2, 2, 2, 1.0));
+  material.SetSpecular(GfVec4f(0.1, 0.1, 0.1, 1.0));
+  material.SetShininess(32.0);
+
+  GfVec4f sceneAmbient(0.01, 0.01, 0.01, 1.0);
+
+  GlfSimpleLightingContextRefPtr lightingContextState =
+      GlfSimpleLightingContext::New();
+
+  lightingContextState->SetLights({l});
+  lightingContextState->SetMaterial(material);
+  lightingContextState->SetSceneAmbient(sceneAmbient);
+  lightingContextState->SetUseLighting(true);
+  _taskController->SetLightingState(lightingContextState);
+}
+
+void 
+Engine::Prepare()
+{
+  _PrepareDefaultLighting();
+  _taskController->SetFreeCameraMatrices(_camView, _camProj);
+}
+
+void
+Engine::Render()
+{
+  HdTaskSharedPtrVector tasks = _taskController->GetRenderingTasks();
+  _engine.Execute(_renderIndex, &tasks);
+  Present();
+}
+
+bool
+Engine::IsConverged() const
+{
+  if (ARCH_UNLIKELY(!_renderDelegate)) {
+    return true;
+  }
+
+  return _taskController->IsConverged();
+}
 
 
+SdfPath Engine::FindIntersection(GfVec2f screenPos)
+{
+  // create a narrowed frustum on the given position
+  float normalizedXPos = screenPos[0] / _width;
+  float normalizedYPos = screenPos[1] / _height;
+
+  GfVec2d size(1.0 / _width, 1.0 / _height);
+
+  GfCamera gfCam;
+  gfCam.SetFromViewAndProjectionMatrix(_camView, _camProj);
+  GfFrustum frustum = gfCam.GetFrustum();
+
+  auto nFrustum = frustum.ComputeNarrowedFrustum(
+    GfVec2d(2.0 * normalizedXPos - 1.0,
+            2.0 * (1.0 - normalizedYPos) - 1.0),
+    size);
+
+  // check the intersection from the narrowed frustum
   HdxPickHitVector allHits;
   HdxPickTaskContextParams pickParams;
   pickParams.resolveMode = HdxPickTokens->resolveNearestToCenter;
-  pickParams.viewMatrix = viewMatrix;
-  pickParams.projectionMatrix = projectionMatrix;
-  pickParams.clipPlanes = params.clipPlanes;
-  pickParams.collection = _intersectCollection;
+  pickParams.viewMatrix = nFrustum.ComputeViewMatrix();
+  pickParams.projectionMatrix = nFrustum.ComputeProjectionMatrix();
+  pickParams.collection = _collection;
   pickParams.outHits = &allHits;
   const VtValue vtPickParams(pickParams);
 
-  _GetHdEngine()->SetTaskContextData(HdxPickTokens->pickParams, vtPickParams);
-  _Execute(params, _taskController->GetPickingTasks());
+  _engine.SetTaskContextData(HdxPickTokens->pickParams, vtPickParams);
 
-  // Since we are in nearest-hit mode, we expect allHits to have
-  // a single point in it.
-  if (allHits.size() != 1) {
-    return false;
-  }
+  // render with the picking task
+  HdTaskSharedPtrVector tasks = _taskController->GetPickingTasks();
+  _engine.Execute(_renderIndex, &tasks);
 
-  HdxPickHit& hit = allHits[0];
+  // get the hitting point
+  if (allHits.size() != 1) return SdfPath();
 
-  if (outHitPoint) {
-    *outHitPoint = hit.worldSpaceHitPoint;
-  }
+  const SdfPath path = allHits[0].objectId.ReplacePrefix(
+    _taskControllerId, SdfPath::AbsoluteRootPath());
 
-  if (outHitNormal) {
-    *outHitNormal = hit.worldSpaceHitNormal;
-  }
-
-  if(Application::Get()->GetExec() && !hit.objectId.IsEmpty() && 
-    !_CheckPrimSelectable(hit.objectId)) return false;
-
-  hit.objectId = _GetSceneDelegate()->GetScenePrimPath(
-    hit.objectId, hit.instanceIndex, outInstancerContext);
-  hit.instancerId = _GetSceneDelegate()->ConvertIndexPathToCachePath(
-    hit.instancerId).GetAbsoluteRootOrPrimPath();
-
-  if (outHitPrimPath) {
-    *outHitPrimPath = hit.objectId;
-  }
-  if (outHitInstancerPath) {
-    *outHitInstancerPath = hit.instancerId;
-  }
-  if (outHitInstanceIndex) {
-    *outHitInstanceIndex = hit.instanceIndex;
-  }
-
-  return true;
-  
+  return path;
 }
 
-HdSelectionSharedPtr
-Engine::MarqueeSelect(
-  GfVec2i const &startPos, GfVec2i const &endPos,
-  TfToken const& pickTarget, int width, int height, 
-  GfFrustum const &frustum, GfMatrix4d const &viewMatrix)
+GfFrustum Engine::GetFrustum()
 {
-  HdxPickHitVector allHits;
-  HdxPickTaskContextParams p;
-  p.resolution = Picking::CalculatePickResolution(startPos, endPos, GfVec2i(4,4));
-  p.pickTarget = pickTarget;
-  p.resolveMode = HdxPickTokens->resolveUnique;
-  p.viewMatrix = viewMatrix;
-  p.projectionMatrix = Picking::ComputePickingProjectionMatrix(
-    startPos, endPos, GfVec2i(width, height), frustum);
-  p.collection = _pickables;
-  p.outHits = &allHits;
-
-  HdTaskSharedPtrVector tasks;
-  tasks.push_back(_GetSceneDelegate()->GetRenderIndex().GetTask(
-    SdfPath("/pickTask")));
-  VtValue pickParams(p);
-  _GetHdEngine()->SetTaskContextData(HdxPickTokens->pickParams, pickParams);
-  _GetHdEngine()->Execute(&_GetSceneDelegate()->GetRenderIndex(), &tasks);
-
-  return Picking::TranslateHitsToSelection(
-    p.pickTarget, HdSelection::HighlightModeSelect, allHits);
+  GfCamera gfCam;
+  gfCam.SetFromViewAndProjectionMatrix(_camView, _camProj);
+  return gfCam.GetFrustum();
 }
 
-bool
-Engine::DecodeIntersection(
-  unsigned char const primIdColor[4],
-  unsigned char const instanceIdColor[4],
-  SdfPath* outHitPrimPath,
-  SdfPath* outHitInstancerPath,
-  int* outHitInstanceIndex,
-  HdInstancerContext* outInstancerContext)
-{
-
-  if (_GetUseSceneIndices()) {
-    // XXX(HYD-2299): picking
-    return false;
-  }
-
-  TF_VERIFY(_GetSceneDelegate());
-
-  const int primId = HdxPickTask::DecodeIDRenderColor(primIdColor);
-  const int instanceIdx = HdxPickTask::DecodeIDRenderColor(instanceIdColor);
-  SdfPath primPath =
-    _GetSceneDelegate()->GetRenderIndex().GetRprimPathFromPrimId(primId);
-
-  if (primPath.IsEmpty()) {
-    return false;
-  }
-
-  SdfPath delegateId, instancerId;
-  _GetSceneDelegate()->GetRenderIndex().GetSceneDelegateAndInstancerIds(
-    primPath, &delegateId, &instancerId);
-
-  primPath = _GetSceneDelegate()->GetScenePrimPath(
-    primPath, instanceIdx, outInstancerContext);
-  instancerId = _GetSceneDelegate()->ConvertIndexPathToCachePath(instancerId)
-    .GetAbsoluteRootOrPrimPath();
-
-  if (outHitPrimPath) {
-    *outHitPrimPath = primPath;
-  }
-  if (outHitInstancerPath) {
-    *outHitInstancerPath = instancerId;
-  }
-  if (outHitInstanceIndex) {
-    *outHitInstanceIndex = instanceIdx;
-  }
-
-  return true;
-}
-
-bool
-Engine::_CheckPrimSelectable(const SdfPath &path)
-{
-  Scene* scene = _delegate->GetScene();
-  if(!scene->GetPrim(path)->geom->IsInput())return false;
-  return true;
-}
-
-
-JVR_NAMESPACE_CLOSE_SCOPE
+PXR_NAMESPACE_CLOSE_SCOPE

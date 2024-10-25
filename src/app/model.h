@@ -1,5 +1,5 @@
-#ifndef JVR_APPLICATION_APPLICATION_H
-#define JVR_APPLICATION_APPLICATION_H
+#ifndef JVR_APPLICATION_MODEL_H
+#define JVR_APPLICATION_MODEL_H
 
 #include <pxr/base/gf/vec3d.h>
 #include <pxr/imaging/hd/mergingSceneIndex.h>
@@ -22,45 +22,27 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-class PopupUI;
 class Engine;
-class Window;
 class Scene;
 
-class Application : public TfWeakBase
+class Model : public TfWeakBase
 {
 public:
   static const char* name;
   // constructor
-  Application();
+  Model();
 
   // destructor
-  ~Application();
-
-    // create a fullscreen window
-  static Window* CreateFullScreenWindow(const std::string& name);
-
-  // create a standard window of specified size
-  static Window* CreateStandardWindow(const std::string& name, const GfVec4i& dimension);
-
-  // create a child window
-  static Window* CreateChildWindow(const std::string& name, const GfVec4i& dimension, Window* parent);
+  ~Model();
 
   // browse file
   std::string BrowseFile(int x, int y, const char* folder, const char* filters[], 
     const int numFilters, const char* name="Browse", bool readOrWrite=false);
-  
-  // init application
-  void Init(unsigned width, unsigned height, bool fullscreen=false);
-  void Term();
 
-  // update application
-  bool Update();
-
-  void NewScene(const std::string& filename);
-  void OpenScene(const std::string& filename);
-  void SaveScene();
-  void SaveSceneAs(const std::string& filename);
+  void New(const std::string& filename);
+  void Open(const std::string& filename);
+  void Save();
+  void SaveAs(const std::string& filename);
 
   // selection
   Selection* GetSelection(){return &_selection;};
@@ -86,23 +68,6 @@ public:
   void Redo();
   void Duplicate();
   void Delete();
-
-  // window
-  Window* GetMainWindow() {return _mainWindow;};
-  Window* GetChildWindow(size_t index) {return _childWindows[index];};
-  Window* GetActiveWindow() { return _activeWindow ? _activeWindow : _mainWindow; };
-  void SetActiveWindow(Window* window) { _activeWindow = window; };
-  void SetFocusWindow(Window* window) { _focusWindow = window; };
-  void AddWindow(Window* window);
-  void RemoveWindow(Window* window);
-
-  // popup
-  PopupUI* GetPopup() { return _popup; };
-  void SetPopup(PopupUI* popup);
-  void UpdatePopup();
-
-  // tools
-  void SetActiveTool(size_t tool);
   void AddDeferredCommand(CALLBACK_FN fn);
   void ExecuteDeferredCommands();
 
@@ -113,6 +78,9 @@ public:
   Engine* GetActiveEngine();
   std::vector<Engine*> GetEngines() { return _engines; };
   void DirtyAllEngines();
+
+  // tools
+  void SetActiveTool(size_t tool);
 
   // stage cache
   UsdStageRefPtr& GetStage(){return _stage;};
@@ -129,16 +97,11 @@ public:
   virtual void TerminateExec(UsdStageRefPtr& stage);
   virtual void SendExecViewEvent(const ViewEventData *data);
 
-  // singleton 
-  static Application *Get();
-
-  // usd stages
-  //std::vector<UsdStageRefPtr>& GetStages(){return _stages;};
-  UsdStageRefPtr GetDisplayStage();
-  UsdStageRefPtr GetWorkStage();
-
+  // stage
+  UsdStageRefPtr GetStage();
   SdfLayerRefPtr GetCurrentLayer();
 
+  // scene indices
   void AddSceneIndexBase(HdSceneIndexBaseRefPtr sceneIndex);
   HdSceneIndexBaseRefPtr GetEditableSceneIndex();
 
@@ -150,30 +113,13 @@ public:
   UsdPrimRange GetAllPrims();
 
 protected:
-  bool _IsAnyEngineDirty();
   void _SetEmptyStage();
   void _LoadUsdStage(const std::string usdFilePath);
 
-  Execution*                        _exec;
-  double                            _lastTime;
-  static Application*               _singleton;
-
-
 private:
-  // windows
-  Window*                           _mainWindow;
-  std::vector<Window*>              _childWindows;
-  Window*                           _activeWindow;
-  Window*                           _focusWindow;
-  //Model*                            _model;
 
-  // uis
-  PopupUI*                          _popup;
-
-   // command
-  CommandManager                    _manager;
-  std::vector<CALLBACK_FN>          _deferred;
-
+  // filename
+  std::string                       _filename;
   // selection 
   Selection                         _selection;
 
@@ -188,11 +134,14 @@ private:
   bool                              _execute;
 
   // model
-  SdfLayerRefPtr                      _rootLayer, _sessionLayer;
-  UsdImagingStageSceneIndexRefPtr     _stageSceneIndex;
-  HdSceneIndexBaseRefPtr              _editableSceneIndex;
-  HdMergingSceneIndexRefPtr           _sceneIndexBases;
-  HdMergingSceneIndexRefPtr           _finalSceneIndex;
+  SdfLayerRefPtr                    _rootLayer, _sessionLayer;
+  UsdImagingStageSceneIndexRefPtr   _stageSceneIndex;
+  HdSceneIndexBaseRefPtr            _editableSceneIndex;
+  HdMergingSceneIndexRefPtr         _sceneIndexBases;
+  HdMergingSceneIndexRefPtr         _finalSceneIndex;
+
+  Execution*                        _exec;
+  double                            _lastTime;
 
 };
 

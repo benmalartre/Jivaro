@@ -6,6 +6,7 @@
 
 #include "../ui/propertyEditor.h"
 #include "../ui/utils.h"
+#include "../command/manager.h"
 #include "../geometry/utils.h"
 #include "../app/view.h"
 #include "../app/window.h"

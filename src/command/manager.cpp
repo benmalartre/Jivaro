@@ -2,6 +2,17 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
+// singleton
+//----------------------------------------------------------------------------
+CommandManager* CommandManager::_singleton=nullptr;
+
+CommandManager* CommandManager::Get() { 
+  if(_singleton==nullptr){
+        _singleton = new CommandManager();
+    }
+    return _singleton; 
+};
+
 void
 CommandManager::AddCommand(std::shared_ptr<Command> command)
 {

@@ -100,7 +100,6 @@ class ViewportUI : public BaseUI
     // usd imaging engine
     TfToken                             _aov;
     Engine*                             _engine;
-    UsdImagingGLRenderParams            _renderParams;
     UsdPrim                             _root;
     UsdLuxDomeLight                     _light;
     GlfSimpleLightingContextRefPtr      _lightingContext;

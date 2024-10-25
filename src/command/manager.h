@@ -18,11 +18,6 @@ JVR_NAMESPACE_OPEN_SCOPE
 typedef std::deque<std::shared_ptr<Command>> CommandStack_t;
 
 class CommandManager {
-  CommandStack_t _todoStack;
-  CommandStack_t _undoStack;
-  CommandStack_t _redoStack;
-  std::vector<UndoInverse> _inverse;
-
 public:
   CommandManager() {};
   void AddCommand(std::shared_ptr<Command> command);
@@ -30,7 +25,20 @@ public:
   void Undo();
   void Redo();
   void Clear();
+
+  // singleton 
+  static CommandManager *Get();
+
+private:
+  static CommandManager*      _singleton;
+  CommandStack_t              _todoStack;
+  CommandStack_t              _undoStack;
+  CommandStack_t              _redoStack;
+  std::vector<UndoInverse>    _inverse;
 };
+
+#define ADD_COMMAND(CMD, ...) \
+CommandManager::Get()->AddCommand(std::shared_ptr<CMD>( new CMD(__VA_ARGS__)));
 
 JVR_NAMESPACE_CLOSE_SCOPE
 

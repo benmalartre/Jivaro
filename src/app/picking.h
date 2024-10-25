@@ -57,6 +57,11 @@ namespace Picking
     GfVec2i const& start, GfVec2i const& end, GfVec2i const& screen, 
     GfFrustum const& viewFrustum);
 
+  /// MarqueeSelect 
+  HdSelectionSharedPtr MarqueeSelect(GfVec2i const &startPos, GfVec2i const &endPos,
+    TfToken const& pickTarget, int width, int height, 
+    GfFrustum const &frustum, GfMatrix4d const &viewMatrix);
+
   class Marquee {
   public:
     Marquee();

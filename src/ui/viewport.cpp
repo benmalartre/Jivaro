@@ -1,6 +1,8 @@
 #include <pxr/imaging/hd/light.h>
 #include <pxr/imaging/cameraUtil/conformWindow.h>
 #include "pxr/imaging/hdx/shadowTask.h"
+#include <pxr/usdImaging/usdImaging/sceneIndices.h>
+#include <pxr/usdImaging/usdImaging/stageSceneIndex.h>
 
 #include "../utils/strings.h"
 #include "../utils/glutils.h"
@@ -53,7 +55,7 @@ static void _BlitFramebufferFromTarget(GlfDrawTargetRefPtr target,
 ViewportUI::ViewportUI(View* parent)
   : BaseUI(parent, UIType::VIEWPORT)
   , _texture(0)
-  , _drawMode((int)UsdImagingGLDrawMode::DRAW_SHADED_SMOOTH)
+  , _drawMode((int)0)
   , _camera(new Camera("Camera"))
   , _valid(true)
   , _interactionMode(INTERACTION_NONE)
@@ -139,9 +141,6 @@ void ViewportUI::Init()
     app->RemoveEngine(_engine);
     delete _engine;
   }
-  SdfPathVector excludedPaths;
-  _engine = new Engine(SdfPath("/"), excludedPaths);
-  app->AddEngine(_engine);
 
   TfTokenVector rendererTokens = _engine->GetRendererPlugins();
   if (_rendererNames) delete[] _rendererNames;
@@ -150,15 +149,22 @@ void ViewportUI::Init()
   for (short rendererIndex = 0; rendererIndex < _numRenderers; ++rendererIndex) {
     _rendererNames[rendererIndex] = rendererTokens[rendererIndex].GetText();
   }
-  if (LEGACY_OPENGL) {
-    _engine->SetRendererPlugin(TfToken("LoFiRendererPlugin"));
-  } else {
-    _engine->SetRendererPlugin(TfToken(_rendererNames[_rendererIndex]));
-  }
+
+    auto editableSceneIndex = app->GetEditableSceneIndex();
+
+  //TfToken plugin = Engine::GetDefaultRendererPlugin();
+  TfToken plugin = TfToken(_rendererNames[_rendererIndex]);
+  _engine = new Engine(app->GetFinalSceneIndex(), plugin);
+
+  app->AddEngine(_engine);
+
+  //_engine->SetRendererPlugin(TfToken(_rendererNames[_rendererIndex]));
+
 
   UpdateLighting();
 
   Resize();
+
 
   /*
   glEnable(GL_DEPTH_TEST);
@@ -401,39 +407,29 @@ void ViewportUI::Render()
   const float& h = GetHeight();
   const float& w = GetWidth();
 
-  _engine->SetRendererAov(_aov);
+  _engine->SetRenderViewport(GfVec4d(0, wh-(h), w, h));
 
-  _engine->SetRenderViewport(
-    GfVec4d(0, wh-(h), w, h));
-
-  _engine->SetCameraState(
+  _engine->SetCameraMatrices(
     _camera->GetViewMatrix(),
     _camera->GetProjectionMatrix()
   );
 
-  _engine->SetSelectionColor(GfVec4f(0.75, 0.75, 0, 0.5));
-  UpdateLighting();
+  // set selection
+  /*SdfPathVector paths;
+  for (auto&& prim : GetModel()->GetSelection())
+      paths.push_back(prim.GetPrimPath());*/
+  //_engine->SetRendererAov(_aov);
 
-  _renderParams.frame = UsdTimeCode(Time::Get()->GetActiveTime());
-  _renderParams.complexity = 1.0f;
-  _renderParams.drawMode = (UsdImagingGLDrawMode)_drawMode;
-  _renderParams.showGuides = true;
-  _renderParams.showRender = true;
-  _renderParams.showProxy = true;
-  _renderParams.forceRefresh = true;
-  _renderParams.cullStyle = UsdImagingGLCullStyle::CULL_STYLE_BACK_UNLESS_DOUBLE_SIDED;
-  _renderParams.gammaCorrectColors = false;
-  _renderParams.enableIdRender = false;
-  _renderParams.enableLighting = true;
-  _renderParams.enableSampleAlphaToCoverage = true; 
-  _renderParams.highlight = true;
-  _renderParams.enableSceneMaterials = false;
-  
 
-  _renderParams.complexity = 1.3;
-  _renderParams.clearColor = GfVec4f{ 1.0f, .5f, 0.1f, 1.0f };
-  //_renderParams.colorCorrectionMode = ???
+  _engine->Prepare();
 
+  // do the render
+  _engine->Render();
+
+
+
+
+  /*
   if (_highlightSelection) {
     Selection* selection = app->GetSelection();
     if (!selection->IsEmpty() && selection->IsObject()) {
@@ -444,22 +440,20 @@ void ViewportUI::Render()
   } else {
     _engine->ClearSelected();
   }
-
+  */
   // clear to black
   _drawTarget->Bind();
   glEnable(GL_DEPTH_TEST);
-  glClearColor(_renderParams.clearColor[0], 
-               _renderParams.clearColor[1], 
-               _renderParams.clearColor[2],
-               _renderParams.clearColor[3]);
+  glClearColor(0.5,0.5,0.5,1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  if (app->GetDisplayStage()->HasDefaultPrim()) {
-    _engine->Render(app->GetDisplayStage()->GetDefaultPrim(), _renderParams);
-  }
+  if (app->GetDisplayStage()->HasDefaultPrim())
+    _engine->Render();
+
   _drawTarget->Unbind();
   
   _engine->SetDirty(false);
+  std::cout << "viewport DRaw done..." << std::endl;
 }
 
 void 
@@ -611,8 +605,8 @@ bool ViewportUI::Draw()
     _DrawAov();
 
     // engine
-    ImGui::Text("%s", _engine->GetRendererDisplayName(
-      _engine->GetCurrentRendererId()).c_str());
+    //ImGui::Text("%s", _engine->GetRendererDisplayName(
+    //  _engine->GetCurrentRendererId()).c_str());
     
 
     //ImGui::PopFont();
@@ -772,6 +766,7 @@ bool ViewportUI::Pick(int x, int y, int mods)
   int outHitInstanceIndex;
   HdInstancerContext outInstancerContext;
 
+  /*
   if (_engine->TestIntersection(
     pickFrustum.ComputeViewMatrix(),
     pickFrustum.ComputeProjectionMatrix(),
@@ -801,6 +796,8 @@ bool ViewportUI::Pick(int x, int y, int mods)
     app->ClearSelection();
     return false;
   }
+  */
+  return false;
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

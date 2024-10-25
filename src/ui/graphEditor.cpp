@@ -17,8 +17,10 @@
 
 #include "../utils/color.h"
 #include "../utils/keys.h"
+#include "../command/manager.h"
 #include "../ui/popup.h"
 #include "../ui/graphEditor.h"
+#include "../app/commands.h"
 #include "../app/view.h"
 #include "../app/window.h"
 #include "../app/application.h"

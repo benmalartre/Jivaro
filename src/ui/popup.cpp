@@ -8,6 +8,7 @@
 #include "../utils/keys.h"
 #include "../utils/strings.h"
 #include "../command/block.h"
+#include "../command/manager.h"
 #include "../app/window.h"
 #include "../app/view.h"
 #include "../app/application.h"

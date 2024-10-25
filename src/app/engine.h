@@ -1,18 +1,17 @@
 #ifndef JVR_APPLICATION_ENGINE_H
 #define JVR_APPLICATION_ENGINE_H
 
-
-#include <pxr/pxr.h>
-#include <pxr/usd/sdf/path.h>
-#include <pxr/imaging/hd/driver.h>
-#include <pxr/usdImaging/usdImagingGL/engine.h>
-#include <pxr/usdImaging/usdImagingGL/renderParams.h>
-
 #include <pxr/base/tf/token.h>
-#include <pxr/base/tf/errorMark.h>
-#include <pxr/base/gf/matrix4f.h>
-#include <pxr/base/gf/frustum.h>
-#include <pxr/base/gf/rotation.h>
+#include <pxr/imaging/glf/drawTarget.h>
+#include <pxr/imaging/hd/engine.h>
+#include <pxr/imaging/hd/pluginRenderDelegateUniqueHandle.h>
+#include <pxr/imaging/hd/renderDelegate.h>
+#include <pxr/imaging/hd/sceneIndex.h>
+#include <pxr/imaging/hdx/taskController.h>
+#include <pxr/imaging/hgi/hgi.h>
+#include <pxr/imaging/hgiInterop/hgiInterop.h>
+#include <pxr/usd/usd/prim.h>
+#include <pxr/usd/usd/primRange.h>
 
 #include "../common.h"
 #include "../geometry/intersection.h"
@@ -23,18 +22,35 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-class Engine : public UsdImagingGLEngine {
+using HgiUniquePtr = std::unique_ptr<class Hgi>;
+
+class Engine {
 public:
-  Engine(const HdDriver& driver);
-  Engine( const SdfPath& rootPath,
-          const SdfPathVector& excludedPaths,
-          const SdfPathVector& invisedPaths = SdfPathVector(),
-          const SdfPath& sceneDelegateID =
-          SdfPath::AbsoluteRootPath(),
-          const HdDriver& driver = HdDriver());
+  Engine(HdSceneIndexBaseRefPtr sceneIndex, TfToken plugin);
   ~Engine();
 
-  inline bool IsDirty() { return _dirty;};
+  // ---------------------------------------------------------------------
+  /// \name Rendering
+  /// @{
+  // ---------------------------------------------------------------------
+  void Prepare();
+  void Render();
+  bool IsConverged() const;
+  void Present();
+
+
+  static TfTokenVector GetRendererPlugins();
+  static TfToken GetDefaultRendererPlugin();
+  std::string GetRendererPluginName(TfToken plugin);
+  TfToken GetCurrentRendererPlugin();
+  void SetCameraMatrices(GfMatrix4d view, GfMatrix4d proj);
+  void SetSelection(SdfPathVector paths);
+  void SetRenderSize(int width, int height);
+  void SetRenderViewport(const pxr::GfVec4d &viewport);
+
+  SdfPath FindIntersection(GfVec2f screenPos);
+
+  inline bool IsDirty() { return _dirty; };
   inline void SetDirty(bool dirty) { _dirty = dirty; };
 
   void InitExec(Scene* scene);
@@ -43,54 +59,50 @@ public:
 
   void ActivateShadows(bool active);
 
-  /*
-  HdSelectionSharedPtr _Pick(GfVec2i const& startPos, 
-    GfVec2i const& endPos, TfToken const& pickTarget);
-    */
-  bool TestIntersection(
-    const GfMatrix4d& viewMatrix,
-    const GfMatrix4d& projectionMatrix,
-    const UsdPrim& root,
-    const UsdImagingGLRenderParams& params,
-    GfVec3d* outHitPoint,
-    GfVec3d* outHitNormal,
-    SdfPath* outHitPrimPath = NULL,
-    SdfPath* outHitInstancerPath = NULL,
-    int* outHitInstanceIndex = NULL,
-    HdInstancerContext* outInstancerContext = NULL);
-
-  /// Decodes a pick result given hydra prim ID/instance ID (like you'd get
-  /// from an ID render).
-  bool DecodeIntersection(
-    unsigned char const primIdColor[4],
-    unsigned char const instanceIdColor[4],
-    SdfPath* outHitPrimPath = NULL,
-    SdfPath* outHitInstancerPath = NULL,
-    int* outHitInstanceIndex = NULL,
-    HdInstancerContext* outInstancerContext = NULL);
-
-  /// MarqueeSelect 
-  HdSelectionSharedPtr MarqueeSelect(GfVec2i const &startPos, GfVec2i const &endPos,
-    TfToken const& pickTarget, int width, int height, 
-    GfFrustum const &frustum, GfMatrix4d const &viewMatrix);
-
   void SetHighlightSelection(bool state) { _highlightSelection = state; };
   bool GetHighlightSelection() { return _highlightSelection; };
 
   Delegate* GetDelegate() { return _delegate; };
-
+  GfFrustum GetFrustum();
 
 protected:
-  const HdRprimCollection &_GetCollection() const { return _collection; };
-  bool _CheckPrimSelectable(const SdfPath &path);
+  static HdPluginRenderDelegateUniqueHandle 
+    _GetRenderDelegateFromPlugin(TfToken plugin);
+
+  void      _Initialize();
+  void      _PrepareDefaultLighting();
+
+
+  bool      _CheckPrimSelectable(const SdfPath& path);
 
 private:
-  bool                    _dirty;
-  bool                    _highlightSelection;
-  Delegate*               _delegate;
-  HdRprimCollection       _collection;
-  HdRprimCollection       _pickables;
-  //std::vector<View*> _views;
+  UsdStageRefPtr                      _stage;
+  GfMatrix4d                          _camView;
+  GfMatrix4d                          _camProj;
+  int                                 _width;
+  int                                 _height;
+
+  HgiUniquePtr                        _hgi;
+  HdDriver                            _hgiDriver;
+
+  HdEngine                            _engine;
+  HdPluginRenderDelegateUniqueHandle  _renderDelegate;
+  HdRenderIndex*                      _renderIndex;
+  HdxTaskController*                  _taskController;
+  HdRprimCollection                   _collection;
+  HdSceneIndexBaseRefPtr              _sceneIndex;
+  SdfPath                             _taskControllerId;
+
+  HgiInterop                          _interop;
+  HdxSelectionTrackerSharedPtr        _selTracker;
+
+  TfToken                             _curRendererPlugin;
+
+  bool                                _dirty;
+  bool                                _highlightSelection;
+
+  Delegate*                           _delegate;
+
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE
