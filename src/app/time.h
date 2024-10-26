@@ -33,20 +33,21 @@ public:
   inline float GetSpeed(){return _speed;};
   inline bool  GetLoop(){return _loop;};
   inline float GetFrameDuration() { return _frame;};
-  inline short GetMode(){return _mode;};
+  inline int    GetMode(){return _mode;};
 
   inline void SetMinTime(float time){_minTime = time;};
   inline void SetStartTime(float time){_startTime = time;};
   inline void SetEndTime(float time){_endTime = time;};
   inline void SetMaxTime(float time){_maxTime = time;};
   inline void SetActiveTime(float time){_activeTime = time;};
-  inline void SetMode(short mode){_mode = mode;};
-  void SetFPS(float fps);
+  inline void SetMode(int mode){_mode = mode;};
   inline void SetSpeed(float speed){_speed = speed;};
   inline void SetLoop(bool loop){_loop = loop;};
 
-  void PreviousFrame();
-  void NextFrame();
+  void SetFPS(float fps);
+
+  bool PreviousFrame();
+  bool NextFrame();
   void FirstFrame();
   void LastFrame();
   void StartPlayback(bool backward=false);
@@ -54,26 +55,27 @@ public:
   int Playback();
   bool IsPlaying(){return _playback;};
   
-
   // singleton 
   static Time *Get();
 
-private:
-  float                             _activeTime;
-  float                             _startTime;
-  float                             _endTime;
-  float                             _minTime;
-  float                             _maxTime;
-  float                             _fps;
-  float                             _speed;
-  short                             _mode;
-  uint64_t                          _frame;  // frame duration in micro seconds
-  bool                              _loop;
-  bool                              _backward;
-  bool                              _playback;
+protected:
+  float _GetIncrement();
 
-  // main loop
-  uint64_t                           _lastT;
+private:
+  float                             _activeTime;          // current active time
+  float                             _startTime;           // playback start time
+  float                             _endTime;             // playback end time
+  float                             _minTime;             // scene min time
+  float                             _maxTime;             // scene max time
+  float                             _fps;                 // frame per second
+  float                             _speed;               // playback speed multiplier
+  int                               _mode;                // playback mode : REALTIME or ALLFRAMES
+  bool                              _loop;                // playback looping
+  bool                              _backward;            // play backward
+  bool                              _playback;            // currently playing
+
+  uint64_t                          _frame;               // frame duration in micro seconds
+  uint64_t                          _lastT;               // last clock time
 
   static Time*                      _singleton;
 };

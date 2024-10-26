@@ -142,7 +142,7 @@ public:
   void Do() override;
 
 private:
-  std::vector<SdfPath> _previous;
+  std::vector<Selection::Item> _previous;
 };
 
 //==================================================================================

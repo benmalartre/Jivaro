@@ -38,6 +38,7 @@ public:
   float _maxTime;
   float _fps;
   float _speed;
+  int   _mode;
   bool  _loop;
   bool  _playing;
 

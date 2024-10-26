@@ -300,7 +300,7 @@ SelectCommand::SelectCommand(short type,
   : Command(true)
 {
   Selection* selection = Application::Get()->GetModel()->GetSelection();
-  _previous = selection->GetSelectedPaths();
+  _previous = selection->GetItems();
   switch (mode) {
   case SET:
     selection->Clear();
@@ -322,9 +322,9 @@ SelectCommand::SelectCommand(short type,
 void SelectCommand::Do()
 {
   Selection* selection = Application::Get()->GetModel()->GetSelection();
-  std::vector<Selection::Item> previous = selection->GetItems();
-  //election->SetItems(_previous);
-  //_previous = previous;
+  std::vector<Selection::Item> current = selection->GetItems();
+  selection->SetItems(_previous);
+  _previous = current;
   SelectionChangedNotice().Send();
 }
 

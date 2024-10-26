@@ -327,6 +327,7 @@ static ImVec4 GetPrimColor(const UsdPrim& prim) {
 void 
 ExplorerUI::DrawPrim(const UsdPrim& prim, Selection* selection) 
 {
+  Model* model = Application::Get()->GetModel();
   ImGuiTreeNodeFlags flags = _treeFlags;
   
   const auto& children = prim.GetFilteredChildren(
@@ -345,15 +346,14 @@ ExplorerUI::DrawPrim(const UsdPrim& prim, Selection* selection)
   if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
     _current = prim.GetPath();
 
-    Application* app = Application::Get();
     ImGuiIO& io = ImGui::GetIO();
 
-    if (app->GetModel()->GetStage()->GetPrimAtPath(_current).IsValid()) {
+    if (model->GetStage()->GetPrimAtPath(_current).IsValid()) {
       if (io.KeysDown[GLFW_KEY_LEFT_CONTROL] || io.KeysDown[GLFW_KEY_RIGHT_CONTROL]) {
-        app->GetModel()->ToggleSelection({ _current });
+        model->ToggleSelection({ _current });
       }
       else {
-        app->GetModel()->SetSelection({ _current });
+        model->SetSelection({ _current });
       }
     }
   }
@@ -393,8 +393,7 @@ bool
 ExplorerUI::Draw()
 {
   /// Draw the hierarchy of the stage
-  Application* app = Application::Get();
-  Model* model = app->GetModel();
+  Model* model = Application::Get()->GetModel();
   Selection* selection = model->GetSelection();
   UsdStageRefPtr stage = model->GetStage();
   const ImGuiStyle& style = ImGui::GetStyle();
@@ -408,7 +407,6 @@ ExplorerUI::Draw()
 
   ImGui::Begin(_name.c_str(), NULL, _flags);
   
-
   _items.clear();
   _mapping = 0;
 
@@ -475,5 +473,15 @@ ExplorerUI::Draw()
     ImGui::IsAnyItemFocused() ||
     ImGui::IsAnyMouseDown();
 }
+
+void 
+ExplorerUI::OnSelectionChangedNotice(const SelectionChangedNotice& n)
+{
+  Application* app = Application::Get();
+  Selection* selection = app->GetModel()->GetSelection();
+
+  std::cout << "Explorer Recieved Selection Change Event!!" << std::endl;
+}
+
 
 JVR_NAMESPACE_CLOSE_SCOPE

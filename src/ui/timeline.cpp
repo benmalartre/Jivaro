@@ -41,7 +41,6 @@ TimelineUI::Init()
 void 
 TimelineUI::Update()
 {
-  Application* app = Application::Get();
   Time* time = Time::Get();
   _minTime = time->GetMinTime();
   _startTime = time->GetStartTime();
@@ -51,6 +50,7 @@ TimelineUI::Update()
   _loop = time->GetLoop();
   _fps = time->GetFPS();
   _speed = time->GetSpeed();
+  _mode = time->GetMode();
   _playing = time->IsPlaying();
   _parent->SetDirty();
 }
@@ -59,7 +59,6 @@ void
 TimelineUI::ValidateTime()
 {
   Time* time = Time::Get();
-
   _currentTime = time->GetActiveTime();
   if (_minTime >= _maxTime)_maxTime = _minTime + 1;
   if (_endTime > _maxTime)_maxTime = _endTime;
@@ -76,6 +75,8 @@ TimelineUI::ValidateTime()
   time->SetActiveTime(_currentTime);
   time->SetLoop(_loop);
   time->SetSpeed(_speed);
+  time->SetMode(_mode);
+  time->SetFPS(_fps);
   //time->Release();
 }
 
@@ -231,24 +232,24 @@ void TimelineUI::DrawControls()
   ImGuiStyle* style = &ImGui::GetStyle();
   const ImVec4* colors = style->Colors;
 
-  static const int paddingX = 5;
+  static const int padding = 4;
 
-  int nWidth = width / 20;
+  int nWidth = width / 20 - padding;
   int posY = height - (TIMELINE_CONTROL_HEIGHT - 4);
-  ImGui::SetCursorPosX(paddingX);
+  ImGui::SetCursorPosX(padding);
   ImGui::SetCursorPosY(posY);
 
   //ImGui::PushFont(GetWindow()->GetMediumFont(0));
 
 
-  _DrawOneControl("minTime", nWidth, _minTime, time->GetMinTime(), false, "Minimum Time");
-  _DrawOneControl("startTime", nWidth, _startTime, time->GetStartTime(), false, "Start Time");
+  _DrawOneControl("min", nWidth, _minTime, time->GetMinTime(), true);
+  _DrawOneControl("start", nWidth, _startTime, time->GetStartTime(), true);
 
 
-  ImGui::SetCursorPosX(width / 2 - (5 * nWidth + paddingX));
+  ImGui::SetCursorPosX(width / 2 - (5 * nWidth + padding));
 
-  _DrawOneControl("fps", nWidth, _fps, time->GetFPS(), true, "Frame Per Seconds");
-  _DrawOneControl("speed", nWidth, _speed, time->GetSpeed(), true, "Read Speed");
+  _DrawOneControl("fps", nWidth, _fps, time->GetFPS(), true);
+  _DrawOneControl("speed", nWidth, _speed, time->GetSpeed(), true);
 
   // buttons
   DrawButtons();
@@ -256,11 +257,15 @@ void TimelineUI::DrawControls()
   ImGui::SetCursorPosY(posY);
   _DrawOneControl("time", nWidth, _currentTime, time->GetActiveTime(), true, "Active Time");
 
+    //AddComboWidget(const char* label, const char** names, const size_t count, int &last, size_t width)
+  static const char* playbackModeNames[2] = {"Realtime", "AllFrames"};
+  UI::AddComboWidget("mode", &playbackModeNames[0], 2, _mode, 120);
+  ImGui::SameLine();
 
   ImGui::SetCursorPosX(width - 2 * nWidth);
 
-  _DrawOneControl("endTime", nWidth, _endTime, time->GetEndTime(), false, "End Time");
-  _DrawOneControl("maxTime", nWidth, _maxTime, time->GetMaxTime(), false, "Max Time");
+  _DrawOneControl("end", nWidth, _endTime, time->GetEndTime(), false, "End Time");
+  _DrawOneControl("max", nWidth, _maxTime, time->GetMaxTime(), false, "Max Time");
 }
 
 void TimelineUI::DrawTimeSlider()

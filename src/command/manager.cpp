@@ -16,7 +16,6 @@ CommandManager* CommandManager::Get() {
 void
 CommandManager::AddCommand(std::shared_ptr<Command> command)
 {
-  std::cout << "Add command: " << _todoStack.size() << std::endl;
   _todoStack.push_front(command);
 }
 
@@ -33,7 +32,6 @@ CommandManager::ExecuteCommands()
 
 void 
 CommandManager::Undo() {
-  std::cout << "Undo Stack : " << _undoStack.size() << std::endl;
   if (_undoStack.size() <= 0) {
     return;
   }

@@ -64,11 +64,8 @@ Solver::Solver(Scene* scene, const UsdGeomXform& xform, const GfMatrix4d& world)
    _gravity = new GravityForce(gravityAttr);
   AddElement(_gravity, NULL, _solverId.AppendProperty(gravityAttr.GetName()));
 
-  /*
-  UsdAttribute dampAttr = solver.GetDampAttr();
-  _damp = new DampForce(dampAttr);
-  AddElement(_damp, NULL, _solverId.AppendProperty(dampAttr.GetName()));
-  */
+  Reset();
+
 }
 
 Solver::~Solver()
@@ -112,12 +109,15 @@ void Solver::AddElement(Element* element, Geometry* geom, const SdfPath& path)
       break;
   }
 
+  Reset();
+
   //else TF_WARN("There is already an element named %s", path.GetText());
 }
 
 void Solver::RemoveElement(Element* element)
 {
   _elements.erase(element);
+  Reset();
 }
 
 SdfPath Solver::GetElementPath(Element* element)
@@ -540,10 +540,8 @@ void Solver::Update(UsdStageRefPtr& stage, float time)
 
 void Solver::Reset()
 {
-  Time::Get()->SetActiveTime(_startTime);
   // reset
   _particles.RemoveAllBodies();
-
 
   for (size_t b = 0; b < _bodies.size(); ++b) {
     const GfMatrix4d& matrix = _bodies[b]->GetGeometry()->GetMatrix();
@@ -584,6 +582,7 @@ void Solver::Reset()
   
   if(_selfCollisions)
     _selfCollisions->Reset();
+
   for(auto& collision: _collisions)
     collision->Reset();
   

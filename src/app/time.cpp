@@ -11,11 +11,16 @@ Time* Time::_singleton=nullptr;
 
 Time* Time::Get() { 
   if(_singleton==nullptr){
-        _singleton = new Time();
-    }
-    return _singleton; 
+    _singleton = new Time();
+  }
+  return _singleton; 
 };
 
+
+float Time::_GetIncrement()
+{
+  return _speed * static_cast<float>(_frame) * 1e-6 * _fps;
+};
 
 void Time::Init(float start, float end, float fps)
 {
@@ -25,8 +30,8 @@ void Time::Init(float start, float end, float fps)
   _endTime = end;
   _maxTime = _endTime;
   _loop = true;
-  _fps = fps > 1e-6 ? fps : 1e-6;
-  _frame = 1.f / _fps;
+  _fps = fps > 1 ? fps : 1;
+  _frame = 1e6 / _fps;
   _speed = 1.f;
   _playback = false;
   _mode = PLAYBACK_REALTIME;
@@ -36,34 +41,36 @@ void Time::Init(float start, float end, float fps)
 
 void Time::SetFPS(float fps)
 {
-  _fps = fps > 1e-6 ? fps : 1e-6; 
-  _frame = 1.f/_fps;
-  Geometry::SetFrameDuration(_frame);
+  if(fps == _fps) return;
+  _fps = fps > 1 ? fps : 1; 
+  _frame = 1e6 / _fps;
+  Geometry::SetFrameDuration(static_cast<float>(_frame) * 1e-6);
 };
 
 // time
-void Time::PreviousFrame()
+bool Time::PreviousFrame()
 {
   _lastT = CurrentTime();
-  float currentTime = _activeTime - _speed * _frame;
-  if(currentTime < _startTime)
-  {
-    if(_loop)_activeTime = _endTime;
-    else _activeTime = _startTime;
+  float currentTime = _activeTime - _GetIncrement();
+  if(currentTime < _startTime) {
+    _activeTime = _loop ? _endTime : _startTime;
+    return _loop;
   }
-  else _activeTime = currentTime;
+  _activeTime = currentTime;
+  return true;
 }
 
-void Time::NextFrame()
+bool Time::NextFrame()
 {
+  std::cout << "NEXT FRAME " << CurrentTime() << " " << _lastT << " " << _GetIncrement() << std::endl;
   _lastT = CurrentTime();
-  float currentTime = _activeTime + _speed * _frame;
-  if(currentTime > _endTime)
-  {
-    if(_loop)_activeTime = _startTime;
-    else _activeTime = _endTime;
+  float currentTime = _activeTime + _GetIncrement();
+  if(currentTime > _endTime) {
+    _activeTime = _loop ? _startTime : _endTime;
+    return _loop;
   }
-  else _activeTime = currentTime;
+  _activeTime = currentTime;
+  return true;
 }
 
 void Time::FirstFrame()
@@ -93,32 +100,17 @@ void Time::StopPlayback()
 
 int Time::Playback()
 {
-  if(_mode == PLAYBACK_REALTIME && (CurrentTime() - _lastT < _frame))
+  // check for real time
+  if(_mode == PLAYBACK_REALTIME && ((CurrentTime() - _lastT) < _frame))
     return PLAYBACK_WAITING;
 
+  // idle
   if(!_playback)return PLAYBACK_IDLE;
 
-  _lastT = CurrentTime();
-
-  if(_backward) {
-    if((_activeTime - _speed * _frame) < _startTime) {
-      if(_loop) LastFrame();
-      else StopPlayback();
-      return _loop ? PLAYBACK_LAST : PLAYBACK_STOP;
-    } else {
-      PreviousFrame();
-      return PLAYBACK_PREVIOUS;
-    }
-  } else {
-    if((_activeTime + _speed * _frame) > _endTime) {
-      if(_loop) FirstFrame();
-      else StopPlayback();
-      return _loop ? PLAYBACK_FIRST : PLAYBACK_STOP;
-    } else {
-      NextFrame();
-      return PLAYBACK_NEXT;
-    }
-  } 
+  // playing
+  if (_backward) return (PreviousFrame() ? PLAYBACK_PREVIOUS : PLAYBACK_STOP);
+  else return (NextFrame() ? PLAYBACK_NEXT : PLAYBACK_STOP);
+    
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

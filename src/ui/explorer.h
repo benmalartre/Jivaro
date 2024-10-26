@@ -33,6 +33,7 @@ public:
   void Keyboard(int key, int scancode, int action, int mods) override;
   void Init();
   bool Draw() override;
+  void OnSelectionChangedNotice(const SelectionChangedNotice& n) override;
 
   void DrawItemBackground(ImDrawList* drawList, bool selected, bool& flip);
   void DrawBackground();
@@ -47,13 +48,13 @@ protected:
 private:
   bool                          _locked;
   bool                          _flip;
-  SdfPath                  _current;
+  SdfPath                       _current;
   size_t                        _selectionHash;
   std::vector<Item>             _items;
   size_t                        _mapping;
   bool                          _drag;
-  std::vector<SdfPath>     _dragItems;
-  GfVec2f                  _scroll;
+  std::vector<SdfPath>          _dragItems;
+  GfVec2f                       _scroll;
 
   static ImGuiWindowFlags       _flags;
   static ImGuiTreeNodeFlags     _treeFlags;
