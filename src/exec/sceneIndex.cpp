@@ -156,17 +156,18 @@ ExecSceneIndex::_SystemMessage(
 {
 
   Scene* scene = _exec->GetScene();
-  SdfPathVector candidates;
+  HdSceneIndexObserver::DirtiedPrimEntries dirtied;
   for (auto &prim: scene->GetPrims()) {
     const SdfPath &path = prim.first;
     HdDirtyBits bits = prim.second.bits;
 
     if(bits != HdChangeTracker::Clean)
-      candidates.push_back(path);
+      std::cout << "EXEC : dirty " << path << std::endl;
+      //dirtied.push_back({ path, HdDataSourceLocator(HdPrimvarsSchemaTokens->points) });
   }
 
-  if (!candidates.empty()) {
-      _SendPrimsDirtied(candidates);
+  if (!dirtied.empty()) {
+      _SendPrimsDirtied(dirtied);
   }
 }
 

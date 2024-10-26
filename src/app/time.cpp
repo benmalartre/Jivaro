@@ -26,24 +26,26 @@ void Time::Init(float start, float end, float fps)
   _maxTime = _endTime;
   _loop = true;
   _fps = fps > 1e-6 ? fps : 1e-6;
-  _frame = 1e6f / _fps;
+  _frame = 1.f / _fps;
   _speed = 1.f;
   _playback = false;
-  _playForwardOrBackward = false;
+  _mode = PLAYBACK_REALTIME;
+  _backward = false;
   _lastT = 0;
 }
 
 void Time::SetFPS(float fps)
 {
   _fps = fps > 1e-6 ? fps : 1e-6; 
-  _frame = 1e6f/_fps;
+  _frame = 1.f/_fps;
   Geometry::SetFrameDuration(_frame);
 };
 
 // time
 void Time::PreviousFrame()
 {
-  float currentTime = _activeTime - _speed;
+  _lastT = CurrentTime();
+  float currentTime = _activeTime - _speed * _frame;
   if(currentTime < _startTime)
   {
     if(_loop)_activeTime = _endTime;
@@ -54,7 +56,8 @@ void Time::PreviousFrame()
 
 void Time::NextFrame()
 {
-  float currentTime = _activeTime + _speed;
+  _lastT = CurrentTime();
+  float currentTime = _activeTime + _speed * _frame;
   if(currentTime > _endTime)
   {
     if(_loop)_activeTime = _startTime;
@@ -65,19 +68,21 @@ void Time::NextFrame()
 
 void Time::FirstFrame()
 {
+  _lastT = CurrentTime();
   _activeTime = _startTime;
 }
 
 void Time::LastFrame()
 {
+  _lastT = CurrentTime();
   _activeTime = _endTime;
 }
 
 void Time::StartPlayback(bool backward)
 {
-  _chronometer = 0;
+  _lastT = CurrentTime();
   _playback = true;
-  _playForwardOrBackward = backward;
+  _backward = backward;
   Playback();
 }
 
@@ -88,26 +93,32 @@ void Time::StopPlayback()
 
 int Time::Playback()
 {
-  _chronometer = CurrentTime() - _lastT;
-
-  if(_chronometer < _frame)
+  if(_mode == PLAYBACK_REALTIME && (CurrentTime() - _lastT < _frame))
     return PLAYBACK_WAITING;
 
+  if(!_playback)return PLAYBACK_IDLE;
+
   _lastT = CurrentTime();
-  
-  if(!_playForwardOrBackward && _activeTime > _endTime)
-    return _loop ? PLAYBACK_FIRST : PLAYBACK_STOP;
 
-  else if(_playForwardOrBackward && _activeTime < _startTime)
-    return _loop ? PLAYBACK_LAST : PLAYBACK_STOP;
-
-  else if(!_playForwardOrBackward)
-    return PLAYBACK_NEXT;
-
-  else return PLAYBACK_PREVIOUS;
-
-  
-} 
+  if(_backward) {
+    if((_activeTime - _speed * _frame) < _startTime) {
+      if(_loop) LastFrame();
+      else StopPlayback();
+      return _loop ? PLAYBACK_LAST : PLAYBACK_STOP;
+    } else {
+      PreviousFrame();
+      return PLAYBACK_PREVIOUS;
+    }
+  } else {
+    if((_activeTime + _speed * _frame) > _endTime) {
+      if(_loop) FirstFrame();
+      else StopPlayback();
+      return _loop ? PLAYBACK_FIRST : PLAYBACK_STOP;
+    } else {
+      NextFrame();
+      return PLAYBACK_NEXT;
+    }
+  } 
+}
 
 JVR_NAMESPACE_CLOSE_SCOPE
-

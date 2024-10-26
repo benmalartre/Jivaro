@@ -45,6 +45,9 @@ private:
   float _GetFrameUnderMouse(int x, int y);
   GfVec2f _TimeToPosition(float time);
   float _PositionToTime(const GfVec2f& position);
+
+  void _DrawOneControl(const char* name, float width, float& value, 
+    float previous, bool labelled=false, const char* tooltip=NULL);
   
   int                     _frame;
   int                     _lastFrame;

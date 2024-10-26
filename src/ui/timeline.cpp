@@ -68,6 +68,7 @@ TimelineUI::ValidateTime()
   if (_currentTime < _startTime)_currentTime = _startTime;
   else if (_currentTime > _endTime)_currentTime = _endTime;
   
+  //time->Lock();
   time->SetMinTime(_minTime);
   time->SetStartTime(_startTime);
   time->SetEndTime(_endTime);
@@ -75,6 +76,7 @@ TimelineUI::ValidateTime()
   time->SetActiveTime(_currentTime);
   time->SetLoop(_loop);
   time->SetSpeed(_speed);
+  //time->Release();
 }
 
 float 
@@ -196,17 +198,27 @@ void TimelineUI::DrawButtons()
       time->SetLoop(_loop);
     });
   ImGui::SameLine();
+}
 
-  ImGui::SetNextItemWidth(60);
-  ImGui::InputScalar("speed", ImGuiDataType_Float, &_speed,
-    NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
-  if (!ImGui::IsItemActive() && _speed != time->GetSpeed())
-  {
-    ValidateTime();
+
+
+void TimelineUI::_DrawOneControl(const char* name, float width, float& value, 
+  float previous, bool labelled, const char* tooltip)
+{
+  if(labelled) {
+    ImGui::Text(name);
+    ImGui::SameLine();
   }
-  if (ImGui::IsItemHovered())
-    AttachTooltip("Speed");
-  //AttachTooltip("Minimum Time", 0.5f, 128, GetWindow()->GetRegularFont(0));
+
+  ImGui::SetNextItemWidth(width);
+  ImGui::InputScalar(UI::HiddenLabel(name).c_str(), ImGuiDataType_Float, &value,
+    NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
+  if (!ImGui::IsItemActive() && value != previous)
+    ValidateTime();
+  
+  if (tooltip && ImGui::IsItemHovered())
+    AttachTooltip(tooltip);
+
   ImGui::SameLine(); 
 }
 
@@ -219,79 +231,36 @@ void TimelineUI::DrawControls()
   ImGuiStyle* style = &ImGui::GetStyle();
   const ImVec4* colors = style->Colors;
 
-  ImGui::SetCursorPosX(20);
-  ImGui::SetCursorPosY(height - TIMELINE_CONTROL_HEIGHT + 8);
+  static const int paddingX = 5;
+
+  int nWidth = width / 20;
+  int posY = height - (TIMELINE_CONTROL_HEIGHT - 4);
+  ImGui::SetCursorPosX(paddingX);
+  ImGui::SetCursorPosY(posY);
 
   //ImGui::PushFont(GetWindow()->GetMediumFont(0));
 
-  ImGui::SetNextItemWidth(60);
-  ImGui::InputScalar("##minTime", ImGuiDataType_Float, &_minTime,
-    NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
-  if (!ImGui::IsItemActive() && _minTime != time->GetMinTime())
-  {
-    ValidateTime();
-  }
-  if (ImGui::IsItemHovered())
-    AttachTooltip("Minimum Time");
-  //AttachTooltip("Minimum Time", 0.5f, 128, GetWindow()->GetRegularFont(0));
-  ImGui::SameLine(); 
 
-  ImGui::SetNextItemWidth(60);
-  ImGui::InputScalar("##startTime", ImGuiDataType_Float, &_startTime,
-    NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
-  if (!ImGui::IsItemActive() && _startTime != time->GetStartTime())
-  {
-    ValidateTime();
-  }
-  if (ImGui::IsItemHovered())
-    AttachTooltip("Start Time");
-  //AttachTooltip("Start Time", 0.5f, 128, GetWindow()->GetRegularFont(0));
-  ImGui::SameLine(); 
+  _DrawOneControl("minTime", nWidth, _minTime, time->GetMinTime(), false, "Minimum Time");
+  _DrawOneControl("startTime", nWidth, _startTime, time->GetStartTime(), false, "Start Time");
 
-  float cy = ImGui::GetCursorPosY();
-  //ImGui::SetCursorPosY(cy - 6);
-  ImGui::SetCursorPosX(width * 0.5f - 64);
+
+  ImGui::SetCursorPosX(width / 2 - (5 * nWidth + paddingX));
+
+  _DrawOneControl("fps", nWidth, _fps, time->GetFPS(), true, "Frame Per Seconds");
+  _DrawOneControl("speed", nWidth, _speed, time->GetSpeed(), true, "Read Speed");
 
   // buttons
   DrawButtons();
-  ImGui::SetCursorPosY(cy);
 
-  // current time
-  ImGui::SetNextItemWidth(60);
-  ImGui::InputScalar("##currentTime", ImGuiDataType_Float, &_currentTime,
-    NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
-  if (!ImGui::IsItemActive() && _currentTime != time->GetActiveTime())
-  {
-    ValidateTime();
-  }
-  if (ImGui::IsItemHovered())
-    AttachTooltip("Current Time");
-  //AttachTooltip("Current Time", 0.5f, 128, GetWindow()->GetRegularFont(0));
-  ImGui::SameLine(); 
+  ImGui::SetCursorPosY(posY);
+  _DrawOneControl("time", nWidth, _currentTime, time->GetActiveTime(), true, "Active Time");
 
-  ImGui::SetCursorPosX(width - 140);
 
-  ImGui::SetNextItemWidth(60);
-  ImGui::InputScalar("##endTime", ImGuiDataType_Float, &_endTime,
-    NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
-  if (!ImGui::IsItemActive() && _endTime != time->GetEndTime())
-  {
-    ValidateTime();
-  }
-  ImGui::SameLine();
+  ImGui::SetCursorPosX(width - 2 * nWidth);
 
-  ImGui::SetNextItemWidth(60);
-  ImGui::InputScalar("##maxTime", ImGuiDataType_Float, &_maxTime,
-    NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
-  if (!ImGui::IsItemActive() && _maxTime != time->GetMaxTime())
-  {
-    ValidateTime();
-  }
-  if (ImGui::IsItemHovered())
-    AttachTooltip("Maximum Time");
-  //AttachTooltip("Maximum Time", 0.5f, 128, GetWindow()->GetRegularFont(0));
-  ImGui::SameLine();
-  //ImGui::PopFont();
+  _DrawOneControl("endTime", nWidth, _endTime, time->GetEndTime(), false, "End Time");
+  _DrawOneControl("maxTime", nWidth, _maxTime, time->GetMaxTime(), false, "Max Time");
 }
 
 void TimelineUI::DrawTimeSlider()

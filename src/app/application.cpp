@@ -293,12 +293,13 @@ Application::Update()
   //Time::Get()->ComputeFramerate();
 
   Time* time = Time::Get();
+
   float currentTime(time->GetActiveTime());
-  static int playback = time->Playback();
-  if(playback == Time::PLAYBACK_WAITING) return false; 
+  int playback = time->Playback();
+  if( playback == Time::PLAYBACK_WAITING) return true;
   
   // execution if needed
-  if (time->IsPlaying() || Application::Get()->IsToolInteracting() || currentTime != time->GetLastTick()) {
+  if (_popup || playback > Time::PLAYBACK_IDLE || Application::Get()->IsToolInteracting()) {
     if(_model->GetExec() ) 
       _model->UpdateExec(currentTime);
 
@@ -319,22 +320,7 @@ Application::Update()
     if (!_mainWindow->Update()) return false;
     for (auto& childWindow : _childWindows)childWindow->Update();
   }
-
-  // playback if needed
-  if(time->IsPlaying() && playback != Time::PLAYBACK_WAITING) {
-    switch(playback) {
-      case Time::PLAYBACK_NEXT:
-        time->NextFrame(); break;
-      case Time::PLAYBACK_PREVIOUS:
-        time->PreviousFrame(); break;
-      case Time::PLAYBACK_FIRST:
-        time->FirstFrame(); break;
-      case Time::PLAYBACK_LAST:
-        time->LastFrame(); break;
-      case Time::PLAYBACK_STOP:
-        time->StopPlayback(); break;
-    }
-  }
+  
 
   CommandManager::Get()->ExecuteCommands();
   return true;
