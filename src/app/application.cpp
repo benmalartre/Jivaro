@@ -455,7 +455,6 @@ Application::SelectionChangedCallback(const SelectionChangedNotice& n)
     window->ForceRedraw();
   }
   DirtyAllEngines();
-  
 }
 
 void 

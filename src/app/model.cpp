@@ -19,7 +19,6 @@
 #include "../app/camera.h"
 #include "../app/tools.h"
 #include "../app/application.h"
-#include "../exec/sceneIndex.h"
 
 #include "../tests/grid.h"
 #include "../tests/raycast.h"
@@ -49,7 +48,7 @@ Model::Model()
   _sceneIndexBases = HdMergingSceneIndex::New();
   _finalSceneIndex = HdMergingSceneIndex::New();
   _editableSceneIndex = _sceneIndexBases;
-  SetEditableSceneIndex(_editableSceneIndex);
+  SetCurrentSceneIndex(_editableSceneIndex);
 
   UsdImagingCreateSceneIndicesInfo info;
   info.displayUnloadedPrimsWithBounds = true;
@@ -76,7 +75,6 @@ Model::_IsAnyEngineDirty()
 void
 Model::SetStage(UsdStageRefPtr& stage)
 {
-  _stageCache.Insert(stage);
   _stage = stage;
   _layer = stage->GetRootLayer();
     
@@ -121,7 +119,7 @@ Model::Init()
   _sceneIndexBases = HdMergingSceneIndex::New();
   _finalSceneIndex = HdMergingSceneIndex::New();
   _editableSceneIndex = _sceneIndexBases;
-  SetEditableSceneIndex(_editableSceneIndex);
+  SetCurrentSceneIndex(_editableSceneIndex);
 
   UsdImagingCreateSceneIndicesInfo info;
   info.displayUnloadedPrimsWithBounds = true;
@@ -157,11 +155,12 @@ Model::InitExec()
   //_exec = new TestHair();
   //_exec = new TestGeodesic();
   //_exec = new TestBVH();
-  //_exec->InitExec(_stage);
 
-  _execSceneIndex = ExecSceneIndex::New(_editableSceneIndex);
-  //_execSceneIndex->SetScene(_exec->GetScene());
-  SetEditableSceneIndex(_execSceneIndex);
+  _exec->InitExec(_stage);
+
+  _execSceneIndex = ExecSceneIndex::New(_sceneIndexBases);
+  _execSceneIndex->SetExec(_exec);
+  SetCurrentSceneIndex(_execSceneIndex);
 
   for(auto& engine: _engines) {
     engine->InitExec(_exec->GetScene());
@@ -171,7 +170,7 @@ Model::InitExec()
 void
 Model::UpdateExec(float time)
 {
-  //_exec->UpdateExec(_stage, time);
+  _exec->UpdateExec(_stage, time);
   GetActiveEngine()->SetDirty(true);
   for (auto& engine : _engines) {
     engine->UpdateExec(time);
@@ -184,10 +183,12 @@ Model::TerminateExec()
   for (auto& engine : _engines) {
     engine->TerminateExec();
   }
+  _finalSceneIndex->RemoveInputScene(_execSceneIndex);
+  SetCurrentSceneIndex(_sceneIndexBases);
   _exec->TerminateExec(_stage);
-  delete _exec;
-  _exec = NULL;  
   _execute = false;
+  _exec = nullptr;
+  _execSceneIndex = nullptr;
   NewSceneNotice().Send();
 }
 
@@ -216,18 +217,19 @@ Model::GetEditableSceneIndex()
 }
 
 void 
-Model::SetEditableSceneIndex(HdSceneIndexBaseRefPtr sceneIndex)
+Model::SetCurrentSceneIndex(HdSceneIndexBaseRefPtr sceneIndex)
 {
   std::cout << "Set Editable Scene Index" << sceneIndex << std::endl;
 
   if(_editableSceneIndex)
     _finalSceneIndex->RemoveInputScene(_editableSceneIndex);
-  //_editableSceneIndex = sceneIndex;
+  _editableSceneIndex = sceneIndex;
   _finalSceneIndex->AddInputScene(sceneIndex,
                                   SdfPath::AbsoluteRootPath());
 
   std::cout << "Set Editable Scene Index done!" << sceneIndex << std::endl;
 }
+
 
 HdSceneIndexBaseRefPtr 
 Model::GetFinalSceneIndex()

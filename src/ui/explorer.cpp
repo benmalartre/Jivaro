@@ -42,7 +42,6 @@ static void ExploreLayerTree(SdfLayerTreeHandle tree, PcpNodeRef node) {
     format += obj->GetPath().GetString();
     if (ImGui::MenuItem(format.c_str())) {
       //ExecuteAfterDraw<EditorInspectLayerLocation>(tree->GetLayer(), obj->GetPath());
-      std::cout << "INSPECT LAYER LOCATION : " << obj->GetPath() << std::endl;
     }
   }
   for (auto subTree : tree->GetChildTrees()) {
@@ -110,7 +109,6 @@ ExplorerUI::_GetItemUnderMouse(const GfVec2f &relative)
   size_t lineHeight = ImGui::GetTextLineHeight() + style.FramePadding.y * 2 + style.ItemInnerSpacing.y;
   int index = (_scroll[1] + relative[1]) / lineHeight - 1;
 
-  std::cout << "Item Under Mouse" << relative << " : " << index << std::endl;
   if(index >= 0 && index < _items.size())
     return &_items[index]; 
 
@@ -234,7 +232,7 @@ ExplorerUI::DrawVisibility(const UsdPrim& prim, bool visible, bool selected)
   Application* app = Application::Get();
   if (ImGui::Button(visible ? visibleIcon : invisibleIcon)) {
     _current = prim.GetPath();
-    SdfPathVector paths = _model->GetSelection()->GetSelectedPaths();
+    SdfPathVector paths = app->GetModel()->GetSelection()->GetSelectedPaths();
     _PushCurrentPath(_current, paths);
     ADD_COMMAND(ShowHideCommand, paths, ShowHideCommand::TOGGLE);
   }
@@ -256,7 +254,7 @@ ExplorerUI::DrawActive(const UsdPrim& prim, bool selected)
   const char* inactiveIcon = ICON_FA_PAUSE;
 
   Application* app = Application::Get();
-  Selection* selection = _model->GetSelection();
+  Selection* selection = app->GetModel()->GetSelection();
   
  
   if (ImGui::Button(selected ? activeIcon : inactiveIcon)) {
@@ -344,7 +342,7 @@ ExplorerUI::DrawPrim(const UsdPrim& prim, Selection* selection)
 
   ImGui::PushStyleColor(ImGuiCol_Text, GetPrimColor(prim));
   const bool unfolded = ImGui::TreeNodeEx(prim.GetName().GetText(), flags);
-  if (ImGui::IsItemClicked()) {
+  if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
     _current = prim.GetPath();
 
     Application* app = Application::Get();
@@ -398,7 +396,7 @@ ExplorerUI::Draw()
   Application* app = Application::Get();
   Model* model = app->GetModel();
   Selection* selection = model->GetSelection();
-  UsdStageRefPtr stage = model->GetWorkStage();
+  UsdStageRefPtr stage = model->GetStage();
   const ImGuiStyle& style = ImGui::GetStyle();
   if (!stage) return false;
 
@@ -457,9 +455,11 @@ ExplorerUI::Draw()
     // TODO HighlightSelectedPaths();
   }
   */
+
   //ImGui::PushFont(GetWindow()->GetRegularFont(1));
   const auto& children = root.GetFilteredChildren(
     UsdTraverseInstanceProxies(UsdPrimAllPrimsPredicate));
+  
   for (const auto& child : children) {
     DrawPrim(child, selection);
   }

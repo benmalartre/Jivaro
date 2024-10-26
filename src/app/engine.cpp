@@ -342,8 +342,6 @@ void
 Engine::Render()
 {
   HdTaskSharedPtrVector tasks = _taskController->GetRenderingTasks();
-  for(auto& task: tasks)
-    std::cout << task->GetId() << std::endl;
   _engine.Execute(_renderIndex, &tasks);
   Present();
 }

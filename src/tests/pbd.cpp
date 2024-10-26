@@ -98,6 +98,7 @@ void TestPBD::_AddAnimationSamples(UsdStageRefPtr& stage, SdfPath& path)
 
 void TestPBD::InitExec(UsdStageRefPtr& stage)
 {
+
   std::cout << "Test PBD Init Execution" << std::endl;
   if (!stage) return;
 
@@ -239,10 +240,22 @@ void TestPBD::UpdateExec(UsdStageRefPtr& stage, float time)
 
 void TestPBD::TerminateExec(UsdStageRefPtr& stage)
 {
+  std::cout << "TEST PBD TERMINATE EXEC" << std::endl;
   if (!stage) return;
   _scene.RemoveGeometry(_solverId);
   delete _solver;
+  std::cout << "TEST PBD TERMINATED" << std::endl;
+}
 
+void TestPBD::PopulateSceneIndex(HdSceneIndexBase* index)
+{
+  std::cout << "TestPBD POPULATE SceneIndex Called!!!" << std::endl;
+  //ExecSceneIndex* sceneIndex = (ExecSceneIndex*)index;
+}
+
+void TestPBD::RemoveFromSceneIndex(HdSceneIndexBase* index)
+{
+  std::cout << "TestPBD REMOVE SceneIndex Called!!!" << std::endl;
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

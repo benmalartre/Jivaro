@@ -25,17 +25,17 @@ class Execution;
 class Scene  {
 public:
   struct _Prim {
-    Geometry*          geom;
+    Geometry*     geom;
     HdDirtyBits   bits;
   };
 
   struct _Graph {
-    Graph*             graph;
+    Graph*        graph;
     HdDirtyBits   bits;
   };
 
-  typedef TfHashMap< SdfPath, _Prim, SdfPath::Hash >   _PrimMap;
-  typedef TfHashMap< SdfPath, _Graph, SdfPath::Hash >  _GraphMap;
+  typedef TfHashMap< SdfPath, _Prim, SdfPath::Hash >        _PrimMap;
+  typedef TfHashMap< SdfPath, _Graph, SdfPath::Hash >       _GraphMap;
   typedef std::map< SdfPath, VtValue >                      _MaterialMap;
   typedef std::map< SdfPath, SdfPath >                      _MaterialBindingMap;
   
@@ -45,11 +45,7 @@ public:
   ~Scene();
 
   void Init(const UsdStageRefPtr& stage);
-  void Sync(const UsdStageRefPtr& stage, 
-    const UsdTimeCode& time=UsdTimeCode::Default());
-
-  void Save(const std::string& filename);
-  void Export(const std::string& filename);
+  void Sync(const UsdStageRefPtr& stage, const UsdTimeCode& time=UsdTimeCode::Default());
 
   Mesh* AddMesh(const SdfPath& path, const GfMatrix4d& xfo=GfMatrix4d(1.0));
   Curve* AddCurve(const SdfPath& path, const GfMatrix4d& xfo=GfMatrix4d(1.0));
@@ -73,6 +69,8 @@ public:
   _PrimMap& GetPrims() { return _prims; };
   const _PrimMap& GetPrims() const { return _prims; };
 
+  size_t GetNumGeometries() { return _prims.size(); };
+  Geometry* GetGeometry(size_t index);
   _Prim* GetPrim(const SdfPath& path);
   Geometry* GetGeometry(const SdfPath& path);
   SdfPath GetInstancerBinding(const SdfPath& path);

@@ -12,16 +12,60 @@
 #include <pxr/imaging/hd/visibilitySchema.h>
 
 #include "../exec/sceneIndex.h"
+#include "../exec/execution.h"
+#include "../geometry/geometry.h"
+#include "../geometry/mesh.h"
+#include "../geometry/curve.h"
+#include "../geometry/points.h"
+#include "../geometry/scene.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
 
 ExecSceneIndex::ExecSceneIndex(const HdSceneIndexBaseRefPtr  &inputSceneIndex)
   : HdSingleInputFilteringSceneIndexBase(inputSceneIndex)
+  , _exec(nullptr)
+  , _isPopulated(false)
 {
   _gridPath = SdfPath("/Grid");
   _prim = _CreateGridPrim();
   Populate(true);
+}
+
+ExecSceneIndex::~ExecSceneIndex()
+{
+  Populate(false);
+}
+
+void ExecSceneIndex::SetExec(Execution* exec)
+{
+  if(_exec)delete _exec;
+  _exec = exec;
+
+  if(!_exec)return;
+
+  Scene* scene = _exec->GetScene();
+  for(size_t g = 0; g < scene->GetNumGeometries();++g) {
+    Geometry* geometry = scene->GetGeometry(g);
+    SdfPath path = geometry->GetPrim().GetPath();
+    HdSceneIndexPrim indexPrim;
+    switch(geometry->GetType()) {
+      case Geometry::MESH:
+        std::cout << "exec populate mesh : " << path << std::endl;
+        if(path.IsEmpty()) continue;
+        indexPrim = _GetInputSceneIndex()->GetPrim(path);
+        _SendPrimsAdded({{path, HdPrimTypeTokens->mesh}});
+        break;
+
+      case Geometry::POINT:
+        std::cout << "exec populate points : " << path << std::endl;
+        break;
+
+      case Geometry::CURVE:
+        std::cout << "exec populate curve : " << path << std::endl;
+        break;
+    }
+  }
 }
 
 /*
@@ -68,7 +112,12 @@ ExecSceneIndex::Populate(bool populate)
 HdSceneIndexPrim ExecSceneIndex::GetPrim(const SdfPath &primPath) const
 {
   if (primPath == _gridPath) return _prim;
-  else return this->GetInputScenes().back()->GetPrim(primPath);
+  if(_exec) {    
+    Scene::_Prim* prim = _exec->GetScene()->GetPrim(primPath);
+    if(prim) std::cout << primPath << " is exec object : update it !!";
+  }
+
+  return _GetInputSceneIndex()->GetPrim(primPath);
 }
 
 SdfPathVector ExecSceneIndex::GetChildPrimPaths(
@@ -78,6 +127,49 @@ SdfPathVector ExecSceneIndex::GetChildPrimPaths(
     if (primPath == SdfPath::AbsoluteRootPath()) return {_gridPath};
     else return {};
 }
+
+void ExecSceneIndex::_PrimsAdded(
+  const pxr::HdSceneIndexBase &sender,
+  const pxr::HdSceneIndexObserver::AddedPrimEntries &entries)
+{
+  _SendPrimsAdded(entries);
+}
+
+void ExecSceneIndex::_PrimsRemoved(
+  const pxr::HdSceneIndexBase &sender,
+  const pxr::HdSceneIndexObserver::RemovedPrimEntries &entries)
+{
+  _SendPrimsRemoved(entries);
+}
+
+void ExecSceneIndex::_PrimsDirtied(
+  const pxr::HdSceneIndexBase &sender,
+  const pxr::HdSceneIndexObserver::DirtiedPrimEntries &entries)
+{
+  _SendPrimsDirtied(entries);
+}
+
+void
+ExecSceneIndex::_SystemMessage(
+  const TfToken &messageType,
+  const HdDataSourceBaseHandle &args)
+{
+
+  Scene* scene = _exec->GetScene();
+  SdfPathVector candidates;
+  for (auto &prim: scene->GetPrims()) {
+    const SdfPath &path = prim.first;
+    HdDirtyBits bits = prim.second.bits;
+
+    if(bits != HdChangeTracker::Clean)
+      candidates.push_back(path);
+  }
+
+  if (!candidates.empty()) {
+      _SendPrimsDirtied(candidates);
+  }
+}
+
 
 
 HdSceneIndexPrim 

@@ -45,12 +45,16 @@ PropertyEditorUI::OnSelectionChangedNotice(const SelectionChangedNotice& n)
 {
   Application* app = Application::Get();
   Selection* selection = app->GetModel()->GetSelection();
+
+  std::cout << "property ui selection changed : " << std::endl;
   if (selection->GetNumSelectedItems()) {
     UsdPrim prim = app->GetModel()->GetStage()->GetPrimAtPath(selection->GetSelectedPaths().back());
     SetPrim(prim);
+    std::cout << "set content to " << prim.GetPath() << std::endl;
   }
   else {
     SetPrim(UsdPrim());
+    std::cout << "set content to empty" << std::endl;
   }
 }
 

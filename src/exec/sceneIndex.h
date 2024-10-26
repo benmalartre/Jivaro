@@ -10,7 +10,7 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-class Exec;
+class Execution;
 
 TF_DECLARE_REF_PTRS(ExecSceneIndex);
 
@@ -21,8 +21,10 @@ class ExecSceneIndex : public HdSingleInputFilteringSceneIndexBase {
         return TfCreateRefPtr(new ExecSceneIndex(inputSceneIndex));}
 
     ExecSceneIndex(const HdSceneIndexBaseRefPtr  &inputSceneIndex);
+    ~ExecSceneIndex();
 
     void Populate(bool populate);
+    void SetExec(Execution* exec);
 
     virtual HdSceneIndexPrim GetPrim(
       const SdfPath &primPath) const override;
@@ -30,27 +32,27 @@ class ExecSceneIndex : public HdSingleInputFilteringSceneIndexBase {
     virtual SdfPathVector GetChildPrimPaths(
       const SdfPath &primPath) const override;
 
-
   protected:
     HdSceneIndexPrim _CreateGridPrim();
 
     virtual void _PrimsAdded(
       const pxr::HdSceneIndexBase &sender,
-      const pxr::HdSceneIndexObserver::AddedPrimEntries &entries)
-      override{};
+      const pxr::HdSceneIndexObserver::AddedPrimEntries &entries) override;
 
     virtual void _PrimsRemoved(
       const pxr::HdSceneIndexBase &sender,
-      const pxr::HdSceneIndexObserver::RemovedPrimEntries &entries)
-      override{};
+      const pxr::HdSceneIndexObserver::RemovedPrimEntries &entries) override;
 
     virtual void _PrimsDirtied(
       const pxr::HdSceneIndexBase &sender,
-      const pxr::HdSceneIndexObserver::DirtiedPrimEntries &entries)
-      override{};
+      const pxr::HdSceneIndexObserver::DirtiedPrimEntries &entries) override;
+
+    virtual void _SystemMessage(
+        const TfToken &messageType,
+        const HdDataSourceBaseHandle &args) override;
 
   private:
-    Exec* _exec;
+    Execution* _exec;
 
     SdfPath _gridPath;
     HdSceneIndexPrim _prim;

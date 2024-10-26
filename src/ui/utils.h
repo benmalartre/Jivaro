@@ -49,8 +49,7 @@ class View;
 namespace UI 
 {
   inline std::string HiddenLabel(const char* label) {
-    return std::string("##").append(label);
-  }
+    return std::string("##").append(label);}
 
   void HelpMarker(const char* desc);
 

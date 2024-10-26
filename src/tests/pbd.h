@@ -16,6 +16,8 @@ public:
   void InitExec(UsdStageRefPtr& stage) override;
   void UpdateExec(UsdStageRefPtr& stage, float time) override;
   void TerminateExec(UsdStageRefPtr& stage) override;
+  void PopulateSceneIndex(HdSceneIndexBase* index) override;
+  void RemoveFromSceneIndex(HdSceneIndexBase* index) override;
 
 protected: 
   void _TraverseStageFindingElements(UsdStageRefPtr& stage);

@@ -693,7 +693,7 @@ void Solver::UpdateGeometries()
         }
         deformable->SetBoundingBox(range);
 
-        _scene->MarkPrimDirty(id, HdChangeTracker::AllDirty);
+        _scene->MarkPrimDirty(id, HdChangeTracker::DirtyPoints);
       }
     }
   }

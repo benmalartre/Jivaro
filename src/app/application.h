@@ -2,6 +2,8 @@
 #define JVR_APPLICATION_APPLICATION_H
 #include <map>
 
+#include <pxr/usd/usd/stageCache.h>
+
 #include "../common.h"
 #include "../exec/execution.h"
 #include "../app/model.h"
@@ -80,6 +82,9 @@ public:
   // model
   Model* GetModel() {return _model;};
 
+  // stages
+  UsdStageCache& GetStageCache() { return _stageCache; }
+
   // engines
   /*
   void AddEngine(Engine* engine);
@@ -118,6 +123,9 @@ private:
 
    // command
   std::vector<CALLBACK_FN>          _deferred;
+
+  // stages
+  UsdStageCache                     _stageCache;
 
 };
 

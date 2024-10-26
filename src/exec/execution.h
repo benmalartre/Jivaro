@@ -7,6 +7,7 @@
 #include <pxr/usd/usd/stage.h>
 #include <pxr/base/work/loops.h>
 #include <pxr/imaging/hd/changeTracker.h>
+#include <pxr/imaging/hd/sceneIndex.h>
 #include "../geometry/scene.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -25,6 +26,8 @@ public:
   virtual void InitExec(UsdStageRefPtr& stage) = 0;
   virtual void UpdateExec(UsdStageRefPtr& stage, float time) = 0;
   virtual void TerminateExec(UsdStageRefPtr& stage) = 0;
+  virtual void PopulateSceneIndex(HdSceneIndexBase* index){};
+  virtual void RemoveFromSceneIndex(HdSceneIndexBase* index){};
 
   virtual void ViewEvent(const ViewEventData *data);
 

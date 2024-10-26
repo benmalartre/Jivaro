@@ -67,18 +67,6 @@ Scene::Sync(const UsdStageRefPtr& stage, const UsdTimeCode& time)
   }
 }
 
-void
-Scene::Save(const std::string& filename)
-{
-
-}
-
-void 
-Scene::Export(const std::string& filename)
-{
-  
-}
-
 Mesh* Scene::AddMesh(const SdfPath& path, const GfMatrix4d& xfo)
 {
   _prims[path] = { new Mesh(xfo) };
@@ -233,6 +221,14 @@ void Scene::Remove(const SdfPath & path)
     _prims.erase(primIt);
     delete geometry;
   }
+}
+
+Geometry*
+Scene::GetGeometry(size_t index)
+{
+  _PrimMap::iterator primIt = _prims.begin();
+  std::advance(primIt, index);
+  return primIt != _prims.end() ? primIt->second.geom : NULL;
 }
 
 Geometry*

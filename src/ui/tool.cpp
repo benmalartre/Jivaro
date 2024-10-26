@@ -244,7 +244,6 @@ void _CreateVertexColor()
     UsdAttribute colorsAttr = colorPrimVar.GetAttr();
     colorsAttr.Set(colors);
   }
-
 }
 
 bool ToolUI::Draw()

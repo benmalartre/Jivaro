@@ -7,7 +7,6 @@
 #include <pxr/usd/usd/prim.h>
 #include <pxr/usd/usd/primRange.h>
 #include <pxr/usd/usd/stage.h>
-#include <pxr/usd/usd/stageCache.h>
 #include <pxr/usd/usdGeom/metrics.h>
 #include <pxr/usdImaging/usdImaging/sceneIndices.h>
 #include <pxr/usdImaging/usdImaging/stageSceneIndex.h>
@@ -74,7 +73,7 @@ public:
   // stage cache
   UsdStageRefPtr& GetStage(){return _stage;};
   void SetStage(UsdStageRefPtr& stage);
-  UsdStageCache& GetStageCache() { return _stageCache; }
+
 
   // execution
   void ToggleExec();
@@ -96,7 +95,7 @@ public:
   void AddSceneIndexBase(HdSceneIndexBaseRefPtr sceneIndex);
   HdSceneIndexBaseRefPtr GetEditableSceneIndex();
 
-  void SetEditableSceneIndex(HdSceneIndexBaseRefPtr sceneIndex);
+  void SetCurrentSceneIndex(HdSceneIndexBaseRefPtr sceneIndex);
   HdSceneIndexBaseRefPtr GetFinalSceneIndex();
   HdSceneIndexPrim GetPrim(SdfPath primPath);
 
@@ -117,15 +116,13 @@ private:
   // selection 
   Selection                         _selection;
 
-  // stages
-  UsdStageCache                     _stageCache;
+  // stage
   UsdStageRefPtr                    _stage;
   SdfLayerRefPtr                    _layer;
 
   // engines
   std::vector<Engine*>              _engines;
   Engine*                           _activeEngine;
-
 
   // model
   SdfLayerRefPtr                    _rootLayer, _sessionLayer;
@@ -137,7 +134,7 @@ private:
   // execution
   bool                              _execute;
   Execution*                        _exec;
-  HdSceneIndexBaseRefPtr            _execSceneIndex;
+  ExecSceneIndexRefPtr              _execSceneIndex;
   float                             _lastTime;
 
 };
