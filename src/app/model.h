@@ -13,10 +13,11 @@
 #include <pxr/usdImaging/usdImaging/stageSceneIndex.h>
 
 #include "../common.h"
-#include "../exec/execution.h"
 #include "../app/time.h"
 #include "../app/notice.h"
 #include "../app/selection.h"
+#include "../exec/execution.h"
+#include "../exec/sceneIndex.h"
 #include "../command/manager.h"
 
 
@@ -124,7 +125,7 @@ private:
   // engines
   std::vector<Engine*>              _engines;
   Engine*                           _activeEngine;
-  bool                              _execute;
+
 
   // model
   SdfLayerRefPtr                    _rootLayer, _sessionLayer;
@@ -133,7 +134,10 @@ private:
   HdMergingSceneIndexRefPtr         _sceneIndexBases;
   HdMergingSceneIndexRefPtr         _finalSceneIndex;
 
+  // execution
+  bool                              _execute;
   Execution*                        _exec;
+  HdSceneIndexBaseRefPtr            _execSceneIndex;
   float                             _lastTime;
 
 };

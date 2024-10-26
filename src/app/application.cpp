@@ -298,7 +298,7 @@ Application::Update()
   if(playback == Time::PLAYBACK_WAITING) return false; 
   
   // execution if needed
-  if ((time->IsPlaying() && (playback != Time::PLAYBACK_WAITING)) || Application::Get()->IsToolInteracting()) {
+  if (time->IsPlaying() || Application::Get()->IsToolInteracting() || currentTime != time->GetLastTick()) {
     if(_model->GetExec() ) 
       _model->UpdateExec(currentTime);
 

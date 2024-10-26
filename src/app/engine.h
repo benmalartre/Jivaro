@@ -69,11 +69,9 @@ protected:
   static HdPluginRenderDelegateUniqueHandle 
     _GetRenderDelegateFromPlugin(TfToken plugin);
 
-  void      _Initialize();
-  void      _PrepareDefaultLighting();
-
-
-  bool      _CheckPrimSelectable(const SdfPath& path);
+  void _Initialize();
+  void _PrepareDefaultLighting();
+  bool _CheckPrimSelectable(const SdfPath& path);
 
 private:
   UsdStageRefPtr                      _stage;

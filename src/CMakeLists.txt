@@ -49,6 +49,7 @@ add_executable(${TARGET}
   graph/execution.cpp
   graph/hierarchy.cpp
 
+  exec/sceneIndex.cpp
   exec/execution.cpp
   #exec/node.cpp 
   #exec/network.cpp 

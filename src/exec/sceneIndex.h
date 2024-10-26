@@ -5,55 +5,56 @@
 #include <pxr/base/vt/dictionary.h>
 #include <pxr/imaging/hd/filteringSceneIndex.h>
 #include <pxr/imaging/hd/sceneIndex.h>
-#include <pxr/pxr.h>
+
+#include "../common.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-class ExecSceneIndex;
+class Exec;
 
 TF_DECLARE_REF_PTRS(ExecSceneIndex);
 
 class ExecSceneIndex : public HdSingleInputFilteringSceneIndexBase {
   public:
     static ExecSceneIndexRefPtr New(
-      const ExecSceneIndexRefPtr &inputSceneIndex)
-    {
-      return TfCreateRefPtr(
-        new ExecSceneIndex(inputSceneIndex));
-    }
+      const HdSceneIndexBaseRefPtr  &inputSceneIndex){
+        return TfCreateRefPtr(new ExecSceneIndex(inputSceneIndex));}
 
-    ExecSceneIndex(
-      const pxr::HdSceneIndexBaseRefPtr &inputSceneIndex);
+    ExecSceneIndex(const HdSceneIndexBaseRefPtr  &inputSceneIndex);
 
-    virtual pxr::HdSceneIndexPrim GetPrim(
-      const pxr::SdfPath &primPath) const override;
+    void Populate(bool populate);
 
-    virtual pxr::SdfPathVector GetChildPrimPaths(
-      const pxr::SdfPath &primPath) const override;
+    virtual HdSceneIndexPrim GetPrim(
+      const SdfPath &primPath) const override;
 
-    void SetScene(Scene* scene);
-    void RemoveScene();
-    Scene* GetScene() { return _scene; };
-    void UpdateScene();
+    virtual SdfPathVector GetChildPrimPaths(
+      const SdfPath &primPath) const override;
+
 
   protected:
+    HdSceneIndexPrim _CreateGridPrim();
+
     virtual void _PrimsAdded(
       const pxr::HdSceneIndexBase &sender,
       const pxr::HdSceneIndexObserver::AddedPrimEntries &entries)
-      override;
+      override{};
 
     virtual void _PrimsRemoved(
       const pxr::HdSceneIndexBase &sender,
       const pxr::HdSceneIndexObserver::RemovedPrimEntries &entries)
-      override;
+      override{};
 
     virtual void _PrimsDirtied(
       const pxr::HdSceneIndexBase &sender,
       const pxr::HdSceneIndexObserver::DirtiedPrimEntries &entries)
-      override;
+      override{};
 
   private:
-    Scene* _scene;
+    Exec* _exec;
+
+    SdfPath _gridPath;
+    HdSceneIndexPrim _prim;
+    bool _isPopulated;
 
 };
 

@@ -1,14 +1,54 @@
 #include <pxr/base/gf/camera.h>
 #include <pxr/base/gf/frustum.h>
 #include <pxr/imaging/cameraUtil/conformWindow.h>
+#include <pxr/imaging/hd/light.h>
 #include <pxr/imaging/hd/rendererPlugin.h>
 #include <pxr/imaging/hd/rendererPluginRegistry.h>
 #include <pxr/imaging/hdx/pickTask.h>
+#include <pxr/imaging/hdx/simpleLightTask.h>
+#include <pxr/imaging/hdx/shadowTask.h>
+#include <pxr/imaging/hdx/shadowMatrixComputation.h>
 #include <pxr/imaging/hgi/tokens.h>
 
+#include "../app/time.h"
 #include "../app/engine.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
+
+namespace {
+  class ShadowMatrix : public HdxShadowMatrixComputation
+  {
+  public:
+    ShadowMatrix(GlfSimpleLight const& light) {
+      GfFrustum frustum;
+      frustum.SetProjectionType(GfFrustum::Orthographic);
+      frustum.SetWindow(GfRange2d(GfVec2d(-10, -10), GfVec2d(10, 10)));
+      frustum.SetNearFar(GfRange1d(0, 100));
+      const GfVec4d pos = light.GetPosition();
+      frustum.SetPosition(GfVec3d(0, 0, 10));
+      frustum.SetRotation(GfRotation(GfVec3d(0, 0, 1),
+        GfVec3d(pos[0], pos[1], pos[2])));
+
+      _shadowMatrix =
+        frustum.ComputeViewMatrix() * frustum.ComputeProjectionMatrix();
+    }
+
+    std::vector<GfMatrix4d> Compute(
+      const GfVec4f& viewport,
+      CameraUtilConformWindowPolicy policy) override {
+      return { _shadowMatrix };
+    }
+
+    std::vector<GfMatrix4d> Compute(
+      const CameraUtilFraming& framing,
+      CameraUtilConformWindowPolicy policy) override {
+      return { _shadowMatrix };
+    }
+
+  private:
+    GfMatrix4d _shadowMatrix;
+  };
+}
 
 Engine::Engine(HdSceneIndexBaseRefPtr sceneIndex, TfToken plugin)
   : _sceneIndex(sceneIndex),
@@ -43,39 +83,29 @@ Engine::~Engine()
 
 void Engine::InitExec(Scene* scene)
 {
+  /*
   _Initialize();
   _delegate = new Delegate(_renderIndex, SdfPath("/"));
   _delegate->SetScene(scene);
+  */
 }
 
 
 void Engine::UpdateExec(double time)
 {
-  _delegate->UpdateScene();
+  //_delegate->UpdateScene();
 }
 
 void Engine::TerminateExec()
 {
+  /*
   _delegate->RemoveScene();
   delete(_delegate);  
   _delegate = NULL;
   _Initialize();
+  */
 }
 
-void Engine::ActivateShadows(bool active)
-{
-  
-  _taskController->SetEnableShadows(active);
-  
-  if(active) {
-    HdxShadowTaskParams shadowParams;
-
-    shadowParams.enableLighting = true;
-    shadowParams.enableIdRender = false;
-    shadowParams.enableSceneMaterials = false;
-    _taskController->SetShadowParams(shadowParams);
-  }
-}
 
 
 void Engine::_Initialize()
@@ -97,6 +127,8 @@ void Engine::_Initialize()
   HdxRenderTaskParams params;
   params.viewport = GfVec4f(0, 0, _width, _height);
   params.enableLighting = true;
+  params.enableSceneLights = true;
+
   _taskController->SetRenderParams(params);
 
   // init collection
@@ -109,6 +141,7 @@ void Engine::_Initialize()
 
   // init AOVs
   TfTokenVector _aovOutputs{HdAovTokens->color};
+
   _taskController->SetRenderOutputs(_aovOutputs);
 
   GfVec4f clearColor = GfVec4f(.2f, .2f, .2f, 1.0f);
@@ -119,6 +152,7 @@ void Engine::_Initialize()
     _taskController->SetRenderOutputSettings( HdAovTokens->color,
                                               colorAovDesc);
   }
+
 
   // init selection
   GfVec4f selectionColor = GfVec4f(1.f, 1.f, 0.f, .5f);
@@ -257,11 +291,12 @@ Engine::Present()
 void 
 Engine::_PrepareDefaultLighting()
 {
-  // set a spot light to the camera position
-  GfVec3d camPos = _camView.GetInverse().ExtractTranslation();
+  // set a animated spot light
+  const float t = Time::Get()->GetActiveTime();
+  GfVec3d lightPos(pxr::GfSin(t)*10, 8.f, GfCos(t)*10);
   GlfSimpleLight l;
   l.SetAmbient(GfVec4f(0, 0, 0, 0));
-  l.SetPosition(GfVec4f(camPos[0], camPos[1], camPos[2], 1));
+  l.SetPosition(GfVec4f(lightPos[0], lightPos[1], lightPos[2], 1));
   l.SetHasShadow(true);
 
   GlfSimpleMaterial material;
@@ -279,6 +314,21 @@ Engine::_PrepareDefaultLighting()
   lightingContextState->SetSceneAmbient(sceneAmbient);
   lightingContextState->SetUseLighting(true);
   _taskController->SetLightingState(lightingContextState);
+
+  // try enabling shadow 
+  _taskController->SetEnableShadows(true);
+
+  HdxShadowParams shadowParams;
+  shadowParams.enabled = true;
+  shadowParams.resolution = 512;
+  shadowParams.shadowMatrix
+      = HdxShadowMatrixComputationSharedPtr(new ShadowMatrix(l));
+  shadowParams.bias = -0.001;
+  shadowParams.blur = 0.1;
+  const VtValue vtShadowParams(shadowParams);
+
+  _engine.SetTaskContextData(HdLightTokens->shadowParams, vtShadowParams);
+
 }
 
 void 
@@ -292,6 +342,8 @@ void
 Engine::Render()
 {
   HdTaskSharedPtrVector tasks = _taskController->GetRenderingTasks();
+  for(auto& task: tasks)
+    std::cout << task->GetId() << std::endl;
   _engine.Execute(_renderIndex, &tasks);
   Present();
 }
