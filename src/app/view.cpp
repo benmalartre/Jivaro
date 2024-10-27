@@ -236,7 +236,6 @@ View::DrawTab()
 void 
 View::Draw()
 {
-  static bool playbackAllViewport = false;
 
   if (!GetFlag(LEAF)) {
     if (_left)_left->Draw();
@@ -248,8 +247,8 @@ View::Draw()
     bool isActive = _current->Draw();
 
     bool isViewport = _current->GetType() == UIType::VIEWPORT;
-    bool isPlaybackViewport = playbackAllViewport || (isViewport &&
-      Application::Get()->IsPlaybackViewport((ViewportUI*)_current));
+    bool isPlaybackViewport = isViewport &&
+      Application::Get()->IsPlaybackViewport((ViewportUI*)_current);
 
     bool isTimeVarying = GetFlag(TIMEVARYING) && Time::Get()->IsPlaying();
 

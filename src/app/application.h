@@ -71,8 +71,8 @@ public:
   void SetAllWindowsDirty();
 
   // playback viewport
-  bool IsPlaybackViewport(ViewportUI* viewport) { return viewport == _viewport; };
-  void SetPlaybackViewport(ViewportUI* viewport){_viewport = viewport;};
+  bool IsPlaybackViewport(ViewportUI* viewport);
+  void SetPlaybackViewport(ViewportUI* viewport);
 
   // popup
   PopupUI* GetPopup() { return _popup; };
@@ -111,9 +111,11 @@ public:
 
   // singleton 
   static Application *Get();
+  static bool         PlaybackAllViewports;
 
 protected:
   static Application*               _singleton;
+
 
 private:
   // windows

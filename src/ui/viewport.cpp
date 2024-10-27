@@ -90,6 +90,7 @@ ViewportUI::~ViewportUI()
 
 void ViewportUI::_BuildDrawTargets(const pxr::GfVec2i &resolution)
 {
+  std::cout << "VIEWPORT REBUILD DRAW TARGETS" << std::endl;
   _drawTarget = GlfDrawTarget::New(resolution, false);
   _drawTarget->Bind();
   _drawTarget->AddAttachment("color", GL_RGBA, GL_FLOAT, GL_RGBA);
@@ -367,11 +368,8 @@ void ViewportUI::Render()
   Application* app = Application::Get();
   Window* window = GetWindow();
 
-  const float& wh = window->GetHeight();
-  const float& h = GetHeight();
-  const float& w = GetWidth();
-
-  _engine->SetRenderSize(w, h);
+  _engine->SetRenderViewport(
+    pxr::GfVec4i(0, window->GetHeight() - GetHeight(), GetWidth(), GetHeight()));
 
   _engine->SetCameraMatrices(
     _camera->GetViewMatrix(),
@@ -403,7 +401,7 @@ void ViewportUI::Render()
   */
   // clear to black
   _drawTarget->Bind();
-  _drawTarget->SetSize(GfVec2i(GetWidth(), GetHeight()));
+  //_drawTarget->SetSize(GfVec2i(GetWidth(), GetHeight()));
   glEnable(GL_DEPTH_TEST);
   glClearColor(0.5,0.5,0.5,1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

@@ -40,6 +40,7 @@ const char* Application::name = "Jivaro";
 // singleton
 //----------------------------------------------------------------------------
 Application* Application::_singleton=nullptr;
+bool Application::PlaybackAllViewports = true;
 
 Application* Application::Get() { 
   if(_singleton==nullptr){
@@ -361,6 +362,18 @@ Application::SetAllWindowsDirty()
   for(auto& childWindow: _childWindows)
     SetWindowDirty(childWindow);
 }
+
+// playback viewport
+bool 
+Application::IsPlaybackViewport(ViewportUI* viewport) 
+{ 
+  return viewport == _viewport || PlaybackAllViewports; 
+};
+
+void 
+Application::SetPlaybackViewport(ViewportUI* viewport){
+  _viewport = viewport;
+};
 
 void 
 Application::SetActiveTool(size_t t)
