@@ -36,7 +36,6 @@ public:
   void Prepare();
   void Render();
   bool IsConverged() const;
-  void Present();
 
 
   static TfTokenVector GetRendererPlugins();
@@ -49,10 +48,6 @@ public:
   void SetRenderViewport(const pxr::GfVec4d &viewport);
 
   SdfPath FindIntersection(GfVec2f screenPos);
-
-  inline bool IsDirty() { return _dirty; };
-  inline void SetDirty(bool dirty) { _dirty = dirty; };
-
   void InitExec(Scene* scene);
   void UpdateExec(double time);
   void TerminateExec();
@@ -96,7 +91,6 @@ private:
 
   TfToken                             _curRendererPlugin;
 
-  bool                                _dirty;
   bool                                _highlightSelection;
 
   Delegate*                           _delegate;

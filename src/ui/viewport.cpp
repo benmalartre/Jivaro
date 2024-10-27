@@ -488,7 +488,7 @@ bool ViewportUI::Draw()
     }
 
     Tool* tool = window->GetTool();
-    const bool shouldDrawTool = tool->IsActive();
+    const bool shouldDrawTool = tool->IsActive() && this->GetView()->GetFlag(View::ACTIVE);
    
     if (shouldDrawTool) {
       _toolTarget->Bind();

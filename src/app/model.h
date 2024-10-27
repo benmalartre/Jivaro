@@ -68,7 +68,6 @@ public:
   void SetActiveEngine(Engine* engine);
   Engine* GetActiveEngine();
   std::vector<Engine*> GetEngines() { return _engines; };
-  void DirtyAllEngines();
 
   // stage cache
   UsdStageRefPtr& GetStage(){return _stage;};
@@ -103,7 +102,6 @@ public:
   UsdPrimRange GetAllPrims();
 
 protected:
-  bool _IsAnyEngineDirty();
   void _SetEmptyStage();
   void _LoadUsdStage(const std::string usdFilePath);
 

@@ -32,7 +32,7 @@ View::View(View* parent, const GfVec2f& min, const GfVec2f& max, unsigned flags)
   , _flags(flags)
   , _perc(0.5)
   , _buffered(0)
-  , _fixedPixels(-1)
+  , _fixed(-1)
   , _current(NULL)
   , _currentIdx(-1)
 {
@@ -50,7 +50,7 @@ View::View(View* parent, int x, int y, int w, int h, unsigned flags)
   , _flags(flags)
   , _perc(0.5)
   , _buffered(0)
-  , _fixedPixels(-1)
+  , _fixed(-1)
   , _current(NULL)
   , _currentIdx(-1)
 {
@@ -441,12 +441,12 @@ View::GetSplitInfos(GfVec2f& sMin, GfVec2f& sMax,
 }
 
 void
-View::Split(double perc, bool horizontal, int fixed, int numPixels)
+View::Split(double perc, bool horizontal, int fixed, int pixels)
 {
   if(horizontal)SetFlag(HORIZONTAL);
   else ClearFlag(HORIZONTAL);
 
-  if (fixed && numPixels > 0) {
+  if (fixed && pixels > 0) {
     if (fixed & LFIXED) {
       SetFlag(LFIXED); 
       ClearFlag(RFIXED);
@@ -461,7 +461,7 @@ View::Split(double perc, bool horizontal, int fixed, int numPixels)
     ClearFlag(RFIXED);
   }
   _perc = perc;
-  _fixedPixels = numPixels;
+  _fixed = pixels;
 
   GfVec2f cMin, cMax;    
   GetChildMinMax(true, cMin, cMax);
@@ -472,7 +472,7 @@ View::Split(double perc, bool horizontal, int fixed, int numPixels)
   _right = new View(this, cMin, cMax);
   _right->_parent = this;
 
-  ComputeNumPixels(false);
+  ComputePixels();
   ClearFlag(LEAF);
 
   if (_tab && _left->_tab) {
@@ -483,15 +483,8 @@ View::Split(double perc, bool horizontal, int fixed, int numPixels)
 }
 
 void 
-View::Resize(int x, int y, int w, int h, bool rationalize)
+View::Resize(int x, int y, int w, int h)
 {
-  GfVec2f ratio;
-
-  if(rationalize)
-  {
-    ratio[0] = 1 / (((double)_max[0] - (double)_min[0]) / (double)w);
-    ratio[1] = 1 / (((double)_max[1] - (double)_min[1]) / (double)h);
-  }
   _min = GfVec2f(x , y);
   _max = GfVec2f(x + w, y + h);
 
@@ -499,8 +492,8 @@ View::Resize(int x, int y, int w, int h, bool rationalize)
   {
     if(GetFlag(HORIZONTAL))
     {
-      if (GetFlag(LFIXED)) _perc = (double)_fixedPixels / (double)h;
-      else if (GetFlag(RFIXED)) _perc = ((double)h - _fixedPixels) / (double)h;
+      if (GetFlag(LFIXED)) _perc = (double)_fixed / (double)h;
+      else if (GetFlag(RFIXED)) _perc = ((double)h - _fixed) / (double)h;
       
       double ph = (double)h * _perc;
       if (_left)_left->Resize(x, y, w, ph);
@@ -508,8 +501,8 @@ View::Resize(int x, int y, int w, int h, bool rationalize)
     }
     else
     {
-      if (GetFlag(LFIXED)) _perc = (float)_fixedPixels / (float)w;
-      else if (GetFlag(RFIXED)) _perc = (float)(w - _fixedPixels) / (float)w;
+      if (GetFlag(LFIXED)) _perc = (float)_fixed / (float)w;
+      else if (GetFlag(RFIXED)) _perc = (float)(w - _fixed) / (float)w;
       
       double pw = (double)w * _perc;
       if (_left)_left->Resize(x, y, pw, h);
@@ -520,7 +513,6 @@ View::Resize(int x, int y, int w, int h, bool rationalize)
   {
     if(_current)_current->Resize();
   }
-  if(rationalize)RescaleNumPixels(ratio);
   SetDirty();
   
   _window->ForceRedraw();
@@ -542,7 +534,7 @@ View::GetPercFromMousePosition(int x, int y)
     double perc = ((double)x - _min[0]) / ((double)_max[0] - _min[0]);
     _perc = perc < 0.05 ? 0.05 : perc > 0.95 ? 0.95 : perc;
   }
-  ComputeNumPixels(true);
+  ComputePixels();
  
 }
 
@@ -550,44 +542,38 @@ void
 View::SetPerc(double perc)
 {
   _perc=perc;
-  ComputeNumPixels(false);
+  ComputePixels();
 };
 
 void
-View::ComputeNumPixels(bool postFix)
+View::ComputePixels()
 {
-  float side = GetFlag(HORIZONTAL) ? GetHeight() : GetWidth();
+  double side = GetFlag(HORIZONTAL) ? GetHeight() : GetWidth();
 
   if (GetFlag(LFIXED)) {
-    _numPixels[0] = _fixedPixels;
-    _numPixels[1] = side - _fixedPixels;
+    _pixels[0] = _fixed;
+    _pixels[1] = side - _fixed;
   }
   else if (GetFlag(RFIXED)) {
-    _numPixels[0] = side - _fixedPixels;
-    _numPixels[1] = _fixedPixels;
+    _pixels[0] = side - _fixed;
+    _pixels[1] = _fixed;
   }
   else {
-    _numPixels[0] = _perc * side;
-    _numPixels[1] = (1 - _perc) * side;
-  }
-
-  if(postFix)
-  {
-    if(_left)RescaleLeft();
-    if(_right)RescaleRight();
+    _pixels[0] = std::ceil(_perc * side);
+    _pixels[1] = std::ceil((1 - _perc) * side);
   }
 }
 
 void 
-View::RescaleNumPixels(GfVec2f  ratio)
+View::RescalePixels(GfVec2d  ratio)
 {
   if(!GetFlag(LEAF))
   {
-    if(GetFlag(HORIZONTAL)){_numPixels[0] *= ratio[1]; _numPixels[1] *= ratio[1];}
-    else {_numPixels[0] *= ratio[0]; _numPixels[1] *= ratio[0];}
+    if(GetFlag(HORIZONTAL)){_pixels[0] *= ratio[1]; _pixels[1] *= ratio[1];}
+    else {_pixels[0] *= ratio[0]; _pixels[1] *= ratio[0];}
 
-    if(_left)_left->RescaleNumPixels(ratio);
-    if(_right)_right->RescaleNumPixels(ratio);
+    if(_left)_left->RescalePixels(ratio);
+    if(_right)_right->RescalePixels(ratio);
   }
 }
 
@@ -599,11 +585,11 @@ View::RescaleLeft()
     double perc;
     if(GetFlag(HORIZONTAL)) {
       double height = GetHeight() * _perc;
-      perc = (double)_left->_numPixels[0] / height;
+      perc = (double)_left->_pixels[0] / height;
     }
     else { 
       double width = GetWidth() * _perc;
-      perc = (double)_left->_numPixels[0] / width;
+      perc = (double)_left->_pixels[0] / width;
     }
 
      _left->_perc = perc < 0.05 ? 0.05 : perc > 0.95 ? 0.95 : perc;
@@ -624,11 +610,11 @@ View::RescaleRight()
     double perc;
     if(GetFlag(HORIZONTAL)) {
       double height = GetHeight() * (1.0 - _perc);
-      perc = 1.0-(double)_right->_numPixels[1] / (double)height;
+      perc = 1.0-(double)_right->_pixels[1] / (double)height;
     }
     else { 
       double width = GetWidth() * (1.0 - _perc);
-      perc = 1.0 - (double)_right->_numPixels[1] / (double)width;
+      perc = 1.0 - (double)_right->_pixels[1] / (double)width;
     }
     _right->_perc = perc < 0.05 ? 0.05 : perc > 0.95 ? 0.95 : perc;
 
@@ -643,8 +629,6 @@ View::RescaleRight()
 void
 View::SetClean()
 {
-  // temporariraly view are always redraw cause of glitch (double buffer maybe) on windows
-  return; 
   if (_buffered <= 0) {
     ClearFlag(DIRTY);
   }

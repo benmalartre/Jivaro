@@ -21,7 +21,7 @@ BaseUI::BaseUI(View* parent, short type, bool popup)
   if (_parent && !popup)
   {
     _parent->AddUI(this);
-    _parent->SetCurrent(this);
+    _parent->SetCurrentUI(this);
     _parent->SetFlag(View::LEAF);
     _parent->SetDirty();
   }

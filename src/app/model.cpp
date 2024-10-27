@@ -63,15 +63,6 @@ Model::~Model()
 {
 };
 
-bool
-Model::_IsAnyEngineDirty()
-{
-  for (auto& engine : _engines) {
-    if (engine->IsDirty())return true;
-  }
-  return false;
-}
-
 void
 Model::SetStage(UsdStageRefPtr& stage)
 {
@@ -143,6 +134,8 @@ Model::Update(const float time)
 void 
 Model::InitExec()
 {
+  Time* time = Time::Get();
+  time->SetActiveTime(time->GetStartTime());
   //_exec = new TestPendulum();
   //_exec = new TestVelocity();
   //_exec = new TestPoints();
@@ -171,10 +164,6 @@ void
 Model::UpdateExec(float time)
 {
   _exec->UpdateExec(_stage, time);
-  GetActiveEngine()->SetDirty(true);
-  for (auto& engine : _engines) {
-    engine->UpdateExec(time);
-  }
 }
 
 void
@@ -278,14 +267,6 @@ Model::RemoveEngine(Engine* engine)
   }
 }
 
-void 
-Model::DirtyAllEngines()
-{
-  for (auto& engine : _engines) {
-    engine->SetDirty(true);
-  }
-}
-
 Engine* Model::GetActiveEngine()
 {
   return _activeEngine;
@@ -312,7 +293,6 @@ Model::ToggleExec()
   _execute = 1 - _execute; 
   if (_execute)InitExec();
   else TerminateExec();
-  DirtyAllEngines();
 };
 
 void 

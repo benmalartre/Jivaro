@@ -48,7 +48,7 @@ private:
   float _PositionToTime(const GfVec2f& position);
 
   void _DrawOneControl(const char* name, float width, float& value, 
-    float previous, bool labelled=false, const char* tooltip=NULL);
+    float previous, short labelled=1, const char* tooltip=NULL);
   
   int                     _frame;
   int                     _lastFrame;

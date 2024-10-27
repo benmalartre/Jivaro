@@ -304,7 +304,7 @@ Application::Update()
       _model->UpdateExec(currentTime);
 
     _model->Update(currentTime);
-    DirtyAllEngines();
+    SetAllWindowsDirty();
   }
   
   // draw popup
@@ -343,6 +343,16 @@ Application::RemoveWindow(Window* window)
       _childWindows.erase(it);
     }
   }
+}
+
+void 
+Application::SetAllWindowsDirty()
+{
+  for(auto& view: _mainWindow->GetViews())
+    view->SetDirty();
+  for(auto& childWindow: _childWindows)
+    for(auto& view: childWindow->GetViews())
+      view->SetDirty();
 }
 
 void 
@@ -420,12 +430,6 @@ void Application::SaveSceneAs(const std::string& filename)
   _model->GetStage()->GetRootLayer()->Save(true);
 }
 
-void 
-Application::DirtyAllEngines()
-{
-  _model->DirtyAllEngines();
-}
-
 // ---------------------------------------------------------------------------------------------
 // Notices Callbacks
 //----------------------------------------------------------------------------------------------
@@ -440,7 +444,7 @@ Application::SelectionChangedCallback(const SelectionChangedNotice& n)
       window->GetTool()->ResetSelection();
     window->ForceRedraw();
   }
-  DirtyAllEngines();
+  SetAllWindowsDirty();
 }
 
 void 
@@ -449,7 +453,7 @@ Application::NewSceneCallback(const NewSceneNotice& n)
   if(_model->GetExec()) _model->TerminateExec();
 
   _model->ClearSelection();
-  DirtyAllEngines();
+  SetAllWindowsDirty();
 }
 
 void 
@@ -463,7 +467,7 @@ Application::SceneChangedCallback(const SceneChangedNotice& n)
     window->ForceRedraw();
   }
   
-  DirtyAllEngines();
+  SetAllWindowsDirty();
 }
 
 void
@@ -478,7 +482,9 @@ Application::AttributeChangedCallback(const AttributeChangedNotice& n)
     window->ForceRedraw();
     window->GetTool()->ResetSelection();
   }
-  DirtyAllEngines();
+
+  SetAllWindowsDirty();
+
 }
 
 void
@@ -492,7 +498,7 @@ Application::TimeChangedCallback(const TimeChangedNotice& n)
   for (auto& window : _childWindows) {
     window->ForceRedraw();
   }
-  DirtyAllEngines();
+  SetAllWindowsDirty();
 }
 
 void

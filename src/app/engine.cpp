@@ -270,25 +270,6 @@ Engine::SetRenderViewport(const pxr::GfVec4d &viewport)
 }
 
 void 
-Engine::Present()
-{
-  VtValue aov;
-  HgiTextureHandle aovTexture;
-
-  if (_engine.GetTaskContextData(HdAovTokens->color, &aov)) {
-    if (aov.IsHolding<HgiTextureHandle>()) {
-      aovTexture = aov.Get<HgiTextureHandle>();
-    }
-  }
-
-  uint32_t framebuffer = 0;
-  _interop.TransferToApp(_hgi.get(), aovTexture,
-                          HgiTextureHandle(), HgiTokens->OpenGL,
-                          VtValue(framebuffer),
-                          GfVec4i(0, 0, _width, _height));
-}
-
-void 
 Engine::_PrepareDefaultLighting()
 {
   // set a animated spot light
@@ -343,7 +324,6 @@ Engine::Render()
 {
   HdTaskSharedPtrVector tasks = _taskController->GetRenderingTasks();
   _engine.Execute(_renderIndex, &tasks);
-  Present();
 }
 
 bool

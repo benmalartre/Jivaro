@@ -49,15 +49,15 @@ public:
   float GetWidth(){return (_max[0] - _min[0]);};
   float GetHeight(){return (_max[1] - _min[1]);};
   const GfVec2f GetSize(){return (_max - _min);};
-  bool IsFixed(){return (_fixedPixels > 0);};
+  bool IsFixed(){return (_fixed > 0);};
   bool IsActive();
   bool IsHovered();
 
   inline double GetPerc(){return _perc;};
   void SetPerc(double perc);
   void GetPercFromMousePosition(int x, int y);
-  void ComputeNumPixels(bool postFix=false);
-  void RescaleNumPixels( GfVec2f ratio);
+  void ComputePixels();
+  void RescalePixels( GfVec2d ratio);
   void RescaleLeft();
   void RescaleRight();
 
@@ -95,8 +95,7 @@ public:
   void SetViewportMessage(const std::string &message);
 
   // current
-  BaseUI* GetCurrent() { return _current; };
-  void SetCurrent(BaseUI* ui) { _current = ui; };
+  void SetCurrentUI(BaseUI* ui) { _current = ui; };
 
   // cursor
   GfVec2f GetRelativeMousePosition(const int inX, const int inY);
@@ -106,7 +105,7 @@ public:
   // callbacks
   bool DrawTab();
   virtual void Draw(bool forceRedraw);
-  virtual void Resize(int x, int y, int width, int height, bool rationalize=false);
+  virtual void Resize(int x, int y, int width, int height);
   virtual void MouseMove(int x, int y);
   virtual void MouseButton(int button, int action, int mods);
   virtual void MouseWheel(int x, int y);
@@ -133,8 +132,8 @@ private:
   unsigned              _flags;
   double                _perc;
   double                _lastPerc;
-  unsigned              _numPixels[2];
-  int                   _fixedPixels;
+  unsigned              _pixels[2];
+  int                   _fixed;
   int                   _buffered;
   ViewTabUI*            _tab;
   Window*               _window;

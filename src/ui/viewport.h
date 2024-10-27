@@ -87,8 +87,6 @@ class ViewportUI : public BaseUI
     void                                _DrawAov();
     void                                _DrawPickMode();
     GLuint                              _texture;
-    //int*                                _pixels;
-    //int*                                _lowPixels;
     int                                 _width;
     int                                 _height;
     Camera*                             _camera;
@@ -97,7 +95,7 @@ class ViewportUI : public BaseUI
     short                               _interactionMode;
     bool                                _valid;
     bool                                _highlightSelection;
-    // usd imaging engine
+
     TfToken                             _aov;
     Engine*                             _engine;
     UsdPrim                             _root;

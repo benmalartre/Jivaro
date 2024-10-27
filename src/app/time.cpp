@@ -62,7 +62,6 @@ bool Time::PreviousFrame()
 
 bool Time::NextFrame()
 {
-  std::cout << "NEXT FRAME " << CurrentTime() << " " << _lastT << " " << _GetIncrement() << std::endl;
   _lastT = CurrentTime();
   float currentTime = _activeTime + _GetIncrement();
   if(currentTime > _endTime) {

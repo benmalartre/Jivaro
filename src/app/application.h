@@ -66,6 +66,7 @@ public:
   void SetFocusWindow(Window* window) { _focusWindow = window; };
   void AddWindow(Window* window);
   void RemoveWindow(Window* window);
+  void SetAllWindowsDirty();
 
   // popup
   PopupUI* GetPopup() { return _popup; };
@@ -93,7 +94,6 @@ public:
   Engine* GetActiveEngine();
   std::vector<Engine*> GetEngines() { return _engines; };
   */
-  void DirtyAllEngines();
 
   // notices callback
   void SelectionChangedCallback(const SelectionChangedNotice& n);

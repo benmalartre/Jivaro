@@ -405,7 +405,7 @@ Window::Resize(unsigned width, unsigned height)
   _height = height;
 
   CollectLeaves();
-  _mainView->Resize(0, 0, _width, _height, true);
+  _mainView->Resize(0, 0, _width, _height);
   _splitter->Resize(_width, _height);
 
   if(_width <= 0 || _height <= 0)_valid = false;
@@ -859,7 +859,7 @@ void Window::DragSplitter(int x, int y)
 {
   if(_activeView) {
     _activeView->GetPercFromMousePosition(x, y);
-    _mainView->Resize(0, 0, _width, _height, false);
+    _mainView->Resize(0, 0, _width, _height);
     _splitter->Resize(_width, _height);
   }
 }
