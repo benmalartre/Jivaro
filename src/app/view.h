@@ -104,7 +104,7 @@ public:
   
   // callbacks
   bool DrawTab();
-  virtual void Draw();
+  virtual void Draw(bool force=false);
   virtual void Resize(int x, int y, int width, int height);
   virtual void MouseMove(int x, int y);
   virtual void MouseButton(int button, int action, int mods);

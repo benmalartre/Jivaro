@@ -473,7 +473,7 @@ bool ViewportUI::Draw()
   Application* app = Application::Get();
   Window* window = GetWindow();
   if (!_initialized)Init();
-  if(!_valid || (Time::Get()->IsPlaying() && !app->IsPlaybackViewport(this)))return false;  
+  if(!_valid)return false;  
   
   if (_model->GetStage() != nullptr) {
     Render();

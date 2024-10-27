@@ -139,7 +139,7 @@ public:
   
   // draw
   void SetGLContext();
-  void Draw();
+  void Draw(bool force);
   void DrawPopup(PopupUI* popup);
   bool PickSplitter(double mX, double mY);
   void SetIdle(bool value){_idle=value;};

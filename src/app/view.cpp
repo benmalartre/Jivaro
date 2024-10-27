@@ -234,12 +234,12 @@ View::DrawTab()
 }
 
 void 
-View::Draw()
+View::Draw(bool force)
 {
 
   if (!GetFlag(LEAF)) {
-    if (_left)_left->Draw();
-    if (_right)_right->Draw();
+    if (_left)_left->Draw(force);
+    if (_right)_right->Draw(force);
   }
   if(_tab) DrawTab();
 
@@ -247,12 +247,12 @@ View::Draw()
     bool isActive = _current->Draw();
 
     bool isViewport = _current->GetType() == UIType::VIEWPORT;
-    bool isPlaybackViewport = isViewport &&
+    bool isPlaybackViewport = isViewport && 
       Application::Get()->IsPlaybackViewport((ViewportUI*)_current);
 
     bool isTimeVarying = GetFlag(TIMEVARYING) && Time::Get()->IsPlaying();
 
-    if (!IsActive() && !isActive && !isTimeVarying && !isPlaybackViewport) 
+    if (!force && !IsActive() && !isActive && !isTimeVarying && !isPlaybackViewport) 
       SetClean();
 
   }

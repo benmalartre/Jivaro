@@ -40,7 +40,7 @@ const char* Application::name = "Jivaro";
 // singleton
 //----------------------------------------------------------------------------
 Application* Application::_singleton=nullptr;
-bool Application::PlaybackAllViewports = true;
+bool Application::PlaybackAllViewports = false;
 
 Application* Application::Get() { 
   if(_singleton==nullptr){

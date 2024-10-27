@@ -704,7 +704,7 @@ Window::SetGLContext()
 // draw
 //----------------------------------------------------------------------------
 void 
-Window::Draw()
+Window::Draw(bool force)
 {
   if (!_valid || _idle)return;
 
@@ -720,7 +720,7 @@ Window::Draw()
   ImGui::NewFrame();
 
   // draw views
-  _mainView->Draw();
+  _mainView->Draw(force);
 
   // draw splitters
   _splitter->Draw();
@@ -763,7 +763,7 @@ Window::DrawPopup(PopupUI* popup)
     ImGui::End();
   } else {
     Application::Get()->SetWindowDirty(this);
-    GetMainView()->Draw();
+    GetMainView()->Draw(false);
   }
 
   popup->Draw();
@@ -878,7 +878,7 @@ bool Window::Update()
     return false;
   }
   SetGLContext();
-  Draw();
+  Draw(false);
   return true;
 }
 
@@ -1327,7 +1327,7 @@ WindowSizeCallback(GLFWwindow* window, int width, int height)
   Window* parent = (Window*)glfwGetWindowUserPointer(window);
   parent->SetGLContext();
   parent->Resize(width, height);
-  parent->Draw();
+  parent->Draw(true);
 }
 
 static void _RecurseSplitRandomLayout(View* view, size_t depth, size_t maxDepth)

@@ -49,7 +49,7 @@ void ModalBase::Term()
 void ModalBase::Loop()
 {
   while (!glfwWindowShouldClose(_window->GetGlfwWindow()) && _status == ACTIVE) {
-    _window->Draw();
+    _window->Draw(false);
     glfwPollEvents();
     _LoopImpl();
   }
