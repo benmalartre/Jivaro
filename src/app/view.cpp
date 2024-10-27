@@ -236,7 +236,6 @@ View::DrawTab()
 void 
 View::Draw(bool force)
 {
-
   if (!GetFlag(LEAF)) {
     if (_left)_left->Draw(force);
     if (_right)_right->Draw(force);
@@ -248,7 +247,6 @@ View::Draw(bool force)
     bool isPlaybackViewport = isViewport && 
       Application::Get()->IsPlaybackViewport((ViewportUI*)_current);
 
-    if(isViewport)std::cout << _current->GetName() << " is active viewport ? " << isPlaybackViewport << std::endl;
     bool isPlaying = Time::Get()->IsPlaying();
     bool isTimeVarying = GetFlag(TIMEVARYING) && isPlaying;
     bool isEdited = _current->Draw();
