@@ -136,7 +136,7 @@ void TimelineUI::MouseMove(int x, int y)
       time->SetActiveTime(_frame);
       AttributeChangedNotice().Send();
       _lastFrame = _frame;
-      _parent->GetWindow()->ForceRedraw();
+      _parent->SetDirty();
     }
   }
   if (_parent->GetFlag(View::INTERACTING) || _parent->GetFlag(View::OVER))

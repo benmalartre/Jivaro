@@ -55,7 +55,7 @@ static ImGuiWindowFlags JVR_BACKGROUND_FLAGS =
 //----------------------------------------------------------------------------
 Window::Window(const std::string& name, const GfVec4i& dimension, bool fullscreen, Window* parent) :
   _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), _hoveredView(NULL),
-  _splitter(NULL), _dragSplitter(false), _fontSize(16.f), _name(name), _forceRedraw(3), _idle(false), 
+  _splitter(NULL), _dragSplitter(false), _fontSize(16.f), _name(name), _idle(false), 
   _fbo(0), _tex(0), _layout(std::numeric_limits<int>::max()), _needUpdateLayout(true)
 {
   GLFWmonitor* monitor = NULL;
@@ -80,13 +80,9 @@ Window::Window(const std::string& name, const GfVec4i& dimension, bool fullscree
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
   
-#ifdef __APPLE__
   glfwWindowHint(GLFW_DOUBLEBUFFER, false);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-#else
-  glfwWindowHint(GLFW_DOUBLEBUFFER, true);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
-#endif
+
   glfwWindowHint(GLFW_STENCIL_BITS, 8);
   glfwWindowHint(GLFW_SAMPLES, 4);
 
@@ -315,14 +311,6 @@ static void _RawLayout(Window* window)
   new TimelineUI(timelineView);
 }
 
-// force redraw
-//----------------------------------------------------------------------------
-void
-Window::ForceRedraw()
-{
-  for (View* leaf : _leaves)leaf->SetFlag(View::FORCEREDRAW);
-  _forceRedraw++;
-}
 
 void
 Window::ClearViews()
@@ -393,7 +381,12 @@ Window::SetViewportMessage(const std::string &message)
     view->SetViewportMessage(message);
 }
 
-
+void 
+Window::DirtyAllViews()
+{
+  for(auto& view: _views)
+    view->SetDirty();
+}
 
 // Resize
 //----------------------------------------------------------------------------
@@ -432,6 +425,8 @@ Window::Resize(unsigned width, unsigned height)
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _tex, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
   }
+
+  DirtyAllViews();
 }
 
 // Layout
@@ -492,6 +487,10 @@ Window::SetActiveView(View* view)
     _activeView->Focus(true);
     _activeView->SetFlag(View::ACTIVE);
     _activeView->SetDirty();
+
+    BaseUI* ui = _activeView->GetCurrentUI();
+    if(ui && ui->GetType() == UIType::VIEWPORT)
+      Application::Get()->SetPlaybackViewport((ViewportUI*)ui);
   }
   else _activeView = NULL;
 }
@@ -591,7 +590,6 @@ Window::RemoveView(View* view)
 
   delete view;
   Resize(_width, _height);
-  ForceRedraw();
   _mainView->SetDirty();
 }
 
@@ -722,8 +720,7 @@ Window::Draw()
   ImGui::NewFrame();
 
   // draw views
-  if (_mainView)_mainView->Draw(_forceRedraw > 0);
-  _forceRedraw = GfMax(0, _forceRedraw - 1);
+  _mainView->Draw();
 
   // draw splitters
   _splitter->Draw();
@@ -766,7 +763,7 @@ Window::DrawPopup(PopupUI* popup)
     ImGui::End();
   } else {
     Application::Get()->SetWindowDirty(this);
-    GetMainView()->Draw(true);
+    GetMainView()->Draw();
   }
 
   popup->Draw();
@@ -858,6 +855,7 @@ void Window::DragSplitter(int x, int y)
     _activeView->GetPercFromMousePosition(x, y);
     _mainView->Resize(0, 0, _width, _height);
     _splitter->Resize(_width, _height);
+    DirtyAllViews();
   }
 }
 
@@ -1194,6 +1192,7 @@ MouseMoveCallback(GLFWwindow* window, double x, double y)
   ImGui::SetCurrentContext(parent->GetContext());
   View* hovered = parent->GetViewUnderMouse((int)x, (int)y);
   View* active = parent->GetActiveView();
+  Time* time = Time::Get();
     
   bool splitterHovered = parent->PickSplitter(x, y);
 
@@ -1206,8 +1205,10 @@ MouseMoveCallback(GLFWwindow* window, double x, double y)
       active->MouseMove(x, y);
     } else {
       if (hovered) {
-        parent->SetHoveredView(hovered);
-        hovered->MouseMove(x, y);
+        if(!time->IsPlaying()) {
+          parent->SetActiveView(hovered);
+          hovered->MouseMove(x, y);
+        }
       }
     }
   }

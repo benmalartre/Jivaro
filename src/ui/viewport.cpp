@@ -71,25 +71,8 @@ ViewportUI::ViewportUI(View* parent)
               GfVec3d(0,1,0));
   
   const GfVec2i resolution(GetWindow()->GetResolution());
-  {
-    _drawTarget = GlfDrawTarget::New(resolution, false);
-    _drawTarget->Bind();
-    _drawTarget->AddAttachment("color", GL_RGBA, GL_FLOAT, GL_RGBA);
-    _drawTarget->AddAttachment("depth", GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_COMPONENT32F);
-    auto color = _drawTarget->GetAttachment("color");
-    _drawTexId = color->GetGlTextureName();
-    _drawTarget->Unbind();
-  }
-  
-  {
-    _toolTarget = GlfDrawTarget::New(resolution, false);
-    _toolTarget->Bind();
-    _toolTarget->AddAttachment("color", GL_RGBA, GL_FLOAT, GL_RGBA);
-    _toolTarget->AddAttachment("depth", GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_COMPONENT32F);
-     auto color = _toolTarget->GetAttachment("color");
-    _toolTexId = color->GetGlTextureName();
-    _toolTarget->Unbind();
-  }
+  _BuildDrawTargets(resolution);
+
 }
 
 // destructor
@@ -103,6 +86,25 @@ ViewportUI::~ViewportUI()
     app->GetModel()->RemoveEngine(_engine);
     delete _engine;
   }
+}
+
+void ViewportUI::_BuildDrawTargets(const pxr::GfVec2i &resolution)
+{
+  _drawTarget = GlfDrawTarget::New(resolution, false);
+  _drawTarget->Bind();
+  _drawTarget->AddAttachment("color", GL_RGBA, GL_FLOAT, GL_RGBA);
+  _drawTarget->AddAttachment("depth", GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_COMPONENT32F);
+  auto color = _drawTarget->GetAttachment("color");
+  _drawTexId = color->GetGlTextureName();
+  _drawTarget->Unbind();
+
+  _toolTarget = GlfDrawTarget::New(resolution, false);
+  _toolTarget->Bind();
+  _toolTarget->AddAttachment("color", GL_RGBA, GL_FLOAT, GL_RGBA);
+  _toolTarget->AddAttachment("depth", GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_COMPONENT32F);
+   color = _toolTarget->GetAttachment("color");
+  _toolTexId = color->GetGlTextureName();
+  _toolTarget->Unbind();
 }
 
 void ViewportUI::UpdateLighting()
@@ -369,7 +371,7 @@ void ViewportUI::Render()
   const float& h = GetHeight();
   const float& w = GetWidth();
 
-  _engine->SetRenderViewport(GfVec4d(0, wh-(h), w, h));
+  _engine->SetRenderSize(w, h);
 
   _engine->SetCameraMatrices(
     _camera->GetViewMatrix(),
@@ -382,10 +384,7 @@ void ViewportUI::Render()
       paths.push_back(prim.GetPrimPath());*/
   //_engine->SetRendererAov(_aov);
 
-  _engine->Prepare();
 
-  // do the render
-  _engine->Render();
 
 
 
@@ -404,12 +403,16 @@ void ViewportUI::Render()
   */
   // clear to black
   _drawTarget->Bind();
+  _drawTarget->SetSize(GfVec2i(GetWidth(), GetHeight()));
   glEnable(GL_DEPTH_TEST);
   glClearColor(0.5,0.5,0.5,1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  if (_model->GetStage()->HasDefaultPrim())
+  if (_model->GetStage()->HasDefaultPrim()) {
+    _engine->Prepare();
     _engine->Render();
+  }
+    
 
   _drawTarget->Unbind();
 }
@@ -473,7 +476,7 @@ bool ViewportUI::Draw()
   Application* app = Application::Get();
   Window* window = GetWindow();
   if (!_initialized)Init();
-  if(!_valid)return false;  
+  if(!_valid || (Time::Get()->IsPlaying() && !app->IsPlaybackViewport(this)))return false;  
   
   if (_model->GetStage() != nullptr) {
     Render();
@@ -564,7 +567,7 @@ bool ViewportUI::Draw()
     ImGui::End();
     ImGui::PopStyleColor();
   
-    return GetView()->IsInteracting();
+    return ImGui::IsAnyItemActive() || GetView()->IsInteracting();
   }
   /*
   if(_pixels)
@@ -619,6 +622,7 @@ void ViewportUI::Resize()
 {
   Window* window = GetWindow();
   if(!_initialized)return;
+
   if(GetWidth() <= 0 || GetHeight() <= 0)_valid = false;
   else _valid = true;
   
@@ -630,15 +634,10 @@ void ViewportUI::Resize()
     GfCamera::FOVHorizontal
   );
 
+
   const GfVec2i& targetSize = _drawTarget->GetSize();
   if (window->GetWidth() != targetSize[0] || window->GetHeight() != targetSize[1]) {
-    _drawTarget->Bind();
-    _drawTarget->SetSize(GfVec2i(window->GetWidth(), window->GetHeight()));
-    _drawTarget->Unbind();
-
-    _toolTarget->Bind();
-    _toolTarget->SetSize(GfVec2i(window->GetWidth(), window->GetHeight()));
-    _toolTarget->Unbind();
+    _BuildDrawTargets(pxr::GfVec2i(window->GetWidth(), window->GetHeight()));
   }
   GetView()->SetDirty();
 }

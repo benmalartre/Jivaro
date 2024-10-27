@@ -79,6 +79,9 @@ class ViewportUI : public BaseUI
 
     void SetMessage(const std::string& message){_message = message;};
 
+  protected:
+    void _BuildDrawTargets(const pxr::GfVec2i &resolution);
+
     /*
     HdSelectionSharedPtr _Pick(GfVec2i const& startPos,
       GfVec2i const& endPos, TfToken const& pickTarget);*/

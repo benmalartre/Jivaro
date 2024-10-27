@@ -119,8 +119,7 @@ Application::UpdatePopup()
     delete _popup;
   }
   _popup = nullptr;
-  _mainWindow->ForceRedraw();
-  for (auto& childWindow : _childWindows)childWindow->ForceRedraw();
+  SetAllWindowsDirty();
 }
 
 void
@@ -170,12 +169,13 @@ Application::BrowseFile(int x, int y, const char* folder, const char* filters[],
 void 
 Application::Init(unsigned width, unsigned height, bool fullscreen)
 {
+
   if(fullscreen) {
     _mainWindow = CreateFullScreenWindow(name);
   } else {
     _mainWindow = CreateStandardWindow(name, GfVec4i(0,0,width, height));
   }
-  
+
   _activeWindow = _mainWindow;
   Time::Get()->Init(1, 101, 24);
 
@@ -288,18 +288,20 @@ Application::Update()
     _needCaptureFramebuffers = false;
   }
   */
-
-  glfwPollEvents();
-  //Time::Get()->ComputeFramerate();
-
-  Time* time = Time::Get();
+ Time* time = Time::Get();
+ 
+  static bool vSync = true;
+  if(vSync && time->IsPlaying())
+    glfwPollEvents();
+  else
+    glfwWaitEvents();
 
   float currentTime(time->GetActiveTime());
   int playback = time->Playback();
   if( playback == Time::PLAYBACK_WAITING) return true;
   
-  // execution if needed
-  if (_popup || playback > Time::PLAYBACK_IDLE || Application::Get()->IsToolInteracting()) {
+  // update model
+  if (!_popup && (playback > Time::PLAYBACK_IDLE || Application::Get()->IsToolInteracting())) {
     if(_model->GetExec() ) 
       _model->UpdateExec(currentTime);
 
@@ -443,11 +445,10 @@ Application::SelectionChangedCallback(const SelectionChangedNotice& n)
 {  
   if(_mainWindow->GetTool()->IsActive())
     _mainWindow->GetTool()->ResetSelection();
-  _mainWindow->ForceRedraw();
+
   for (auto& window : _childWindows) {
     if(window->GetTool()->IsActive())
       window->GetTool()->ResetSelection();
-    window->ForceRedraw();
   }
   SetAllWindowsDirty();
 }
@@ -466,10 +467,8 @@ Application::SceneChangedCallback(const SceneChangedNotice& n)
 {
   Application::Get()->
   _mainWindow->GetTool()->ResetSelection();
-  _mainWindow->ForceRedraw();
   for (auto& window : _childWindows) {
     window->GetTool()->ResetSelection();
-    window->ForceRedraw();
   }
   
   SetAllWindowsDirty();
@@ -481,10 +480,8 @@ Application::AttributeChangedCallback(const AttributeChangedNotice& n)
   if (_model->GetExec()) 
     _model->UpdateExec(Time::Get()->GetActiveTime());
   
-  _mainWindow->ForceRedraw();
   _mainWindow->GetTool()->ResetSelection();
   for (auto& window : _childWindows) {
-    window->ForceRedraw();
     window->GetTool()->ResetSelection();
   }
 
@@ -497,12 +494,7 @@ Application::TimeChangedCallback(const TimeChangedNotice& n)
 {
   if (_model->GetExec()) 
     _model->UpdateExec(Time::Get()->GetActiveTime());
-    
-  
-  _mainWindow->ForceRedraw();
-  for (auto& window : _childWindows) {
-    window->ForceRedraw();
-  }
+
   SetAllWindowsDirty();
 }
 

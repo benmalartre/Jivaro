@@ -154,8 +154,6 @@ void CurveEditorUI::Keyboard(int key, int scancode, int action, int mods)
         SdfFieldKeys->Default,
         VtValue(keyframe.value));
     }
-   
-    GetWindow()->ForceRedraw();
   }
 }
 

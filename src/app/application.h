@@ -13,6 +13,7 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 class PopupUI;
+class ViewportUI;
 class Engine;
 class Window;
 class Scene;
@@ -69,6 +70,10 @@ public:
   void SetWindowDirty(Window* window);
   void SetAllWindowsDirty();
 
+  // playback viewport
+  bool IsPlaybackViewport(ViewportUI* viewport) { return viewport == _viewport; };
+  void SetPlaybackViewport(ViewportUI* viewport){_viewport = viewport;};
+
   // popup
   PopupUI* GetPopup() { return _popup; };
   void SetPopup(PopupUI* popup);
@@ -121,6 +126,7 @@ private:
 
   // uis
   PopupUI*                          _popup;
+  ViewportUI*                       _viewport;
 
    // command
   std::vector<CALLBACK_FN>          _deferred;

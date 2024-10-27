@@ -104,7 +104,7 @@ public:
   
   // callbacks
   bool DrawTab();
-  virtual void Draw(bool forceRedraw);
+  virtual void Draw();
   virtual void Resize(int x, int y, int width, int height);
   virtual void MouseMove(int x, int y);
   virtual void MouseButton(int button, int action, int mods);
@@ -127,14 +127,13 @@ public:
   bool IsInteracting();
 
 private:
-  GfVec2f          _min;
-  GfVec2f          _max;
+  GfVec2f               _min;
+  GfVec2f               _max;
   unsigned              _flags;
   double                _perc;
   double                _lastPerc;
   unsigned              _pixels[2];
   int                   _fixed;
-  int                   _buffered;
   ViewTabUI*            _tab;
   Window*               _window;
   View*                 _left;

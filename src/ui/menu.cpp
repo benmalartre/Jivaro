@@ -76,7 +76,7 @@ void MenuUI::Item::Draw(bool* modified, size_t itemIdx)
   else {
     if (ImGui::MenuItem(label.c_str(), NULL, selected, enabled) && callback) {
       callback();
-      window->ForceRedraw();
+      Application::Get()->SetAllWindowsDirty();
     }
   }
 }

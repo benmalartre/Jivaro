@@ -31,7 +31,6 @@ View::View(View* parent, const GfVec2f& min, const GfVec2f& max, unsigned flags)
   , _max(max)
   , _flags(flags)
   , _perc(0.5)
-  , _buffered(0)
   , _fixed(-1)
   , _current(NULL)
   , _currentIdx(-1)
@@ -49,7 +48,6 @@ View::View(View* parent, int x, int y, int w, int h, unsigned flags)
   , _max(GfVec2f(x+w, y+h))
   , _flags(flags)
   , _perc(0.5)
-  , _buffered(0)
   , _fixed(-1)
   , _current(NULL)
   , _currentIdx(-1)
@@ -236,21 +234,28 @@ View::DrawTab()
 }
 
 void 
-View::Draw(bool forceRedraw)
+View::Draw()
 {
+  static bool playbackAllViewport = false;
+
   if (!GetFlag(LEAF)) {
-    if (_left)_left->Draw(forceRedraw);
-    if (_right)_right->Draw(forceRedraw);
+    if (_left)_left->Draw();
+    if (_right)_right->Draw();
   }
-  else {
-    if (DrawTab() || forceRedraw) {
-      Time* time = Time::Get();
-      if (_current && (forceRedraw || GetFlag(INTERACTING) || GetFlag(DIRTY))) {
-        if (!_current->Draw() && !IsActive() && !(GetFlag(TIMEVARYING) && time->IsPlaying())) {
-          SetClean();
-        }
-      }
-    }
+  if(_tab) DrawTab();
+
+  if (_current && (GetFlag(INTERACTING) || GetFlag(DIRTY))) {
+    bool isActive = _current->Draw();
+
+    bool isViewport = _current->GetType() == UIType::VIEWPORT;
+    bool isPlaybackViewport = playbackAllViewport || (isViewport &&
+      Application::Get()->IsPlaybackViewport((ViewportUI*)_current));
+
+    bool isTimeVarying = GetFlag(TIMEVARYING) && Time::Get()->IsPlaying();
+
+    if (!IsActive() && !isActive && !isTimeVarying && !isPlaybackViewport) 
+      SetClean();
+
   }
 }
 
@@ -513,10 +518,6 @@ View::Resize(int x, int y, int w, int h)
   {
     if(_current)_current->Resize();
   }
-  SetDirty();
-  
-  _window->ForceRedraw();
-  
 }
 
 void 
@@ -629,17 +630,13 @@ View::RescaleRight()
 void
 View::SetClean()
 {
-  if (_buffered <= 0) {
-    ClearFlag(DIRTY);
-  }
-  else _buffered--;
+  ClearFlag(DIRTY);
 }
 
 void
 View::SetDirty()
 {
   SetFlag(DIRTY);
-  _buffered = 3;
 }
 
 void 

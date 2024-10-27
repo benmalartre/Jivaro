@@ -135,13 +135,13 @@ public:
   void SetLayout();
   void SetDesiredLayout(size_t layout);
   size_t GetLayout();
+  void DirtyAllViews();
   
   // draw
   void SetGLContext();
   void Draw();
   void DrawPopup(PopupUI* popup);
   bool PickSplitter(double mX, double mY);
-  void ForceRedraw();
   void SetIdle(bool value){_idle=value;};
   bool IsIdle(){return _idle;};
   void CaptureFramebuffer();
@@ -199,7 +199,6 @@ private:
   int                   _height;
   unsigned*             _pixels;
   bool                  _valid;
-  int                   _forceRedraw;
   int                   _layout;
   bool                  _needUpdateLayout;
 

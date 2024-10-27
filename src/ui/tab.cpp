@@ -194,10 +194,9 @@ void ViewTabUI::Focus(bool state)
 void ViewTabUI::MouseButton(int button, int action, int mods)
 {
   if (action == GLFW_RELEASE && button == GLFW_MOUSE_BUTTON_LEFT) {
-    if (_invade) {
-      _parent->SetDirty();
-      _parent->GetWindow()->ForceRedraw();
-    }
+    if (_invade)
+      _parent->GetWindow()->DirtyAllViews();
+    
     _invade = false;
   }
 }
