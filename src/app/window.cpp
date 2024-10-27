@@ -385,13 +385,14 @@ void
 Window::DirtyAllViews()
 {
   // when playback is ON we only dirty playback viewport
-  for(auto& view: _views) 
-    if(Time::Get()->IsPlaying()) {
-      BaseUI* ui = view->GetCurrentUI();
-      if(ui && ui->GetType() == UIType::VIEWPORT && IsPlaybackViewport((ViewportUI*)ui))
+  for(auto& view: _views) {
+    BaseUI* ui = view->GetCurrentUI();
+    if(ui && ui->GetType() == UIType::VIEWPORT) {
+      if(!Time::Get()->IsPlaying() || Application::Get()->IsPlaybackViewport((ViewportUI*)ui))
         view->SetDirty();
-    } else
-      view->SetDirty();
+    } 
+    else view->SetDirty();
+  }
 }
 
 // Resize
