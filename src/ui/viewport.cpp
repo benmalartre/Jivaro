@@ -90,7 +90,6 @@ ViewportUI::~ViewportUI()
 
 void ViewportUI::_BuildDrawTargets(const pxr::GfVec2i &resolution)
 {
-  std::cout << "VIEWPORT REBUILD DRAW TARGETS" << std::endl;
   _drawTarget = GlfDrawTarget::New(resolution, false);
   _drawTarget->Bind();
   _drawTarget->AddAttachment("color", GL_RGBA, GL_FLOAT, GL_RGBA);
