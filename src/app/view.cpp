@@ -244,17 +244,21 @@ View::Draw(bool force)
   if(_tab) DrawTab();
 
   if (_current && (GetFlag(INTERACTING) || GetFlag(DIRTY))) {
-    bool isActive = _current->Draw();
-
     bool isViewport = _current->GetType() == UIType::VIEWPORT;
     bool isPlaybackViewport = isViewport && 
       Application::Get()->IsPlaybackViewport((ViewportUI*)_current);
 
-    bool isTimeVarying = GetFlag(TIMEVARYING) && Time::Get()->IsPlaying();
+    if(isViewport)std::cout << _current->GetName() << " is active viewport ? " << isPlaybackViewport << std::endl;
+    bool isPlaying = Time::Get()->IsPlaying();
+    bool isTimeVarying = GetFlag(TIMEVARYING) && isPlaying;
+    bool isEdited = _current->Draw();
 
-    if (!force && !IsActive() && !isActive && !isTimeVarying && !isPlaybackViewport) 
+    bool doClean = isViewport ? 
+      !isPlaybackViewport && isPlaying: 
+      !force && !IsActive() && !isEdited && !isTimeVarying;
+
+    if ( doClean) 
       SetClean();
-
   }
 }
 

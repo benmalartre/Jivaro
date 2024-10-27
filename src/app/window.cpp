@@ -384,8 +384,14 @@ Window::SetViewportMessage(const std::string &message)
 void 
 Window::DirtyAllViews()
 {
-  for(auto& view: _views)
-    view->SetDirty();
+  // when playback is ON we only dirty playback viewport
+  for(auto& view: _views) 
+    if(Time::Get()->IsPlaying()) {
+      BaseUI* ui = view->GetCurrentUI();
+      if(ui && ui->GetType() == UIType::VIEWPORT && IsPlaybackViewport((ViewportUI*)ui))
+        view->SetDirty();
+    } else
+      view->SetDirty();
 }
 
 // Resize

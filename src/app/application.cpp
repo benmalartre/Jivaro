@@ -351,16 +351,15 @@ Application::RemoveWindow(Window* window)
 void 
 Application::SetWindowDirty(Window* window)
 {
-  for(auto& view: window->GetViews())
-    view->SetDirty();
+  window->DirtyAllViews();
 }
 
 void 
 Application::SetAllWindowsDirty()
 {
-  SetWindowDirty(_mainWindow);
+  _mainWindow->DirtyAllViews();
   for(auto& childWindow: _childWindows)
-    SetWindowDirty(childWindow);
+    childWindow->DirtyAllViews();
 }
 
 // playback viewport
