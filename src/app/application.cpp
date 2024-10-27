@@ -346,13 +346,18 @@ Application::RemoveWindow(Window* window)
 }
 
 void 
+Application::SetWindowDirty(Window* window)
+{
+  for(auto& view: window->GetViews())
+    view->SetDirty();
+}
+
+void 
 Application::SetAllWindowsDirty()
 {
-  for(auto& view: _mainWindow->GetViews())
-    view->SetDirty();
+  SetWindowDirty(_mainWindow);
   for(auto& childWindow: _childWindows)
-    for(auto& view: childWindow->GetViews())
-      view->SetDirty();
+    SetWindowDirty(childWindow);
 }
 
 void 

@@ -765,10 +765,7 @@ Window::DrawPopup(PopupUI* popup)
       ImVec2(0, 0), ImVec2(1, 1), ImColor(100, 100, 100, 255));
     ImGui::End();
   } else {
-    for (Engine* engine : Application::Get()->GetModel()->GetEngines()) {
-      engine->SetHighlightSelection(false);
-      engine->SetDirty(true);
-    }
+    Application::Get()->SetWindowDirty(this);
     GetMainView()->Draw(true);
   }
 

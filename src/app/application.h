@@ -66,6 +66,7 @@ public:
   void SetFocusWindow(Window* window) { _focusWindow = window; };
   void AddWindow(Window* window);
   void RemoveWindow(Window* window);
+  void SetWindowDirty(Window* window);
   void SetAllWindowsDirty();
 
   // popup

@@ -102,9 +102,9 @@ SplitterUI::Draw()
   }
 
   ImDrawList* drawList = ImGui::GetForegroundDrawList();
-  ImU32 color = ImColor(1.f, 0.f, 0.f);
+  ImU32 color = ImColor(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
   for(auto view : views)
-    if(view->GetFlag(View::LEAF))
+    if(view->GetFlag(View::LEAF) && view->GetFlag(View::DIRTY))
       drawList->AddRect(view->GetMin(), view->GetMax(), color, 0.f, 0, 1.f);
 
   ImGui::End();

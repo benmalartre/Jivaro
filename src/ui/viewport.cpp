@@ -254,7 +254,6 @@ void ViewportUI::MouseButton(int button, int action, int mods)
 
     }
   }
-  _engine->SetDirty(true);
   _parent->SetDirty();
 
   Application* app = Application::Get();
@@ -305,7 +304,6 @@ void ViewportUI::MouseMove(int x, int y)
         break;
       }
     }
-    _engine->SetDirty(true);
     _parent->SetDirty();
   } else {
     tool->Pick(x - GetX(), y - GetY(), GetWidth(), GetHeight());
@@ -322,7 +320,6 @@ void ViewportUI::MouseWheel(int x, int y)
     static_cast<double>(x) / static_cast<double>(GetWidth()), 
     static_cast<double>(x) / static_cast<double>(GetHeight())
   );
-  _engine->SetDirty(true);
   _parent->SetDirty();
 }
 
@@ -335,7 +332,6 @@ void ViewportUI::Keyboard(int key, int scancode, int action, int mods)
       case GLFW_KEY_A:
       {
         _camera->FrameSelection(Application::Get()->GetModel()->GetStageBoundingBox());
-        _engine->SetDirty(true);
         break;
       }
       case GLFW_KEY_F:
@@ -343,7 +339,6 @@ void ViewportUI::Keyboard(int key, int scancode, int action, int mods)
         Model* model = app->GetModel();
         if (model->GetSelection()->IsEmpty())return;
         _camera->FrameSelection(model->GetSelectionBoundingBox());
-        _engine->SetDirty(true);
         break;
       }
       case GLFW_KEY_S:
@@ -417,8 +412,6 @@ void ViewportUI::Render()
     _engine->Render();
 
   _drawTarget->Unbind();
-  
-  _engine->SetDirty(false);
 }
 
 void 
@@ -483,10 +476,8 @@ bool ViewportUI::Draw()
   if(!_valid)return false;  
   
   if (_model->GetStage() != nullptr) {
-    if ( _engine->IsDirty() || !_engine->IsConverged()) {
-      Render();
-    }
-
+    Render();
+    
     Tool* tool = window->GetTool();
     const bool shouldDrawTool = tool->IsActive() && this->GetView()->GetFlag(View::ACTIVE);
    
@@ -557,7 +548,6 @@ bool ViewportUI::Draw()
 
     // shaded mode
     if (UI::AddComboWidget("DrawMode", DRAW_MODE_NAMES, IM_ARRAYSIZE(DRAW_MODE_NAMES), _drawMode, 250)) {
-      _engine->SetDirty(true);
       GetView()->SetFlag(View::DISCARDMOUSEBUTTON);
     }
     ImGui::SameLine();
@@ -650,8 +640,7 @@ void ViewportUI::Resize()
     _toolTarget->SetSize(GfVec2i(window->GetWidth(), window->GetHeight()));
     _toolTarget->Unbind();
   }
-
-  _engine->SetDirty(true);
+  GetView()->SetDirty();
 }
 
 static GfVec4i _ViewportMakeCenteredIntegral(GfVec4f& viewport)
