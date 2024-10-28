@@ -162,7 +162,7 @@ public:
   };
   inline int GetActiveTool(){return _activeTool;};
   inline void RestoreLastActiveTool(){_activeTool=_lastActiveTool;};
-  bool UpdateActiveTool(int mouseX, int mouseY);
+  void UpdateActiveTool(int mouseX, int mouseY);
 
   // splitter
   void BeginDragSplitter(){_dragSplitter=true;};

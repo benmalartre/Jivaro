@@ -47,7 +47,7 @@ private:
   void            _ResetActiveTool();
   short           _last;
   short           _current;
-  GfVec4f    _viewport;
+  GfVec4f         _viewport;
   bool            _interacting;
   BaseHandle*     _active;
   short           _activeAxis;

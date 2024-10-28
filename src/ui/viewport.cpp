@@ -367,6 +367,7 @@ void ViewportUI::Render()
   Application* app = Application::Get();
   Window* window = GetWindow();
 
+  _engine->PollForAsynchronousUpdates();
   _engine->SetRenderViewport(
     pxr::GfVec4i(0, window->GetHeight() - GetHeight(), GetWidth(), GetHeight()));
 
@@ -380,11 +381,6 @@ void ViewportUI::Render()
   for (auto&& prim : GetModel()->GetSelection())
       paths.push_back(prim.GetPrimPath());*/
   //_engine->SetRendererAov(_aov);
-
-
-
-
-
 
   /*
   if (_highlightSelection) {
@@ -410,7 +406,6 @@ void ViewportUI::Render()
     _engine->Render();
   }
     
-
   _drawTarget->Unbind();
 }
 
@@ -479,6 +474,7 @@ bool ViewportUI::Draw()
     Render();
     
     Tool* tool = window->GetTool();
+    
     const bool shouldDrawTool = tool->IsActive() && this->GetView()->GetFlag(View::ACTIVE);
    
     if (shouldDrawTool) {

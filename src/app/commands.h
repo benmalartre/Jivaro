@@ -107,7 +107,9 @@ public:
   DuplicatePrimCommand(UsdStageRefPtr stage, const SdfPath& path);
   ~DuplicatePrimCommand() {};
   void Do() override;
-
+  
+private:
+  std::vector<Selection::Item> _selection;
 };
 
 //==================================================================================
@@ -120,6 +122,8 @@ public:
   ~DeletePrimCommand() {};
   void Do() override;
 
+private:
+  std::vector<Selection::Item> _selection;
 };
 
 //==================================================================================

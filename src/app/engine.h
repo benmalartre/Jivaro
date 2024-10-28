@@ -48,10 +48,6 @@ public:
   void SetRenderViewport(const pxr::GfVec4d &viewport);
 
   SdfPath FindIntersection(GfVec2f screenPos);
-  void InitExec(Scene* scene);
-  void UpdateExec(double time);
-  void TerminateExec();
-
   void ActivateShadows(bool active);
 
   void SetHighlightSelection(bool state) { _highlightSelection = state; };
@@ -59,6 +55,8 @@ public:
 
   Delegate* GetDelegate() { return _delegate; };
   GfFrustum GetFrustum();
+
+  bool PollForAsynchronousUpdates() const;
 
 protected:
   static HdPluginRenderDelegateUniqueHandle 
@@ -92,6 +90,7 @@ private:
   TfToken                             _curRendererPlugin;
 
   bool                                _highlightSelection;
+  bool                                _allowAsynchronousSceneProcessing;
 
   Delegate*                           _delegate;
 

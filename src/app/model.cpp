@@ -54,7 +54,9 @@ Model::Model()
   info.displayUnloadedPrimsWithBounds = true;
   const UsdImagingSceneIndices sceneIndices = UsdImagingCreateSceneIndices(info);
   _stageSceneIndex = sceneIndices.stageSceneIndex;
+
   AddSceneIndexBase(_stageSceneIndex);
+  
 };
 
 // destructor
@@ -101,25 +103,6 @@ Model::_LoadUsdStage(const std::string usdFilePath)
 }
 
 
-// init application
-//----------------------------------------------------------------------------
-void 
-Model::Init()
-{
-  // scene indices
-  _sceneIndexBases = HdMergingSceneIndex::New();
-  _finalSceneIndex = HdMergingSceneIndex::New();
-  _editableSceneIndex = _sceneIndexBases;
-  SetCurrentSceneIndex(_editableSceneIndex);
-
-  UsdImagingCreateSceneIndicesInfo info;
-  info.displayUnloadedPrimsWithBounds = true;
-  const UsdImagingSceneIndices sceneIndices = UsdImagingCreateSceneIndices(info);
-  _stageSceneIndex = sceneIndices.stageSceneIndex;
-  AddSceneIndexBase(_stageSceneIndex);
-  
-}
-
 void
 Model::Update(const float time)
 {
@@ -154,10 +137,6 @@ Model::InitExec()
   _execSceneIndex = ExecSceneIndex::New(_sceneIndexBases);
   _execSceneIndex->SetExec(_exec);
   SetCurrentSceneIndex(_execSceneIndex);
-
-  for(auto& engine: _engines) {
-    engine->InitExec(_exec->GetScene());
-  }
 }
 
 void
@@ -169,9 +148,6 @@ Model::UpdateExec(float time)
 void
 Model::TerminateExec()
 {
-  for (auto& engine : _engines) {
-    engine->TerminateExec();
-  }
   _finalSceneIndex->RemoveInputScene(_execSceneIndex);
   SetCurrentSceneIndex(_sceneIndexBases);
   _exec->TerminateExec(_stage);
@@ -208,15 +184,11 @@ Model::GetEditableSceneIndex()
 void 
 Model::SetCurrentSceneIndex(HdSceneIndexBaseRefPtr sceneIndex)
 {
-  std::cout << "Set Editable Scene Index" << sceneIndex << std::endl;
-
   if(_editableSceneIndex)
     _finalSceneIndex->RemoveInputScene(_editableSceneIndex);
   _editableSceneIndex = sceneIndex;
   _finalSceneIndex->AddInputScene(sceneIndex,
                                   SdfPath::AbsoluteRootPath());
-
-  std::cout << "Set Editable Scene Index done!" << sceneIndex << std::endl;
 }
 
 

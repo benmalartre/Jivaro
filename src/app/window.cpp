@@ -866,12 +866,12 @@ void Window::DragSplitter(int x, int y)
   }
 }
 
-bool Window::UpdateActiveTool(int x, int y)
+void Window::UpdateActiveTool(int x, int y)
 {
-  if(GetActiveView()) {
+  if(_tool.IsActive() && _tool.IsInteracting() &&GetActiveView())
     GetActiveView()->MouseMove(x, y);
-  }
-  return false;
+  else if(GetHoveredView())
+    GetHoveredView()->MouseMove(x, y);
 }
 
 bool Window::Update()

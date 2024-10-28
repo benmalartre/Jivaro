@@ -4,6 +4,7 @@
 #include <pxr/imaging/hd/light.h>
 #include <pxr/imaging/hd/rendererPlugin.h>
 #include <pxr/imaging/hd/rendererPluginRegistry.h>
+#include <pxr/imaging/hd/systemMessages.h>
 #include <pxr/imaging/hdx/pickTask.h>
 #include <pxr/imaging/hdx/simpleLightTask.h>
 #include <pxr/imaging/hdx/shadowTask.h>
@@ -59,7 +60,8 @@ Engine::Engine(HdSceneIndexBaseRefPtr sceneIndex, TfToken plugin)
     _renderDelegate(nullptr),
     _renderIndex(nullptr),
     _taskController(nullptr),
-    _taskControllerId("/defaultTaskController")
+    _taskControllerId("/defaultTaskController"),
+    _allowAsynchronousSceneProcessing(true)
 {
   _width = 512;
   _height = 512;
@@ -80,33 +82,6 @@ Engine::~Engine()
   delete _renderIndex;
   _renderDelegate = nullptr;
 }
-
-void Engine::InitExec(Scene* scene)
-{
-  /*
-  _Initialize();
-  _delegate = new Delegate(_renderIndex, SdfPath("/"));
-  _delegate->SetScene(scene);
-  */
-}
-
-
-void Engine::UpdateExec(double time)
-{
-  //_delegate->UpdateScene();
-}
-
-void Engine::TerminateExec()
-{
-  /*
-  _delegate->RemoveScene();
-  delete(_delegate);  
-  _delegate = NULL;
-  _Initialize();
-  */
-}
-
-
 
 void Engine::_Initialize()
 {
@@ -337,7 +312,8 @@ Engine::IsConverged() const
 }
 
 
-SdfPath Engine::FindIntersection(GfVec2f screenPos)
+SdfPath 
+Engine::FindIntersection(GfVec2f screenPos)
 {
   // create a narrowed frustum on the given position
   float normalizedXPos = screenPos[0] / _width;
@@ -379,11 +355,67 @@ SdfPath Engine::FindIntersection(GfVec2f screenPos)
   return path;
 }
 
-GfFrustum Engine::GetFrustum()
+GfFrustum 
+Engine::GetFrustum()
 {
   GfCamera gfCam;
   gfCam.SetFromViewAndProjectionMatrix(_camView, _camProj);
   return gfCam.GetFrustum();
 }
+
+bool
+Engine::PollForAsynchronousUpdates() const
+{
+  class _Observer : public HdSceneIndexObserver
+  {
+  public:
+    void PrimsAdded(
+      const HdSceneIndexBase &sender,
+      const AddedPrimEntries &entries) override
+    {
+
+      _changed = true;
+    }
+
+    void PrimsRemoved(
+      const HdSceneIndexBase &sender,
+      const RemovedPrimEntries &entries) override
+    {
+      _changed = true;
+    }
+
+    void PrimsDirtied(
+      const HdSceneIndexBase &sender,
+      const DirtiedPrimEntries &entries) override
+    {
+      _changed = true;
+    }
+
+    void PrimsRenamed(
+      const HdSceneIndexBase &sender,
+      const RenamedPrimEntries &entries) override
+    {
+      _changed = true;
+    }
+
+    bool IsChanged() { return _changed; }
+  private:
+    bool _changed = false;
+  };
+
+  if (_allowAsynchronousSceneProcessing && _renderIndex) {
+    if (HdSceneIndexBaseRefPtr si = _renderIndex->GetTerminalSceneIndex()) {
+      _Observer ob;
+      si->AddObserver(HdSceneIndexObserverPtr(&ob));
+      si->SystemMessage(HdSystemMessageTokens->asyncPoll, nullptr);
+      si->RemoveObserver(HdSceneIndexObserverPtr(&ob));
+      std::cout << "ASYNC SHIT CHANGED ? "<< ob.IsChanged() << std::endl;
+      return ob.IsChanged();
+    }
+  }
+  return false;
+}
+
+
 
 PXR_NAMESPACE_CLOSE_SCOPE

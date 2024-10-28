@@ -250,6 +250,9 @@ void CreatePrimCommand::Do() {
 DuplicatePrimCommand::DuplicatePrimCommand(UsdStageRefPtr stage, const SdfPath& path)
   : Command(true)
 {
+  Selection* selection = Application::Get()->GetModel()->GetSelection();
+  _selection = selection->GetItems();
+
   SdfPath destinationPath = SdfPath(path.GetString() + "_duplicate");
   UsdPrim sourcePrim = stage->GetPrimAtPath(path);
   SdfPrimSpecHandleVector stack = sourcePrim.GetPrimStack();
@@ -270,7 +273,11 @@ DuplicatePrimCommand::DuplicatePrimCommand(UsdStageRefPtr stage, const SdfPath& 
 }
 
 void DuplicatePrimCommand::Do() {
+  Selection* selection = Application::Get()->GetModel()->GetSelection();
+  std::vector<Selection::Item> current = selection->GetItems();
   _inverse.Invert();
+  selection->SetItems(_selection);
+  _selection = current;
   SceneChangedNotice().Send();
 }
 
@@ -280,6 +287,9 @@ void DuplicatePrimCommand::Do() {
 DeletePrimCommand::DeletePrimCommand(UsdStageRefPtr stage, const SdfPathVector& paths)
   : Command(true)
 {
+  Selection* selection = Application::Get()->GetModel()->GetSelection();
+  _previous = selection->GetItems();
+
   for (auto& path : paths) {
     stage->RemovePrim(path);
   }
@@ -288,7 +298,11 @@ DeletePrimCommand::DeletePrimCommand(UsdStageRefPtr stage, const SdfPathVector& 
 }
 
 void DeletePrimCommand::Do() {
+  Selection* selection = Application::Get()->GetModel()->GetSelection();
+  std::vector<Selection::Item> current = selection->GetItems();
   _inverse.Invert();
+  selection->SetItems(_selection);
+  _selection = current;
   SceneChangedNotice().Send();
 }
 
@@ -558,6 +572,7 @@ SetAttributeCommand::SetAttributeCommand(UsdAttributeVector& attributes,
   const VtValue& value, const VtValue& previous, const UsdTimeCode& timeCode)
   : Command(true)
 {
+  std::cout << "Set Attribute Command Called" << value << std::endl;
   for (auto& attribute : attributes) {
     attribute.Set(previous, timeCode);
   }

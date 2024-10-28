@@ -305,10 +305,12 @@ Application::Update()
   if (!_popup && (playback > Time::PLAYBACK_IDLE || Application::Get()->IsToolInteracting())) {
     if(_model->GetExec() ) 
       _model->UpdateExec(currentTime);
-
-    _model->Update(currentTime);
     SetAllWindowsDirty();
   }
+
+  _model->Update(currentTime);
+    //
+  //}
   
   // draw popup
   if (_popup) {

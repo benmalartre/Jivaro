@@ -38,6 +38,35 @@ ToolUI::~ToolUI()
 {
 }
 
+
+UsdGeomMesh _GetSelectedMesh()
+{
+  UsdStageRefPtr stage = Application::Get()->GetModel()->GetStage();
+  Selection* selection = Application::Get()->GetModel()->GetSelection();
+  if (selection->GetNumSelectedItems() > 0) {
+    Selection::Item& item = selection->GetItem(0);
+    UsdPrim prim = stage->GetPrimAtPath(item.path);
+    if (prim.IsValid() && prim.IsA<UsdGeomMesh>()) {
+      return UsdGeomMesh(prim);
+    }
+  }
+  return UsdGeomMesh();
+}
+
+static void _SetRandomColor()
+{
+  UsdGeomMesh usdMesh = _GetSelectedMesh();
+  UsdGeomPrimvarsAPI primvarsApi(usdMesh);
+  UsdGeomPrimvar colorPrimvar =
+    primvarsApi.CreatePrimvar(UsdGeomTokens->primvarsDisplayColor, SdfValueTypeNames->Color3fArray);
+  colorPrimvar.SetInterpolation(UsdGeomTokens->constant);
+  colorPrimvar.SetElementSize(1);
+  pxr::VtArray<pxr::GfVec3f> colors = { {RANDOM_0_1, RANDOM_0_1, RANDOM_0_1} };
+  colorPrimvar.Set(colors);
+
+  SceneChangedNotice().Send();
+}
+
 static void
 _SetupBVHInstancer(UsdStageRefPtr& stage, BVH* bvh)
 {
@@ -91,19 +120,6 @@ _SetupBVHInstancer(UsdStageRefPtr& stage, BVH* bvh)
 
 }
 
-UsdGeomMesh _GetSelectedMesh()
-{
-  UsdStageRefPtr stage = Application::Get()->GetModel()->GetStage();
-  Selection* selection = Application::Get()->GetModel()->GetSelection();
-  if (selection->GetNumSelectedItems() > 0) {
-    Selection::Item& item = selection->GetItem(0);
-    UsdPrim prim = stage->GetPrimAtPath(item.path);
-    if (prim.IsValid() && prim.IsA<UsdGeomMesh>()) {
-      return UsdGeomMesh(prim);
-    }
-  }
-  return UsdGeomMesh();
-}
 
 static void _SetMesh(UsdGeomMesh& mesh, const VtVec3fArray& points,
   const VtIntArray& faceCounts, const VtIntArray& faceConnects)
@@ -311,6 +327,11 @@ bool ToolUI::Draw()
   ImGui::SameLine();
   if (ImGui::Button("Create Vertex Color")) {
     _CreateVertexColor();
+  }
+
+  ImGui::SameLine();
+  if (ImGui::Button("Random Display Color")) {
+    _SetRandomColor();
   }
 
   if (ImGui::Button("Triangulate Mesh")) {

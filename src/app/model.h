@@ -35,7 +35,6 @@ public:
   // destructor
   ~Model();
 
-  void Init();
   void Update(const float time);
 
   // browse file
