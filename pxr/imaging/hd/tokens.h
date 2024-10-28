@@ -1,25 +1,8 @@
 //
 // Copyright 2016 Pixar
 //
-// Licensed under the Apache License, Version 2.0 (the "Apache License")
-// with the following modification; you may not use this file except in
-// compliance with the Apache License and the following modification to it:
-// Section 6. Trademarks. is deleted and replaced with:
-//
-// 6. Trademarks. This License does not grant permission to use the trade
-//    names, trademarks, service marks, or product names of the Licensor
-//    and its affiliates, except as required to comply with Section 4(c) of
-//    the License and to reproduce the content of the NOTICE file.
-//
-// You may obtain a copy of the Apache License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the Apache License with the above modification is
-// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied. See the Apache License for the specific
-// language governing permissions and limitations under the Apache License.
+// Licensed under the terms set forth in the LICENSE.txt file available at
+// https://openusd.org/license.
 //
 #ifndef PXR_IMAGING_HD_TOKENS_H
 #define PXR_IMAGING_HD_TOKENS_H
@@ -32,11 +15,10 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-extern HD_API TfEnvSetting<bool> HD_USE_DEPRECATED_INSTANCER_PRIMVAR_NAMES;
-
 #define HD_TOKENS                               \
     (accelerations)                             \
     (adjacency)                                 \
+    (angularVelocities)                         \
     (bboxLocalMin)                              \
     (bboxLocalMax)                              \
     (bbox)                                      \
@@ -80,6 +62,7 @@ extern HD_API TfEnvSetting<bool> HD_USE_DEPRECATED_INSTANCER_PRIMVAR_NAMES;
     (leftHanded)                                \
     (linear)                                    \
     (lightLink)                                 \
+    (filterLink)                                \
     (lightFilterLink)                           \
     (lightFilterType)                           \
     (meshLight)                                 \
@@ -141,15 +124,7 @@ extern HD_API TfEnvSetting<bool> HD_USE_DEPRECATED_INSTANCER_PRIMVAR_NAMES;
     ((instanceTransforms,   "hydra:instanceTransforms"))   \
     ((instanceRotations,    "hydra:instanceRotations"))    \
     ((instanceScales,       "hydra:instanceScales"))       \
-    ((instanceTranslations, "hydra:instanceTranslations")) \
-                                                           \
-    /* Deprecated versions of the above */                 \
-    /* To be removed in 2024, along with the */            \
-    /* HD_USE_DEPRECATED_INSTANCER_PRIMVAR_NAMES env var*/ \
-    (instanceTransform)                                    \
-    (rotate)                                               \
-    (scale)                                                \
-    (translate)
+    ((instanceTranslations, "hydra:instanceTranslations"))
 
 #define HD_REPR_TOKENS                          \
     (disabled)                                  \
@@ -269,7 +244,8 @@ extern HD_API TfEnvSetting<bool> HD_USE_DEPRECATED_INSTANCER_PRIMVAR_NAMES;
     (displacement)                              \
     (volume)                                    \
     (light)                                     \
-    (lightFilter)
+    (lightFilter)                               \
+    (imageShader)
 
 #define HD_RENDERTAG_TOKENS                     \
     (geometry)                                  \
@@ -293,14 +269,34 @@ extern HD_API TfEnvSetting<bool> HD_USE_DEPRECATED_INSTANCER_PRIMVAR_NAMES;
     (cube)                                      \
     (cylinder)                                  \
     (cylinder_1)                                \
+    (geomSubset)                                \
     (mesh)                                      \
+    (tetMesh)                                   \
     (nurbsPatch)                                \
     (basisCurves)                               \
     (nurbsCurves)                               \
+    (plane)                                     \
     (points)                                    \
     (sphere)                                    \
     (volume)                                    \
     (model)
+
+// XXX Unfortunately, we export a function of the name HdLightPrimTypeTokens.
+//     Omit 'Prim' from the name.
+#define HD_LIGHT_TYPE_TOKENS                    \
+    (cylinderLight)                             \
+    (diskLight)                                 \
+    (distantLight)                              \
+    (domeLight)                                 \
+    (light)                                     \
+    (meshLight)                                 \
+    (pluginLight)                               \
+    (rectLight)                                 \
+    (simpleLight)                               \
+    (sphereLight)
+
+#define HD_LIGHT_FILTER_TYPE_TOKENS             \
+    (lightFilter)
 
 #define HD_SPRIMTYPE_TOKENS                     \
     /* Sprims */                                \
@@ -314,18 +310,10 @@ extern HD_API TfEnvSetting<bool> HD_USE_DEPRECATED_INSTANCER_PRIMVAR_NAMES;
     (sampleFilter)                              \
     (displayFilter)                             \
     (imageShader)                               \
-    /* Sprims Lights */                         \
-    (simpleLight)                               \
-    (cylinderLight)                             \
-    (diskLight)                                 \
-    (distantLight)                              \
-    (domeLight)                                 \
-    (light)                                     \
-    (lightFilter)                               \
-    (meshLight)                                 \
-    (pluginLight)                               \
-    (rectLight)                                 \
-    (sphereLight)                               \
+                                                \
+    HD_LIGHT_TYPE_TOKENS                        \
+    HD_LIGHT_FILTER_TYPE_TOKENS                 \
+                                                \
     /* Sprims ExtComputations */                \
     (extComputation)                            \
 
@@ -338,12 +326,17 @@ extern HD_API TfEnvSetting<bool> HD_USE_DEPRECATED_INSTANCER_PRIMVAR_NAMES;
     HD_RPRIMTYPE_TOKENS                         \
     HD_SPRIMTYPE_TOKENS                         \
     HD_BPRIMTYPE_TOKENS                         \
+    /* Scene-index-only prim types */           \
+    (renderPass)
 
 HD_API
 bool HdPrimTypeIsGprim(TfToken const& primType);
 
 HD_API
 bool HdPrimTypeIsLight(TfToken const& primType);
+
+HD_API
+bool HdPrimTypeSupportsGeomSubsets(const TfToken& primType);
 
 HD_API
 const TfTokenVector &HdLightPrimTypeTokens();
@@ -475,6 +468,18 @@ TfToken HdAovTokensMakeShader(TfToken const& shader);
 #define HD_SCENE_INDEX_EMULATION_TOKENS               \
     (sceneDelegate)                                   \
 
+/* Tokens used to emulate collections for light linking. The collection names
+   match the UsdLuxLightAPI. Hydra 1.0 uses lightFilterLink instead of
+   filterLink.
+*/
+#define HD_COLLECTION_EMULATION_TOKENS                \
+    ((lightLinkCollection, "lightLink"))              \
+    ((shadowLinkCollection, "shadowLink"))            \
+    ((filterLinkCollection, "filterLink"))            \
+    (lightLinkCollectionMembershipExpression)         \
+    (shadowLinkCollectionMembershipExpression)        \
+    (filterLinkCollectionMembershipExpression)
+
 TF_DECLARE_PUBLIC_TOKENS(HdTokens, HD_API, HD_TOKENS);
 TF_DECLARE_PUBLIC_TOKENS(HdInstancerTokens, HD_API, HD_INSTANCER_TOKENS);
 TF_DECLARE_PUBLIC_TOKENS(HdReprTokens, HD_API, HD_REPR_TOKENS);
@@ -489,6 +494,9 @@ TF_DECLARE_PUBLIC_TOKENS(HdMaterialTerminalTokens, HD_API,
 TF_DECLARE_PUBLIC_TOKENS(HdRenderTagTokens, HD_API, HD_RENDERTAG_TOKENS);
 TF_DECLARE_PUBLIC_TOKENS(HdRenderContextTokens, HD_API, HD_RENDER_CONTEXT_TOKENS);
 TF_DECLARE_PUBLIC_TOKENS(HdOptionTokens, HD_API, HD_OPTION_TOKENS);
+TF_DECLARE_PUBLIC_TOKENS(HdLightTypeTokens, HD_API, HD_LIGHT_TYPE_TOKENS);
+TF_DECLARE_PUBLIC_TOKENS(HdLightFilterTypeTokens, HD_API,
+    HD_LIGHT_FILTER_TYPE_TOKENS);
 TF_DECLARE_PUBLIC_TOKENS(HdRprimTypeTokens, HD_API, HD_RPRIMTYPE_TOKENS);
 TF_DECLARE_PUBLIC_TOKENS(HdSprimTypeTokens, HD_API, HD_SPRIMTYPE_TOKENS);
 TF_DECLARE_PUBLIC_TOKENS(HdBprimTypeTokens, HD_API, HD_BPRIMTYPE_TOKENS);
@@ -503,6 +511,8 @@ TF_DECLARE_PUBLIC_TOKENS(HdAspectRatioConformPolicyTokens, HD_API,
 TF_DECLARE_PUBLIC_TOKENS(HdResourceTypeTokens, HD_API, HD_RESOURCE_TYPE_TOKENS);
 TF_DECLARE_PUBLIC_TOKENS(HdSceneIndexEmulationTokens, HD_API, 
                          HD_SCENE_INDEX_EMULATION_TOKENS);
+TF_DECLARE_PUBLIC_TOKENS(HdCollectionEmulationTokens, HD_API, 
+                         HD_COLLECTION_EMULATION_TOKENS);
 
 PXR_NAMESPACE_CLOSE_SCOPE
 

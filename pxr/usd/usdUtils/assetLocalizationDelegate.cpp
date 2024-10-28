@@ -1,31 +1,16 @@
 //
 // Copyright 2023 Pixar
 //
-// Licensed under the Apache License, Version 2.0 (the "Apache License")
-// with the following modification; you may not use this file except in
-// compliance with the Apache License and the following modification to it:
-// Section 6. Trademarks. is deleted and replaced with:
-//
-// 6. Trademarks. This License does not grant permission to use the trade
-//    names, trademarks, service marks, or product names of the Licensor
-//    and its affiliates, except as required to comply with Section 4(c) of
-//    the License and to reproduce the content of the NOTICE file.
-//
-// You may obtain a copy of the Apache License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the Apache License with the above modification is
-// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied. See the Apache License for the specific
-// language governing permissions and limitations under the Apache License.
+// Licensed under the terms set forth in the LICENSE.txt file available at
+// https://openusd.org/license.
 //
 ///
 /// \file usdUtils/assetLocalizationDelegate.cpp
 
 #include "pxr/usd/usdUtils/assetLocalizationDelegate.h"
 
+#include "pxr/usd/ar/packageUtils.h"
+#include "pxr/usd/sdf/fileFormat.h"
 #include "pxr/usd/sdf/primSpec.h"
 #include "pxr/usd/usd/clipsAPI.h"
 
@@ -100,7 +85,10 @@ UsdUtils_WritableLocalizationDelegate::ProcessSublayers(
 
     if (processedPaths != sublayerPaths) {
         SdfLayerRefPtr writableLayer = _GetOrCreateWritableLayer(layer);
-        writableLayer->SetSubLayerPaths(processedPaths);
+        
+        if (writableLayer) {
+            writableLayer->SetSubLayerPaths(processedPaths);
+        }
     }
 
     return dependencies;
@@ -158,6 +146,11 @@ UsdUtils_WritableLocalizationDelegate::_ProcessReferencesOrPayloads(
     }
 
     SdfLayerRefPtr writableLayer = _GetOrCreateWritableLayer(layer);
+
+    if (!writableLayer) {
+        return dependencies;
+    }
+
     SdfPrimSpecHandle writablePrim = 
         writableLayer->GetPrimAtPath(primSpec->GetPath());
     
@@ -225,6 +218,10 @@ UsdUtils_WritableLocalizationDelegate::ProcessValuePath(
     const std::string &authoredPath,
     const std::vector<std::string> &dependencies)
 {
+    if (authoredPath.empty()) {
+        return {};
+    }
+
     UsdUtilsDependencyInfo depInfo = {authoredPath, dependencies};
     UsdUtilsDependencyInfo info = _pathCache.GetProcessedInfo(
         layer, depInfo, UsdUtils_DependencyType::Reference);
@@ -261,9 +258,15 @@ UsdUtils_WritableLocalizationDelegate::ProcessValuePathArrayElement(
         return _AllDependenciesForInfo(info);
     }
     else {
+        // We don't want to remove empty paths from arrays. They may be
+        // meaningful, for example in primvar attributes that need to be
+        // a certain length.
+        if (_keepEmptyPathsInArrays) {
+            _currentPathArray.emplace_back(SdfAssetPath());
+        }
+
         return {};
     }
-    
 }
 
 void 
@@ -338,11 +341,13 @@ UsdUtils_WritableLocalizationDelegate::EndProcessValue(
 
     SdfLayerRefPtr writableLayer = _GetOrCreateWritableLayer(layer);
 
-    if (updatedValue.IsEmpty()) {
-        writableLayer->EraseField(path, key);
-    }
-    else if (val != updatedValue) {
-        writableLayer->SetField(path, key, updatedValue);
+    if (writableLayer) {
+        if (updatedValue.IsEmpty()) {
+            writableLayer->EraseField(path, key);
+        }
+        else if (val != updatedValue) {
+            writableLayer->SetField(path, key, updatedValue);
+        }
     }
 }
 
@@ -361,10 +366,12 @@ UsdUtils_WritableLocalizationDelegate::EndProcessTimeSampleValue(
     
     SdfLayerRefPtr writableLayer = _GetOrCreateWritableLayer(layer);
 
-    if (updatedValue.IsEmpty()) {
-        writableLayer->EraseTimeSample(path, t);
-    } else {
-        writableLayer->SetTimeSample(path, t, updatedValue);
+    if (writableLayer) {
+        if (updatedValue.IsEmpty()) {
+            writableLayer->EraseTimeSample(path, t);
+        } else {
+            writableLayer->SetTimeSample(path, t, updatedValue);
+        }
     }
 }
 
@@ -385,6 +392,10 @@ UsdUtils_WritableLocalizationDelegate::ProcessClipTemplateAssetPath(
     }
 
     SdfLayerRefPtr writableLayer = _GetOrCreateWritableLayer(layer);
+    if (!writableLayer) {
+        return _AllDependenciesForInfo(info);
+    }
+
     SdfPrimSpecHandle writablePrim = 
         writableLayer->GetPrimAtPath(primSpec->GetPath());
 
@@ -417,7 +428,21 @@ SdfLayerRefPtr
 UsdUtils_WritableLocalizationDelegate::_GetOrCreateWritableLayer(
     const SdfLayerRefPtr& layer)
 {
-    if (_editLayersInPlace || !layer) {
+    if (!layer ) {
+        return nullptr;
+    }
+
+    // We do not allow writing to package layers or layers contained within
+    // existing packages. Doing so would require us to expand and rebuild
+    // the existing package.
+    if (layer->GetFileFormat()->IsPackage() ||
+        ArIsPackageRelativePath(layer->GetIdentifier())) {
+        TF_CODING_ERROR("Unable to edit asset path in package layer: %s",
+            layer->GetIdentifier().c_str());
+        return nullptr;
+    }
+
+    if (_editLayersInPlace) {
         return layer;
     }
 
@@ -544,6 +569,10 @@ UsdUtils_ReadOnlyLocalizationDelegate::ProcessValuePath(
     const std::string &authoredPath,
     const std::vector<std::string> &dependencies)
 {
+    if (authoredPath.empty()) {
+        return {};
+    }
+
     return _AllDependenciesForInfo(_pathCache.GetProcessedInfo(layer, 
         {authoredPath, dependencies}, UsdUtils_DependencyType::Reference));
 }
@@ -555,6 +584,12 @@ UsdUtils_ReadOnlyLocalizationDelegate::ProcessValuePathArrayElement(
     const std::string &authoredPath,
     const std::vector<std::string> &dependencies)
 {    
+    // We may get passed an empty authored path if an array has some
+    // explicitly empty elements.
+    if (authoredPath.empty()) {
+        return {};
+    }
+
     return _AllDependenciesForInfo(_pathCache.GetProcessedInfo(layer, 
         {authoredPath, dependencies}, UsdUtils_DependencyType::Reference));
 }

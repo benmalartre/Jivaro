@@ -8,10 +8,6 @@ pxr_library(sdr
         ar
         ndr
         sdf
-        ${Boost_PYTHON_LIBRARY}
-
-    INCLUDE_DIRS
-        ${Boost_INCLUDE_DIRS}
 
     PUBLIC_HEADERS
         api.h
@@ -46,7 +42,6 @@ pxr_test_scripts(
 )
 
 pxr_build_test_shared_lib(TestSdrRegistry
-    CREATE_FRAMEWORK
     INSTALL_PREFIX SdrPlugins
     LIBRARIES
         tf

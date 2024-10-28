@@ -1,25 +1,8 @@
 //
 // Copyright 2016 Pixar
 //
-// Licensed under the Apache License, Version 2.0 (the "Apache License")
-// with the following modification; you may not use this file except in
-// compliance with the Apache License and the following modification to it:
-// Section 6. Trademarks. is deleted and replaced with:
-//
-// 6. Trademarks. This License does not grant permission to use the trade
-//    names, trademarks, service marks, or product names of the Licensor
-//    and its affiliates, except as required to comply with Section 4(c) of
-//    the License and to reproduce the content of the NOTICE file.
-//
-// You may obtain a copy of the Apache License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the Apache License with the above modification is
-// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied. See the Apache License for the specific
-// language governing permissions and limitations under the Apache License.
+// Licensed under the terms set forth in the LICENSE.txt file available at
+// https://openusd.org/license.
 //
 #ifndef USDGEOM_GENERATED_POINTINSTANCER_H
 #define USDGEOM_GENERATED_POINTINSTANCER_H
@@ -833,7 +816,18 @@ public:
     ///             this function returns true then orientationsf will be 
     ///             stored in rotationsAttr, and orientations if not
     USDGEOM_API
-    bool UsesOrientationsf(UsdAttribute &rotationsAttr) const;
+    bool UsesOrientationsf(UsdAttribute *rotationsAttr) const;
+    
+    /// \overload same functionality as 
+    /// UsesOrientationsf(UsdAttribute &rotationsAttr) but populates a
+    /// TfToken instead
+    ///
+    /// \param rotationsToken (optional) the outparameter for the corresponding
+    ///             attribute. If this function returns true then 
+    ///             UsdGeomTokens->orientationsf will be stored in UsdToken,
+    ///             and UsdGeomTokens->orientations if not
+    USDGEOM_API
+    bool UsesOrientationsf(TfToken *rotationsToken = nullptr) const;
     
     // --------------------------------------------------------------------- //
     /// @}

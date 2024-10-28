@@ -1,25 +1,8 @@
 //
 // Copyright 2021 Pixar
 //
-// Licensed under the Apache License, Version 2.0 (the "Apache License")
-// with the following modification; you may not use this file except in
-// compliance with the Apache License and the following modification to it:
-// Section 6. Trademarks. is deleted and replaced with:
-//
-// 6. Trademarks. This License does not grant permission to use the trade
-//    names, trademarks, service marks, or product names of the Licensor
-//    and its affiliates, except as required to comply with Section 4(c) of
-//    the License and to reproduce the content of the NOTICE file.
-//
-// You may obtain a copy of the Apache License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the Apache License with the above modification is
-// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied. See the Apache License for the specific
-// language governing permissions and limitations under the Apache License.
+// Licensed under the terms set forth in the LICENSE.txt file available at
+// https://openusd.org/license.
 //
 #include "pxr/imaging/hdMtlx/hdMtlx.h"
 #include "pxr/imaging/hd/material.h"
@@ -37,11 +20,13 @@
 #include "pxr/base/tf/diagnostic.h"
 #include "pxr/base/tf/getenv.h"
 #include "pxr/base/tf/token.h"
+#include "pxr/base/trace/trace.h"
 
 #include "pxr/usd/usdMtlx/utils.h"
 
 #include <MaterialXCore/Document.h>
 #include <MaterialXCore/Node.h>
+#include <MaterialXFormat/Environ.h>
 #include <MaterialXFormat/Util.h>
 #include <MaterialXFormat/XmlIo.h>
 
@@ -51,7 +36,9 @@ PXR_NAMESPACE_OPEN_SCOPE
 
 TF_DEFINE_PRIVATE_TOKENS(
     _tokens,
-    (index)
+    (texcoord)
+    (geompropvalue)
+    (filename)
 );
 
 static mx::FileSearchPath
@@ -62,6 +49,12 @@ _ComputeSearchPaths()
     for (auto path : searchPathStrings) {
         searchPaths.append(mx::FilePath(path));
     }
+#ifdef PXR_DCC_LOCATION_ENV_VAR
+    const std::string dccLocationEnvVar(PXR_DCC_LOCATION_ENV_VAR);
+    const std::string dccLocation = mx::getEnviron(dccLocationEnvVar);
+    searchPaths.append(mx::FilePath(dccLocation + PXR_MATERIALX_STDLIB_DIR));
+    searchPaths.append(mx::FilePath(dccLocation + PXR_MATERIALX_BASE_DIR));
+#endif
     return searchPaths;
 }
 
@@ -129,6 +122,21 @@ _AddNodeToNodeGraph(
     }
     // Otherwise get the existing node from the mxNodeGraph
     return mxNodeGraph->getNode(mxNodeName);
+}
+
+std::string
+HdMtlxCreateNameFromPath(SdfPath const& path)
+{
+#ifdef PXR_DCC_LOCATION_ENV_VAR
+    std::string pathnm = path.GetText();
+    if(pathnm.size() > 3 &&
+       pathnm[0] == '/' && pathnm[1] == '_' && pathnm[2] == '_') {
+        pathnm[0] = 's'; // triple leading underscores aren't allowed in osl
+    }
+    return TfStringReplace( pathnm, "/", "_");
+#else
+    return path.GetName();
+#endif
 }
 
 // Convert the HdParameterValue to a string MaterialX can understand
@@ -200,12 +208,12 @@ HdMtlxConvertToString(VtValue const& hdParameterValue)
 }
 
 static bool
-_ContainsTexcoordNode(mx::NodeDefPtr const& mxNodeDef)
+_UsesTexcoordNode(mx::NodeDefPtr const& mxNodeDef)
 {
     mx::InterfaceElementPtr impl = mxNodeDef->getImplementation();
     if (impl && impl->isA<mx::NodeGraph>()) {
         mx::NodeGraphPtr nodegraph = impl->asA<mx::NodeGraph>();
-        if (nodegraph->getNodes("texcoord").size() != 0) {
+        if (!nodegraph->getNodes(_tokens->texcoord).empty()) {
             return true;
         }
     }
@@ -244,7 +252,7 @@ _AddMaterialXNode(
     const SdfPath hdNodePath(hdNodeName.GetString());
     const std::string mxNodeCategory = _GetMxNodeString(mxNodeDef);
     const std::string &mxNodeType = mxNodeDef->getType();
-    const std::string &mxNodeName = hdNodePath.GetName();
+    const std::string &mxNodeName = HdMtlxCreateNameFromPath(hdNodePath);
 
     // Add the mxNode to the mxNodeGraph
     mx::NodePtr mxNode =
@@ -288,18 +296,20 @@ _AddMaterialXNode(
         }
     }
 
-    // MaterialX nodes that use textures are assumed to have a filename input
-    if (mxNodeDef->getNodeGroup() == "texture2d") {
-        if (mxHdData) {
-            // Save the corresponding MaterialX and Hydra names for ShaderGen
-            mxHdData->mxHdTextureMap[mxNodeName] = connectionName;
-            // Save the path to adjust parameters after traversing the network
-            mxHdData->hdTextureNodes.insert(hdNodePath);
+    // MaterialX nodes that use textures can have more than one filename input
+    if (mxHdData) {
+        for (mx::InputPtr const& mxInput : mxNodeDef->getActiveInputs()) {
+            if (mxInput->getType() == _tokens->filename) {
+                // Save the corresponding Mx and Hydra names for ShaderGen
+                mxHdData->mxHdTextureMap[mxNodeName].insert(mxInput->getName());
+                // Save the path to adjust parameters after for ShaderGen
+                mxHdData->hdTextureNodes.insert(hdNodePath);
+            }
         }
     }
 
     // MaterialX primvar node
-    if (mxNodeCategory == "geompropvalue") {
+    if (mxNodeCategory == _tokens->geompropvalue) {
         if (mxHdData) {
             // Save the path to have the primvarName declared in ShaderGen
             mxHdData->hdPrimvarNodes.insert(hdNodePath);
@@ -308,14 +318,8 @@ _AddMaterialXNode(
 
     // Stdlib MaterialX texture coordinate node or a custom node that 
     // uses a texture coordinate node
-    if (mxNodeCategory == "texcoord" || _ContainsTexcoordNode(mxNodeDef)) {
+    if (mxNodeCategory == _tokens->texcoord || _UsesTexcoordNode(mxNodeDef)) {
         if (mxHdData) {
-            // Make sure it has the index parameter set.
-            if (std::find(hdNodeParamNames.begin(), hdNodeParamNames.end(), 
-                _tokens->index) == hdNodeParamNames.end()) {
-                netInterface->SetNodeParameterValue(
-                    hdNodeName, _tokens->index, VtValue(0));
-            }
             // Save the path to have the textureCoord name declared in ShaderGen
             mxHdData->hdPrimvarNodes.insert(hdNodePath);
         }
@@ -569,6 +573,7 @@ HdMtlxCreateMtlxDocumentFromHdMaterialNetworkInterface(
     MaterialX::DocumentPtr const& libraries,
     HdMtlxTexturePrimvarData *mxHdData)
 {
+    TRACE_FUNCTION_SCOPE("Create Mtlx Document from HdMaterialNetwork")
     if (!netInterface) {
         return nullptr;
     }
@@ -599,12 +604,14 @@ HdMtlxCreateMtlxDocumentFromHdMaterialNetworkInterface(
         mxShaderNode);
 
     // Validate the MaterialX Document.
-    std::string message;
-    if (!mxDoc->validate(&message)) {
-        TF_WARN("Validation warnings for generated MaterialX file.\n%s", 
+    {
+        TRACE_FUNCTION_SCOPE("Validate created Mtlx Document")
+        std::string message;
+        if (!mxDoc->validate(&message)) {
+            TF_WARN("Validation warnings for generated MaterialX file.\n%s\n", 
                 message.c_str());
+        }
     }
-
     return mxDoc;
 }
 

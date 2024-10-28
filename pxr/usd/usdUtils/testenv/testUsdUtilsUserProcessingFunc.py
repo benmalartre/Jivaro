@@ -2,27 +2,10 @@
 #
 # Copyright 2023 Pixar
 #
-# Licensed under the Apache License, Version 2.0 (the "Apache License")
-# with the following modification; you may not use this file except in
-# compliance with the Apache License and the following modification to it:
-# Section 6. Trademarks. is deleted and replaced with:
-#
-# 6. Trademarks. This License does not grant permission to use the trade
-#    names, trademarks, service marks, or product names of the Licensor
-#    and its affiliates, except as required to comply with Section 4(c) of
-#    the License and to reproduce the content of the NOTICE file.
-#
-# You may obtain a copy of the Apache License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the Apache License with the above modification is
-# distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-# KIND, either express or implied. See the Apache License for the specific
-# language governing permissions and limitations under the Apache License.
+# Licensed under the terms set forth in the LICENSE.txt file available at
+# https://openusd.org/license.
 
-from pxr import Ar, Sdf, Usd, UsdUtils
+from pxr import Ar, Sdf, Tf, Usd, UsdUtils
 import os, sys, shutil, tempfile, unittest
 
 class TestUsdUtilsUserProcessFunc(unittest.TestCase):
@@ -85,7 +68,8 @@ class TestUsdUtilsUserProcessFunc(unittest.TestCase):
         self._CheckLocalizedPackageContents(localizationDir, expectedFiles)
 
     def test_UserProcessingFuncRemove(self):
-        """Tests that dependencies can be removed with the user processing func"""
+        """Tests that dependencies can be removed with the user 
+        processing func"""
         def TestUserFunc(layer, depInfo):
             return UsdUtils.DependencyInfo()
 
@@ -104,7 +88,7 @@ class TestUsdUtilsUserProcessFunc(unittest.TestCase):
 
     def test_FileFormatConversion(self):
         """Tests converting a layer to a crate file in a temp path and
-           ensuring the resulting localized package can be loaded correctly"""
+        ensuring the resulting localized package can be loaded correctly"""
         
         with tempfile.TemporaryDirectory() as tempDir:
             def TestUserFunc(layer, depInfo):
@@ -168,6 +152,55 @@ class TestUsdUtilsUserProcessFunc(unittest.TestCase):
         ]
 
         self._CheckLocalizedPackageContents(localizationDir, expectedFiles)
+
+    def test_FilesystemAbsolutePaths(self):
+        """Tests that localization works correctly with absolute filesystem 
+        paths"""
+
+        def TestUserFunc(layer, depInfo):
+            absPath = os.path.abspath(Sdf.ComputeAssetPathRelativeToLayer(
+                layer, depInfo.assetPath))
+            return UsdUtils.DependencyInfo(absPath)
+    
+        rootPath = os.path.abspath('fileFormatConversion/root.usda')
+        localizationDir = os.path.abspath('abspath_localized')
+        localizedRoot = os.path.join(localizationDir, 'root.usda')
+
+        self._Localize(rootPath, localizationDir, TestUserFunc)
+        self.assertIsNotNone(Usd.Stage.Open(localizedRoot))
+
+        expectedFiles = [
+            '0/sublayer.usda',
+            'root.usda'
+        ]
+
+        self._CheckLocalizedPackageContents(localizationDir, expectedFiles)
+
+    def test_CodingErrorPackageLayer(self):
+        """Tests that a coding error is issued when trying to modify an asset
+        path in a layer that is a package"""
+        def ModifyPackageLayer(layer, depInfo):
+            if layer.GetFileFormat().IsPackage():
+                return UsdUtils.DependencyInfo("foo")
+            else:
+                return depInfo
+
+        with self.assertRaises(Tf.ErrorException):
+            self._Localize("package/package.usdz", "package_localized1", 
+                           ModifyPackageLayer)
+            
+    def test_CodingErrorLayerContainedInPackage(self):
+        """Tests that a coding error is issued when trying to modify an asset
+        path of a layer that is contained in a package"""
+        def ModifyLayerInPackage(layer, depInfo):
+            if Ar.IsPackageRelativePath(layer.identifier):
+                return UsdUtils.DependencyInfo("foo")
+            else:
+                return depInfo
+
+        with self.assertRaises(Tf.ErrorException):
+            self._Localize("package/package.usdz", "package_localized2", 
+                           ModifyLayerInPackage)
 
     def _Localize(self, rootPath, localizationDir, userFunc):
         if os.path.isdir(localizationDir):

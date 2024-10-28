@@ -1,25 +1,8 @@
 //
 // Copyright 2016 Pixar
 //
-// Licensed under the Apache License, Version 2.0 (the "Apache License")
-// with the following modification; you may not use this file except in
-// compliance with the Apache License and the following modification to it:
-// Section 6. Trademarks. is deleted and replaced with:
-//
-// 6. Trademarks. This License does not grant permission to use the trade
-//    names, trademarks, service marks, or product names of the Licensor
-//    and its affiliates, except as required to comply with Section 4(c) of
-//    the License and to reproduce the content of the NOTICE file.
-//
-// You may obtain a copy of the Apache License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the Apache License with the above modification is
-// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied. See the Apache License for the specific
-// language governing permissions and limitations under the Apache License.
+// Licensed under the terms set forth in the LICENSE.txt file available at
+// https://openusd.org/license.
 //
 #include "pxr/imaging/hdSt/interleavedMemoryManager.h"
 #include "pxr/imaging/hdSt/bufferResource.h"
@@ -144,7 +127,7 @@ HdStInterleavedUBOMemoryManager::ComputeAggregationId(
 
     return static_cast<AggregationId>(
         TfHash::Combine(
-            salt, bufferSpecs, usageHint.value
+            salt, bufferSpecs, usageHint
         )
     );
 }
@@ -183,7 +166,7 @@ HdStInterleavedSSBOMemoryManager::ComputeAggregationId(
 
     return static_cast<AggregationId>(
         TfHash::Combine(
-            salt, bufferSpecs, usageHint.value
+            salt, bufferSpecs, usageHint
         )
     );
 }
@@ -244,8 +227,8 @@ HdStInterleavedMemoryManager::_StripedInterleavedBuffer::_StripedInterleavedBuff
       _needsCompaction(false),
       _stride(0),
       _bufferOffsetAlignment(bufferOffsetAlignment),
-      _maxSize(maxSize)
-
+      _maxSize(maxSize),
+      _bufferUsage(0)
 {
     HD_TRACE_FUNCTION();
     HF_MALLOC_TAG_FUNCTION();
@@ -342,6 +325,19 @@ HdStInterleavedMemoryManager::_StripedInterleavedBuffer::_StripedInterleavedBuff
     _SetMaxNumRanges(_maxSize / _stride);
 
     TF_VERIFY(_stride + offset);
+
+    if (usageHint & HdBufferArrayUsageHintBitsUniform) {
+        _bufferUsage |= HgiBufferUsageUniform;
+    }
+    if (usageHint & HdBufferArrayUsageHintBitsStorage) {
+        _bufferUsage |= HgiBufferUsageStorage;
+    }
+    if (usageHint & HdBufferArrayUsageHintBitsVertex) {
+        _bufferUsage |= HgiBufferUsageVertex;
+    }
+    if (_bufferUsage == 0) {
+        TF_CODING_ERROR("Buffer usage was not specified!");
+    }
 }
 
 HdStBufferResourceSharedPtr
@@ -463,7 +459,7 @@ HdStInterleavedMemoryManager::_StripedInterleavedBuffer::Reallocate(
     if (totalSize > 0) {
         HgiBufferDesc bufDesc;
         bufDesc.byteSize = totalSize;
-        bufDesc.usage = HgiBufferUsageUniform;
+        bufDesc.usage = _bufferUsage;
         newBuf = hgi->CreateBuffer(bufDesc);
     }
 

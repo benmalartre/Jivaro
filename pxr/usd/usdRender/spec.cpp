@@ -1,25 +1,8 @@
 //
 // Copyright 2016 Pixar
 //
-// Licensed under the Apache License, Version 2.0 (the "Apache License")
-// with the following modification; you may not use this file except in
-// compliance with the Apache License and the following modification to it:
-// Section 6. Trademarks. is deleted and replaced with:
-//
-// 6. Trademarks. This License does not grant permission to use the trade
-//    names, trademarks, service marks, or product names of the Licensor
-//    and its affiliates, except as required to comply with Section 4(c) of
-//    the License and to reproduce the content of the NOTICE file.
-//
-// You may obtain a copy of the Apache License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the Apache License with the above modification is
-// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied. See the Apache License for the specific
-// language governing permissions and limitations under the Apache License.
+// Licensed under the terms set forth in the LICENSE.txt file available at
+// https://openusd.org/license.
 //
 #include "pxr/usd/usdRender/spec.h"
 #include "pxr/usd/usdRender/settings.h"
@@ -27,51 +10,68 @@
 #include "pxr/usd/usdRender/var.h"
 #include "pxr/usd/usdGeom/camera.h"
 #include "pxr/usd/usdShade/output.h"
+#include "pxr/usd/usdShade/tokens.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
+
+// Return the outermost namespace of an attribute name.
+static std::string
+_GetAttrNamespace(std::string const& name)
+{
+    size_t pos = name.find(UsdObject::GetNamespaceDelimiter());
+    if (pos != std::string::npos) {
+        return name.substr(0, pos);
+    } else {
+        return std::string();
+    }
+}
 
 static void
 _ReadNamespacedSettings(
     UsdPrim const& prim,
-    TfTokenVector const& namespaces, 
+    TfTokenVector const& requestedNamespaces, 
     VtDictionary *namespacedSettings)
 {
-    const std::vector<UsdAttribute> attrs = prim.GetAuthoredAttributes();
-    const TfTokenVector &schemaProps =
-        prim.GetPrimDefinition().GetPropertyNames();
+    for (UsdAttribute attr: prim.GetAuthoredAttributes()) {
+        const TfToken name = attr.GetName();
 
-    for (UsdAttribute attr: attrs) {
-        if (namespaces.empty()) {
-            // Skip schema attributes from being aggregated.
-            if (std::find(schemaProps.begin(), schemaProps.end(),
-                          attr.GetBaseName()) != schemaProps.end()) {
-                continue;
-            }
-        } else {
-            bool attrIsInRequestedNS = false;
-            for (std::string const& ns: namespaces) {
-                if (TfStringStartsWith(attr.GetName(), ns)) {
-                    attrIsInRequestedNS = true;
-                    break;
+        // Use UsdShadeOutput to strip "outputs:"
+        UsdShadeOutput shadeOutput(attr);
+        const TfToken basename = shadeOutput ? shadeOutput.GetBaseName() : name;
+        const std::string attrNamespace = _GetAttrNamespace(basename);
+
+        // Only collect namespaced settings
+        if (attrNamespace.empty()) {
+            continue;
+        }
+
+        // If specific namespaces were requested, require a match
+        if (!requestedNamespaces.empty() &&
+            std::find(requestedNamespaces.begin(), requestedNamespaces.end(),
+                      attrNamespace) == requestedNamespaces.end()) {
+            continue;
+        }
+
+        // Connections are stronger than values authored on the attribute,
+        // so check for connections first.
+        if (shadeOutput) {
+            UsdShadeAttributeVector targets =
+                UsdShadeUtils::GetValueProducingAttributes(shadeOutput);
+            if (!targets.empty()) {
+                SdfPathVector outputConnectedPaths;
+                outputConnectedPaths.reserve(targets.size());
+                for (auto const& targetPath : targets) {
+                    outputConnectedPaths.push_back(targetPath.GetPrimPath());
                 }
-            }
-            if (!attrIsInRequestedNS) {
+                (*namespacedSettings)[name] = VtValue(outputConnectedPaths);
                 continue;
             }
         }
+
+        // Base case: use the attribute value
         VtValue val;
         if (attr.Get(&val)) {
-            (*namespacedSettings)[attr.GetName()] = val;
-        }
-        else if (UsdShadeOutput::IsOutput(attr)) {
-            UsdShadeAttributeVector targets =
-                UsdShadeUtils::GetValueProducingAttributes(
-                    UsdShadeOutput(attr));
-            SdfPathVector outputs;
-            for (auto const& output : targets) {
-                outputs.push_back(output.GetPrimPath());
-            }
-            (*namespacedSettings)[attr.GetName()] = VtValue(outputs);
+            (*namespacedSettings)[name] = val;
         }
     }
 }

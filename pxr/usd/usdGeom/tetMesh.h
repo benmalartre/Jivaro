@@ -1,25 +1,8 @@
 //
 // Copyright 2016 Pixar
 //
-// Licensed under the Apache License, Version 2.0 (the "Apache License")
-// with the following modification; you may not use this file except in
-// compliance with the Apache License and the following modification to it:
-// Section 6. Trademarks. is deleted and replaced with:
-//
-// 6. Trademarks. This License does not grant permission to use the trade
-//    names, trademarks, service marks, or product names of the Licensor
-//    and its affiliates, except as required to comply with Section 4(c) of
-//    the License and to reproduce the content of the NOTICE file.
-//
-// You may obtain a copy of the Apache License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the Apache License with the above modification is
-// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied. See the Apache License for the specific
-// language governing permissions and limitations under the Apache License.
+// Licensed under the terms set forth in the LICENSE.txt file available at
+// https://openusd.org/license.
 //
 #ifndef USDGEOM_GENERATED_TETMESH_H
 #define USDGEOM_GENERATED_TETMESH_H
@@ -162,18 +145,29 @@ public:
     // --------------------------------------------------------------------- //
     // TETVERTEXINDICES 
     // --------------------------------------------------------------------- //
-    /// Flat list of the index (into the <b>points<> attribute) of 
+    /// Flat list of the index (into the <b>points</b> attribute) of 
     /// each vertex of each tetrahedron in the mesh. Each int4 corresponds to the
-    /// indices of a single tetrahedron. Users should set the <b>orientation<>
-    /// attribute of UsdGeomPrim accordingly. That is if the <b>orientation<> 
+    /// indices of a single tetrahedron. Users should set the <b>orientation</b>
+    /// attribute of UsdGeomPrim accordingly. That is if the <b>orientation</b> 
     /// is "rightHanded", the CCW face ordering of a tetrahedron is
     /// [123],[032],[013],[021] with respect to the int4. This results in the
-    /// normals facing outward from the center of the tetrahedron. If the
-    /// <b>orientation<> attribute is set to "leftHanded" the face ordering of 
-    /// the tetrahedron is [321],[230],[310],[120] and the leftHanded CW face 
-    /// normals point outward from the center of the tetrahedron. Setting the 
-    /// <b>orientation<> attribute to align with the ordering of the int4 for  
-    /// the tetrahedrons is the responsibility of the user.
+    /// normals facing outward from the center of the tetrahedron. The following
+    /// diagram shows the face ordering of an unwrapped tetrahedron with 
+    /// "rightHanded" orientation.
+    /// 
+    /// \image html USDTetMeshRightHanded.svg
+    /// 
+    /// If the <b>orientation</b> attribute is set to "leftHanded" the face 
+    /// ordering of the tetrahedron is [321],[230],[310],[120] and the 
+    /// leftHanded CW face normals point outward from the center of the 
+    /// tetrahedron. The following diagram shows the face ordering of an 
+    /// unwrapped tetrahedron with "leftHanded" orientation.
+    /// 
+    /// \image html USDTetMeshLeftHanded.svg
+    /// 
+    /// Setting the <b>orientation</b> attribute to align with the 
+    /// ordering of the int4 for the tetrahedrons is the responsibility of the 
+    /// user.
     ///
     /// | ||
     /// | -- | -- |
@@ -195,10 +189,10 @@ public:
     // --------------------------------------------------------------------- //
     // SURFACEFACEVERTEXINDICES 
     // --------------------------------------------------------------------- //
-    /// <b>surfaceFaceVertexIndices<> defines the triangle
-    /// surface faces indices wrt. <b>points<> of the tetmesh surface. Again 
-    /// the <b>orientation<> attribute inherited from UsdGeomPrim should be 
-    /// set accordingly. The <b>orientation<> for faces of tetrahedra and  
+    /// <b>surfaceFaceVertexIndices</b> defines the triangle
+    /// surface faces indices wrt. <b>points</b> of the tetmesh surface. Again 
+    /// the <b>orientation</b> attribute inherited from UsdGeomPrim should be 
+    /// set accordingly. The <b>orientation</b> for faces of tetrahedra and  
     /// surface faces must match.
     ///
     /// | ||
@@ -228,7 +222,7 @@ public:
     //  - Close the include guard with #endif
     // ===================================================================== //
     // --(BEGIN CUSTOM CODE)--
-    
+
     /// ComputeSurfaceFaces determines the vertex indices of the surface faces 
     /// from tetVertexIndices. The surface faces are the set of faces that occur 
     /// only once when traversing the faces of all the tetrahedra. The algorithm 
@@ -240,7 +234,18 @@ public:
     USDGEOM_API    
     static bool ComputeSurfaceFaces(const UsdGeomTetMesh& tetMesh,
                                     VtVec3iArray* surfaceFaceIndices,
-                                    const UsdTimeCode timeCode = UsdTimeCode::Default());     
+                                    const UsdTimeCode timeCode = UsdTimeCode::Default()); 
+
+    /// FindInvertedElements is used to determine if the tetMesh has inverted 
+    /// tetrahedral elements at the given time code. Inverted elements are 
+    /// determined wrt. the "orientation" attribute of the UsdGeomTetMesh and
+    /// are stored in the invertedElements arg. Method returns true if it 
+    /// succeeds and if invertedElements is empty then all the tetrahedra have  
+    /// the correct orientation.
+    USDGEOM_API    
+    static bool FindInvertedElements(const UsdGeomTetMesh& tetMesh,
+                                     VtIntArray* invertedElements,
+                                     const UsdTimeCode timeCode = UsdTimeCode::Default());
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE

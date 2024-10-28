@@ -38,13 +38,6 @@ vec3 mx_square(vec3 x)
 {
     return x*x;
 }
-#if NUM_LIGHTS > 0
-#define MAX_LIGHT_SOURCES NUM_LIGHTS
-#else
-#define MAX_LIGHT_SOURCES 1
-#endif
-#define DIRECTIONAL_ALBEDO_METHOD 0
-
 struct BSDF { vec3 response; vec3 throughput; float thickness; float ior; };
 #define EDF vec3
 struct surfaceshader { vec3 color; vec3 transparency; };
@@ -52,6 +45,13 @@ struct volumeshader { vec3 color; vec3 transparency; };
 struct displacementshader { vec3 offset; float scale; };
 struct lightshader { vec3 intensity; vec3 direction; };
 #define material surfaceshader
+
+#if NUM_LIGHTS > 0
+#define MAX_LIGHT_SOURCES NUM_LIGHTS
+#else
+#define MAX_LIGHT_SOURCES 1
+#endif
+#define DIRECTIONAL_ALBEDO_METHOD 0
 
 // Uniform block: PublicUniforms
 float base;
@@ -96,6 +96,7 @@ bool thin_walled;
 
 // Uniform block: PrivateUniforms
 mat4 u_envMatrix = mat4(-1.000000, 0.000000, 0.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000, 0.000000, 0.000000, -1.000000, 0.000000, 0.000000, 0.000000, 0.000000, 1.000000);
+float u_envLightIntensity = 1.000000;
 int u_envRadianceMips;
 int u_envRadianceSamples;
 bool u_refractionTwoSided = false;
@@ -207,6 +208,9 @@ void mxInit(vec4 Peye, vec3 Neye)
         // Save the indirect light transformation
         if (light.isIndirectLight) {
             hdTransformationMatrix = light.worldToLightTransform;
+            // Note: in Storm, diffuse = lightColor * intensity;
+            u_envLightIntensity = max( max(light.diffuse.r, light.diffuse.g), 
+                                   light.diffuse.b);
         }
         // Save the direct light data
         else {
@@ -233,7 +237,9 @@ void mxInit(vec4 Peye, vec3 Neye)
             // Note: in Storm, diffuse = lightColor * intensity;
             float intensity = max( max(light.diffuse.r, light.diffuse.g), 
                                    light.diffuse.b);
-            u_lightData[u_numActiveLightSources].color = light.diffuse.rgb/intensity;
+            vec3 lightColor = (intensity == 0.0) 
+                ? light.diffuse.rgb : light.diffuse.rgb/intensity;
+            u_lightData[u_numActiveLightSources].color = lightColor;
             u_lightData[u_numActiveLightSources].intensity = intensity;
             
             // Attenuation 
@@ -403,48 +409,22 @@ float mx_ggx_NDF(vec3 H, vec2 alpha)
     return 1.0 / (M_PI * alpha.x * alpha.y * mx_square(denom));
 }
 
-// https://media.disneyanimation.com/uploads/production/publication_asset/48/asset/s2012_pbs_disney_brdf_notes_v3.pdf
-// Appendix B.1 Equation 3
-float mx_ggx_PDF(vec3 H, float LdotH, vec2 alpha)
-{
-    float NdotH = H.z;
-    return mx_ggx_NDF(H, alpha) * NdotH / (4.0 * LdotH);
-}
-
-// https://media.disneyanimation.com/uploads/production/publication_asset/48/asset/s2012_pbs_disney_brdf_notes_v3.pdf
-// Appendix B.2 Equation 15
-vec3 mx_ggx_importance_sample_NDF(vec2 Xi, vec2 alpha)
-{
-    float phi = 2.0 * M_PI * Xi.x;
-    float tanTheta = sqrt(Xi.y / (1.0 - Xi.y));
-    vec3 H = vec3(tanTheta * alpha.x * cos(phi),
-                  tanTheta * alpha.y * sin(phi),
-                  1.0);
-    return normalize(H);
-}
-
-// http://jcgt.org/published/0007/04/01/paper.pdf
-// Appendix A Listing 1
+// https://ggx-research.github.io/publication/2023/06/09/publication-ggx.html
 vec3 mx_ggx_importance_sample_VNDF(vec2 Xi, vec3 V, vec2 alpha)
 {
     // Transform the view direction to the hemisphere configuration.
     V = normalize(vec3(V.xy * alpha, V.z));
 
-    // Construct an orthonormal basis from the view direction.
-    float len = length(V.xy);
-    vec3 T1 = (len > 0.0) ? vec3(-V.y, V.x, 0.0) / len : vec3(1.0, 0.0, 0.0);
-    vec3 T2 = cross(V, T1);
-
-    // Parameterization of the projected area.
-    float r = sqrt(Xi.y);
+    // Sample a spherical cap in (-V.z, 1].
     float phi = 2.0 * M_PI * Xi.x;
-    float t1 = r * cos(phi);
-    float t2 = r * sin(phi);
-    float s = 0.5 * (1.0 + V.z);
-    t2 = (1.0 - s) * sqrt(1.0 - mx_square(t1)) + s * t2;
+    float z = (1.0 - Xi.y) * (1.0 + V.z) - V.z;
+    float sinTheta = sqrt(clamp(1.0 - z * z, 0.0, 1.0));
+    float x = sinTheta * cos(phi);
+    float y = sinTheta * sin(phi);
+    vec3 c = vec3(x, y, z);
 
-    // Reprojection onto hemisphere.
-    vec3 H = t1 * T1 + t2 * T2 + sqrt(max(0.0, 1.0 - mx_square(t1) - mx_square(t2))) * V;
+    // Compute the microfacet normal.
+    vec3 H = c + V;
 
     // Transform the microfacet normal back to the ellipsoid configuration.
     H = normalize(vec3(H.xy * alpha, max(H.z, 0.0)));
@@ -962,11 +942,22 @@ vec3 mx_latlong_map_lookup(vec3 dir, mat4 transform, float lod, sampler2D envSam
     return textureLod(envSampler, uv, lod).rgb;
 }
 
-float mx_latlong_compute_lod(float alpha)
+// Return the mip level with the appropriate coverage for a filtered importance sample.
+// https://developer.nvidia.com/gpugems/GPUGems3/gpugems3_ch20.html
+// Section 20.4 Equation 13
+float mx_latlong_compute_lod(vec3 dir, float pdf, float maxMipLevel, int envSamples)
 {
-    // Select a mip level based on input alpha.
-    float lodBias = alpha < 0.25 ? sqrt(alpha) : 0.5*alpha + 0.375;
-    return lodBias * float(u_envRadianceMips);
+    const float MIP_LEVEL_OFFSET = 1.5;
+    float effectiveMaxMipLevel = maxMipLevel - MIP_LEVEL_OFFSET;
+    float distortion = sqrt(1.0 - mx_square(dir.y));
+    return max(effectiveMaxMipLevel - 0.5 * log2(float(envSamples) * pdf * distortion), 0.0);
+}
+
+// Return the mip level associated with the given alpha in a prefiltered environment.
+float mx_latlong_alpha_to_lod(float alpha)
+{
+    float lodBias = (alpha < 0.25) ? sqrt(alpha) : 0.5 * alpha + 0.375;
+    return lodBias * float(u_envRadianceMips - 1);
 }
 
 vec3 mx_environment_radiance(vec3 N, vec3 V, vec3 X, vec2 alpha, int distribution, FresnelData fd)
@@ -981,13 +972,14 @@ vec3 mx_environment_radiance(vec3 N, vec3 V, vec3 X, vec2 alpha, int distributio
     float G = mx_ggx_smith_G2(NdotV, NdotV, avgAlpha);
     vec3 FG = fd.refraction ? vec3(1.0) - (F * G) : F * G;
 
-    vec3 Li = mx_latlong_map_lookup(L, u_envMatrix, mx_latlong_compute_lod(avgAlpha), u_envRadiance);
-    return Li * FG;
+    vec3 Li = mx_latlong_map_lookup(L, u_envMatrix, mx_latlong_alpha_to_lod(avgAlpha), u_envRadiance);
+    return Li * FG * u_envLightIntensity;
 }
 
 vec3 mx_environment_irradiance(vec3 N)
 {
-    return mx_latlong_map_lookup(N, u_envMatrix, 0.0, u_envIrradiance);
+    vec3 Li = mx_latlong_map_lookup(N, u_envMatrix, 0.0, u_envIrradiance);
+    return Li * u_envLightIntensity;
 }
 
 
@@ -1030,27 +1022,33 @@ void sampleLightSource(LightData light, vec3 position, out lightshader result)
     }
 }
 
-const mat3 AP1_TO_REC709 = mat3( 1.705050992658, -0.130256417507, -0.024003356805,
-                                -0.621792120657,  1.140804736575, -0.128968976065,
-                                -0.083258872001, -0.010548319068,  1.15297233287);
-
-const mat3 ADOBERGB_TO_REC709 = mat3( 1.39835574e+00, -2.50233861e-16,  2.77555756e-17,
-                                     -3.98355744e-01,  1.00000000e+00, -4.29289893e-02,
-                                      0.00000000e+00,  0.00000000e+00,  1.04292899e+00);
-
-const float ADOBERGB_GAMMA = 563.0 / 256.0;
-
-vec3 mx_srgb_texture_to_lin_rec709(vec3 color)
+void NG_srgb_texture_to_lin_rec709_color3(vec3 in1, out vec3 out1)
 {
-    bvec3 isAbove = greaterThan(color, vec3(0.04045));
-    vec3 linSeg = color / 12.92;
-    vec3 powSeg = pow(max(color + vec3(0.055), vec3(0.0)) / 1.055, vec3(2.4));
-    return mix(linSeg, powSeg, vec3(isAbove));
-}
-
-void mx_srgb_texture_to_lin_rec709_color3(vec3 _in, out vec3 result)
-{
-    result = mx_srgb_texture_to_lin_rec709(_in);
+    const float bias_in2_tmp = 0.055000;
+    vec3 bias_out = in1 + bias_in2_tmp;
+    const float linSeg_in2_tmp = 12.920000;
+    vec3 linSeg_out = in1 / linSeg_in2_tmp;
+    const float isAboveR_value2_tmp = 0.040450;
+    const float isAboveR_in1_tmp = 1.000000;
+    const float isAboveR_in2_tmp = 0.000000;
+    float isAboveR_out = (in1.x > isAboveR_value2_tmp) ? isAboveR_in1_tmp : isAboveR_in2_tmp;
+    const float isAboveG_value2_tmp = 0.040450;
+    const float isAboveG_in1_tmp = 1.000000;
+    const float isAboveG_in2_tmp = 0.000000;
+    float isAboveG_out = (in1.y > isAboveG_value2_tmp) ? isAboveG_in1_tmp : isAboveG_in2_tmp;
+    const float isAboveB_value2_tmp = 0.040450;
+    const float isAboveB_in1_tmp = 1.000000;
+    const float isAboveB_in2_tmp = 0.000000;
+    float isAboveB_out = (in1.z > isAboveB_value2_tmp) ? isAboveB_in1_tmp : isAboveB_in2_tmp;
+    const float max_in2_tmp = 0.000000;
+    vec3 max_out = max(bias_out, max_in2_tmp);
+    vec3 isAbove_out = vec3(isAboveR_out, isAboveG_out, isAboveB_out);
+    const float scale_in2_tmp = 1.055000;
+    vec3 scale_out = max_out / scale_in2_tmp;
+    const float powSeg_in2_tmp = 2.400000;
+    vec3 powSeg_out = pow(scale_out, vec3(powSeg_in2_tmp));
+    vec3 mix_out = mix(linSeg_out, powSeg_out, isAbove_out);
+    out1 = mix_out;
 }
 
 void mx_roughness_anisotropy(float roughness, float anisotropy, out vec2 result)
@@ -1252,15 +1250,6 @@ void mx_uniform_edf(vec3 N, vec3 L, vec3 color, out EDF result)
 }
 
 
-void mx_generalized_schlick_edf(vec3 N, vec3 V, vec3 color0, vec3 color90, float exponent, EDF base, out EDF result)
-{
-    N = mx_forward_facing_normal(N, V);
-    float NdotV = clamp(dot(N, V), M_FLOAT_EPS, 1.0);
-    vec3 f = mx_fresnel_schlick(NdotV, color0, color90, exponent);
-    result = base * f;
-}
-
-
 void mx_dielectric_bsdf_reflection(vec3 L, vec3 V, vec3 P, float occlusion, float weight, vec3 tint, float ior, vec2 roughness, vec3 N, vec3 X, int distribution, int scatter_mode, inout BSDF bsdf)
 {
     if (weight < M_FLOAT_EPS)
@@ -1283,6 +1272,7 @@ void mx_dielectric_bsdf_reflection(vec3 L, vec3 V, vec3 P, float occlusion, floa
     vec3 Ht = vec3(dot(H, X), dot(H, Y), dot(H, N));
 
     FresnelData fd;
+    vec3 safeTint = max(tint, 0.0);
     if (bsdf.thickness > 0.0)
     { 
         fd = mx_init_fresnel_dielectric_airy(ior, bsdf.thickness, bsdf.ior);
@@ -1301,7 +1291,7 @@ void mx_dielectric_bsdf_reflection(vec3 L, vec3 V, vec3 P, float occlusion, floa
     bsdf.throughput = 1.0 - dirAlbedo * weight;
 
     // Note: NdotL is cancelled out
-    bsdf.response = D * F * G * comp * tint * occlusion * weight / (4.0 * NdotV);
+    bsdf.response = D * F * G * comp * safeTint * occlusion * weight / (4.0 * NdotV);
 }
 
 void mx_dielectric_bsdf_transmission(vec3 V, float weight, vec3 tint, float ior, vec2 roughness, vec3 N, vec3 X, int distribution, int scatter_mode, inout BSDF bsdf)
@@ -1315,6 +1305,7 @@ void mx_dielectric_bsdf_transmission(vec3 V, float weight, vec3 tint, float ior,
     float NdotV = clamp(dot(N, V), M_FLOAT_EPS, 1.0);
 
     FresnelData fd;
+    vec3 safeTint = max(tint, 0.0);
     if (bsdf.thickness > 0.0)
     { 
         fd = mx_init_fresnel_dielectric_airy(ior, bsdf.thickness, bsdf.ior);
@@ -1335,7 +1326,7 @@ void mx_dielectric_bsdf_transmission(vec3 V, float weight, vec3 tint, float ior,
 
     if (scatter_mode != 0)
     {
-        bsdf.response = mx_surface_transmission(N, V, X, safeAlpha, distribution, fd, tint) * weight;
+        bsdf.response = mx_surface_transmission(N, V, X, safeAlpha, distribution, fd, safeTint) * weight;
     }
 }
 
@@ -1351,6 +1342,7 @@ void mx_dielectric_bsdf_indirect(vec3 V, float weight, vec3 tint, float ior, vec
     float NdotV = clamp(dot(N, V), M_FLOAT_EPS, 1.0);
 
     FresnelData fd;
+    vec3 safeTint = max(tint, 0.0);
     if (bsdf.thickness > 0.0)
     { 
         fd = mx_init_fresnel_dielectric_airy(ior, bsdf.thickness, bsdf.ior);
@@ -1370,7 +1362,7 @@ void mx_dielectric_bsdf_indirect(vec3 V, float weight, vec3 tint, float ior, vec
     bsdf.throughput = 1.0 - dirAlbedo * weight;
 
     vec3 Li = mx_environment_radiance(N, V, X, safeAlpha, distribution, fd);
-    bsdf.response = Li * tint * comp * weight;
+    bsdf.response = Li * safeTint * comp * weight;
 }
 
 
@@ -1626,6 +1618,15 @@ void mx_oren_nayar_diffuse_bsdf_indirect(vec3 V, float weight, vec3 color, float
     bsdf.response = Li * color * weight;
 }
 
+
+void mx_generalized_schlick_edf(vec3 N, vec3 V, vec3 color0, vec3 color90, float exponent, EDF base, out EDF result)
+{
+    N = mx_forward_facing_normal(N, V);
+    float NdotV = clamp(dot(N, V), M_FLOAT_EPS, 1.0);
+    vec3 f = mx_fresnel_schlick(NdotV, color0, color90, exponent);
+    result = base * f;
+}
+
 void NG_standard_surface_surfaceshader_100(float base, vec3 base_color, float diffuse_roughness, float metalness, float specular, vec3 specular_color, float specular_roughness, float specular_IOR, float specular_anisotropy, float specular_rotation, float transmission, vec3 transmission_color, float transmission_depth, vec3 transmission_scatter, float transmission_scatter_anisotropy, float transmission_dispersion, float transmission_extra_roughness, float subsurface, vec3 subsurface_color, vec3 subsurface_radius, float subsurface_scale, float subsurface_anisotropy, float sheen, vec3 sheen_color, float sheen_roughness, float coat, vec3 coat_color, float coat_roughness, float coat_anisotropy, float coat_rotation, float coat_IOR, vec3 coat_normal, float coat_affect_color, float coat_affect_roughness, float thin_film_thickness, float thin_film_IOR, float emission, vec3 emission_color, vec3 opacity, bool thin_walled, vec3 normal, vec3 tangent, out surfaceshader out1)
 {
     vec2 coat_roughness_vector_out = vec2(0.0);
@@ -1689,6 +1690,8 @@ void NG_standard_surface_surfaceshader_100(float base, vec3 base_color, float di
     mx_roughness_anisotropy(coat_affected_transmission_roughness_out, specular_anisotropy, transmission_roughness_out);
     vec3 coat_affected_subsurface_color_out = pow(subsurface_color_nonnegative_out, vec3(coat_gamma_out));
     vec3 coat_affected_diffuse_color_out = pow(base_color_nonnegative_out, vec3(coat_gamma_out));
+    const float one_minus_coat_ior_to_F0_in1_tmp = 1.000000;
+    float one_minus_coat_ior_to_F0_out = one_minus_coat_ior_to_F0_in1_tmp - coat_ior_to_F0_out;
     surfaceshader shader_constructor_out = surfaceshader(vec3(0.0),vec3(0.0));
     {
         vec3 N = normalize(vd.normalWorld);
@@ -1818,7 +1821,7 @@ void NG_standard_surface_surfaceshader_100(float base, vec3 base_color, float di
             mx_uniform_edf(N, V, emission_weight_out, emission_edf_out);
             EDF coat_tinted_emission_edf_out = emission_edf_out * coat_color;
             EDF coat_emission_edf_out = EDF(0.0);
-            mx_generalized_schlick_edf(N, V, vec3(1.000000, 1.000000, 1.000000), vec3(coat_ior_to_F0_out, coat_ior_to_F0_out, coat_ior_to_F0_out), 5.000000, coat_tinted_emission_edf_out, coat_emission_edf_out);
+            mx_generalized_schlick_edf(N, V, vec3(one_minus_coat_ior_to_F0_out, one_minus_coat_ior_to_F0_out, one_minus_coat_ior_to_F0_out), vec3(0.000000, 0.000000, 0.000000), 5.000000, coat_tinted_emission_edf_out, coat_emission_edf_out);
             // Omitted node 'emission_edf'. Function already called in this scope.
             EDF blended_coat_emission_edf_out = mix(emission_edf_out, coat_emission_edf_out, coat);
             shader_constructor_out.color += blended_coat_emission_edf_out;
@@ -1881,14 +1884,14 @@ vec4 surfaceShader(vec4 Peye, vec3 Neye, vec4 color, vec4 patchCoord)
 {
     // Initialize MaterialX Variables
     mxInit(Peye, Neye);
-    vec3 geomprop_Nworld_out1 = normalize(vd.normalWorld);
-    vec3 geomprop_Tworld_out1 = normalize(vd.tangentWorld);
     vec3 SR_copper_coat_color_cm_out = vec3(0.0);
-    mx_srgb_texture_to_lin_rec709_color3(coat_color, SR_copper_coat_color_cm_out);
+    NG_srgb_texture_to_lin_rec709_color3(coat_color, SR_copper_coat_color_cm_out);
     vec3 SR_copper_base_color_cm_out = vec3(0.0);
-    mx_srgb_texture_to_lin_rec709_color3(base_color, SR_copper_base_color_cm_out);
+    NG_srgb_texture_to_lin_rec709_color3(base_color, SR_copper_base_color_cm_out);
+    vec3 geomprop_Nworld_out = normalize(vd.normalWorld);
+    vec3 geomprop_Tworld_out = normalize(vd.tangentWorld);
     surfaceshader SR_copper_out = surfaceshader(vec3(0.0),vec3(0.0));
-    NG_standard_surface_surfaceshader_100(base, SR_copper_base_color_cm_out, diffuse_roughness, metalness, specular, specular_color, specular_roughness, specular_IOR, specular_anisotropy, specular_rotation, transmission, transmission_color, transmission_depth, transmission_scatter, transmission_scatter_anisotropy, transmission_dispersion, transmission_extra_roughness, subsurface, subsurface_color, subsurface_radius, subsurface_scale, subsurface_anisotropy, sheen, sheen_color, sheen_roughness, coat, SR_copper_coat_color_cm_out, coat_roughness, coat_anisotropy, coat_rotation, coat_IOR, geomprop_Nworld_out1, coat_affect_color, coat_affect_roughness, thin_film_thickness, thin_film_IOR, emission, emission_color, opacity, thin_walled, geomprop_Nworld_out1, geomprop_Tworld_out1, SR_copper_out);
+    NG_standard_surface_surfaceshader_100(base, SR_copper_base_color_cm_out, diffuse_roughness, metalness, specular, specular_color, specular_roughness, specular_IOR, specular_anisotropy, specular_rotation, transmission, transmission_color, transmission_depth, transmission_scatter, transmission_scatter_anisotropy, transmission_dispersion, transmission_extra_roughness, subsurface, subsurface_color, subsurface_radius, subsurface_scale, subsurface_anisotropy, sheen, sheen_color, sheen_roughness, coat, SR_copper_coat_color_cm_out, coat_roughness, coat_anisotropy, coat_rotation, coat_IOR, geomprop_Nworld_out, coat_affect_color, coat_affect_roughness, thin_film_thickness, thin_film_IOR, emission, emission_color, opacity, thin_walled, geomprop_Nworld_out, geomprop_Tworld_out, SR_copper_out);
     vec4 mxOut = vec4(SR_copper_out.color, 1.0);
     mxOut = ApplyColorOverrides(mxOut);
     return mxOut;

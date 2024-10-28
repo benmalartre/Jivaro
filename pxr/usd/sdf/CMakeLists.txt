@@ -6,14 +6,16 @@ pxr_library(sdf
         arch
         tf
         gf
+        pegtl
         trace
+        ts
         vt
         work
         ar
-        ${Boost_PYTHON_LIBRARY}
+        ${TBB_tbb_LIBRARY}
 
     INCLUDE_DIRS
-        ${Boost_INCLUDE_DIRS}
+        ${TBB_INCLUDE_DIRS}
 
     PUBLIC_CLASSES
         abstractData
@@ -51,6 +53,7 @@ pxr_library(sdf
         pathExpression
         pathExpressionEval
         pathNode
+        pathPattern
         pathTable
         payload
         pool
@@ -76,9 +79,6 @@ pxr_library(sdf
         variableExpression
         variantSetSpec
         variantSpec
-
-        # Flex/Bison generated code
-        textFileFormat.tab
    
     PYTHON_PUBLIC_CLASSES
         pyChildrenProxy
@@ -94,8 +94,8 @@ pxr_library(sdf
         api.h
         accessorHelpers.h
         declareSpec.h
-        invoke.hpp
         layerHints.h
+        pathPatternParser.h
         predicateExpressionParser.h
         predicateProgram.h
         schemaTypeRegistration.h
@@ -115,6 +115,7 @@ pxr_library(sdf
         parserValueContext
         pathParser
         subLayerListEditor
+        textFileFormatParser
         textParserContext
         textParserHelpers
         valueTypeRegistry
@@ -125,10 +126,6 @@ pxr_library(sdf
     PRIVATE_HEADERS
         instantiatePool.h
         valueTypePrivate.h
-
-    CPPFILES
-        # Flex/Bison generated code
-        textFileFormat.lex.cpp
 
     PYTHON_CPPFILES
         moduleDeps.cpp
@@ -152,6 +149,7 @@ pxr_library(sdf
         wrapOpaqueValue.cpp
         wrapPath.cpp
         wrapPathExpression.cpp
+        wrapPathPattern.cpp
         wrapPayload.cpp
         wrapPredicateExpression.cpp
         wrapPredicateFunctionResult.cpp
@@ -180,29 +178,6 @@ pxr_library(sdf
         doxygen/variableExpressions.dox
 )
 
-# Validate that the checked in generated code matches the sources. This requires
-# a specific version of bison/flex to get the same results
-if (NOT ${PXR_VALIDATE_GENERATED_CODE})
-    message(STATUS "Skipping validation of sdf generated code because PXR_VALIDATE_GENERATED_CODE=OFF")
-elseif(NOT BISON_FOUND)
-    message(STATUS "Skipping validation of sdf generated code because of missing dependency: bison")
-elseif(NOT FLEX_FOUND)
-    message(STATUS "Skipping validation of sdf generated code because of missing dependency: flex")
-else()
-    add_custom_command(
-        TARGET sdf
-        PRE_BUILD 
-        COMMENT "Validating sdf generated code..."
-        COMMAND
-            ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/sdfGenAsciiParsers.py 
-            --srcDir ${CMAKE_CURRENT_SOURCE_DIR}
-            --bison ${BISON_EXECUTABLE}
-            --flex ${FLEX_EXECUTABLE}
-            --bases textFileFormat
-            --validate
-    )
-endif()
-
 pxr_test_scripts(
     testenv/testSdfAssetPath.py
     testenv/testSdfAttribute.py
@@ -224,6 +199,7 @@ pxr_test_scripts(
     testenv/testSdfPayload.py
     testenv/testSdfPrim.py
     testenv/testSdfReference.py
+    testenv/testSdfRelocates.py
     testenv/testSdfSpecHash.py
     testenv/testSdfTimeCode.py
     testenv/testSdfTypes.py
@@ -232,7 +208,6 @@ pxr_test_scripts(
 )
 
 pxr_build_test_shared_lib(TestSdfFileFormatCapabilities
-    CREATE_FRAMEWORK
     INSTALL_PREFIX SdfPlugins
     LIBRARIES
         sdf
@@ -242,8 +217,17 @@ pxr_build_test_shared_lib(TestSdfFileFormatCapabilities
         testenv/TestSdfFileFormatCapabilities.cpp
 )
 
+pxr_build_test_shared_lib(TestSdfLayerExceptionHandling
+    INSTALL_PREFIX SdfPlugins
+    LIBRARIES
+        sdf
+        tf
+
+    CPPFILES
+        testenv/TestSdfLayerExceptionHandling.cpp
+)
+
 pxr_build_test_shared_lib(TestSdfNoAssetFileFormat
-    CREATE_FRAMEWORK
     INSTALL_PREFIX SdfPlugins
     LIBRARIES
         sdf
@@ -254,7 +238,6 @@ pxr_build_test_shared_lib(TestSdfNoAssetFileFormat
 )
 
 pxr_build_test_shared_lib(TestSdfStreamingFileFormat
-    CREATE_FRAMEWORK
     INSTALL_PREFIX SdfPlugins
     LIBRARIES
         sdf
@@ -265,7 +248,6 @@ pxr_build_test_shared_lib(TestSdfStreamingFileFormat
 )
 
 pxr_build_test_shared_lib(TestSdfTargetFileFormat
-    CREATE_FRAMEWORK
     INSTALL_PREFIX SdfPlugins
     LIBRARIES
         sdf
@@ -276,7 +258,6 @@ pxr_build_test_shared_lib(TestSdfTargetFileFormat
 )
 
 pxr_build_test_shared_lib(TestSdfResolver
-    CREATE_FRAMEWORK
     INSTALL_PREFIX SdfPlugins
     LIBRARIES
         ar
@@ -350,6 +331,14 @@ pxr_build_test(testSdfPredicateExpression_Cpp
         tf
     CPPFILES
         testenv/testSdfPredicateExpression.cpp
+)
+
+pxr_build_test(testSdfTextFileFormatParsing
+    LIBRARIES
+        sdf
+        tf
+    CPPFILES
+        testenv/testSdfTextFileFormatParsing.cpp
 )
 
 pxr_install_test_dir(
@@ -518,6 +507,10 @@ pxr_register_test(testSdfPredicateExpression_Cpp
     COMMAND "${CMAKE_INSTALL_PREFIX}/tests/testSdfPredicateExpression_Cpp"
 )
 
+pxr_register_test(testSdfTextFileFormatParsing
+   COMMAND "${CMAKE_INSTALL_PREFIX}/tests/testSdfTextFileFormatParsing"
+)
+
 pxr_register_test(testSdfPayload
     PYTHON
     COMMAND "${CMAKE_INSTALL_PREFIX}/tests/testSdfPayload"
@@ -529,6 +522,10 @@ pxr_register_test(testSdfPrim
 pxr_register_test(testSdfReference
     PYTHON
     COMMAND "${CMAKE_INSTALL_PREFIX}/tests/testSdfReference"
+)
+pxr_register_test(testSdfRelocates
+    PYTHON
+    COMMAND "${CMAKE_INSTALL_PREFIX}/tests/testSdfRelocates"
 )
 pxr_register_test(testSdfSpecHash
     PYTHON

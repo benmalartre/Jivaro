@@ -1,25 +1,8 @@
 //
-// Copyright 2018 Pixar
+// Copyright 2023 Pixar
 //
-// Licensed under the Apache License, Version 2.0 (the "Apache License")
-// with the following modification; you may not use this file except in
-// compliance with the Apache License and the following modification to it:
-// Section 6. Trademarks. is deleted and replaced with:
-//
-// 6. Trademarks. This License does not grant permission to use the trade
-//    names, trademarks, service marks, or product names of the Licensor
-//    and its affiliates, except as required to comply with Section 4(c) of
-//    the License and to reproduce the content of the NOTICE file.
-//
-// You may obtain a copy of the Apache License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the Apache License with the above modification is
-// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied. See the Apache License for the specific
-// language governing permissions and limitations under the Apache License.
+// Licensed under the terms set forth in the LICENSE.txt file available at
+// https://openusd.org/license.
 //
 #include "pxr/pxr.h"
 #include "pxr/usd/usdMtlx/utils.h"
@@ -32,6 +15,8 @@
 #include <algorithm>
 #include <cctype>
 #include <map>
+
+#include "pxr/base/trace/trace.h"
 
 namespace mx = MaterialX;
 
@@ -52,6 +37,8 @@ using _NameMapping = std::map<std::string, std::string>;
 void
 _MapNodeNamesToBaseForVersioning(mx::ConstElementPtr mtlx, _NameMapping* mapping)
 {
+    TRACE_FUNCTION();
+
     static const std::string inheritAttr("inherit");
 
     // Find shortest:
@@ -102,6 +89,8 @@ _MapNodeNamesToBaseForVersioning(mx::ConstElementPtr mtlx, _NameMapping* mapping
 _NameMapping
 _ComputeNameMapping(const mx::ConstDocumentPtr& doc)
 {
+    TRACE_FUNCTION();
+
     _NameMapping result;
 
     // For each nodeDef with an inheritance chain, we populate the 
@@ -134,6 +123,8 @@ _ComputeNameMapping(const mx::ConstDocumentPtr& doc)
 std::string
 _ChooseName(const std::string& nodeDefName, const _NameMapping& nameMapping)
 {
+    TRACE_FUNCTION();
+
     auto i = nameMapping.find(nodeDefName);
     return i == nameMapping.end() ? nodeDefName : i->second;
 }
@@ -146,6 +137,8 @@ _DiscoverNodes(
     const NdrDiscoveryUri& fileResult,
     const _NameMapping& nameMapping)
 {
+    TRACE_FUNCTION();
+
     static const TfToken family = TfToken();
 
     // Get the node definitions
@@ -187,6 +180,8 @@ private:
 
 UsdMtlxDiscoveryPlugin::UsdMtlxDiscoveryPlugin()
 {
+    TRACE_FUNCTION();
+
     _customSearchPaths = UsdMtlxCustomSearchPaths();
     _allSearchPaths = UsdMtlxSearchPaths();
 }
@@ -194,6 +189,8 @@ UsdMtlxDiscoveryPlugin::UsdMtlxDiscoveryPlugin()
 NdrNodeDiscoveryResultVec
 UsdMtlxDiscoveryPlugin::DiscoverNodes(const Context& context)
 {
+    TRACE_FUNCTION();
+
     NdrNodeDiscoveryResultVec result;
 
     // Merge all MaterialX standard library files into a single document.
@@ -226,6 +223,8 @@ UsdMtlxDiscoveryPlugin::DiscoverNodes(const Context& context)
 const NdrStringVec&
 UsdMtlxDiscoveryPlugin::GetSearchURIs() const
 {
+    TRACE_FUNCTION();
+
     return _allSearchPaths;
 }
 

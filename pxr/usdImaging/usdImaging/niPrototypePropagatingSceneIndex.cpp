@@ -1,25 +1,8 @@
 //
 // Copyright 2022 Pixar
 //
-// Licensed under the Apache License, Version 2.0 (the "Apache License")
-// with the following modification; you may not use this file except in
-// compliance with the Apache License and the following modification to it:
-// Section 6. Trademarks. is deleted and replaced with:
-//
-// 6. Trademarks. This License does not grant permission to use the trade
-//    names, trademarks, service marks, or product names of the Licensor
-//    and its affiliates, except as required to comply with Section 4(c) of
-//    the License and to reproduce the content of the NOTICE file.
-//
-// You may obtain a copy of the Apache License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the Apache License with the above modification is
-// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied. See the Apache License for the specific
-// language governing permissions and limitations under the Apache License.
+// Licensed under the terms set forth in the LICENSE.txt file available at
+// https://openusd.org/license.
 //
 #include "pxr/usdImaging/usdImaging/niPrototypePropagatingSceneIndex.h"
 
@@ -36,6 +19,7 @@
 #include "pxr/imaging/hd/sceneIndexPrimView.h"
 #include "pxr/imaging/hd/retainedDataSource.h"
 
+#include "pxr/base/trace/trace.h"
 #include "pxr/base/tf/envSetting.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
@@ -87,6 +71,8 @@ public:
         const size_t prototypeRootOverlayDsHash,
         HdContainerDataSourceHandle const &prototypeRootOverlayDs)
     {
+        TRACE_FUNCTION();
+
         SceneIndices result;
 
         _SceneIndices2 &sceneIndices2 =
@@ -335,6 +321,8 @@ UsdImagingNiPrototypePropagatingSceneIndex(
   , _instanceAggregationSceneIndexObserver(this)
   , _mergingSceneIndexObserver(this)
 {
+    TRACE_FUNCTION();
+
     const _SceneIndexCache::SceneIndices sceneIndices =
         _cache->GetSceneIndicesForPrototype(
             prototypeName, _prototypeRootOverlayDsHash, prototypeRootOverlayDs);
@@ -373,6 +361,8 @@ void
 UsdImagingNiPrototypePropagatingSceneIndex::_Populate(
     HdSceneIndexBaseRefPtr const &instanceAggregationSceneIndex)
 {
+    TRACE_FUNCTION();
+
     for (const SdfPath &primPath
              : HdSceneIndexPrimView(instanceAggregationSceneIndex,
                                     SdfPath::AbsoluteRootPath())) {
@@ -451,6 +441,8 @@ _ErasePrefix(Container * const c, const SdfPath &prefix)
 void
 UsdImagingNiPrototypePropagatingSceneIndex::_RemovePrim(const SdfPath &primPath)
 {
+    TRACE_FUNCTION();
+
     // Erase all entries from map with given prefix.
     _ErasePrefix(&_instancersToMergingSceneIndexEntry, primPath);
 }
@@ -465,10 +457,18 @@ UsdImagingNiPrototypePropagatingSceneIndex::GetInputScenes() const
     }
 }
 
+std::vector<HdSceneIndexBaseRefPtr>
+UsdImagingNiPrototypePropagatingSceneIndex::GetEncapsulatedScenes() const
+{
+    return { _mergingSceneIndex };
+}
+
 HdSceneIndexPrim
 UsdImagingNiPrototypePropagatingSceneIndex::GetPrim(
     const SdfPath &primPath) const
 {
+    TRACE_FUNCTION();
+
     return _mergingSceneIndex->GetPrim(primPath);
 }
 
@@ -476,6 +476,8 @@ SdfPathVector
 UsdImagingNiPrototypePropagatingSceneIndex::GetChildPrimPaths(
     const SdfPath &primPath) const
 {
+    TRACE_FUNCTION();
+
     return _mergingSceneIndex->GetChildPrimPaths(primPath);
 }
 
@@ -492,6 +494,8 @@ _InstanceAggregationSceneIndexObserver::PrimsAdded(
     const HdSceneIndexBase &sender,
     const AddedPrimEntries &entries)
 {
+    TRACE_FUNCTION();
+
     for (const AddedPrimEntry &entry : entries) {
         _owner->_AddPrim(entry.primPath);
     }
@@ -512,6 +516,8 @@ _InstanceAggregationSceneIndexObserver::PrimsRemoved(
     const HdSceneIndexBase &sender,
     const RemovedPrimEntries &entries)
 {
+    TRACE_FUNCTION();
+
     for (const RemovedPrimEntry &entry : entries) {
         _owner->_RemovePrim(entry.primPath);
     }

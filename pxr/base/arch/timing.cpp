@@ -1,25 +1,8 @@
 //
 // Copyright 2016 Pixar
 //
-// Licensed under the Apache License, Version 2.0 (the "Apache License")
-// with the following modification; you may not use this file except in
-// compliance with the Apache License and the following modification to it:
-// Section 6. Trademarks. is deleted and replaced with:
-//
-// 6. Trademarks. This License does not grant permission to use the trade
-//    names, trademarks, service marks, or product names of the Licensor
-//    and its affiliates, except as required to comply with Section 4(c) of
-//    the License and to reproduce the content of the NOTICE file.
-//
-// You may obtain a copy of the Apache License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the Apache License with the above modification is
-// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied. See the Apache License for the specific
-// language governing permissions and limitations under the Apache License.
+// Licensed under the terms set forth in the LICENSE.txt file available at
+// https://openusd.org/license.
 //
 
 #include "pxr/pxr.h"
@@ -115,8 +98,23 @@ Arch_ComputeNanosecondsPerTick()
 #if defined(ARCH_CPU_ARM)
     uint64_t counter_hz;
     __asm __volatile("mrs	%0, CNTFRQ_EL0" : "=&r" (counter_hz));
-    Arch_NanosecondsPerTick = double(1e9) / double(counter_hz);
-#else
+
+    // As noted in this commit in the linux kernel:
+    //
+    // https://github.com/torvalds/linux/commit/c6f97add0f2ac83b98b06dbdda58fa47638ae7b0
+    //
+    // ...the value of CNTFRQ_EL0 is sometimes unreliable.  The linux kernel
+    // instead reads the tick rate from the device tree, and if that fails,
+    // only then falls back on CNTFRQ_EL0.
+    //
+    // Since we already have measurement-based code, and reading from the device
+    // tree seemed tricky, we instead check if CNTFRQ_EL0 seems "sane"
+    // (ie, > 1Hz), and if not, fall back on the measurement code used in all
+    // other linux flavors.
+    if (counter_hz > 1) {
+        return double(1e9) / double(counter_hz);
+    }
+#endif
 
     // Measure how long it takes to call ::now().
     uint64_t nowDuration =
@@ -135,7 +133,6 @@ Arch_ComputeNanosecondsPerTick()
     // as the overhead to call now() one time.
     return clockNanoSecs /
         double(ticks - ArchGetIntervalTimerTickOverhead() - nowDuration);
-#endif
 }
 #elif defined(ARCH_OS_WINDOWS)
 

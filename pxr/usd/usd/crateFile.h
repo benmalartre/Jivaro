@@ -1,25 +1,8 @@
 //
 // Copyright 2016 Pixar
 //
-// Licensed under the Apache License, Version 2.0 (the "Apache License")
-// with the following modification; you may not use this file except in
-// compliance with the Apache License and the following modification to it:
-// Section 6. Trademarks. is deleted and replaced with:
-//
-// 6. Trademarks. This License does not grant permission to use the trade
-//    names, trademarks, service marks, or product names of the Licensor
-//    and its affiliates, except as required to comply with Section 4(c) of
-//    the License and to reproduce the content of the NOTICE file.
-//
-// You may obtain a copy of the Apache License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the Apache License with the above modification is
-// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied. See the Apache License for the specific
-// language governing permissions and limitations under the Apache License.
+// Licensed under the terms set forth in the LICENSE.txt file available at
+// https://openusd.org/license.
 //
 #ifndef PXR_USD_USD_CRATE_FILE_H
 #define PXR_USD_USD_CRATE_FILE_H
@@ -31,6 +14,7 @@
 #include "crateValueInliners.h"
 
 #include "pxr/base/arch/fileSystem.h"
+#include "pxr/base/tf/delegatedCountPtr.h"
 #include "pxr/base/tf/hash.h"
 #include "pxr/base/tf/pxrTslRobinMap/robin_map.h"
 #include "pxr/base/tf/token.h"
@@ -43,8 +27,6 @@
 #include "pxr/usd/sdf/assetPath.h"
 #include "pxr/usd/sdf/path.h"
 #include "pxr/usd/sdf/types.h"
-
-#include <boost/intrusive_ptr.hpp>
 
 #include <tbb/concurrent_unordered_set.h>
 #include <tbb/spin_rw_mutex.h>
@@ -349,12 +331,15 @@ private:
                 bool operator!=(ZeroCopySource const &other) const {
                     return !(*this == other);
                 }
-                friend size_t tbb_hasher(ZeroCopySource const &z) {
-                    return TfHash::Combine(
-                        reinterpret_cast<uintptr_t>(z._addr),
-                        z._numBytes
-                    );
-                }
+
+                struct Hash {
+                    inline size_t operator()(const ZeroCopySource& z) const {
+                        return TfHash::Combine(
+                            reinterpret_cast<uintptr_t>(z._addr),
+                            z._numBytes
+                        );
+                    }
+                };
                 
                 // Return true if the refcount is nonzero.
                 bool IsInUse() const { return _refCount; }
@@ -403,15 +388,15 @@ private:
             // other code reading/writing the file.)
             void _DetachReferencedRanges();
             
-            // This class is managed by a combination of boost::intrusive_ptr
+            // This class is managed by a combination of TfDelegatedCountPtr
             // and manual reference counting -- see explicit calls to
-            // intrusive_ptr_add_ref/release in the .cpp file.
+            // TfDelegatedCount{Increment,Decrement} in the .cpp file.
             friend inline void
-            intrusive_ptr_add_ref(_Impl const *m) {
+            TfDelegatedCountIncrement(_Impl const *m) noexcept {
                 m->_refCount.fetch_add(1, std::memory_order_relaxed);
             }
             friend inline void
-            intrusive_ptr_release(_Impl const *m) {
+            TfDelegatedCountDecrement(_Impl const *m) noexcept {
                 if (m->_refCount.fetch_sub(1, std::memory_order_release) == 1) {
                     std::atomic_thread_fence(std::memory_order_acquire);
                     delete m;
@@ -422,7 +407,8 @@ private:
             ArchConstFileMapping _mapping;
             char const *_start;
             int64_t _length;
-            tbb::concurrent_unordered_set<ZeroCopySource> _outstandingRanges;
+            tbb::concurrent_unordered_set<ZeroCopySource,
+                ZeroCopySource::Hash> _outstandingRanges;
         };
 
     public:
@@ -432,7 +418,8 @@ private:
         // Construct with new mapping.
         explicit _FileMapping(ArchConstFileMapping &&mapping,
                               int64_t offset=0, int64_t length=-1) noexcept
-            : _impl(new _Impl(std::move(mapping), offset, length)) {}
+            : _impl(TfDelegatedCountIncrementTag,
+                    new _Impl(std::move(mapping), offset, length)) {}
 
         _FileMapping(_FileMapping &&other) noexcept
             : _impl(std::move(other._impl)) {
@@ -477,7 +464,7 @@ private:
         }
 
     private:
-        boost::intrusive_ptr<_Impl> _impl;
+        TfDelegatedCountPtr<_Impl> _impl;
     };
     
     ////////////////////////////////////////////////////////////////////////
@@ -720,10 +707,6 @@ public:
         explicit Packer(CrateFile *crate) : _crate(crate) {}
         CrateFile *_crate;
     };
-
-    // Return true if this CrateFile object wasn't populated from a file, or if
-    // the given \p fileName is the file this object was populated from.
-    bool CanPackTo(string const &fileName) const;
 
     Packer StartPacking(string const &fileName);
 
@@ -1083,8 +1066,6 @@ private:
     const bool _detached;
 
     std::string _assetPath; // Empty if this file data is in-memory only.
-    std::string _fileReadFrom; // The file this object was populate from, if it
-                               // was populated from a file.
 
     std::unique_ptr<char []> _debugPageMap; // Debug page access map, see
                                             // USDC_DUMP_PAGE_MAPS.

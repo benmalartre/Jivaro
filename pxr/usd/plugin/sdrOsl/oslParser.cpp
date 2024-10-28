@@ -1,25 +1,8 @@
 //
 // Copyright 2018 Pixar
 //
-// Licensed under the Apache License, Version 2.0 (the "Apache License")
-// with the following modification; you may not use this file except in
-// compliance with the Apache License and the following modification to it:
-// Section 6. Trademarks. is deleted and replaced with:
-//
-// 6. Trademarks. This License does not grant permission to use the trade
-//    names, trademarks, service marks, or product names of the Licensor
-//    and its affiliates, except as required to comply with Section 4(c) of
-//    the License and to reproduce the content of the NOTICE file.
-//
-// You may obtain a copy of the Apache License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the Apache License with the above modification is
-// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied. See the Apache License for the specific
-// language governing permissions and limitations under the Apache License.
+// Licensed under the terms set forth in the LICENSE.txt file available at
+// https://openusd.org/license.
 //
 
 #include "pxr/base/gf/vec2f.h"
@@ -39,6 +22,7 @@
 #include "pxr/usd/ndr/debugCodes.h"
 #include "pxr/usd/ndr/nodeDiscoveryResult.h"
 #include "pxr/usd/sdf/assetPath.h"
+#include "pxr/usd/sdf/path.h"
 #include "pxr/usd/sdr/shaderMetadataHelpers.h"
 #include "pxr/usd/sdr/shaderNode.h"
 #include "pxr/usd/sdr/shaderProperty.h"
@@ -67,6 +51,11 @@ TF_DEFINE_PRIVATE_TOKENS(
     // Discovery and source type
     ((discoveryType, "oso"))
     ((sourceType, "OSL"))
+
+    ((usdSchemaDefPrefix, "usdSchemaDef_"))
+    ((sdrGlobalConfigPrefix, "sdrGlobalConfig_"))
+    (sdrDefinitionNameFallbackPrefix)
+    
 );
 
 const NdrTokenVec& 
@@ -163,6 +152,17 @@ SdrOslParserPlugin::Parse(const NdrNodeDiscoveryResult& discoveryResult)
         return NdrParserPlugin::GetInvalidNode(discoveryResult);
     }
 
+    // The sdrDefinitionFallbackPrefix is found in the node metadata. The 
+    // fallbackPrefix is used in getNodeProperties to define the property's 
+    // ImplementationName.
+    NdrTokenMap metadata = _getNodeMetadata(oslQuery, discoveryResult.metadata);
+    std::string fallbackPrefix;
+    auto it = metadata.find(_tokens->sdrDefinitionNameFallbackPrefix);
+    if (it != metadata.end())
+    {
+        fallbackPrefix = it->second;
+    }
+
     return NdrNodeUniquePtr(
         new SdrShaderNode(
             discoveryResult.identifier,
@@ -176,8 +176,8 @@ SdrOslParserPlugin::Parse(const NdrNodeDiscoveryResult& discoveryResult)
             discoveryResult.resolvedUri,    // Definitive assertion that the
                                             // implementation is the same asset
                                             // as the definition
-            _getNodeProperties(oslQuery, discoveryResult),
-            _getNodeMetadata(oslQuery, discoveryResult.metadata),
+            _getNodeProperties(oslQuery, discoveryResult, fallbackPrefix),
+            metadata,
             discoveryResult.sourceCode
         )
     );
@@ -185,7 +185,9 @@ SdrOslParserPlugin::Parse(const NdrNodeDiscoveryResult& discoveryResult)
 
 NdrPropertyUniquePtrVec
 SdrOslParserPlugin::_getNodeProperties(
-    const OSL::OSLQuery &query, const NdrNodeDiscoveryResult& discoveryResult) const
+    const OSL::OSLQuery &query, 
+    const NdrNodeDiscoveryResult& discoveryResult, 
+    const std::string& fallbackPrefix) const
 {
     NdrPropertyUniquePtrVec properties;
     const size_t nParams = query.nparams();
@@ -246,6 +248,9 @@ SdrOslParserPlugin::_getNodeProperties(
         if (!definitionName.empty()){
             metadata[SdrPropertyMetadata->ImplementationName] = TfToken(propName);
             propName = definitionName;
+        } else if (!fallbackPrefix.empty()){
+            metadata[SdrPropertyMetadata->ImplementationName] = TfToken(propName);
+            propName = TfToken(SdfPath::JoinIdentifier(fallbackPrefix, propName));
         }
 
         // Extract options
@@ -345,7 +350,29 @@ SdrOslParserPlugin::_getNodeMetadata(
     for (const OslParameter& metaParam : query.metadata()) {
         TfToken entryName = TfToken(metaParam.name.string());
 
-        nodeMetadata[entryName] = _getParamAsString(metaParam);
+        // Check for node metadata with the usdSchemaDef_ prefix and store the
+        // metadata with the prefix removed.
+        // XXX: Need to confirm if _getParamAsString handle vector values, 
+        // when we have a use case for OSL shaders providing such metadata 
+        // (for example, usdSchemaDef's apiSchemaAutoApplyTo)
+        if (strncmp(_tokens->usdSchemaDefPrefix.GetText(), entryName.GetText(), 
+            _tokens->usdSchemaDefPrefix.size()) == 0)
+        {
+            const std::string entrySubStr = (entryName.GetString()).substr(
+                (_tokens->usdSchemaDefPrefix).size());
+            nodeMetadata[TfToken(entrySubStr)] = _getParamAsString(metaParam); 
+        }
+        else if (strncmp(_tokens->sdrGlobalConfigPrefix.GetText(), 
+            entryName.GetText(), _tokens->sdrGlobalConfigPrefix.size()) == 0)
+        {
+            const std::string entrySubStr = (entryName.GetString()).substr(
+                (_tokens->sdrGlobalConfigPrefix).size());
+            nodeMetadata[TfToken(entrySubStr)] = _getParamAsString(metaParam); 
+        }
+        else
+        {
+            nodeMetadata[entryName] = _getParamAsString(metaParam);
+        }
     }
 
     return nodeMetadata;

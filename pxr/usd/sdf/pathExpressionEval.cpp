@@ -1,31 +1,15 @@
 //
 // Copyright 2023 Pixar
 //
-// Licensed under the Apache License, Version 2.0 (the "Apache License")
-// with the following modification; you may not use this file except in
-// compliance with the Apache License and the following modification to it:
-// Section 6. Trademarks. is deleted and replaced with:
-//
-// 6. Trademarks. This License does not grant permission to use the trade
-//    names, trademarks, service marks, or product names of the Licensor
-//    and its affiliates, except as required to comply with Section 4(c) of
-//    the License and to reproduce the content of the NOTICE file.
-//
-// You may obtain a copy of the Apache License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the Apache License with the above modification is
-// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied. See the Apache License for the specific
-// language governing permissions and limitations under the Apache License.
+// Licensed under the terms set forth in the LICENSE.txt file available at
+// https://openusd.org/license.
 //
 
 #include "pxr/pxr.h"
 #include "pxr/usd/sdf/pathExpressionEval.h"
 
 #include "pxr/base/tf/errorMark.h"
+#include "pxr/base/tf/ostreamMethods.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -42,6 +26,18 @@ TF_CONDITIONALLY_COMPILE_TIME_ENABLED_DEBUG_CODES(
 
 #define DEBUG_MSG(...) \
     TF_DEBUG_MSG(SDF_PATH_EXPRESSION_EVAL, __VA_ARGS__)
+
+void
+Sdf_PathExpressionEvalBase::_PatternIncrSearchState::Pop(int newDepth)
+{
+    while (!_segmentMatchDepths.empty() &&
+           _segmentMatchDepths.back() >= newDepth) {
+        _segmentMatchDepths.pop_back();
+    }
+    if (newDepth <= _constantDepth) {
+        _constantDepth = -1;
+    }
+}
 
 SdfPredicateFunctionResult
 Sdf_PathExpressionEvalBase::_EvalExpr(
@@ -88,20 +84,27 @@ Sdf_PathExpressionEvalBase::_EvalExpr(
             result.SetAndPropagateConstancy(evalPattern(/*skip=*/false));
             break;
         case Not:
+            DEBUG_MSG("- Not %s -> %s\n",
+                      Stringify(result), Stringify(!result));
             result = !result;
             break;
         case And:
         case Or: {
+            DEBUG_MSG("- %s (lhs = %s)\n",
+                      *opIter == And ? "And" : "Or", result ? "true" : "false");
             const bool decidingValue = *opIter != And;
             // If the And/Or result is already the deciding value,
             // short-circuit.  Otherwise the result is the rhs, so continue.
             if (result == decidingValue) {
+                DEBUG_MSG("- Short-circuiting '%s', with %s\n",
+                          *opIter == And ? "And" : "Or",
+                          Stringify(result));
                 shortCircuit();
             }
         }
             break;
-        case Open: ++nest; break;
-        case Close: --nest; break;
+        case Open: DEBUG_MSG("- Open\n"); ++nest; break;
+        case Close: DEBUG_MSG("- Close\n"); --nest; break;
         };
     }
     return result;
@@ -115,11 +118,19 @@ _PatternImplBase::_Init(
 {
     // Build a matcher.
     _prefix = pattern.GetPrefix();
-    _isProperty = pattern.IsProperty();
+    // _matchObjType set below.
     _stretchBegin = false;
     _stretchEnd = false;
     auto const &predicateExprs = pattern.GetPredicateExprs();
 
+    // A helper to close and append a segment to _segments.
+    auto closeAndAppendSegment = [this]() {
+        _segments.push_back({
+                _segments.empty() ? 0 : _segments.back().end,
+                _components.size()
+            });
+    };
+    
     // This will technically over-reserve by the number of 'stretch' (//)
     // components, but it's worth it to not thrash the heap.
     _components.reserve(pattern.GetComponents().size());
@@ -128,20 +139,17 @@ _PatternImplBase::_Init(
         SdfPathExpression::PathPattern::Component const &component = *iter;
         // A 'stretch' (//) component.
         if (component.IsStretch()) {
-            if (_components.empty()) {
-                _stretchBegin = true;
-            }
-            // If this is the end of the components, just mark that.
+            // If this is the end of the components, mark that.
             if (std::next(iter) == end) {
                 _stretchEnd = true;
             }
-            // Otherwise finish any existing segment & start a new segment.
+            // If this pattern begins with stretch, we don't yet have a segment.
+            if (_components.empty()) {
+                _stretchBegin = true;
+            }
+            // Otherwise this stretch completes a segment -- append it.
             else {
-                if (_segments.empty()) {
-                    _segments.push_back({ 0, 0 });
-                }
-                _segments.back().end = _components.size();
-                _segments.push_back({ _components.size(), _components.size() });
+                closeAndAppendSegment();
             }
             continue;
         }
@@ -164,12 +172,66 @@ _PatternImplBase::_Init(
                 linkPredicate(predicateExprs[component.predicateIndex]);
         }
     }
-    // Close the final segment.
-    if (!_components.empty()) {
-        if (_segments.empty()) {
-            _segments.push_back({ 0, 0 });
+    // Close the final segment if necessary, for patterns that do not end in
+    // stretch.  Patterns that do end in stretch close the final segment in the
+    // above loop.
+    if (!_stretchEnd && !_components.empty()) {
+        closeAndAppendSegment();
+    }
+
+    // Set the object types this pattern can match.  If the pattern isn't
+    // explicitly a property, then it can match only prims if the final
+    // component's text is not empty.  That is, patterns like '/foo//' or '//'
+    // or '/predicate//{test}' can match either prims or properties, but
+    // patterns like '/foo//bar', '//baz{test}', '/foo/[Bb]' can only match
+    // prims.
+    if (pattern.IsProperty()) {
+        // The pattern demands a property.
+        _matchObjType = _MatchPropOnly;
+    }
+    else if (_stretchEnd ||
+             (!_components.empty() && _components.back().type == ExplicitName &&
+              _explicitNames[_components.back().patternIndex].empty())) {
+        // Trailing stretch, or last component has empty text means this can
+        // match both prims & properties.
+        _matchObjType = _MatchPrimOrProp;
+    }
+    else {
+        // No trailing stretch, and the final component requires a prim
+        // name/regex match means this pattern can only match prims.
+        _matchObjType = _MatchPrimOnly;
+    }
+
+    if (TfDebug::IsEnabled(SDF_PATH_EXPRESSION_EVAL)) {
+        auto stringifyComponent = [this](_Component const &component) {
+            std::string result = (component.type == ExplicitName)
+                ? TfStringPrintf(
+                    "'%s'", _explicitNames[component.patternIndex].c_str())
+                : TfStringPrintf("<regex %d>", component.patternIndex);
+            if (component.predicateIndex != -1) {
+                result += TfStringPrintf(" pred %d", component.predicateIndex);
+            }
+            return result;
+        };
+        std::vector<std::string> segmentStrs;
+        for (_Segment const &seg: _segments) {
+            std::vector<std::string> compStrs;
+            for (size_t i = seg.begin; i != seg.end; ++i) {
+                compStrs.push_back(stringifyComponent(_components[i]));
+            }
+            segmentStrs.push_back("[" + TfStringJoin(compStrs, ", ") + "]");
         }
-        _segments.back().end = _components.size();
+        DEBUG_MSG("_PatternImplBase::_Init\n"
+                  "  pattern      : <%s>\n"
+                  "  prefix       : <%s>\n"
+                  "  stretchBegin : %d\n"
+                  "  stretchEnd   : %d\n"
+                  "  segments     : %s\n",
+                  pattern.GetText().c_str(),
+                  _prefix.GetAsString().c_str(),
+                  _stretchBegin,
+                  _stretchEnd,
+                  TfStringJoin(segmentStrs, ", ").c_str());
     }
 }
 
@@ -207,10 +269,16 @@ _PatternImplBase::_Match(
                   Stringify(result));
         return result;
     }
-    if (_isProperty && !path.IsPrimPropertyPath()) {
-        DEBUG_MSG("pattern demands a property; <%s> is not -> varying false\n",
-                  path.GetAsString().c_str());
+    const bool isPrimPropertyPath = path.IsPrimPropertyPath();
+    if (_matchObjType == _MatchPropOnly && !isPrimPropertyPath) {
+        DEBUG_MSG("pattern demands a property; <%s> is a prim path -> "
+                  "varying false\n", path.GetAsString().c_str());
         return Result::MakeVarying(false);
+    }
+    if (_matchObjType == _MatchPrimOnly && isPrimPropertyPath) {
+        DEBUG_MSG("pattern demands a prim; <%s> is a property path -> "
+                  "constant false\n", path.GetAsString().c_str());
+        return Result::MakeConstant(false);
     }
 
     // If this pattern has no components, it matches if it is the same as the
@@ -218,7 +286,8 @@ _PatternImplBase::_Match(
     if (_components.empty()) {
         // Accepts all descendant paths.
         if (_stretchBegin || _stretchEnd) {
-            DEBUG_MSG("pattern accepts all paths -> constant true\n");
+            DEBUG_MSG("pattern accepts all descendant paths "
+                      "-> constant true\n");
             return Result::MakeConstant(true);
         }
         // Accepts only the prefix exactly.
@@ -233,12 +302,23 @@ _PatternImplBase::_Match(
                   path.GetAsString().c_str());
         return Result::MakeConstant(false);
     }
+    // If the pattern has components then the path must be longer than the
+    // prefix, otherwise those components have nothing to match.
+    else if (path.GetPathElementCount() == _prefix.GetPathElementCount()) {
+        DEBUG_MSG("path matches prefix but pattern requires additional "
+                  "components -> varying false\n");
+        return Result::MakeVarying(false);
+    }
 
     // Split the path into prefixes but skip any covered by _prefix.
     // XXX:TODO Plumb-in caller-supplied vector for reuse by GetPrefixes().
     SdfPathVector prefixes;
     path.GetPrefixes(
         &prefixes, path.GetPathElementCount() - _prefix.GetPathElementCount());
+
+    DEBUG_MSG("Examining paths not covered by pattern prefix <%s>:\n    %s\n",
+              _prefix.GetAsString().c_str(),
+              TfStringify(prefixes).c_str());
     
     SdfPathVector::const_iterator matchLoc = prefixes.begin();
     const SdfPathVector::const_iterator matchEnd = prefixes.end();
@@ -351,9 +431,9 @@ _PatternImplBase::_Match(
         // First segment must match at the beginning.
         if (!_stretchBegin && segment.StartsAt(0)) {
             const Result result = checkMatch(segment, matchLoc);
+            DEBUG_MSG("segment %smatch at start -> %s\n",
+                      result ? "" : "does not ", Stringify(result));
             if (!result) {
-                DEBUG_MSG("segment does not match at start -> %s\n",
-                          Stringify(result));
                 return result;
             }
             matchLoc += segment.GetSize();
@@ -369,9 +449,9 @@ _PatternImplBase::_Match(
         else if (!_stretchEnd && segment.EndsAt(componentsSize)) {
             const Result result =
                 checkMatch(segment, matchEnd - segment.GetSize());
+            DEBUG_MSG("segment %smatch at end -> %s\n",
+                      result ? "" : "does not ", Stringify(result));
             if (!result) {
-                DEBUG_MSG("segment does not match at end -> %s\n",
-                          Stringify(result));
                 return result;
             }
             matchLoc = matchEnd;
@@ -382,18 +462,25 @@ _PatternImplBase::_Match(
             // components we have remaining to match against.
             const Result result =
                 searchMatch(segment, matchLoc, matchEnd - numComponentsLeft);
+            DEBUG_MSG("found %smatch in interior -> %s\n",
+                      result ? "" : "no ", Stringify(result));
             if (!result) {
-                DEBUG_MSG("found no match in interior -> %s\n",
-                          Stringify(result));
                 return result;
             }
             matchLoc += segment.GetSize();
         }
     }
 
+    // We've successfully completed matching.  If we end with a stretch '//'
+    // component, we can mark the result constant over descendants.
+    if (_stretchEnd) {
+        DEBUG_MSG("_Match(<%s>) succeeds with trailing stretch -> "
+                  "constant true\n", path.GetAsString().c_str());
+        return Result::MakeConstant(true);
+    }
+
     DEBUG_MSG("_Match(<%s>) succeeds -> varying true\n",
               path.GetAsString().c_str());
-
     return Result::MakeVarying(true);
 }
 
@@ -448,13 +535,18 @@ Sdf_PathExpressionEvalBase
         return Result::MakeVarying(false);
     }
 
-    // If this pattern demands a property path then we can early-out if the path
-    // in question is not a property path.  Otherwise this path may or may not
-    // match properties.
-    if (_isProperty && !path.IsPrimPropertyPath()) {
+    // If this pattern demands a either a prim or a property path then we can
+    // early-out if the path in question is not the required type.
+    const bool isPrimPropertyPath = path.IsPrimPropertyPath();
+    if (_matchObjType == _MatchPropOnly && !isPrimPropertyPath) {
         DEBUG_MSG("_Next(<%s>) isn't a property path -> varying false\n",
                   path.GetAsString().c_str());
         return Result::MakeVarying(false);
+    }
+    if (_matchObjType == _MatchPrimOnly && isPrimPropertyPath) {
+        DEBUG_MSG("_Next(<%s>) isn't a prim path -> constant false\n",
+                  path.GetAsString().c_str());
+        return Result::MakeConstant(false);
     }
 
     // If this pattern has no components, it matches if there's a stretch or if
@@ -465,7 +557,7 @@ Sdf_PathExpressionEvalBase
             // The pattern allows arbitrary elements following the prefix. 
             DEBUG_MSG("_Next(<%s>) covered by stretch -> constant true\n",
                       path.GetAsString().c_str());
-            search._constantDepth = 0;
+            search._constantDepth = prefixElemCount;
             search._constantValue = true;
             return Result::MakeConstant(search._constantValue);
         }
@@ -476,7 +568,7 @@ Sdf_PathExpressionEvalBase
                       "constant false\n",
                       path.GetAsString().c_str(),
                       _prefix.GetAsString().c_str());
-            search._constantDepth = 0;
+            search._constantDepth = prefixElemCount;
             search._constantValue = false;
             return Result::MakeConstant(search._constantValue);
         }
@@ -539,8 +631,10 @@ Sdf_PathExpressionEvalBase
     // literal component matches first since those are the fastest to check.
 
     SdfPath workingPath = path;
-    auto compIter = make_reverse_iterator(_components.cbegin() + curSeg.end),
-        compEnd = make_reverse_iterator(_components.cbegin() + curSeg.begin);
+    auto compIter =
+        make_reverse_iterator(_components.cbegin() + curSeg.end);
+    const auto compEnd =
+        make_reverse_iterator(_components.cbegin() + curSeg.begin);
 
     // First pass explicit names & their predicates.
     for (; compIter != compEnd;
@@ -626,8 +720,10 @@ Sdf_PathExpressionEvalBase
     }
 
     // We have taken the next step, but we have more matching to do.
-    DEBUG_MSG("_Next(<%s>) partial yet incomplete match -> varying false\n",
-              path.GetAsString().c_str());
+    DEBUG_MSG("_Next(<%s>) partial yet incomplete match "
+              "(%zd of %zd segments) -> varying false\n",
+              path.GetAsString().c_str(),
+              search._segmentMatchDepths.size(), _segments.size());
     
     return Result::MakeVarying(false);
 }

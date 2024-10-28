@@ -1,25 +1,8 @@
 //
 // Copyright 2022 Pixar
 //
-// Licensed under the Apache License, Version 2.0 (the "Apache License")
-// with the following modification; you may not use this file except in
-// compliance with the Apache License and the following modification to it:
-// Section 6. Trademarks. is deleted and replaced with:
-//
-// 6. Trademarks. This License does not grant permission to use the trade
-//    names, trademarks, service marks, or product names of the Licensor
-//    and its affiliates, except as required to comply with Section 4(c) of
-//    the License and to reproduce the content of the NOTICE file.
-//
-// You may obtain a copy of the Apache License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the Apache License with the above modification is
-// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied. See the Apache License for the specific
-// language governing permissions and limitations under the Apache License.
+// Licensed under the terms set forth in the LICENSE.txt file available at
+// https://openusd.org/license.
 //
 #include "pxr/imaging/hio/glslfxResourceLayout.h"
 
@@ -64,18 +47,47 @@ _GetInputValueVector(InputValue const & input)
     return input.GetWithDefault(InputValueVector());
 }
 
+// Check fpr specific storage and interpolation qualifiers.
+bool
+_IsMemberQualifier(TfToken const & input)
+{
+    return (input == HioGlslfxResourceLayoutTokens->centroid ||
+            input == HioGlslfxResourceLayoutTokens->sample ||
+            input == HioGlslfxResourceLayoutTokens->flat ||
+            input == HioGlslfxResourceLayoutTokens->noperspective ||
+            input == HioGlslfxResourceLayoutTokens->smooth);
+}
+
 // e.g. ["vec4", "Peye"]
+// e.g. ["float", "length", "3"] The member is a float array with 3 elements.
+// e.g. ["vec3", "color", "flat"] The member type is vec3, and there is no 
+// interpolation across the face.
+// e.g. ["float", "length", "3", "flat"] The member is a float array with 3 
+// elements, and there is no interpolation across the face.
 MemberVector
 _ParseMembers(InputValueVector const & input, int fromElement)
 {
     MemberVector result;
     for (auto const & inputValue : input) {
         InputValueVector memberInput = _GetInputValueVector(inputValue);
-        if (memberInput.size() != 2 && memberInput.size() != 3) continue;
+        const size_t n = memberInput.size();
+        if (!(2 <= n && n <= 4)) {
+            continue;
+        }
         result.emplace_back(/*dataType=*/_Token(memberInput[0]),
                             /*name=*/_Token(memberInput[1]));
-        if (input.size() == 3) {
-            result.back().arraySize = _Token(input[2]);
+        if (n == 3) {
+            TfToken const inputToken = _Token(memberInput[2]);
+            // Try to parse qualifier.
+            if (_IsMemberQualifier(inputToken)) {
+                result.back().qualifiers = inputToken;
+            // If fails, parse as array size.
+            } else {
+                result.back().arraySize = inputToken;
+            }
+        } else if (n == 4) {
+            result.back().arraySize = _Token(memberInput[2]);
+            result.back().qualifiers = _Token(memberInput[3]);
         }
     }
     return result;

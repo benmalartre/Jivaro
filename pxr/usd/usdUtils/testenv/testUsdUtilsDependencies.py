@@ -2,27 +2,10 @@
 #
 # Copyright 2020 Pixar
 #
-# Licensed under the Apache License, Version 2.0 (the "Apache License")
-# with the following modification; you may not use this file except in
-# compliance with the Apache License and the following modification to it:
-# Section 6. Trademarks. is deleted and replaced with:
-#
-# 6. Trademarks. This License does not grant permission to use the trade
-#    names, trademarks, service marks, or product names of the Licensor
-#    and its affiliates, except as required to comply with Section 4(c) of
-#    the License and to reproduce the content of the NOTICE file.
-#
-# You may obtain a copy of the Apache License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the Apache License with the above modification is
-# distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-# KIND, either express or implied. See the Apache License for the specific
-# language governing permissions and limitations under the Apache License.
+# Licensed under the terms set forth in the LICENSE.txt file available at
+# https://openusd.org/license.
 
-from pxr import UsdUtils, Sdf, Usd
+from pxr import Ar, UsdUtils, Sdf, Usd
 from pathlib import Path
 import os
 import unittest
@@ -292,6 +275,25 @@ class TestUsdUtilsDependencies(unittest.TestCase):
         self.assertEqual([os.path.normcase(f) for f in references],
             [os.path.normcase(os.path.abspath("file.txt"))])
         self.assertEqual(unresolved, [])
+
+    def test_ComputeAllDependenciesMissingExternalDep(self):
+        """Tests detecting missing external dependencies from package files"""
+        packageFile = "computeAllDependenciesUsdz/package_missing_external.usdz"
+        layers, references, unresolved = \
+            UsdUtils.ComputeAllDependencies(packageFile)
+
+        expectedLayers = [ Ar.JoinPackageRelativePath(p) for p in [
+            [packageFile],
+            [packageFile, "missing_in_package.usdz"],
+            [packageFile, "missing_in_reference.usda"]
+        ]]
+
+        self.assertEqual(layers, 
+                             [Sdf.Layer.FindOrOpen(l) for l in expectedLayers])
+        self.assertEqual(len(references), 0)
+        self.assertEqual(unresolved, ["missing.png",
+                                      "missing_in_package.png", 
+                                      "missing_in_reference.png"])
 
 if __name__=="__main__":
     unittest.main()

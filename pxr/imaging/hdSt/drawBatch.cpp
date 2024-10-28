@@ -1,25 +1,8 @@
 //
 // Copyright 2016 Pixar
 //
-// Licensed under the Apache License, Version 2.0 (the "Apache License")
-// with the following modification; you may not use this file except in
-// compliance with the Apache License and the following modification to it:
-// Section 6. Trademarks. is deleted and replaced with:
-//
-// 6. Trademarks. This License does not grant permission to use the trade
-//    names, trademarks, service marks, or product names of the Licensor
-//    and its affiliates, except as required to comply with Section 4(c) of
-//    the License and to reproduce the content of the NOTICE file.
-//
-// You may obtain a copy of the Apache License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the Apache License with the above modification is
-// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied. See the Apache License for the specific
-// language governing permissions and limitations under the Apache License.
+// Licensed under the terms set forth in the LICENSE.txt file available at
+// https://openusd.org/license.
 //
 #include "pxr/imaging/hdSt/binding.h"
 #include "pxr/imaging/hdSt/codeGen.h"
@@ -112,8 +95,11 @@ _LogShaderCacheLookup()
 }
 
 
-HdSt_DrawBatch::HdSt_DrawBatch(HdStDrawItemInstance * drawItemInstance)
-    : _shaderHash(0)
+HdSt_DrawBatch::HdSt_DrawBatch(
+    HdStDrawItemInstance * drawItemInstance,
+    bool const allowTextureResourceRebinding)
+    : _allowTextureResourceRebinding(allowTextureResourceRebinding)
+    , _shaderHash(0)
 {
 }
 
@@ -188,17 +174,57 @@ HdSt_DrawBatch::Append(HdStDrawItemInstance * drawItemInstance)
 
 /*static*/
 bool
-HdSt_DrawBatch::_IsAggregated(HdStDrawItem const *drawItem0,
-                              HdStDrawItem const *drawItem1)
+HdSt_DrawBatch::_CanAggregateMaterials(HdStDrawItem const *drawItem0,
+                                       HdStDrawItem const *drawItem1)
 {
-    if (!HdSt_MaterialNetworkShader::CanAggregate(
-            drawItem0->GetMaterialNetworkShader(),
-            drawItem1->GetMaterialNetworkShader())) {
+    if (drawItem0->GetMaterialIsFinal() !=
+        drawItem1->GetMaterialIsFinal()) {
         return false;
     }
 
-    if (drawItem0->GetMaterialIsFinal() != 
-        drawItem1->GetMaterialIsFinal()) {
+    HdStShaderCodeSharedPtr const &
+        shaderA = drawItem0->GetMaterialNetworkShader();
+    HdStShaderCodeSharedPtr const &
+        shaderB = drawItem1->GetMaterialNetworkShader();
+
+    // Can aggregate if the shaders are identical.
+    if (shaderA == shaderB) {
+        return true;
+    }
+
+    HdBufferArrayRangeSharedPtr dataA = shaderA->GetShaderData();
+    HdBufferArrayRangeSharedPtr dataB = shaderB->GetShaderData();
+
+    bool dataIsAggregated = (dataA == dataB) ||
+                            (dataA && dataA->IsAggregatedWith(dataB));
+
+    // We can't aggregate if the shaders have data buffers that aren't
+    // aggregated or if the shaders don't match.
+    if (!dataIsAggregated || shaderA->ComputeHash() != shaderB->ComputeHash()) {
+        return false;
+    }
+
+    return true;
+}
+
+bool
+HdSt_DrawBatch::_CanAggregateTextures(HdStDrawItem const *drawItem0,
+                                      HdStDrawItem const *drawItem1)
+{
+    return _allowTextureResourceRebinding ||
+           (drawItem0->GetMaterialNetworkShader()->ComputeTextureSourceHash() ==
+            drawItem1->GetMaterialNetworkShader()->ComputeTextureSourceHash());
+}
+
+bool
+HdSt_DrawBatch::_IsAggregated(HdStDrawItem const *drawItem0,
+                              HdStDrawItem const *drawItem1)
+{
+    if (!_CanAggregateMaterials(drawItem0, drawItem1)) {
+        return false;
+    }
+
+    if (!_CanAggregateTextures(drawItem0, drawItem1)) {
         return false;
     }
 

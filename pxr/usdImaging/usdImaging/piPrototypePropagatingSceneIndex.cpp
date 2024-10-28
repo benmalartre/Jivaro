@@ -1,39 +1,23 @@
 //
 // Copyright 2022 Pixar
 //
-// Licensed under the Apache License, Version 2.0 (the "Apache License")
-// with the following modification; you may not use this file except in
-// compliance with the Apache License and the following modification to it:
-// Section 6. Trademarks. is deleted and replaced with:
-//
-// 6. Trademarks. This License does not grant permission to use the trade
-//    names, trademarks, service marks, or product names of the Licensor
-//    and its affiliates, except as required to comply with Section 4(c) of
-//    the License and to reproduce the content of the NOTICE file.
-//
-// You may obtain a copy of the Apache License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the Apache License with the above modification is
-// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied. See the Apache License for the specific
-// language governing permissions and limitations under the Apache License.
+// Licensed under the terms set forth in the LICENSE.txt file available at
+// https://openusd.org/license.
 //
 #include "pxr/usdImaging/usdImaging/piPrototypePropagatingSceneIndex.h"
 
 #include "pxr/usdImaging/usdImaging/piPrototypeSceneIndex.h"
 #include "pxr/usdImaging/usdImaging/usdPrimInfoSchema.h"
 #include "pxr/usdImaging/usdImaging/rerootingSceneIndex.h"
-#include "pxr/imaging/hd/sceneIndexPrimView.h"
 
 #include "pxr/imaging/hd/mergingSceneIndex.h"
 #include "pxr/imaging/hd/tokens.h"
 #include "pxr/imaging/hd/instancerTopologySchema.h"
 #include "pxr/imaging/hd/retainedSceneIndex.h"
 #include "pxr/imaging/hd/retainedDataSource.h"
+#include "pxr/imaging/hd/sceneIndexPrimView.h"
 
+#include "pxr/base/trace/trace.h"
 #include "pxr/base/tf/envSetting.h"
 #include "pxr/base/tf/stringUtils.h"
 
@@ -559,6 +543,8 @@ void
 _InstancerObserver::PrimsAdded(const HdSceneIndexBase &sender,
                     const AddedPrimEntries &entries)
 {
+    TRACE_FUNCTION();
+
     for (const AddedPrimEntry &entry : entries) {
         const SdfPath &path = entry.primPath;
         if (entry.primType == HdPrimTypeTokens->instancer) {
@@ -578,6 +564,8 @@ void
 _InstancerObserver::PrimsDirtied(const HdSceneIndexBase &sender,
                                  const DirtiedPrimEntries &entries)
 {
+    TRACE_FUNCTION();
+
     static const HdDataSourceLocator locator =
         HdInstancerTopologySchema::GetDefaultLocator().Append(
             HdInstancerTopologySchemaTokens->prototypes);
@@ -599,6 +587,8 @@ void
 _InstancerObserver::PrimsRemoved(const HdSceneIndexBase &sender,
                                  const RemovedPrimEntries &entries)
 {
+    TRACE_FUNCTION();
+
     HdSceneIndexObserver::RemovedPrimEntries removedInstancers;
 
     for (const RemovedPrimEntry &entry : entries) {
@@ -652,16 +642,24 @@ std::vector<HdSceneIndexBaseRefPtr>
 UsdImagingPiPrototypePropagatingSceneIndex::GetInputScenes() const
 {
     if (TfGetEnvSetting(USDIMAGING_SHOW_POINT_PROTOTYPE_SCENE_INDICES)) {
-        return { _context->mergingSceneIndex->GetInputScenes() };
+        return _context->mergingSceneIndex->GetInputScenes();
     } else {
         return { _context->inputSceneIndex };
     }
+}
+
+std::vector<HdSceneIndexBaseRefPtr>
+UsdImagingPiPrototypePropagatingSceneIndex::GetEncapsulatedScenes() const
+{
+    return { _context->mergingSceneIndex };
 }
 
 HdSceneIndexPrim
 UsdImagingPiPrototypePropagatingSceneIndex::GetPrim(
     const SdfPath &primPath) const
 {
+    TRACE_FUNCTION();
+
     return _context->mergingSceneIndex->GetPrim(primPath);
 }
 
@@ -669,6 +667,8 @@ SdfPathVector
 UsdImagingPiPrototypePropagatingSceneIndex::GetChildPrimPaths(
     const SdfPath &primPath) const
 {
+    TRACE_FUNCTION();
+
     return _context->mergingSceneIndex->GetChildPrimPaths(primPath);
 }
 

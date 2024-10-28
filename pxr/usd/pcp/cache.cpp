@@ -1,25 +1,8 @@
 //
 // Copyright 2016 Pixar
 //
-// Licensed under the Apache License, Version 2.0 (the "Apache License")
-// with the following modification; you may not use this file except in
-// compliance with the Apache License and the following modification to it:
-// Section 6. Trademarks. is deleted and replaced with:
-//
-// 6. Trademarks. This License does not grant permission to use the trade
-//    names, trademarks, service marks, or product names of the Licensor
-//    and its affiliates, except as required to comply with Section 4(c) of
-//    the License and to reproduce the content of the NOTICE file.
-//
-// You may obtain a copy of the Apache License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the Apache License with the above modification is
-// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied. See the Apache License for the specific
-// language governing permissions and limitations under the Apache License.
+// Licensed under the terms set forth in the LICENSE.txt file available at
+// https://openusd.org/license.
 //
 
 #include "pxr/pxr.h"
@@ -318,15 +301,8 @@ PcpCache::RequestLayerMuting(const std::vector<std::string>& layersToMute,
 
     Pcp_CacheChangesHelper cacheChanges(changes);
 
-    // Register changes for all computed layer stacks that are
-    // affected by the newly muted/unmuted layers.
-    for (const auto& layerToMute : finalLayersToMute) {
-        cacheChanges->DidMuteLayer(this, layerToMute);
-    }
-
-    for (const auto& layerToUnmute : finalLayersToUnmute) {
-        cacheChanges->DidUnmuteLayer(this, layerToUnmute);
-    }
+    cacheChanges->DidMuteAndUnmuteLayers(
+        this, finalLayersToMute, finalLayersToUnmute);
 
     // The above won't handle cases where we've unmuted the root layer
     // of a reference or payload layer stack, since prim indexing will skip
@@ -438,14 +414,26 @@ PcpCache::ComputeRelationshipTargetPaths(const SdfPath & relPath,
         return;
     }
 
-    PcpTargetIndex targetIndex;
-    PcpBuildFilteredTargetIndex( PcpSite(GetLayerStackIdentifier(), relPath),
-                                 ComputePropertyIndex(relPath, allErrors),
-                                 SdfSpecTypeRelationship,
-                                 localOnly, stopProperty, includeStopProperty,
-                                 this, &targetIndex, deletedPaths,
-                                 allErrors );
-    paths->swap(targetIndex.paths);
+    auto computeTargets = [&](const PcpPropertyIndex &propIndex) {
+        PcpTargetIndex targetIndex;
+        PcpBuildFilteredTargetIndex( PcpSite(GetLayerStackIdentifier(), relPath),
+                                    propIndex,
+                                    SdfSpecTypeRelationship,
+                                    localOnly, stopProperty, includeStopProperty,
+                                    this, &targetIndex, deletedPaths,
+                                    allErrors );
+        paths->swap(targetIndex.paths);
+    };
+
+    if (IsUsd()) {
+        // USD does not cache property indexes, but we can still build one
+        // to get the relationship targets.
+        PcpPropertyIndex propIndex;
+        PcpBuildPropertyIndex(relPath, this, &propIndex, allErrors);
+        computeTargets(propIndex);
+    } else {
+        computeTargets(ComputePropertyIndex(relPath, allErrors));
+    }
 }
 
 void
@@ -465,14 +453,26 @@ PcpCache::ComputeAttributeConnectionPaths(const SdfPath & attrPath,
         return;
     }
 
-    PcpTargetIndex targetIndex;
-    PcpBuildFilteredTargetIndex( PcpSite(GetLayerStackIdentifier(), attrPath),
-                                 ComputePropertyIndex(attrPath, allErrors),
-                                 SdfSpecTypeAttribute,
-                                 localOnly, stopProperty, includeStopProperty,
-                                 this, &targetIndex,  deletedPaths,
-                                 allErrors );
-    paths->swap(targetIndex.paths);
+    auto computeTargets = [&](const PcpPropertyIndex &propIndex) {
+        PcpTargetIndex targetIndex;
+        PcpBuildFilteredTargetIndex( PcpSite(GetLayerStackIdentifier(), attrPath),
+                                    propIndex,
+                                    SdfSpecTypeAttribute,
+                                    localOnly, stopProperty, includeStopProperty,
+                                    this, &targetIndex,  deletedPaths,
+                                    allErrors );
+        paths->swap(targetIndex.paths);
+    };
+
+    if (IsUsd()) {
+        // USD does not cache property indexes, but we can still build one
+        // to get the attribute connections.
+        PcpPropertyIndex propIndex;
+        PcpBuildPropertyIndex(attrPath, this, &propIndex, allErrors);
+        computeTargets(propIndex);
+    } else {
+        computeTargets(ComputePropertyIndex(attrPath, allErrors));
+    }
 }
 
 const PcpPropertyIndex *
@@ -558,8 +558,15 @@ _ProcessDependentNode(
         // a relocate node's map function is always
         // identity, we must do our own prefix replacement
         // to step out of the relocate, then continue
-        // with regular path translation.
-        const PcpNodeRef parent = node.GetParentNode(); 
+        // with regular path translation. We must step out of all 
+        // consecutive relocate nodes since they all only hold the 
+        // identity mapping. Once we hit a non-relocates node, any
+        // relocates above that will be accounted for in the map to 
+        // root function
+        PcpNodeRef parent = node.GetParentNode();
+        while (parent.GetArcType() == PcpArcTypeRelocate) {
+            parent = parent.GetParentNode();
+        }
         depIndexPath = PcpTranslatePathFromNodeToRoot(
             parent,
             localSitePath.ReplacePrefix( node.GetPath(),
@@ -1024,13 +1031,14 @@ PcpCache::Apply(const PcpCacheChanges& changes, PcpLifeboat* lifeboat)
         }
 
         // Blow property stacks and update spec dependencies on prims.
-        auto updateSpecStacks = [this, &lifeboat](const SdfPath& path) {
+        auto updateSpecStacks = [this, &lifeboat, &changes](const SdfPath& path) {
             if (path.IsAbsoluteRootOrPrimPath()) {
                 // We've possibly changed the prim spec stack.  Note that
                 // we may have blown the prim index so check that it exists.
                 if (PcpPrimIndex* primIndex = _GetPrimIndex(path)) {
                     Pcp_RescanForSpecs(primIndex, IsUsd(),
-                                       /* updateHasSpecs */ true);
+                                       /* updateHasSpecs */ true,
+                                       &changes);
 
                     // If there are no specs left then we can discard the
                     // prim index.
@@ -1063,6 +1071,13 @@ PcpCache::Apply(const PcpCacheChanges& changes, PcpLifeboat* lifeboat)
 
         TF_FOR_ALL(i, changes._didChangeSpecsInternal) {
             updateSpecStacks(*i);
+        }
+
+        TF_FOR_ALL(i, changes._didChangeSpecsAndChildrenInternal) {
+            auto range = _primIndexCache.FindSubtreeRange(*i);
+            for (auto i = range.first; i != range.second; ++i) {
+                updateSpecStacks(i->first);
+            }
         }
 
         // Fix the keys for any prim or property under any of the renamed

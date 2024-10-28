@@ -1,25 +1,8 @@
 //
 // Copyright 2018 Pixar
 //
-// Licensed under the Apache License, Version 2.0 (the "Apache License")
-// with the following modification; you may not use this file except in
-// compliance with the Apache License and the following modification to it:
-// Section 6. Trademarks. is deleted and replaced with:
-//
-// 6. Trademarks. This License does not grant permission to use the trade
-//    names, trademarks, service marks, or product names of the Licensor
-//    and its affiliates, except as required to comply with Section 4(c) of
-//    the License and to reproduce the content of the NOTICE file.
-//
-// You may obtain a copy of the Apache License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the Apache License with the above modification is
-// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied. See the Apache License for the specific
-// language governing permissions and limitations under the Apache License.
+// Licensed under the terms set forth in the LICENSE.txt file available at
+// https://openusd.org/license.
 //
 #include "pxr/usdImaging/usdSkelImaging/skeletonAdapter.h"
 #include "pxr/usdImaging/usdSkelImaging/package.h"
@@ -194,8 +177,8 @@ UsdSkelImagingSkeletonAdapter::Populate(
             
             // Insert two computations ...
             UsdPrim const& skinnedPrim = query.GetPrim();
-            SdfPath skinnedPrimPath = UsdImagingGprimAdapter::_ResolveCachePath(
-                                    skinnedPrim.GetPath(), instancerContext);
+            SdfPath skinnedPrimPath = ResolveCachePath(
+                skinnedPrim.GetPath(), instancerContext);
 
             _skinnedPrimDataCache[skinnedPrimPath] =
                 _SkinnedPrimData(skelPath, skelData->skelQuery,
@@ -843,7 +826,7 @@ _TransformPoints(TfSpan<GfVec3f> points, const GfMatrix4d& xform)
         [&](size_t start, size_t end)
         {
             for (size_t i = start; i < end; ++i) {
-                points[i] = xform.Transform(points[i]);
+                points[i] = GfVec3f(xform.Transform(points[i]));
             }
         }, /*grainSize*/ 1000);
 }
@@ -1319,8 +1302,7 @@ UsdSkelImagingSkeletonAdapter::GetExtComputationInputs(
         });
 
         SdfPath skinnedPrimPath =
-            UsdImagingGprimAdapter::_ResolveCachePath(
-                        prim.GetPath(), instancerContext);
+            ResolveCachePath(prim.GetPath(), instancerContext);
         SdfPath renderIndexAggrCompId = _ConvertCachePathToIndexPath(
             _GetSkinningInputAggregatorComputationPath(skinnedPrimPath));
         
@@ -1387,9 +1369,8 @@ UsdSkelImagingSkeletonAdapter::GetExtComputationPrimvars(
         pointsType.type = HdTypeFloatVec3;
         pointsType.count = 1;
 
-        const SdfPath skinnedPrimPath =
-            UsdImagingGprimAdapter::_ResolveCachePath(
-                                        prim.GetPath(), instancerContext);
+        const SdfPath skinnedPrimPath = ResolveCachePath(
+            prim.GetPath(), instancerContext);
 
         HdExtComputationPrimvarDescriptorVector compPrimvars;
         compPrimvars.emplace_back(
@@ -1595,9 +1576,8 @@ UsdSkelImagingSkeletonAdapter::_GetExtComputationInputForSkinningComputation(
 
     // XXX: We don't receive the "cachePath" for the skinned prim, and so
     // the method below won't work when using multiple UsdImagingDelgate'.
-    SdfPath skinnedPrimCachePath = 
-        UsdImagingGprimAdapter::_ResolveCachePath(prim.GetPath(), 
-                                                  instancerContext);
+    SdfPath skinnedPrimCachePath = ResolveCachePath(
+        prim.GetPath(), instancerContext);
 
     // XXX: The only time varying input here is the skinning xforms.
     // However, we don't have fine-grained tracking to tell which
@@ -1746,9 +1726,8 @@ UsdSkelImagingSkeletonAdapter::_GetExtComputationInputForInputAggregator(
 
     // XXX: We don't receive the "cachePath" for the skinned prim, and so
     // the method below won't work when using multiple UsdImagingDelegate's.
-    SdfPath skinnedPrimCachePath = 
-        UsdImagingGprimAdapter::_ResolveCachePath(
-            prim.GetPath(), instancerContext);
+    SdfPath skinnedPrimCachePath = ResolveCachePath(
+        prim.GetPath(), instancerContext);
 
     const _SkinnedPrimData* skinnedPrimData =
             _GetSkinnedPrimData(skinnedPrimCachePath);
@@ -1881,9 +1860,8 @@ UsdSkelImagingSkeletonAdapter::_SampleExtComputationInputForSkinningComputation(
 
     // XXX: We don't receive the "cachePath" for the skinned prim, and so
     // the method below won't work when using multiple UsdImagingDelgate'.
-    SdfPath skinnedPrimCachePath = 
-        UsdImagingGprimAdapter::_ResolveCachePath(prim.GetPath(), 
-                                                  instancerContext);
+    SdfPath skinnedPrimCachePath = ResolveCachePath(
+        prim.GetPath(), instancerContext);
 
     // XXX: The only time varying input here is the skinning xforms.
     // However, we don't have fine-grained tracking to tell which
@@ -2064,7 +2042,7 @@ UsdSkelImagingSkeletonAdapter::_SampleExtComputationInputForSkinningComputation(
             static constexpr unsigned int CAPACITY = 4;
             TfSmallVector<GfMatrix4d, CAPACITY> sampleXforms(maxSampleCount);
 
-            SdfPath skelCachePath = UsdImagingGprimAdapter::_ResolveCachePath(
+            SdfPath skelCachePath = ResolveCachePath(
                 skelPrim.GetPath(), instancerContext);
             UsdImagingPrimAdapterSharedPtr adapter = _GetPrimAdapter(skelPrim);
 
@@ -2110,8 +2088,7 @@ UsdSkelImagingSkeletonAdapter::_SampleExtComputationInputForInputAggregator(
 
     // XXX: We don't receive the "cachePath" for the skinned prim, and so
     // the method below won't work when using multiple UsdImagingDelegate's.
-    SdfPath skinnedPrimCachePath = 
-        UsdImagingGprimAdapter::_ResolveCachePath(
+    SdfPath skinnedPrimCachePath = ResolveCachePath(
             prim.GetPath(), instancerContext);
 
     const _SkinnedPrimData* skinnedPrimData =
@@ -2445,7 +2422,7 @@ UsdSkelImagingSkeletonAdapter::_TrackSkinningComputationVariability(
 {
     // XXX: We don't receive the "cachePath" for the skinned prim, and so
     // the method below won't work when using multiple UsdImagingDelgate's.
-    SdfPath skinnedPrimCachePath = UsdImagingGprimAdapter::_ResolveCachePath(
+    SdfPath skinnedPrimCachePath = ResolveCachePath(
             skinnedPrim.GetPath(), instancerContext);
     
     if (_IsAffectedByTimeVaryingSkelAnim(skinnedPrimCachePath)) {
@@ -2662,7 +2639,7 @@ UsdSkelImagingSkeletonAdapter::_SkelData::ComputeTopologyAndRestState()
             int jointIdx = jointIndices[i];
             TF_DEV_AXIOM(jointIdx >= 0 &&
                          static_cast<size_t>(jointIdx) < xforms.size());
-            points[i] = invBindXforms[jointIdx].Transform(points[i]);
+            points[i] = GfVec3f(invBindXforms[jointIdx].Transform(points[i]));
         }
     }
 
@@ -2702,7 +2679,8 @@ UsdSkelImagingSkeletonAdapter::_SkelData::ComputePoints(
 
                 // XXX: Joint transforms in UsdSkel are required to be
                 // affine, so this is safe!
-                points[pi] = jointXforms[jointIdx].TransformAffine(points[pi]);
+                points[pi] =
+                    GfVec3f(jointXforms[jointIdx].TransformAffine(points[pi]));
             }
             return skinnedPoints;
         }

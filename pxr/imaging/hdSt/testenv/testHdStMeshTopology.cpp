@@ -1,25 +1,8 @@
 //
 // Copyright 2023 Pixar
 //
-// Licensed under the Apache License, Version 2.0 (the "Apache License")
-// with the following modification; you may not use this file except in
-// compliance with the Apache License and the following modification to it:
-// Section 6. Trademarks. is deleted and replaced with:
-//
-// 6. Trademarks. This License does not grant permission to use the trade
-//    names, trademarks, service marks, or product names of the Licensor
-//    and its affiliates, except as required to comply with Section 4(c) of
-//    the License and to reproduce the content of the NOTICE file.
-//
-// You may obtain a copy of the Apache License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the Apache License with the above modification is
-// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied. See the Apache License for the specific
-// language governing permissions and limitations under the Apache License.
+// Licensed under the terms set forth in the LICENSE.txt file available at
+// https://openusd.org/license.
 //
 
 #include "pxr/imaging/hdSt/flatNormals.h"
@@ -89,9 +72,10 @@ _CompareIndices(std::string const & name,
     HdBufferSpecVector bufferSpecs;
     source->GetBufferSpecs(&bufferSpecs);
     HdBufferArrayRangeSharedPtr const range =
-        registry->AllocateNonUniformBufferArrayRange(HdTokens->topology,
-                                                     bufferSpecs,
-                                                     HdBufferArrayUsageHint());
+        registry->AllocateNonUniformBufferArrayRange(
+            HdTokens->topology,
+            bufferSpecs,
+            HdBufferArrayUsageHintBitsIndex);
     registry->AddSource(range, source);
 
     // execute computation
@@ -131,9 +115,10 @@ _CompareFaceVarying(std::string const &name,
     HdBufferSpecVector bufferSpecs;
     source->GetBufferSpecs(&bufferSpecs);
     HdBufferArrayRangeSharedPtr const range =
-        registry->AllocateNonUniformBufferArrayRange(HdTokens->primvar,
-                                                     bufferSpecs,
-                                                     HdBufferArrayUsageHint());
+        registry->AllocateNonUniformBufferArrayRange(
+            HdTokens->primvar,
+            bufferSpecs,
+            HdBufferArrayUsageHintBitsStorage);
     registry->AddSource(range, source);
 
     // execute computation
@@ -295,7 +280,8 @@ _CompareGpuSmoothNormals(std::string const & name,
         adjGpuComputation->GetBufferSpecs(&bufferSpecs);
         HdBufferArrayRangeSharedPtr const adjRange =
             registry->AllocateNonUniformBufferArrayRange(
-                HdTokens->topology, bufferSpecs, HdBufferArrayUsageHint());
+                HdTokens->topology, bufferSpecs,
+                HdBufferArrayUsageHintBitsStorage);
         adjacencyBuilder.SetVertexAdjacencyRange(adjRange);
         registry->AddSource(adjRange, adjGpuComputation);
     }
@@ -315,9 +301,10 @@ _CompareGpuSmoothNormals(std::string const & name,
 
     // allocate GPU buffer range
     HdBufferArrayRangeSharedPtr const range =
-        registry->AllocateNonUniformBufferArrayRange(HdTokens->primvar,
-                                                     bufferSpecs,
-                                                     HdBufferArrayUsageHint());
+        registry->AllocateNonUniformBufferArrayRange(
+            HdTokens->primvar,
+            bufferSpecs,
+            HdBufferArrayUsageHintBitsStorage);
 
     // commit points
     HdBufferSourceSharedPtrVector sources;
@@ -370,10 +357,12 @@ _CompareGpuFlatNormals(std::string const & name,
     // build the points range
     HdBufferSpecVector vertexSpecs;
     pointsSource->GetBufferSpecs(&vertexSpecs);
+    HdBufferArrayUsageHint vertexUsageHint =
+        HdBufferArrayUsageHintBitsVertex | HdBufferArrayUsageHintBitsStorage;
     HdBufferArrayRangeSharedPtr const vertexRange =
         registry->AllocateNonUniformBufferArrayRange(HdTokens->primvar,
                                                      vertexSpecs,
-                                                     HdBufferArrayUsageHint());
+                                                     vertexUsageHint);
 
     // index builder
     HdBufferSourceSharedPtr indexComputation;
@@ -393,10 +382,12 @@ _CompareGpuFlatNormals(std::string const & name,
     // build the topology range
     HdBufferSpecVector topoSpecs;
     indexComputation->GetBufferSpecs(&topoSpecs);
+    HdBufferArrayUsageHint topoUsageHint =
+        HdBufferArrayUsageHintBitsIndex | HdBufferArrayUsageHintBitsStorage;
     HdBufferArrayRangeSharedPtr const topoRange =
         registry->AllocateNonUniformBufferArrayRange(HdTokens->topology,
                                                      topoSpecs,
-                                                     HdBufferArrayUsageHint());
+                                                     topoUsageHint);
 
     // GPU flat normals computation
     const int numFaces = topology.GetFaceVertexCounts().size();
@@ -411,9 +402,10 @@ _CompareGpuFlatNormals(std::string const & name,
     HdBufferSpecVector elementSpecs;
     normalComputation->GetBufferSpecs(&elementSpecs);
     HdBufferArrayRangeSharedPtr const elementRange =
-        registry->AllocateNonUniformBufferArrayRange(HdTokens->primvar,
-                                                     elementSpecs,
-                                                     HdBufferArrayUsageHint());
+        registry->AllocateNonUniformBufferArrayRange(
+            HdTokens->primvar,
+            elementSpecs,
+            HdBufferArrayUsageHintBitsStorage);
 
     // Add sources
     if (quadInfoComputation) {

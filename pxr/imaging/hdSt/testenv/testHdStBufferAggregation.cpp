@@ -1,25 +1,8 @@
 //
 // Copyright 2023 Pixar
 //
-// Licensed under the Apache License, Version 2.0 (the "Apache License")
-// with the following modification; you may not use this file except in
-// compliance with the Apache License and the following modification to it:
-// Section 6. Trademarks. is deleted and replaced with:
-//
-// 6. Trademarks. This License does not grant permission to use the trade
-//    names, trademarks, service marks, or product names of the Licensor
-//    and its affiliates, except as required to comply with Section 4(c) of
-//    the License and to reproduce the content of the NOTICE file.
-//
-// You may obtain a copy of the Apache License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the Apache License with the above modification is
-// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied. See the Apache License for the specific
-// language governing permissions and limitations under the Apache License.
+// Licensed under the terms set forth in the LICENSE.txt file available at
+// https://openusd.org/license.
 //
 
 #include "pxr/imaging/hdSt/bufferResource.h"
@@ -99,9 +82,10 @@ BasicTest(HdStResourceRegistry * registry)
     {
         // write
         HdBufferArrayRangeSharedPtr const range =
-            registry->AllocateNonUniformBufferArrayRange(HdTokens->primvar,
-                                                         bufferSpecs,
-                                                         HdBufferArrayUsageHint());
+            registry->AllocateNonUniformBufferArrayRange(
+                HdTokens->primvar,
+                bufferSpecs,
+                HdBufferArrayUsageHintBitsVertex);
         
         // points
         VtArray<GfVec3f> points(3);
@@ -184,14 +168,14 @@ UniformBasicTest(bool ssbo, HdStResourceRegistry * registry)
     HdBufferArrayRangeSharedPtr range;
     if (ssbo) {
         range = registry->AllocateShaderStorageBufferArrayRange(
-                                                      HdTokens->primvar,
-                                                      bufferSpecs,
-                                                      HdBufferArrayUsageHint());
+            HdTokens->primvar,
+            bufferSpecs,
+            HdBufferArrayUsageHintBitsStorage);
     } else {
         range = registry->AllocateUniformBufferArrayRange(
-                                                      HdTokens->primvar,
-                                                      bufferSpecs,
-                                                      HdBufferArrayUsageHint());
+            HdTokens->primvar,
+            bufferSpecs,
+            HdBufferArrayUsageHintBitsUniform);
     }
 
     {
@@ -290,7 +274,8 @@ AggregationTest(bool aggregation, HdStResourceRegistry *registry)
     TF_FOR_ALL (it, prims) {
         if (!it->sources.empty()) {
             it->range = registry->AllocateNonUniformBufferArrayRange(
-                HdTokens->primvar, it->bufferSpecs, HdBufferArrayUsageHint());
+                HdTokens->primvar, it->bufferSpecs,
+                HdBufferArrayUsageHintBitsVertex);
             registry->AddSources(it->range, std::move(it->sources));
         }
         it->sources.clear();
@@ -346,7 +331,7 @@ AggregationTest(bool aggregation, HdStResourceRegistry *registry)
                 it->range = registry->AllocateNonUniformBufferArrayRange(
                     HdTokens->primvar,
                     it->bufferSpecs,
-                    HdBufferArrayUsageHint());
+                    HdBufferArrayUsageHintBitsVertex);
             }
             registry->AddSources(it->range, std::move(it->sources));
         }
@@ -391,7 +376,7 @@ AggregationTest(bool aggregation, HdStResourceRegistry *registry)
                 it->range = registry->AllocateNonUniformBufferArrayRange(
                     HdTokens->primvar,
                     it->bufferSpecs,
-                    HdBufferArrayUsageHint());
+                    HdBufferArrayUsageHintBitsVertex);
             }
             registry->AddSources(it->range, std::move(it->sources));
         }
@@ -457,20 +442,20 @@ UniformAggregationTest(bool aggregation, bool ssbo,
         range1 = registry->AllocateShaderStorageBufferArrayRange(
                      HdTokens->primvar,
                      bufferSpecs,
-                     HdBufferArrayUsageHint());
+                     HdBufferArrayUsageHintBitsStorage);
         range2 = registry->AllocateShaderStorageBufferArrayRange(
                     HdTokens->primvar,
                     bufferSpecs,
-                    HdBufferArrayUsageHint());
+                    HdBufferArrayUsageHintBitsStorage);
     } else {
         range1 = registry->AllocateUniformBufferArrayRange(
                      HdTokens->primvar,
                      bufferSpecs,
-                     HdBufferArrayUsageHint());
+                     HdBufferArrayUsageHintBitsUniform);
         range2 = registry->AllocateUniformBufferArrayRange(
                      HdTokens->primvar,
                      bufferSpecs,
-                     HdBufferArrayUsageHint());
+                     HdBufferArrayUsageHintBitsUniform);
     }
     // set matrix
     const GfMatrix4d matrix1(10), matrix2(20);
@@ -502,23 +487,37 @@ UniformAggregationTest(bool aggregation, bool ssbo,
     // color vec3      : 12 byte
     // total           : 140 byte
     //                 : 160 byte, round up to 32 byte align (due to dmat4)
-    //                   or, 256 byte (GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT)
-
+    //
+    // For an uniform buffer offset alignment of 256 (the value of
+    // GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT on Pixar workstations), this would 
+    // align to 256 bytes.
+    // For an uniform buffer offset alignment of 64 (the value of
+    // VkPhysicalDeviceLimit's minUniformBufferOffsetAlignment on Pixar 
+    // workstations), this would align to 192 bytes.
     {
         HdStBufferArrayRangeSharedPtr range1GL = 
             std::static_pointer_cast<HdStBufferArrayRange>(range1);
 
         if (aggregation) {
+            constexpr int alignedStride = 160;
+
             if (ssbo) {
                 TF_VERIFY(range1GL->GetResource(HdTokens->transform)->GetOffset() == 0);
                 TF_VERIFY(range1GL->GetResource(HdTokens->displayColor)->GetOffset() == 128);
-                TF_VERIFY(range1GL->GetResource(HdTokens->transform)->GetStride() == 160);
-                TF_VERIFY(range1GL->GetResource(HdTokens->displayColor)->GetStride() == 160);
+                TF_VERIFY(range1GL->GetResource(HdTokens->transform)->GetStride() == alignedStride);
+                TF_VERIFY(range1GL->GetResource(HdTokens->displayColor)->GetStride() == alignedStride);
             } else {
+                const int uniformBufferOffsetAlignment = 
+                    registry->GetHgi()->GetCapabilities()->
+                        GetUniformBufferOffsetAlignment();
+                const int uniformAlignedStride = uniformBufferOffsetAlignment *
+                    ((alignedStride + uniformBufferOffsetAlignment - 1) / 
+                        uniformBufferOffsetAlignment);
+
                 TF_VERIFY(range1GL->GetResource(HdTokens->transform)->GetOffset() == 0);
                 TF_VERIFY(range1GL->GetResource(HdTokens->displayColor)->GetOffset() == 128);
-                TF_VERIFY(range1GL->GetResource(HdTokens->transform)->GetStride() == 256);
-                TF_VERIFY(range1GL->GetResource(HdTokens->displayColor)->GetStride() == 256);
+                TF_VERIFY(range1GL->GetResource(HdTokens->transform)->GetStride() == uniformAlignedStride);
+                TF_VERIFY(range1GL->GetResource(HdTokens->displayColor)->GetStride() == uniformAlignedStride);
             }
         } else {
             TF_VERIFY(range1GL->GetResource(HdTokens->transform)->GetOffset() == 0);
@@ -559,7 +558,7 @@ ResizeTest(HdStResourceRegistry *registry)
 
     // register, commit
     range1 = registry->AllocateNonUniformBufferArrayRange(
-        HdTokens->primvar, bufferSpecs, HdBufferArrayUsageHint());
+        HdTokens->primvar, bufferSpecs, HdBufferArrayUsageHintBitsVertex);
     registry->AddSources(range1, std::move(sources));
     registry->Commit();
     TF_VERIFY(points == range1->ReadData(HdTokens->points));
@@ -713,10 +712,12 @@ TopologyTest(HdStResourceRegistry *registry)
     HdBufferSpecVector bufferSpecs;
     bufferSpecs.emplace_back(HdTokens->indices,
                              HdTupleType { HdTypeInt32, 1 } );
+    HdBufferArrayUsageHint usageHint =
+        HdBufferArrayUsageHintBitsIndex | HdBufferArrayUsageHintBitsStorage;
     HdBufferArrayRangeSharedPtr range =
         registry->AllocateNonUniformBufferArrayRange(HdTokens->topology,
                                                      bufferSpecs,
-                                                     HdBufferArrayUsageHint());
+                                                     usageHint);
     TF_VERIFY(range);
 
     // add indices
@@ -773,12 +774,12 @@ InstancingUniformTest(bool ssbo, HdStResourceRegistry *registry)
         range = registry->AllocateShaderStorageBufferArrayRange(
                     HdTokens->primvar,
                     bufferSpecs,
-                    HdBufferArrayUsageHint());
+                    HdBufferArrayUsageHintBitsStorage);
     } else {
         range = registry->AllocateUniformBufferArrayRange(
                     HdTokens->primvar,
                     bufferSpecs,
-                    HdBufferArrayUsageHint());
+                    HdBufferArrayUsageHintBitsUniform);
     }
     // set 2 prims
     VtArray<GfMatrix4d> matrices(arraySize);
@@ -842,7 +843,8 @@ OverAggregationTest(HdStResourceRegistry *registry)
         // write
         HdBufferArrayRangeSharedPtr range =
             registry->AllocateNonUniformBufferArrayRange(
-                HdTokens->primvar, bufferSpecs, HdBufferArrayUsageHint());
+                HdTokens->primvar, bufferSpecs,
+                HdBufferArrayUsageHintBitsVertex);
         TF_VERIFY(range);
 
         ranges.push_back(range);
@@ -863,7 +865,8 @@ OverAggregationTest(HdStResourceRegistry *registry)
         // write
         HdBufferArrayRangeSharedPtr range =
             registry->AllocateNonUniformBufferArrayRange(
-                HdTokens->primvar, bufferSpecs, HdBufferArrayUsageHint());
+                HdTokens->primvar, bufferSpecs,
+                HdBufferArrayUsageHintBitsVertex);
         TF_VERIFY(range);
 
         ranges.push_back(range);
@@ -935,12 +938,15 @@ HintAggregationTest(HdStResourceRegistry *registry)
             // Prim 0 is size varying and immutable
             // Prims 1, 2, 4, 7 and 8 have no hint.
 
-            HdBufferArrayUsageHint hint;
-            hint.value = 0;
-            hint.bits.sizeVarying = ((i % 3) == 0) ? 1 : 0;
-            hint.bits.immutable   = ((i % 5) == 0) ? 1 : 0;
+            HdBufferArrayUsageHint usageHint = HdBufferArrayUsageHintBitsVertex;
+            if ((i % 3) == 0) {
+                usageHint |= HdBufferArrayUsageHintBitsSizeVarying;
+            }
+            if ((i % 5) == 0) {
+                usageHint |= HdBufferArrayUsageHintBitsImmutable;
+            }
             prim.range = registry->AllocateNonUniformBufferArrayRange(
-                HdTokens->primvar, prim.bufferSpecs, hint);
+                HdTokens->primvar, prim.bufferSpecs, usageHint);
             registry->AddSources(prim.range, std::move(prim.sources));
         }
         prim.sources.clear();
@@ -976,12 +982,6 @@ int main(int argc, char *argv[])
     // Initialize the resource registry we will test
 
     std::unique_ptr<Hgi> hgi = Hgi::CreatePlatformDefaultHgi();
-
-    const int uniformBufferOffsetAlignment = 
-        hgi->GetCapabilities()->GetUniformBufferOffsetAlignment();
-
-    // Test verification relies on known GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT
-    TF_VERIFY(uniformBufferOffsetAlignment == 256);
 
     HdStResourceRegistry resourceRegistry(hgi.get());
 

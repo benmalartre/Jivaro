@@ -1,25 +1,8 @@
 //
 // Copyright 2023 Pixar
 //
-// Licensed under the Apache License, Version 2.0 (the "Apache License")
-// with the following modification; you may not use this file except in
-// compliance with the Apache License and the following modification to it:
-// Section 6. Trademarks. is deleted and replaced with:
-//
-// 6. Trademarks. This License does not grant permission to use the trade
-//    names, trademarks, service marks, or product names of the Licensor
-//    and its affiliates, except as required to comply with Section 4(c) of
-//    the License and to reproduce the content of the NOTICE file.
-//
-// You may obtain a copy of the Apache License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the Apache License with the above modification is
-// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied. See the Apache License for the specific
-// language governing permissions and limitations under the Apache License.
+// Licensed under the terms set forth in the LICENSE.txt file available at
+// https://openusd.org/license.
 //
 #ifndef PXR_USD_SDF_PATH_EXPRESSION_EVAL_H
 #define PXR_USD_SDF_PATH_EXPRESSION_EVAL_H
@@ -84,18 +67,10 @@ protected:
     class _PatternIncrSearchState {
         friend class _PatternImplBase;
     public:
-        void Pop(int newDepth) {
-            while (!_segmentMatchDepths.empty() &&
-                   _segmentMatchDepths.back() >= newDepth) {
-                _segmentMatchDepths.pop_back();
-            }
-            if (newDepth <= _constantDepth) {
-                _constantDepth = -1;
-            }
-        }
+        SDF_API void Pop(int newDepth);
     private:
         std::vector<int> _segmentMatchDepths;
-        int _constantDepth = -1; // 0 means constant at the _prefix level.
+        int _constantDepth = -1;
         bool _constantValue = false;
     };
 
@@ -151,7 +126,10 @@ protected:
 
         bool _stretchBegin;
         bool _stretchEnd;
-        bool _isProperty; // true if this pattern matches only properties.
+        enum : uint8_t {
+            // The kind of objects this pattern is capable of matching.
+            _MatchPrimOrProp, _MatchPrimOnly, _MatchPropOnly
+        } _matchObjType;
     };
 
 
@@ -196,31 +174,29 @@ class SdfPathExpressionEval : public Sdf_PathExpressionEvalBase
             _Init(pattern, linkPredicate);
         }
 
-        // Check obj for a match against this pattern.
-        template <class ObjectToPath, class PathToObject>
+        // Check objPath for a match against this pattern.
+        template <class PathToObject>
         SdfPredicateFunctionResult
-        Match(DomainType const &obj,
-              ObjectToPath const &objToPath,
+        Match(SdfPath const &objPath,
               PathToObject const &pathToObj) const {
             auto runNthPredicate =
                 [this, &pathToObj](int i, SdfPath const &path) {
                     return _predicates[i](pathToObj(path));
                 };
-            return _Match(objToPath(obj), runNthPredicate);
+            return _Match(objPath, runNthPredicate);
         }
 
         // Perform the next incremental search step against this pattern.
-        template <class ObjectToPath, class PathToObject>
+        template <class PathToObject>
         SdfPredicateFunctionResult
-        Next(DomainType const &obj,
+        Next(SdfPath const &objPath,
              _PatternIncrSearchState &search,
-             ObjectToPath const &objToPath,
              PathToObject const &pathToObj) const {
             auto runNthPredicate =
                 [this, &pathToObj](int i, SdfPath const &path) {
                     return _predicates[i](pathToObj(path));
                 };
-            return _Next(search, objToPath(obj), runNthPredicate);
+            return _Next(search, objPath, runNthPredicate);
         }
         
     private:
@@ -239,11 +215,10 @@ public:
         return _patternImpls.empty();
     }
 
-    /// Test \p obj for a match with this expression.
-    template <class ObjectToPath, class PathToObject>
+    /// Test \p objPath for a match with this expression.
+    template <class PathToObject>
     SdfPredicateFunctionResult
-    Match(DomainType const &obj,
-          ObjectToPath const &objToPath,
+    Match(SdfPath const &objPath,
           PathToObject const &pathToObj) const {
         if (IsEmpty()) {
             return SdfPredicateFunctionResult::MakeConstant(false);
@@ -251,7 +226,7 @@ public:
         auto patternImplIter = _patternImpls.cbegin();
         auto evalPattern = [&](bool skip) {
             return skip ? (++patternImplIter, SdfPredicateFunctionResult()) :
-                (*patternImplIter++).Match(obj, objToPath, pathToObj);
+                (*patternImplIter++).Match(objPath, pathToObj);
         };
         return _EvalExpr(evalPattern);
     }
@@ -263,52 +238,50 @@ public:
     /// copyable, and may be copied to parallelize searches over domain
     /// subtrees, where one copy is invoked with a child, and the other with the
     /// next sibling.
-    template <class ObjectToPath, class PathToObject>
+    template <class PathToObject>
     class IncrementalSearcher {
     public:
         IncrementalSearcher() : _eval(nullptr), _lastPathDepth(0) {}
         
         IncrementalSearcher(SdfPathExpressionEval const *eval,
-                            ObjectToPath const &o2p,
                             PathToObject const &p2o)
             : _eval(eval)
             , _incrSearchStates(_eval->_patternImpls.size())
-            , _objToPath(o2p)
             , _pathToObj(p2o)
             , _lastPathDepth(0) {}
 
         IncrementalSearcher(SdfPathExpressionEval const *eval,
-                            ObjectToPath &&o2p,
                             PathToObject &&p2o)
             : _eval(eval)
             , _incrSearchStates(_eval->_patternImpls.size())
-            , _objToPath(std::move(o2p))
             , _pathToObj(std::move(p2o))
             , _lastPathDepth(0) {}
 
-        /// Advance the search to the next \p object, and return the result of
+        /// Advance the search to the next \p objPath, and return the result of
         /// evaluating the expression on it.
         /// 
-        /// The passed \p obj must have a path that could succeed the previous
-        /// object's path in a valid depth-first ordering.  That is, it must be
-        /// a direct child, a sibling, or the sibling of an ancestor.  For
-        /// example, the following paths are in a valid order:
+        /// The passed \p objPath must possibly succeed the previous object's
+        /// path in a valid depth-first ordering.  That is, it must be a direct
+        /// child, a sibling, or the sibling of an ancestor.  For example, the
+        /// following paths are in a valid order:
         ///
         /// /foo, /foo/bar, /foo/bar/baz, /foo/bar/qux, /oof, /oof/zab /oof/xuq
         ///
         SdfPredicateFunctionResult
-        Next(DomainType const &obj) {
+        Next(SdfPath const &objPath) {
             auto patternImplIter = _eval->_patternImpls.begin();
             auto stateIter = _incrSearchStates.begin();
-            int newDepth = _objToPath(obj).GetPathElementCount();
-            const int popLevel = (newDepth <= _lastPathDepth) ? newDepth : 0;
+            const int newDepth = objPath.GetPathElementCount();
+            const bool pop = newDepth <= _lastPathDepth;
             auto patternStateNext = [&](bool skip) {
-                if (popLevel) {
-                    stateIter->Pop(popLevel);
+                if (pop) {
+                    stateIter->Pop(newDepth);
                 }
-                return skip ? (++patternImplIter, SdfPredicateFunctionResult())
-                    : (*patternImplIter++).Next(
-                        obj, *stateIter++, _objToPath, _pathToObj);
+                auto const &patternImpl = *patternImplIter++;
+                auto &state = *stateIter++;
+                return skip
+                    ? SdfPredicateFunctionResult {}
+                    : patternImpl.Next(objPath, state, _pathToObj);
             };
             _lastPathDepth = newDepth;
             return _eval->_EvalExpr(patternStateNext);
@@ -317,33 +290,25 @@ public:
         /// Reset this object's incremental search state so that a new round of
         /// searching may begin.
         void Reset() {
-            *this = IncrementalSearcher {
-                _eval, std::move(_objToPath), std::move(_pathToObj)
-            };
+            *this = IncrementalSearcher { _eval, std::move(_pathToObj) };
         }
         
     private:
         SdfPathExpressionEval const *_eval;
         std::vector<_PatternIncrSearchState> _incrSearchStates;
         
-        ObjectToPath _objToPath;
         PathToObject _pathToObj;
 
         int _lastPathDepth;
     };
 
-    /// Create an IncrementalSearcher object, using \p objToPath and \p
-    /// pathToObject to map DomainType instances to their paths and vice-versa.
-    template <class ObjectToPath, class PathToObject>
-    IncrementalSearcher<std::decay_t<ObjectToPath>,
-                        std::decay_t<PathToObject>>
-    MakeIncrementalSearcher(ObjectToPath &&objToPath,
-                            PathToObject &&pathToObj) const {
-        return IncrementalSearcher<
-            std::decay_t<ObjectToPath>,
-            std::decay_t<PathToObject>>(
-                this, std::forward<ObjectToPath>(objToPath),
-                std::forward<PathToObject>(pathToObj));
+    /// Create an IncrementalSearcher object, using \p pathToObject to map
+    /// DomainType instances to their paths.
+    template <class PathToObject>
+    IncrementalSearcher<std::decay_t<PathToObject>>
+    MakeIncrementalSearcher(PathToObject &&pathToObj) const {
+        return IncrementalSearcher<std::decay_t<PathToObject>>(
+            this, std::forward<PathToObject>(pathToObj));
     }
 
 private:

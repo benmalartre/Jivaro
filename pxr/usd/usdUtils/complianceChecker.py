@@ -1,25 +1,8 @@
 #
 # Copyright 2018 Pixar
 #
-# Licensed under the Apache License, Version 2.0 (the "Apache License")
-# with the following modification; you may not use this file except in
-# compliance with the Apache License and the following modification to it:
-# Section 6. Trademarks. is deleted and replaced with:
-#
-# 6. Trademarks. This License does not grant permission to use the trade
-#    names, trademarks, service marks, or product names of the Licensor
-#    and its affiliates, except as required to comply with Section 4(c) of
-#    the License and to reproduce the content of the NOTICE file.
-#
-# You may obtain a copy of the Apache License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the Apache License with the above modification is
-# distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-# KIND, either express or implied. See the Apache License for the specific
-# language governing permissions and limitations under the Apache License.
+# Licensed under the terms set forth in the LICENSE.txt file available at
+# https://openusd.org/license.
 #
 
 from __future__ import print_function
@@ -661,6 +644,89 @@ class SkelBindingAPIAppliedChecker(BaseRuleChecker):
                     "is not of type SkelRoot or is not rooted at a prim of " \
                     "type SkelRoot, as required by the UsdSkel schema.");
 
+class ShaderPropertyTypeConformanceChecker(BaseRuleChecker):
+    @staticmethod
+    def GetDescription():
+        return "Shader prim's input types must be conforming to their " \
+            "appropriate Sdf types in the respective sdr shader."
+
+    def __init__(self, verbose, consumerLevelChecks, assetLevelChecks):
+        super(ShaderPropertyTypeConformanceChecker, self).__init__(verbose,
+                                                   consumerLevelChecks,
+                                                   assetLevelChecks)
+
+    def _FillSdrNameToTypeMap(self, shadeNode, mapping):
+        for inputName in shadeNode.GetInputNames():
+            prop = shadeNode.GetInput(inputName)
+            propName = prop.GetName()
+            mapping[propName] = prop.GetTypeAsSdfType().GetSdfType()
+
+
+
+    def CheckPrim(self, prim):
+        from pxr import Sdr, UsdShade
+
+        if not prim.IsA(UsdShade.Shader):
+            return
+
+        shader = UsdShade.Shader(prim)
+        if not shader:
+            # Error has already been issued by a Base-level checker
+            return
+
+        self._Msg("Checking shader <%s>." % prim.GetPath())
+
+        # Retrieve ground truth Sdf types for input properties for all source 
+        # types
+        sdrNameToTypeMapping = {}
+        sdrShaderNode = None
+        inputs = []
+        expectedImplSources = [UsdShade.Tokens.id, 
+                               UsdShade.Tokens.sourceAsset, 
+                               UsdShade.Tokens.sourceCode]
+        implSource = shader.GetImplementationSource()
+        if implSource in expectedImplSources:
+            sourceTypes = shader.GetSourceTypes()
+            hasNoSources = not len(sourceTypes)
+            if hasNoSources and implSource == UsdShade.Tokens.id:
+                shaderId = shader.GetShaderId( )
+                if not shaderId:
+                    return
+                sdrShaderNode = \
+                    Sdr.Registry().GetShaderNodeByIdentifier(shaderId)
+            elif hasNoSources:
+                self._AddFailedCheck("Shader <%s> has no sourceType. "
+                     % (prim.GetPath()))
+                return
+            else:
+                # If a shader has multiple source types, they will all share
+                # the same inputs so only one shaderNode needs to be checked
+                sdrShaderNode = \
+                    shader.GetShaderNodeForSourceType(sourceTypes[0])
+        else:
+            self._AddFailedCheck("Shader <%s> has invalid implementation "
+                    "source '%s'." % (prim.GetPath(), implSource))
+            return
+
+        if not sdrShaderNode:
+            self._AddFailedCheck("Shader <%s> has invalid shader node. "
+                     % (prim.GetPath()))
+            return
+
+        self._FillSdrNameToTypeMap(sdrShaderNode, sdrNameToTypeMapping)
+
+        # Compare schema properties to the ground truth Sdf values
+        inputs = shader.GetInputs()
+        for input in inputs:
+            inputName = input.GetBaseName()
+            schemaSdfType = input.GetTypeName()
+            if inputName in sdrNameToTypeMapping:
+                sdrSdfType = sdrNameToTypeMapping[inputName]
+                if not (sdrSdfType == schemaSdfType):
+                    self._AddFailedCheck("Incorrect type for %s. Expected '%s'"
+                        "; got '%s'." %
+                        (input.GetAttr().GetPath(), sdrSdfType, schemaSdfType))
+
 class ARKitPackageEncapsulationChecker(BaseRuleChecker):
     @staticmethod
     def GetDescription():
@@ -902,7 +968,7 @@ class ComplianceChecker(object):
 
     @staticmethod
     def GetBaseRules():
-        return [ByteAlignmentChecker, CompressionChecker, 
+        return [ByteAlignmentChecker, CompressionChecker, ShaderPropertyTypeConformanceChecker,
                 MissingReferenceChecker, StageMetadataChecker, TextureChecker, 
                 PrimEncapsulationChecker, NormalMapTextureChecker,
                 MaterialBindingAPIAppliedChecker, SkelBindingAPIAppliedChecker]

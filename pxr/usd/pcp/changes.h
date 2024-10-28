@@ -1,25 +1,8 @@
 //
 // Copyright 2016 Pixar
 //
-// Licensed under the Apache License, Version 2.0 (the "Apache License")
-// with the following modification; you may not use this file except in
-// compliance with the Apache License and the following modification to it:
-// Section 6. Trademarks. is deleted and replaced with:
-//
-// 6. Trademarks. This License does not grant permission to use the trade
-//    names, trademarks, service marks, or product names of the Licensor
-//    and its affiliates, except as required to comply with Section 4(c) of
-//    the License and to reproduce the content of the NOTICE file.
-//
-// You may obtain a copy of the Apache License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the Apache License with the above modification is
-// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied. See the Apache License for the specific
-// language governing permissions and limitations under the Apache License.
+// Licensed under the terms set forth in the LICENSE.txt file available at
+// https://openusd.org/license.
 //
 #ifndef PXR_USD_PCP_CHANGES_H
 #define PXR_USD_PCP_CHANGES_H
@@ -28,6 +11,7 @@
 
 #include "pxr/pxr.h"
 #include "pxr/usd/pcp/api.h"
+#include "pxr/usd/pcp/errors.h"
 #include "pxr/usd/pcp/layerStackIdentifier.h"
 #include "pxr/usd/sdf/changeList.h"
 #include "pxr/usd/sdf/declareHandles.h"
@@ -37,6 +21,7 @@
 
 #include <map>
 #include <set>
+#include <unordered_set>
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -81,6 +66,7 @@ public:
     SdfRelocatesMap newIncrementalRelocatesSourceToTarget;
     SdfRelocatesMap newIncrementalRelocatesTargetToSource;
     SdfPathVector newRelocatesPrimPaths;
+    PcpErrorVector newRelocatesErrors;
 
     /// Paths that are affected by the above relocation changes.
     SdfPathSet pathsAffectedByRelocationChanges;
@@ -143,6 +129,20 @@ public:
     /// Layers used in the composition may have changed.
     bool didMaybeChangeLayers = false;
 
+    /// Will be true if a muting operation took place on a non empty layer.
+    bool didMuteOrUnmuteNonEmptyLayer = false;
+
+    /// Will be true if a non empty sublayer was added or removed.
+    bool didAddOrRemoveNonEmptySublayer = false;
+
+    /// Set of layers that were explicitly muted or removed from a sublayer
+    /// list and all sublayers of those layers, recursively.
+    std::unordered_set<SdfLayerHandle, TfHash> layersAffectedByMutingOrRemoval;
+
+    // Holds all the diff changelists that were computed when adding/removing
+    // sublayers or muting/unmuting layers.
+    SdfLayerChangeListVec layerChangeListVec;
+
 private:
     friend class PcpCache;
     friend class PcpChanges;
@@ -152,6 +152,13 @@ private:
     // not its contents.  Because this causes no externally-observable
     // changes in state, clients do not need to be aware of these changes.
     SdfPathSet _didChangeSpecsInternal;
+
+    // This set serves a similar purpose to _didChangeSpecsInternal above,
+    // however, during processing descendants of the specs in this set will also
+    // be marked as changed. A performance gain is accomplished by placing the
+    // ancestor specs in this set and marking children iteratively when applying
+    // changes to the cache.
+    SdfPathSet _didChangeSpecsAndChildrenInternal;
 };
 
 /// Structure used to temporarily retain layers and layerStacks within
@@ -223,11 +230,20 @@ public:
 
     /// The layer identified by \p layerId was muted in \p cache.
     PCP_API 
-    void DidMuteLayer(const PcpCache* cache, const std::string& layerId);
+    void _DidMuteLayer(const PcpCache* cache, const std::string& layerId);
 
     /// The layer identified by \p layerId was unmuted in \p cache.
     PCP_API 
-    void DidUnmuteLayer(const PcpCache* cache, const std::string& layerId);
+    void _DidUnmuteLayer(const PcpCache* cache, const std::string& layerId);
+
+    /// Sets the list of layers that will ultimately be muted and unmuted for
+    /// this round of changes.  This is used as hints for various change
+    /// processing methods.  Note that identifiers passed into this function
+    /// will be opened and placed in the lifeboat associated with this
+    /// PcpChanges object.
+    void DidMuteAndUnmuteLayers(const PcpCache* cache, 
+                              const std::vector<std::string>& layersToMute,
+                              const std::vector<std::string>& layersToUnmute);
 
     /// The object at \p path changed significantly enough to require
     /// recomputing the entire prim or property index.  A significant change
@@ -235,6 +251,11 @@ public:
     /// dependencies.
     PCP_API 
     void DidChangeSignificantly(const PcpCache* cache, const SdfPath& path);
+
+    enum ChangeSpecsType {
+        ChangeSpecsTypeRemoved,
+        ChangeSpecsTypeAdded
+    };
 
     /// The spec stack for the prim or property has changed, due to the
     /// addition or removal of the spec in \p changedLayer at \p changedPath.
@@ -244,7 +265,7 @@ public:
     PCP_API 
     void DidChangeSpecs(const PcpCache* cache, const SdfPath& path,
                         const SdfLayerHandle& changedLayer,
-                        const SdfPath& changedPath);
+                        const SdfPath& changedPath, ChangeSpecsType changeType);
 
     /// The spec stack for the prim or property at \p path in \p cache has
     /// changed.
@@ -423,6 +444,25 @@ private:
     // of the stack and not its contents.
     void _DidChangeSpecStackInternal(
         const PcpCache* cache, const SdfPath& path);
+
+    void _DidChangeSpecStackAndChildrenInternal(
+        const PcpCache* cache, const SdfPath& path);
+
+    // This method is used when processing layer operations.  It ensures that
+    // affected layer stacks and their dependent spec stacks are marked as
+    // changed.
+    void _ProcessLayerStackAndDependencyChanges(
+        const PcpCache* cache,
+        const PcpLayerStackPtrVector& layerStacks);
+
+    // When muting or unmuting a layer that is being referenced or payloaded,
+    // we need to ensure that all the relevant sites are recomposed.  This
+    // function searches site dependencies of the provided layer stacks and
+    // marks those that are introduced via reference or payload arcs as
+    // significantly changed.
+    void _MarkReferencingSitesAsSignificantlyChanged(
+        const PcpCache* cache,
+        const PcpLayerStackPtrVector& layerStacks);
 
 private:
     LayerStackChanges _layerStackChanges;

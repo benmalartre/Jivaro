@@ -1,25 +1,8 @@
 //
 // Copyright 2016 Pixar
 //
-// Licensed under the Apache License, Version 2.0 (the "Apache License")
-// with the following modification; you may not use this file except in
-// compliance with the Apache License and the following modification to it:
-// Section 6. Trademarks. is deleted and replaced with:
-//
-// 6. Trademarks. This License does not grant permission to use the trade
-//    names, trademarks, service marks, or product names of the Licensor
-//    and its affiliates, except as required to comply with Section 4(c) of
-//    the License and to reproduce the content of the NOTICE file.
-//
-// You may obtain a copy of the Apache License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the Apache License with the above modification is
-// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied. See the Apache License for the specific
-// language governing permissions and limitations under the Apache License.
+// Licensed under the terms set forth in the LICENSE.txt file available at
+// https://openusd.org/license.
 //
 #include "pxr/usdImaging/usdImaging/gprimAdapter.h"
 
@@ -81,8 +64,6 @@ _GetPrimvarsForMaterial(const VtValue & vtMaterial)
     return primvars;
 }
 
-UsdImagingGprimAdapter::~UsdImagingGprimAdapter() = default;
-
 HdDataSourceLocatorSet
 UsdImagingGprimAdapter::InvalidateImagingSubprim(
         UsdPrim const& prim,
@@ -95,37 +76,6 @@ UsdImagingGprimAdapter::InvalidateImagingSubprim(
             prim, subprim, properties, invalidationType);
 }
 
-/* static */
-SdfPath
-UsdImagingGprimAdapter::_ResolveCachePath(SdfPath const& usdPath,
-                                          UsdImagingInstancerContext const*
-                                              instancerContext)
-{
-    SdfPath cachePath = usdPath;
-
-    // For non-instanced prims, cachePath and usdPath will be the same, however
-    // for instanced prims, cachePath will be something like:
-    //
-    // primPath: /__Prototype_1/cube
-    // cachePath: /Models/cube_0.proto_cube_id0
-    //
-    // The name-mangling is so that multiple instancers/adapters can track the
-    // same underlying UsdPrim.
-
-    if (instancerContext != nullptr) {
-        SdfPath const& instancer = instancerContext->instancerCachePath;
-        TfToken const& childName = instancerContext->childName;
-
-        if (!instancer.IsEmpty()) {
-            cachePath = instancer;
-        }
-        if (!childName.IsEmpty()) {
-            cachePath = cachePath.AppendProperty(childName);
-        }
-    }
-    return cachePath;
-}
-
 SdfPath
 UsdImagingGprimAdapter::_AddRprim(TfToken const& primType,
                                   UsdPrim const& usdPrim,
@@ -134,12 +84,10 @@ UsdImagingGprimAdapter::_AddRprim(TfToken const& primType,
                                   UsdImagingInstancerContext const*
                                       instancerContext)
 {
-    SdfPath cachePath = _ResolveCachePath(usdPrim.GetPath(), instancerContext);
+    SdfPath cachePath = ResolveCachePath(usdPrim.GetPath(), instancerContext);
 
-    // For an instanced gprim, this is the instancer prim.
-    // For a non-instanced gprim, this is just the gprim.
-    UsdPrim proxyPrim = usdPrim.GetStage()->GetPrimAtPath(
-        cachePath.GetAbsoluteRootOrPrimPath());
+    UsdPrim proxyPrim = _GetPrim(ResolveProxyPrimPath(
+        cachePath, instancerContext));
 
     index->InsertRprim(primType, cachePath, proxyPrim,
         instancerContext ? instancerContext->instancerAdapter
@@ -529,6 +477,10 @@ UsdImagingGprimAdapter::ProcessPropertyChange(UsdPrim const& prim,
             UsdCollectionAPI::CanContainPropertyName(propertyName)) {
         return HdChangeTracker::DirtyMaterialId |
                HdChangeTracker::DirtyPrimvar;
+    }
+    // Material property edits should invalidate primvars.
+    if (TfStringStartsWith(propertyName.GetString(), "inputs:")) {
+        return HdChangeTracker::DirtyPrimvar;
     }
     
     // Note: This doesn't handle "built-in" attributes that are treated as

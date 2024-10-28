@@ -1,25 +1,8 @@
 //
 // Copyright 2018-2019 Pixar
 //
-// Licensed under the Apache License, Version 2.0 (the "Apache License")
-// with the following modification; you may not use this file except in
-// compliance with the Apache License and the following modification to it:
-// Section 6. Trademarks. is deleted and replaced with:
-//
-// 6. Trademarks. This License does not grant permission to use the trade
-//    names, trademarks, service marks, or product names of the Licensor
-//    and its affiliates, except as required to comply with Section 4(c) of
-//    the License and to reproduce the content of the NOTICE file.
-//
-// You may obtain a copy of the Apache License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the Apache License with the above modification is
-// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied. See the Apache License for the specific
-// language governing permissions and limitations under the Apache License.
+// Licensed under the terms set forth in the LICENSE.txt file available at
+// https://openusd.org/license.
 //
 #include "pxr/pxr.h"
 #include "pxr/usd/usdMtlx/debugCodes.h"
@@ -454,7 +437,7 @@ _TypeSupportsColorSpace(const mx::ConstValueElementPtr& mxElem)
         mx::ConstNodeDefPtr parentNodeDef =
             _GetNodeDef(mxElem->getParent()->asA<mx::Node>());
         if (parentNodeDef) {
-            for (const mx::OutputPtr output : parentNodeDef->getOutputs()) {
+            for (const mx::OutputPtr& output : parentNodeDef->getOutputs()) {
                 const std::string &type = output->getType();
                 colorImageNode |= type == "color3" || type == "color4";
             }
@@ -1520,22 +1503,15 @@ _Context::AddShaderNode(const mx::ConstNodePtr& mtlxShaderNode)
             _FindMatchingNodeDef(mtlxShaderNode,
                                  mtlxShaderNode->getCategory(),
                                  UsdMtlxGetVersion(mtlxShaderNode),
-                                 mtlxShaderNode->getTarget());
+                                 mtlxShaderNode->getTarget(),
+                                 mtlxShaderNode);
     }
     auto shaderId = _GetShaderId(mtlxNodeDef);
     if (shaderId.IsEmpty()) {
         return UsdShadeShader();
     }
 
-    // Choose the name of the shader.  In MaterialX this is just
-    // mtlxShaderNode->getName() and has no meaning other than to uniquely
-    // identify the shader.  In USD to support materialinherit we must
-    // ensure that shaders have the same name if one should compose over
-    // the other.  MaterialX composes over if a shader node refers to the
-    // same nodedef so in USD we use the nodedef's name.  This name isn't
-    // ideal since it's just an arbitrary unique name;  the nodedef's
-    // node name is more meaningful.
-    const auto name = _MakeName(mtlxNodeDef);
+    const auto name = _MakeName(mtlxShaderNode);
 
     // Create the shader if it doesn't exist and copy node def values.
     auto shaderImplPath = _shadersPath.AppendChild(name);

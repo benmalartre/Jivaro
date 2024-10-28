@@ -1,25 +1,8 @@
 //
 // Copyright 2016 Pixar
 //
-// Licensed under the Apache License, Version 2.0 (the "Apache License")
-// with the following modification; you may not use this file except in
-// compliance with the Apache License and the following modification to it:
-// Section 6. Trademarks. is deleted and replaced with:
-//
-// 6. Trademarks. This License does not grant permission to use the trade
-//    names, trademarks, service marks, or product names of the Licensor
-//    and its affiliates, except as required to comply with Section 4(c) of
-//    the License and to reproduce the content of the NOTICE file.
-//
-// You may obtain a copy of the Apache License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the Apache License with the above modification is
-// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied. See the Apache License for the specific
-// language governing permissions and limitations under the Apache License.
+// Licensed under the terms set forth in the LICENSE.txt file available at
+// https://openusd.org/license.
 //
 #include "pxr/usd/usdGeom/tetMesh.h"
 #include "pxr/usd/usd/schemaRegistry.h"
@@ -225,7 +208,7 @@ struct _Vec3iCmp
         
         return f1[0] < f2[0];
     }
-};    
+};
 
 VtVec3iArray
 _ComputeSurfaceFaces(const VtVec4iArray &tetVertexIndices)
@@ -303,8 +286,7 @@ bool UsdGeomTetMesh::ComputeSurfaceFaces(const UsdGeomTetMesh& tetMesh,
                                          const UsdTimeCode timeCode) 
 {
     
-    if (surfaceFaceIndices == nullptr)
-    {
+    if (surfaceFaceIndices == nullptr) {
         return false;
     }
 
@@ -313,6 +295,68 @@ bool UsdGeomTetMesh::ComputeSurfaceFaces(const UsdGeomTetMesh& tetMesh,
     tetVertexIndicesAttr.Get(&tetVertexIndices, timeCode);
     
     *surfaceFaceIndices = _ComputeSurfaceFaces(tetVertexIndices);
+    return true;
+}
+
+VtIntArray
+_FindInvertedElements(const VtVec3fArray &tetMeshPoints, 
+                      const VtVec4iArray &tetVertexIndices,
+                      const TfToken &orientation)
+{
+    VtIntArray invertedElements;
+    invertedElements.reserve(tetVertexIndices.size());
+    GfVec3f elemPoints[4];
+    
+    const float sign = (orientation == UsdGeomTokens->leftHanded) ? -1.0f : 1.0f;
+
+    for (size_t t = 0; t < tetVertexIndices.size(); t++) {
+        for (uint_fast8_t p = 0; p < 4; p++) {
+            elemPoints[p] = tetMeshPoints[tetVertexIndices[t][p]];
+        }
+
+        const float tripleProduct = sign * GfDot(elemPoints[3] - elemPoints[0], 
+                                    GfCross(elemPoints[1] - elemPoints[0], 
+                                            elemPoints[2] - elemPoints[0]));
+
+        if (tripleProduct < 0.0f) {
+            invertedElements.push_back(t);
+        }
+    }
+
+    return invertedElements;
+}
+
+bool UsdGeomTetMesh::FindInvertedElements(const UsdGeomTetMesh& tetMesh,
+                                          VtIntArray* invertedElements,
+                                          const UsdTimeCode timeCode) 
+{    
+    if (invertedElements == nullptr) {
+        return false;
+    }
+
+    const UsdAttribute& tetPointsAttr = tetMesh.GetPointsAttr();
+    VtVec3fArray tetMeshPoints;
+    tetPointsAttr.Get(&tetMeshPoints, timeCode);
+    
+    if (tetMeshPoints.size() < 4) {
+        return false;
+    }
+
+    const UsdAttribute& tetVertexIndicesAttr = tetMesh.GetTetVertexIndicesAttr();
+    VtVec4iArray tetVertexIndices;
+    tetVertexIndicesAttr.Get(&tetVertexIndices, timeCode);
+    
+    if (tetVertexIndices.size() < 1) {
+        return false;
+    }
+    
+    const UsdAttribute& orientationAttr = tetMesh.GetOrientationAttr();
+    TfToken orientation; 
+    orientationAttr.Get(&orientation);
+
+    *invertedElements = _FindInvertedElements(tetMeshPoints,
+                                              tetVertexIndices, 
+                                              orientation);
     return true;
 }
 

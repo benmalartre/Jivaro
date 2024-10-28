@@ -1,25 +1,8 @@
 //
 // Copyright 2016 Pixar
 //
-// Licensed under the Apache License, Version 2.0 (the "Apache License")
-// with the following modification; you may not use this file except in
-// compliance with the Apache License and the following modification to it:
-// Section 6. Trademarks. is deleted and replaced with:
-//
-// 6. Trademarks. This License does not grant permission to use the trade
-//    names, trademarks, service marks, or product names of the Licensor
-//    and its affiliates, except as required to comply with Section 4(c) of
-//    the License and to reproduce the content of the NOTICE file.
-//
-// You may obtain a copy of the Apache License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the Apache License with the above modification is
-// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied. See the Apache License for the specific
-// language governing permissions and limitations under the Apache License.
+// Licensed under the terms set forth in the LICENSE.txt file available at
+// https://openusd.org/license.
 //
 #ifndef PXR_BASE_VT_VALUE_H
 #define PXR_BASE_VT_VALUE_H
@@ -36,6 +19,7 @@
 #include "pxr/base/arch/hints.h"
 #include "pxr/base/arch/pragmas.h"
 #include "pxr/base/tf/anyUniquePtr.h"
+#include "pxr/base/tf/delegatedCountPtr.h"
 #include "pxr/base/tf/pointerAndBits.h"
 #include "pxr/base/tf/preprocessorUtilsLite.h"
 #include "pxr/base/tf/safeTypeCompare.h"
@@ -48,8 +32,6 @@
 #include "pxr/base/vt/streamOut.h"
 #include "pxr/base/vt/traits.h"
 #include "pxr/base/vt/types.h"
-
-#include <boost/intrusive_ptr.hpp>
 
 #include <iosfwd>
 #include <typeinfo>
@@ -114,7 +96,7 @@ VT_VALUE_SET_STORED_TYPE(char const *, std::string);
 VT_VALUE_SET_STORED_TYPE(char *, std::string);
 
 #ifdef PXR_PYTHON_SUPPORT_ENABLED
-VT_VALUE_SET_STORED_TYPE(boost::python::object, TfPyObjWrapper);
+VT_VALUE_SET_STORED_TYPE(pxr_boost::python::object, TfPyObjWrapper);
 #endif // PXR_PYTHON_SUPPORT_ENABLED
 
 #undef VT_VALUE_SET_STORED_TYPE
@@ -180,10 +162,10 @@ class VtValue
         T _obj;
         mutable std::atomic<int> _refCount;
 
-        friend inline void intrusive_ptr_add_ref(_Counted const *d) {
+        friend inline void TfDelegatedCountIncrement(_Counted const *d) {
             d->_refCount.fetch_add(1, std::memory_order_relaxed);
         }
-        friend inline void intrusive_ptr_release(_Counted const *d) {
+        friend inline void TfDelegatedCountDecrement(_Counted const *d) noexcept {
             if (d->_refCount.fetch_sub(1, std::memory_order_release) == 1) {
                 std::atomic_thread_fence(std::memory_order_acquire);
                 delete d;
@@ -464,7 +446,7 @@ class VtValue
 #ifdef PXR_PYTHON_SUPPORT_ENABLED
             ProxiedType const &p = VtGetProxiedObject(obj);
             TfPyLock lock;
-            return boost::python::api::object(p);
+            return pxr_boost::python::api::object(p);
 #else
             return {};
 #endif //PXR_PYTHON_SUPPORT_ENABLED
@@ -525,7 +507,7 @@ class VtValue
 #ifdef PXR_PYTHON_SUPPORT_ENABLED
             VtValue const *val = VtGetErasedProxiedVtValue(obj);
             TfPyLock lock;
-            return boost::python::api::object(*val);
+            return pxr_boost::python::api::object(*val);
 #else
             return {};
 #endif //PXR_PYTHON_SUPPORT_ENABLED
@@ -764,30 +746,31 @@ class VtValue
 
     ////////////////////////////////////////////////////////////////////////
     // Remote-storage type info implementation.  The container is an
-    // intrusive_ptr to an object holder: _Counted<T>.
+    // TfDelegatedCountPtr to an object holder: _Counted<T>.
     template <class T>
     struct _RemoteTypeInfo : _TypeInfoImpl<
-        T,                                  // type
-        boost::intrusive_ptr<_Counted<T> >, // container
-        _RemoteTypeInfo<T>                  // CRTP
+        T,                                   // type
+        TfDelegatedCountPtr<_Counted<T>>, // container
+        _RemoteTypeInfo<T>                   // CRTP
         >
     {
         constexpr _RemoteTypeInfo()
             : _TypeInfoImpl<
-                  T, boost::intrusive_ptr<_Counted<T>>, _RemoteTypeInfo<T>>()
+                  T, TfDelegatedCountPtr<_Counted<T>>, _RemoteTypeInfo<T>>()
         {}
 
-        typedef boost::intrusive_ptr<_Counted<T> > Ptr;
+        using Ptr = TfDelegatedCountPtr<_Counted<T>>;
         // Get returns object stored in the pointed-to _Counted<T>.
         static T &_GetMutableObj(Ptr &ptr) {
-            if (!ptr->IsUnique())
-                ptr.reset(new _Counted<T>(ptr->Get()));
+            if (!ptr->IsUnique()) {
+                ptr = TfMakeDelegatedCountPtr<_Counted<T>>(ptr->Get());
+            }
             return ptr->GetMutable();
         }
         static T const &_GetObj(Ptr const &ptr) { return ptr->Get(); }
         // PlaceCopy() allocates a new _Counted<T> with a copy of the object.
         static void _PlaceCopy(Ptr *dst, T const &src) {
-            new (dst) Ptr(new _Counted<T>(src));
+            new (dst) Ptr(TfDelegatedCountIncrementTag, new _Counted<T>(src));
         }
     };
 
@@ -873,7 +856,7 @@ public:
     /// Construct a VtValue holding a copy of \p obj.
     /// 
     /// If T is a char pointer or array, produce a VtValue holding a
-    /// std::string. If T is boost::python::object, produce a VtValue holding
+    /// std::string. If T is pxr_boost::python::object, produce a VtValue holding
     /// a TfPyObjWrapper.
     template <class T>
     explicit VtValue(T const &obj) {
@@ -1120,7 +1103,8 @@ public:
     template <class T>
     T const &UncheckedGet() const & { return _Get<T>(); }
 
-    /// \overload In case *this is an rvalue, move the held value out and return
+    /// \overload 
+    /// In case *this is an rvalue, move the held value out and return
     /// by value.
     template <class T>
     T UncheckedGet() && { return UncheckedRemove<T>(); }
@@ -1147,7 +1131,8 @@ public:
         return _Get<T>();
     }
 
-    /// \overload In case *this is an rvalue, move the held value out and return
+    /// \overload 
+    /// In case *this is an rvalue, move the held value out and return
     /// by value.
     template <class T>
     T Get() && {
@@ -1387,18 +1372,16 @@ private:
     }
 
     template <class T>
-    inline std::enable_if_t<VtIsKnownValueType_Workaround<T>::value, bool>
+    inline bool
     _TypeIs() const {
-        return _info->knownTypeIndex == VtGetKnownValueTypeIndex<T>() ||
-            ARCH_UNLIKELY(_IsProxy() && _TypeIsImpl(typeid(T)));
-    }
-
-    template <class T>
-    inline std::enable_if_t<!VtIsKnownValueType_Workaround<T>::value, bool>
-    _TypeIs() const {
-        std::type_info const &t = typeid(T);
-        return TfSafeTypeCompare(_info->typeInfo, t) ||
-            ARCH_UNLIKELY(_IsProxy() && _TypeIsImpl(t));
+        if constexpr (VtIsKnownValueType_Workaround<T>::value) {
+            return _info->knownTypeIndex == VtGetKnownValueTypeIndex<T>() ||
+                ARCH_UNLIKELY(_IsProxy() && _TypeIsImpl(typeid(T)));
+        } else {
+            std::type_info const &t = typeid(T);
+            return TfSafeTypeCompare(_info->typeInfo, t) ||
+                ARCH_UNLIKELY(_IsProxy() && _TypeIsImpl(t));
+        }
     }
 
     VT_API bool _TypeIsImpl(std::type_info const &queriedType) const;
@@ -1493,7 +1476,7 @@ ARCH_PRAGMA_POP
 
     // This grants friend access to a function in the wrapper file for this
     // class.  This lets the wrapper reach down into a value to get a
-    // boost::python wrapped object corresponding to the held type.  This
+    // pxr_boost::python wrapped object corresponding to the held type.  This
     // facility is necessary to get the python API we want.
     friend TfPyObjWrapper
     Vt_GetPythonObjectFromHeldValue(VtValue const &self);

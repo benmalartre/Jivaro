@@ -1,38 +1,20 @@
 //
 // Copyright 2023 Pixar
 //
-// Licensed under the Apache License, Version 2.0 (the "Apache License")
-// with the following modification; you may not use this file except in
-// compliance with the Apache License and the following modification to it:
-// Section 6. Trademarks. is deleted and replaced with:
-//
-// 6. Trademarks. This License does not grant permission to use the trade
-//    names, trademarks, service marks, or product names of the Licensor
-//    and its affiliates, except as required to comply with Section 4(c) of
-//    the License and to reproduce the content of the NOTICE file.
-//
-// You may obtain a copy of the Apache License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the Apache License with the above modification is
-// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied. See the Apache License for the specific
-// language governing permissions and limitations under the Apache License.
+// Licensed under the terms set forth in the LICENSE.txt file available at
+// https://openusd.org/license.
 //
 #ifndef PXR_IMAGING_HD_IMAGE_SHADER_H
 #define PXR_IMAGING_HD_IMAGE_SHADER_H
 
 #include "pxr/pxr.h"
 #include "pxr/imaging/hd/api.h"
-#include "pxr/imaging/hd/version.h"
+#include "pxr/imaging/hd/material.h"
 #include "pxr/imaging/hd/sprim.h"
+#include "pxr/imaging/hd/version.h"
 
 #include "pxr/base/tf/staticTokens.h"
 #include "pxr/base/vt/dictionary.h"
-
-#include <vector>
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -40,11 +22,15 @@ PXR_NAMESPACE_OPEN_SCOPE
     (enabled)                                               \
     (priority)                                              \
     (filePath)                                              \
-    (constants)
+    (constants)                                             \
+    (materialNetwork)
 
 TF_DECLARE_PUBLIC_TOKENS(HdImageShaderTokens, HD_API, HD_IMAGE_SHADER_TOKENS);
 
 class HdSceneDelegate;
+
+using HdMaterialNetworkInterfaceUniquePtr =
+    std::unique_ptr<class HdMaterialNetworkInterface>;
 
 /// \class HdImageShader
 ///
@@ -65,11 +51,13 @@ public:
         DirtyPriority         = 1 << 1,
         DirtyFilePath         = 1 << 2,
         DirtyConstants        = 1 << 3,
+        DirtyMaterialNetwork  = 1 << 4,
 
         AllDirty              = (DirtyEnabled
                                  |DirtyPriority
                                  |DirtyFilePath
-                                 |DirtyConstants)
+                                 |DirtyConstants
+                                 |DirtyMaterialNetwork)
     };
 
     // ---------------------------------------------------------------------- //
@@ -104,11 +92,16 @@ public:
     HD_API
     const VtDictionary& GetConstants() const;
 
+    HD_API
+    const HdMaterialNetworkInterface* GetMaterialNetwork() const;
+
 private:
     bool _enabled;
     int _priority;
     std::string _filePath;
     VtDictionary _constants;
+    HdMaterialNetwork2 _materialNetwork;
+    HdMaterialNetworkInterfaceUniquePtr _materialNetworkInterface;
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE

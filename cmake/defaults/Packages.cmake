@@ -1,25 +1,8 @@
 #
 # Copyright 2016 Pixar
 #
-# Licensed under the Apache License, Version 2.0 (the "Apache License")
-# with the following modification; you may not use this file except in
-# compliance with the Apache License and the following modification to it:
-# Section 6. Trademarks. is deleted and replaced with:
-#
-# 6. Trademarks. This License does not grant permission to use the trade
-#    names, trademarks, service marks, or product names of the Licensor
-#    and its affiliates, except as required to comply with Section 4(c) of
-#    the License and to reproduce the content of the NOTICE file.
-#
-# You may obtain a copy of the Apache License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the Apache License with the above modification is
-# distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-# KIND, either express or implied. See the Apache License for the specific
-# language governing permissions and limitations under the Apache License.
+# Licensed under the terms set forth in the LICENSE.txt file available at
+# https://openusd.org/license.
 #
 
 # Save the current value of BUILD_SHARED_LIBS and restore it at
@@ -37,23 +20,25 @@ set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 find_package(Threads REQUIRED)
 set(PXR_THREAD_LIBS "${CMAKE_THREAD_LIBS_INIT}")
 
-# Find Boost package before getting any boost specific components as we need to
-# disable boost-provided cmake config, based on the boost version found.
-find_package(Boost REQUIRED)
+if((PXR_ENABLE_PYTHON_SUPPORT AND PXR_USE_BOOST_PYTHON) OR PXR_ENABLE_OPENVDB_SUPPORT)
+    # Find Boost package before getting any boost specific components as we need to
+    # disable boost-provided cmake config, based on the boost version found.
+    find_package(Boost REQUIRED)
 
-# Boost provided cmake files (introduced in boost version 1.70) result in 
-# inconsistent build failures on different platforms, when trying to find boost 
-# component dependencies like python, etc. Refer some related
-# discussions:
-# https://github.com/boostorg/python/issues/262#issuecomment-483069294
-# https://github.com/boostorg/boost_install/issues/12#issuecomment-508683006
-#
-# Hence to avoid issues with Boost provided cmake config, Boost_NO_BOOST_CMAKE
-# is enabled by default for boost version 1.70 and above. If a user explicitly 
-# set Boost_NO_BOOST_CMAKE to Off, following will be a no-op.
-option(Boost_NO_BOOST_CMAKE "Disable boost-provided cmake config" ON)
-if (Boost_NO_BOOST_CMAKE)
-    message(STATUS "Disabling boost-provided cmake config")
+    # Boost provided cmake files (introduced in boost version 1.70) result in 
+    # inconsistent build failures on different platforms, when trying to find boost 
+    # component dependencies like python, etc. Refer some related
+    # discussions:
+    # https://github.com/boostorg/python/issues/262#issuecomment-483069294
+    # https://github.com/boostorg/boost_install/issues/12#issuecomment-508683006
+    #
+    # Hence to avoid issues with Boost provided cmake config, Boost_NO_BOOST_CMAKE
+    # is enabled by default for boost version 1.70 and above. If a user explicitly 
+    # set Boost_NO_BOOST_CMAKE to Off, following will be a no-op.
+    option(Boost_NO_BOOST_CMAKE "Disable boost-provided cmake config" ON)
+    if (Boost_NO_BOOST_CMAKE)
+      message(STATUS "Disabling boost-provided cmake config")
+    endif()
 endif()
 
 if(PXR_ENABLE_PYTHON_SUPPORT)
@@ -110,31 +95,33 @@ if(PXR_ENABLE_PYTHON_SUPPORT)
     # USD builds only work with Python3
     setup_python_package(Python3)
 
-    if(WIN32 AND PXR_USE_DEBUG_PYTHON)
-        set(Boost_USE_DEBUG_PYTHON ON)
+    if(PXR_USE_BOOST_PYTHON)
+        if(WIN32 AND PXR_USE_DEBUG_PYTHON)
+            set(Boost_USE_DEBUG_PYTHON ON)
+        endif()
+
+        # Manually specify VS2022, 2019, and 2017 as USD's supported compiler versions
+        if(WIN32)
+            set(Boost_COMPILER "-vc143;-vc142;-vc141")
+        endif()
+
+        # As of boost 1.67 the boost_python component name includes the
+        # associated Python version (e.g. python27, python36). 
+        # XXX: After boost 1.73, boost provided config files should be able to 
+        # work without specifying a python version!
+        # https://github.com/boostorg/boost_install/blob/master/BoostConfig.cmake
+
+        # Find the component under the versioned name and then set the generic
+        # Boost_PYTHON_LIBRARY variable so that we don't have to duplicate this
+        # logic in each library's CMakeLists.txt.
+        set(python_version_nodot "${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}")
+        find_package(Boost
+            COMPONENTS
+            python${python_version_nodot}
+            REQUIRED
+        )
+        set(Boost_PYTHON_LIBRARY "${Boost_PYTHON${python_version_nodot}_LIBRARY}")
     endif()
-
-    # Manually specify VS2022, 2019, and 2017 as USD's supported compiler versions
-    if(WIN32)
-        set(Boost_COMPILER "-vc143;-vc142;-vc141")
-    endif()
-
-    # As of boost 1.67 the boost_python component name includes the
-    # associated Python version (e.g. python27, python36). 
-    # XXX: After boost 1.73, boost provided config files should be able to 
-    # work without specifying a python version!
-    # https://github.com/boostorg/boost_install/blob/master/BoostConfig.cmake
-
-    # Find the component under the versioned name and then set the generic
-    # Boost_PYTHON_LIBRARY variable so that we don't have to duplicate this
-    # logic in each library's CMakeLists.txt.
-    set(python_version_nodot "${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}")
-    find_package(Boost
-        COMPONENTS
-        python${python_version_nodot}
-        REQUIRED
-    )
-    set(Boost_PYTHON_LIBRARY "${Boost_PYTHON${python_version_nodot}_LIBRARY}")
 
     # --Jinja2
     find_package(Jinja2)
@@ -159,11 +146,8 @@ add_definitions(${TBB_DEFINITIONS})
 if(WIN32)
     # Math functions are linked automatically by including math.h on Windows.
     set(M_LIB "")
-elseif (APPLE)
-    # On Apple platforms, its idiomatic to just provide the -l linkage for sdk libs to be portable across SDK versions
-    set(M_LIB "-lm")
 else()
-    find_library(M_LIB m)
+    set(M_LIB m)
 endif()
 
 if (NOT PXR_MALLOC_LIBRARY)
@@ -198,14 +182,6 @@ if (PXR_BUILD_DOCUMENTATION)
     endif()
 endif()
 
-if (PXR_VALIDATE_GENERATED_CODE)
-    find_package(BISON 2.4.1 EXACT)
-    # Flex 2.5.39+ is required, generated API is generated incorrectly in
-    # 2.5.35, at least. scan_bytes generates with (..., int len, ...) instead of
-    # the correct (..., yy_size_t len, ...).  Lower at your own peril.
-    find_package(FLEX 2.5.39 EXACT)
-endif()
-
 # Imaging Components Package Requirements
 # ----------------------------------------------
 
@@ -225,17 +201,13 @@ if (PXR_BUILD_IMAGING)
         add_definitions(-DPXR_OCIO_PLUGIN_ENABLED)
     endif()
     # --OpenGL
-    if (PXR_ENABLE_GL_SUPPORT)
+    if (PXR_ENABLE_GL_SUPPORT AND NOT PXR_APPLE_EMBEDDED)
         # Prefer legacy GL library over GLVND libraries if both
         # are installed.
         if (POLICY CMP0072)
             cmake_policy(SET CMP0072 OLD)
         endif()
-        if (APPLE)
-            set(OPENGL_gl_LIBRARY "-framework OpenGL")
-        else ()
-            find_package(OpenGL REQUIRED)
-        endif()
+        find_package(OpenGL REQUIRED)
         add_definitions(-DPXR_GL_SUPPORT_ENABLED)
     endif()
     # --Metal
@@ -243,28 +215,29 @@ if (PXR_BUILD_IMAGING)
         add_definitions(-DPXR_METAL_SUPPORT_ENABLED)
     endif()
     if (PXR_ENABLE_VULKAN_SUPPORT)
+        message(STATUS "Enabling experimental feature Vulkan support")
         if (EXISTS $ENV{VULKAN_SDK})
             # Prioritize the VULKAN_SDK includes and packages before any system
             # installed headers. This is to prevent linking against older SDKs
             # that may be installed by the OS.
             # XXX This is fixed in cmake 3.18+
-            include_directories(BEFORE SYSTEM $ENV{VULKAN_SDK} $ENV{VULKAN_SDK}/include $ENV{VULKAN_SDK}/lib)
-            set(ENV{PATH} "$ENV{VULKAN_SDK}:$ENV{VULKAN_SDK}/include:$ENV{VULKAN_SDK}/lib:$ENV{PATH}")
+            include_directories(BEFORE SYSTEM $ENV{VULKAN_SDK} $ENV{VULKAN_SDK}/include $ENV{VULKAN_SDK}/lib $ENV{VULKAN_SDK}/source)
+            set(ENV{PATH} "$ENV{VULKAN_SDK}:$ENV{VULKAN_SDK}/include:$ENV{VULKAN_SDK}/lib:$ENV{VULKAN_SDK}/source:$ENV{PATH}")
             find_package(Vulkan REQUIRED)
             list(APPEND VULKAN_LIBS Vulkan::Vulkan)
 
             # Find the extra vulkan libraries we need
             set(EXTRA_VULKAN_LIBS shaderc_combined)
+            if (WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+                set(EXTRA_VULKAN_LIBS shaderc_combinedd)
+            endif()
             foreach(EXTRA_LIBRARY ${EXTRA_VULKAN_LIBS})
                 find_library("${EXTRA_LIBRARY}_PATH" NAMES "${EXTRA_LIBRARY}" PATHS $ENV{VULKAN_SDK}/lib)
                 list(APPEND VULKAN_LIBS "${${EXTRA_LIBRARY}_PATH}")
             endforeach()
 
             # Find the OS specific libs we need
-            if (APPLE)
-                find_library(MVK_LIBRARIES NAMES MoltenVK PATHS $ENV{VULKAN_SDK}/lib)
-                list(APPEND VULKAN_LIBS ${MVK_LIBRARIES})
-            elseif (UNIX AND NOT APPLE)
+            if (UNIX AND NOT APPLE)
                 find_package(X11 REQUIRED)
                 list(APPEND VULKAN_LIBS ${X11_LIBRARIES})
             elseif (WIN32)
@@ -277,7 +250,7 @@ if (PXR_BUILD_IMAGING)
         endif()
     endif()
     # --Opensubdiv
-    set(OPENSUBDIV_USE_GPU ${PXR_ENABLE_GL_SUPPORT})
+    set(OPENSUBDIV_USE_GPU ${PXR_BUILD_GPU_SUPPORT})
     find_package(OpenSubdiv 3 REQUIRED)
     # --Ptex
     if (PXR_ENABLE_PTEX_SUPPORT)

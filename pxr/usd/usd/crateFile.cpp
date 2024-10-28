@@ -1,25 +1,8 @@
 //
 // Copyright 2016 Pixar
 //
-// Licensed under the Apache License, Version 2.0 (the "Apache License")
-// with the following modification; you may not use this file except in
-// compliance with the Apache License and the following modification to it:
-// Section 6. Trademarks. is deleted and replaced with:
-//
-// 6. Trademarks. This License does not grant permission to use the trade
-//    names, trademarks, service marks, or product names of the Licensor
-//    and its affiliates, except as required to comply with Section 4(c) of
-//    the License and to reproduce the content of the NOTICE file.
-//
-// You may obtain a copy of the Apache License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the Apache License with the above modification is
-// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied. See the Apache License for the specific
-// language governing permissions and limitations under the Apache License.
+// Licensed under the terms set forth in the LICENSE.txt file available at
+// https://openusd.org/license.
 //
 
 #include "pxr/pxr.h"
@@ -66,6 +49,8 @@
 #include "pxr/base/tf/stringUtils.h"
 #include "pxr/base/tf/token.h"
 #include "pxr/base/tf/type.h"
+#include "pxr/base/ts/binary.h"
+#include "pxr/base/ts/spline.h"
 #include "pxr/base/trace/trace.h"
 #include "pxr/base/vt/dictionary.h"
 #include "pxr/base/vt/value.h"
@@ -341,6 +326,8 @@ using std::unordered_map;
 using std::vector;
 
 // Version history:
+// 0.12.0: Added support for splines.
+// 0.11.0: Added support for relocates in layer metadata.
 // 0.10.0: Added support for the pathExpression value type.
 //  0.9.0: Added support for the timecode and timecode[] value types.
 //  0.8.0: Added support for SdfPayloadListOp values and SdfPayload values with
@@ -356,7 +343,7 @@ using std::vector;
 //         See _PathItemHeader_0_0_1.
 //  0.0.1: Initial release.
 constexpr uint8_t USDC_MAJOR = 0;
-constexpr uint8_t USDC_MINOR = 10;
+constexpr uint8_t USDC_MINOR = 12;
 constexpr uint8_t USDC_PATCH = 0;
 
 CrateFile::Version
@@ -488,7 +475,7 @@ CrateFile::_FileMapping::_Impl
     // If we take the source's count from 0 -> 1, add a reference to the
     // mapping.
     if (iresult.first->NewRef()) {
-        intrusive_ptr_add_ref(this);
+        TfDelegatedCountIncrement(this);
     }
     return &(*iresult.first);
 }
@@ -562,7 +549,7 @@ bool CrateFile::_FileMapping::_Impl::ZeroCopySource::operator==(
 void CrateFile::_FileMapping::_Impl::ZeroCopySource::_Detached(
     Vt_ArrayForeignDataSource *selfBase) {
     auto *self = static_cast<ZeroCopySource *>(selfBase);
-    intrusive_ptr_release(self->_mapping);
+    TfDelegatedCountDecrement(self->_mapping);
 }
 
 template <class FileMappingPtr>
@@ -1173,6 +1160,14 @@ public:
         else if constexpr (std::is_same_v<T, SdfPath>) {
             return crate->GetPath(Read<PathIndex>());
         }
+        else if constexpr (std::is_same_v<T, SdfRelocate>) {
+            // Do not combine the following into one statement.  They must be
+            // separate because the two modifications to the 'src' member must
+            // be correctly sequenced.
+            auto sourcePath = Read<SdfPath>();
+            auto targetPath = Read<SdfPath>();
+            return SdfRelocate(std::move(sourcePath), std::move(targetPath));
+        }
         else if constexpr (std::is_same_v<T, VtDictionary> ||
                            std::is_same_v<T, SdfVariantSelectionMap>) {
             return ReadMap<T>();
@@ -1304,6 +1299,14 @@ public:
             src.Seek(ret.valuesFileOffset + numValues * sizeof(ValueRep));
 
             return ret;
+        }
+        else if constexpr (std::is_same_v<T, TsSpline>) {
+            // Splines are a data blob plus a customData map.
+            vector<uint8_t> splineData = Read<vector<uint8_t>>();
+            std::unordered_map<double, VtDictionary> customData =
+                ReadMap<std::unordered_map<double, VtDictionary>>();
+            return Ts_BinaryDataAccess::CreateSplineFromBinaryData(
+                splineData, std::move(customData));
         }
         else {
             // Otherwise read partial-specialized stuff.
@@ -1485,6 +1488,14 @@ public:
             "version 0.8.0.");
         Write<SdfPayload>(listOp);
     }
+    void Write(SdfRelocate const &relocate) {
+        crate->_packCtx->RequestWriteVersionUpgrade(
+            Version(0, 11, 0),
+            "A SdfRelocatesMap value was detected which requires crate "
+            "version 0.11.0.");
+         Write(relocate.first);
+         Write(relocate.second);
+    }
     void Write(VtValue const &val) {
         ValueRep rep;
         _RecursiveWrite(
@@ -1513,6 +1524,24 @@ public:
         // Write size and contiguous reps.
         WriteAs<uint64_t>(reps.size());
         WriteContiguous(reps.data(), reps.size());
+    }
+
+    void Write(const TsSpline &spline) {
+        // Make sure our output format is compatible with splines.  If the
+        // spline binary format is updated, we must rev the required version
+        // here as well; the static_assert is here to remind us.
+        static_assert(Ts_BinaryDataAccess::GetBinaryFormatVersion() == 1);
+        crate->_packCtx->RequestWriteVersionUpgrade(
+            Version(0,12,0),
+            "A spline was detected which requires crate "
+            "version 0.12.0.");
+
+        // Splines are a data blob plus a customData map.
+        vector<uint8_t> splineData;
+        const std::unordered_map<double, VtDictionary> *customData = nullptr;
+        Ts_BinaryDataAccess::GetBinaryData(spline, &splineData, &customData);
+        Write(splineData);
+        WriteMap(*customData);
     }
 
     template <class T>
@@ -2243,7 +2272,6 @@ CrateFile::CrateFile(string const &assetPath, string const &fileName,
     : _mmapSrc(std::move(mapping))
     , _detached(false)
     , _assetPath(assetPath)
-    , _fileReadFrom(fileName)
     , _useMmap(true)
 {
     // Note that we intentionally do not store the asset -- we want to close the
@@ -2296,7 +2324,6 @@ CrateFile::_InitMMap() {
         }
     } else {
         _assetPath.clear();
-        _fileReadFrom.clear();
     }
 }
 
@@ -2306,7 +2333,6 @@ CrateFile::CrateFile(string const &assetPath, string const &fileName,
     , _assetSrc(asset)
     , _detached(false)
     , _assetPath(assetPath)
-    , _fileReadFrom(fileName)
     , _useMmap(false)
 {
     // Note that we *do* store the asset here, since we need to keep the FILE*
@@ -2328,7 +2354,6 @@ CrateFile::_InitPread()
     _ReadStructuralSections(reader, rangeLength);
     if (!m.IsClean()) {
         _assetPath.clear();
-        _fileReadFrom.clear();
     }
     // Restore default prefetch behavior.
     ArchFileAdvise(_preadSrc.file, _preadSrc.startOffset,
@@ -2437,23 +2462,6 @@ CrateFile::~CrateFile()
     _DeleteValueHandlers();
 }
 
-bool
-CrateFile::CanPackTo(string const &fileName) const
-{
-    if (_assetPath.empty()) {
-        return true;
-    }
-    // Try to open \p fileName and get its filename.
-    bool result = false;
-    if (FILE *f = ArchOpenFile(fileName.c_str(), "rb")) {
-        if (ArchGetFileName(f) == _fileReadFrom) {
-            result = true;
-        }
-        fclose(f);
-    }
-    return result;
-}
-
 CrateFile::Packer
 CrateFile::StartPacking(string const &fileName)
 {
@@ -2496,6 +2504,15 @@ CrateFile::Packer::Close()
 
     // Write contents. Always close the output asset even if writing failed.
     bool writeResult = _crate->_Write();
+
+    if (writeResult) {
+        // Abandon the asset here to release resources that the subsequent call
+        // to CloseOutputAsset() might need.  E.g. on Windows,
+        // CloseOutputAsset() may try to overwrite the file that _assetSrc has
+        // open for read.
+        _crate->_assetSrc.reset();
+    }
+    
     writeResult &= _crate->_packCtx->CloseOutputAsset();
     
     // If we wrote successfully, store the fileName.
@@ -2523,9 +2540,6 @@ CrateFile::Packer::Close()
         FILE *file; size_t offset;
         std::tie(file, offset) = asset->GetFileUnsafe();
         if (file) {
-            // Reset the filename we've read content from.
-            _crate->_fileReadFrom = ArchGetFileName(file);
-
             if (_crate->_useMmap) {
                 // Must remap the file.
                 _crate->_mmapSrc = _MmapFile(_crate->_assetPath.c_str(), file);
@@ -2599,7 +2613,7 @@ CrateFile::_AddDeferredSpecs()
 {
     // A map from sample time to VtValues within TimeSamples instances in
     // _deferredSpecs.
-    pxr_tsl::robin_map<double, vector<VtValue *>> allValuesAtAllTimes;
+    pxr_tsl::robin_map<double, vector<VtValue *>, TfHash> allValuesAtAllTimes;
 
     // Search for the TimeSamples, add to the allValuesAtAllTimes.
     for (auto &spec: _deferredSpecs) {
@@ -2749,6 +2763,10 @@ CrateFile::_AddSpec(const SdfPath &path, SdfSpecType type,
             // format instead of having a mix of formats depending on the order 
             // we wrote our payload values in.
             versionUpgradePendingFields.push_back(p);
+        } else if (p.second.IsHolding<TsSpline>()
+            && p.second.UncheckedGet<TsSpline>().IsEmpty()) {
+            // Don't serialize empty splines, because they don't affect
+            // anything.
         } else {
             ordinaryFields.push_back(_AddField(p));
         }
@@ -3645,13 +3663,14 @@ CrateFile::_ReadPathsImpl(Reader reader,
                 auto siblingOffset = reader.template Read<int64_t>();
                 dispatcher.Run(
                     [this, reader,
-                     siblingOffset, &dispatcher, parentPath]() mutable {
+                     siblingOffset, &dispatcher, parentPath]() {
                         // XXX Remove these tags when bug #132031 is addressed
                         TfAutoMallocTag tag(
                             "Usd", "Usd_CrateDataImpl::Open",
                             "Usd_CrateFile::CrateFile::Open", "_ReadPaths");
-                        reader.Seek(siblingOffset);
-                        _ReadPathsImpl<Header>(reader, dispatcher, parentPath);
+                        auto readerCopy = reader;
+                        readerCopy.Seek(siblingOffset);
+                        _ReadPathsImpl<Header>(readerCopy, dispatcher, parentPath);
                     });
             }
             // Have a child (may have also had a sibling). Reset parent path.
@@ -3781,7 +3800,7 @@ CrateFile::_BuildDecompressedPathsImpl(
 #endif
                 dispatcher.Run(
                     [this, &pathIndexes, &elementTokenIndexes, &jumps,
-                     siblingIndex, &dispatcher, parentPath]() mutable {
+                     siblingIndex, &dispatcher, parentPath]()  {
                         // XXX Remove these tags when bug #132031 is addressed
                         TfAutoMallocTag tag(
                             "Usd", "Usd_CrateDataImpl::Open",

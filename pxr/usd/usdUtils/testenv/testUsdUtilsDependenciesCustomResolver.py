@@ -2,29 +2,14 @@
 #
 # Copyright 2023 Pixar
 #
-# Licensed under the Apache License, Version 2.0 (the "Apache License")
-# with the following modification; you may not use this file except in
-# compliance with the Apache License and the following modification to it:
-# Section 6. Trademarks. is deleted and replaced with:
-#
-# 6. Trademarks. This License does not grant permission to use the trade
-#    names, trademarks, service marks, or product names of the Licensor
-#    and its affiliates, except as required to comply with Section 4(c) of
-#    the License and to reproduce the content of the NOTICE file.
-#
-# You may obtain a copy of the Apache License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the Apache License with the above modification is
-# distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-# KIND, either express or implied. See the Apache License for the specific
-# language governing permissions and limitations under the Apache License.
-from pxr import UsdUtils, Plug, Sdf
+# Licensed under the terms set forth in the LICENSE.txt file available at
+# https://openusd.org/license.
+from pxr import Ar, Plug, Sdf, Usd, UsdUtils
 
-import os, unittest
+import os, shutil, unittest
 
+def _ResolvedPath(relativePath):
+    return "testresolved:" + os.path.abspath(relativePath)
 
 class TestUsdUtilsDependenciesCustomResolver(unittest.TestCase):
     @classmethod
@@ -44,10 +29,10 @@ class TestUsdUtilsDependenciesCustomResolver(unittest.TestCase):
         """Tests that ComputeAllDependencies correctly sets identifier and """
         """resolved paths when using a resolver with multiple uri schemes """
 
-        mainIdentifier = "test:main.usda"
-        expectedMainResolvedPath = "testresolved:main.usda"
-        dependencyIdentifier = "test:dependency.usda"
-        expectedDependencyResolvedPath = "testresolved:dependency.usda"
+        mainIdentifier = "test:basic/main.usda"
+        expectedMainResolvedPath = "testresolved:basic/main.usda"
+        dependencyIdentifier = "test:basic/dependency.usda"
+        expectedDependencyResolvedPath = _ResolvedPath("basic/dependency.usda")
 
         layers, _, _ = UsdUtils.ComputeAllDependencies(mainIdentifier)
 
@@ -58,23 +43,87 @@ class TestUsdUtilsDependenciesCustomResolver(unittest.TestCase):
 
         layer1 = layers[1]
         self.assertEqual(layer1.identifier, dependencyIdentifier)
-        self.assertEqual(layer1.resolvedPath, expectedDependencyResolvedPath)
+        self.assertPathsEqual(layer1.resolvedPath, expectedDependencyResolvedPath)
 
-    def test_findOrOpenLayer(self):
-        mainIdentifier = "test:main.usda"
-        expectedMainResolvedPath = "testresolved:main.usda"
-        dependencyIdentifier = "test:dependency.usda"
-        expectedDependencyResolvedPath = "testresolved:dependency.usda"
+    def test_FindOrOpenLayer(self):
+        mainIdentifier = "test:basic/main.usda"
+        expectedMainResolvedPath = _ResolvedPath("basic/main.usda")
+        dependencyIdentifier = "test:basic/dependency.usda"
+        expectedDependencyResolvedPath =_ResolvedPath("basic/dependency.usda")
 
         UsdUtils.ComputeAllDependencies(mainIdentifier)
 
         layer = Sdf.Layer.FindOrOpen(mainIdentifier)
         self.assertEqual(layer.identifier, mainIdentifier)
-        self.assertEqual(layer.resolvedPath, expectedMainResolvedPath)
+        self.assertPathsEqual(layer.resolvedPath, expectedMainResolvedPath)
 
         layer = Sdf.Layer.FindOrOpen(dependencyIdentifier)
         self.assertEqual(layer.identifier, dependencyIdentifier)
-        self.assertEqual(layer.resolvedPath, expectedDependencyResolvedPath)
+        self.assertPathsEqual(layer.resolvedPath, expectedDependencyResolvedPath)
+        
+    def test_LocalizeAsset(self):
+        """Tests that asset localization works on assets that do not 
+        use filesystem paths"""
+
+        assetPathStr = "test:localize/root.usd"
+        localizationDir = "root_localized"
+        localizedAsset = os.path.join(localizationDir, "root.usd")
+
+        if os.path.exists(localizationDir):
+            shutil.rmtree(localizationDir)
+        os.mkdir(localizationDir)
+
+        self.assertTrue(UsdUtils.LocalizeAsset(assetPathStr, localizationDir))
+
+        # Validate that the localized file can be opened on a stage.
+        stage = Usd.Stage.Open(localizedAsset)
+        self.assertIsNotNone(stage)
+
+        localizedFiles = self._GetFileList(localizationDir)
+
+        expectedFiles = ['0/asset.txt', '0/clip1.usda', '0/clip2.usda', 
+                         '0/ref_a.usd', '0/ref_b.usd', 'root.usd']
+        
+        self.assertEqual(localizedFiles, expectedFiles)
+
+    def _GetFileList(self, localizedAssetDir):
+        rootFolderPathStr = localizedAssetDir + os.sep
+        contents = []
+        for path, directories, files in os.walk(localizedAssetDir):
+            for file in files:
+                localizedPath = os.path.join(path,file)
+                localizedPath = localizedPath.replace(rootFolderPathStr, '')
+                contents.append(localizedPath.replace('\\', '/'))
+
+        contents.sort()
+        return contents
+
+    def test_ComputeAllDependencies(self):
+        """Tests that ComputeAllDependencies works with the custom resolver"""
+        assetPathStr = "test:localize/root.usd"
+
+        layers, assets, unresolved = \
+            UsdUtils.ComputeAllDependencies(assetPathStr)
+        
+        self.assertEqual(layers, [Sdf.Layer.Find(l) for l in [
+            "test:localize/root.usd", 
+            "test:localize/clip1.usda", 
+            "test:localize/clip2.usda", 
+            "test:localize/ref_a.usd", 
+            "test:localize/ref_b.usd"]])
+
+        self.assertEqual(len(assets), 1)
+        self.assertPathsEqual(assets[0], _ResolvedPath("localize/asset.txt"))
+
+        self.assertEqual(unresolved, [])
+
+    def assertPathsEqual(self, path1, path2):
+        # Flip backslashes to forward slashes and make sure path case doesn't
+        # cause test failures to accommodate platform differences. We don't use
+        # os.path.normpath since that might fix up other differences we'd want
+        # to catch in these tests.
+        self.assertEqual(
+            os.path.normcase(str(path1)), os.path.normcase(str(path2)))
 
 
 if __name__=="__main__":

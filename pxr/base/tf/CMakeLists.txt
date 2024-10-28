@@ -18,7 +18,7 @@ function(add_py_dll_link_test)
 
     # early return if python target is not built! (No python build enabled or
     # doing a static build, etc)
-    if (NOT TARGET python)
+    if (NOT TARGET python_modules)
         return()
     endif()
 
@@ -60,7 +60,7 @@ function(add_py_dll_link_test)
     add_library(testTfPyDllLinkModule SHARED
         "testenv/testTfPyDllLinkModule.c"
     )
-    add_dependencies(python testTfPyDllLinkModule)
+    add_dependencies(python_modules testTfPyDllLinkModule)
 
     set(module_name testTfPyDllLinkModule)
     if (PXR_USE_DEBUG_PYTHON)
@@ -114,13 +114,9 @@ pxr_library(tf
     LIBRARIES
         arch
         ${WINLIBS}
-        ${PYTHON_LIBRARIES}
-        ${Boost_PYTHON_LIBRARY}
         ${TBB_tbb_LIBRARY}
 
     INCLUDE_DIRS
-        ${PYTHON_INCLUDE_DIRS}
-        ${Boost_INCLUDE_DIRS}
         ${TBB_INCLUDE_DIRS}
 
     PUBLIC_CLASSES
@@ -128,7 +124,9 @@ pxr_library(tf
         anyWeakPtr
         atomicOfstreamWrapper
         bigRWMutex
+        bits
         bitUtils
+        compressedBits
         debug
         debugNotice
         denseHashMap
@@ -226,6 +224,7 @@ pxr_library(tf
         callContext.h
         cxxCast.h
         declarePtrs.h
+        delegatedCountPtr.h
         diagnosticLite.h
         functionTraits.h
         functionRef.h
@@ -236,12 +235,10 @@ pxr_library(tf
         instantiateType.h
         meta.h
         pxrCLI11/CLI11.h
-        pxrPEGTL/pegtl.h
         pxrTslRobinMap/robin_growth_policy.h
         pxrTslRobinMap/robin_hash.h
         pxrTslRobinMap/robin_map.h
         pxrTslRobinMap/robin_set.h
-        preprocessorUtils.h
         preprocessorUtilsLite.h
         safeTypeCompare.h
         span.h
@@ -284,7 +281,6 @@ pxr_library(tf
 
     CPPFILES
         initConfig.cpp
-        preprocessorUtils.cpp
         pxrDoubleConversion/bignum-dtoa.cc
         pxrDoubleConversion/bignum.cc
         pxrDoubleConversion/cached-powers.cc
@@ -363,7 +359,6 @@ if(PXR_ENABLE_PYTHON_SUPPORT)
     pxr_build_test(testTfPyFunction
         LIBRARIES
             tf
-            ${Boost_PYTHON_LIBRARY}
         CPPFILES
             testenv/testTfPyFunction.cpp
     ) 
@@ -385,7 +380,6 @@ if(PXR_ENABLE_PYTHON_SUPPORT)
     pxr_build_test(testTfPyLock
         LIBRARIES
             tf
-            ${Boost_PYTHON_LIBRARY}
         CPPFILES
             testenv/testTfPyLock.cpp
     )
@@ -393,7 +387,6 @@ if(PXR_ENABLE_PYTHON_SUPPORT)
     pxr_build_test(testTfPyResultConversions
         LIBRARIES
             tf
-            ${Boost_PYTHON_LIBRARY}
         CPPFILES
             testenv/testTfPyResultConversions.cpp
     )
@@ -448,7 +441,9 @@ pxr_build_test(testTf
         testenv/main.cpp
         testenv/anyUniquePtr.cpp
         testenv/atomicOfstreamWrapper.cpp
+        testenv/bits.cpp
         testenv/bitUtils.cpp
+        testenv/compressedBits.cpp
         testenv/debug.cpp
         testenv/denseHashMap.cpp
         testenv/delegate.cpp
@@ -469,7 +464,6 @@ pxr_build_test(testTf
         testenv/pathUtils.cpp
         testenv/patternMatcher.cpp
         testenv/pointerAndBits.cpp
-        testenv/preprocessorUtils.cpp
         testenv/preprocessorUtilsLite.cpp
         testenv/probe.cpp
         testenv/refPtr.cpp
@@ -489,6 +483,7 @@ pxr_build_test(testTf
         testenv/staticTokens.cpp
         testenv/templateString.cpp
         testenv/token.cpp
+        testenv/delegatedCountPtr.cpp
         testenv/type.cpp
         testenv/typeMultipleInheritance.cpp
         testenv/typeInfoMap.cpp
@@ -499,6 +494,7 @@ pxr_build_test(testTf
 pxr_test_scripts(
     testenv/testTfCrashHandler.py
     testenv/testTfFileUtils.py
+    testenv/testTfMallocTagReport.py
     testenv/testTfNamedTemporaryFile.py
     testenv/testTfPathUtils.py
     testenv/testTfPython.py
@@ -550,8 +546,14 @@ pxr_register_test(TfAnyUniquePtr
 pxr_register_test(TfAtomicOfstreamWrapper
     COMMAND "${CMAKE_INSTALL_PREFIX}/tests/testTf TfAtomicOfstreamWrapper"
 )
+pxr_register_test(TfBits
+    COMMAND "${CMAKE_INSTALL_PREFIX}/tests/testTf TfBits"
+)
 pxr_register_test(TfBitUtils
     COMMAND "${CMAKE_INSTALL_PREFIX}/tests/testTf TfBitUtils"
+)
+pxr_register_test(TfCompressedBits
+    COMMAND "${CMAKE_INSTALL_PREFIX}/tests/testTf TfCompressedBits"
 )
 pxr_register_test(TfDl
     COMMAND "${CMAKE_INSTALL_PREFIX}/tests/testTf TfDl"
@@ -652,6 +654,10 @@ pxr_register_test(TfEnum
     STDOUT_REDIRECT enum.out
     DIFF_COMPARE enum.out
 )
+pxr_register_test(TfMallocTagReport
+    PYTHON
+    COMMAND "${CMAKE_INSTALL_PREFIX}/tests/testTfMallocTagReport"
+)
 pxr_register_test(TfNotice
     COMMAND "${CMAKE_INSTALL_PREFIX}/tests/testTf TfNotice"
     STDOUT_REDIRECT notice.out
@@ -673,9 +679,6 @@ pxr_register_test(TfPatternMatcher
 )
 pxr_register_test(TfPointerAndBits
     COMMAND "${CMAKE_INSTALL_PREFIX}/tests/testTf TfPointerAndBits"
-)
-pxr_register_test(TfPreprocessorUtils
-    COMMAND "${CMAKE_INSTALL_PREFIX}/tests/testTf TfPreprocessorUtils"
 )
 pxr_register_test(TfPreprocessorUtilsLite
     COMMAND "${CMAKE_INSTALL_PREFIX}/tests/testTf TfPreprocessorUtilsLite"
@@ -750,6 +753,9 @@ pxr_register_test(testTfTemplateString
 )
 pxr_register_test(TfToken
     COMMAND "${CMAKE_INSTALL_PREFIX}/tests/testTf TfToken"
+)
+pxr_register_test(TfDelegatedCountPtr
+    COMMAND "${CMAKE_INSTALL_PREFIX}/tests/testTf TfDelegatedCountPtr"
 )
 pxr_register_test(TfType
     COMMAND "${CMAKE_INSTALL_PREFIX}/tests/testTf TfType"

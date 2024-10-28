@@ -1,25 +1,8 @@
 #
 # Copyright 2016 Pixar
 #
-# Licensed under the Apache License, Version 2.0 (the "Apache License")
-# with the following modification; you may not use this file except in
-# compliance with the Apache License and the following modification to it:
-# Section 6. Trademarks. is deleted and replaced with:
-#
-# 6. Trademarks. This License does not grant permission to use the trade
-#    names, trademarks, service marks, or product names of the Licensor
-#    and its affiliates, except as required to comply with Section 4(c) of
-#    the License and to reproduce the content of the NOTICE file.
-#
-# You may obtain a copy of the Apache License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the Apache License with the above modification is
-# distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-# KIND, either express or implied. See the Apache License for the specific
-# language governing permissions and limitations under the Apache License.
+# Licensed under the terms set forth in the LICENSE.txt file available at
+# https://openusd.org/license.
 #
 
 # pylint: disable=round-builtin
@@ -394,6 +377,7 @@ class AppController(QtCore.QObject):
 
             self._allowViewUpdates = True
             self._allowAsync = parserData.allowAsync
+            self._bboxstandin = parserData.bboxstandin
 
             # When viewer mode is active, the panel sizes are cached so they can
             # be restored later.
@@ -1201,7 +1185,7 @@ class AppController(QtCore.QObject):
             # fix up bad input on the users behalf since any leading, trailing
             # or duplicate | operators result in a match for every layer and
             # thus break the stage.
-            pattern =  re.sub('^\||(?<=\|)\|+|\|$', '', pattern)
+            pattern =  re.sub(r'^\||(?<=\|)\|+|\|$', '', pattern)
             if not pattern:
                 return
             matcher = re.compile(pattern)
@@ -1753,23 +1737,17 @@ class AppController(QtCore.QObject):
             action.setCheckable(True)
             return action
 
-        def setColorSpace(action):
+        def setOcioColorSpace(action):
             self._dataModel.viewSettings.setOcioSettings(\
                 colorSpace = str(action.text()))
             self._dataModel.viewSettings.colorCorrectionMode =\
                 ColorCorrectionModes.OPENCOLORIO
 
-        def setOcioConfig(action):
+        def setOcioDisplayView(action):
             display = str(action.parent().title())
             view = str(action.text())
-            if hasattr(config, 'getDisplayViewColorSpaceName'):
-                # OCIO version 2
-                colorSpace = config.getDisplayViewColorSpaceName(display, view)
-            else:
-                # OCIO version 1
-                colorSpace = config.getDisplayColorSpaceName(display, view)
-            self._dataModel.viewSettings.setOcioSettings(colorSpace,\
-                display, view)
+            self._dataModel.viewSettings.setOcioSettings(\
+                display=display, view=view)
             self._dataModel.viewSettings.colorCorrectionMode =\
                 ColorCorrectionModes.OPENCOLORIO
 
@@ -1794,7 +1772,7 @@ class AppController(QtCore.QObject):
                 for v in config.getViews(d):
                     a = addAction(displayMenu, v)
                     group.addAction(a)
-                group.triggered.connect(setOcioConfig)
+                group.triggered.connect(setOcioDisplayView)
                 ocioMenu.addMenu(displayMenu)
                 self._ui.ocioDisplayMenus.append(displayMenu)
 
@@ -1809,7 +1787,7 @@ class AppController(QtCore.QObject):
                 colorSpace = cs.getName()
                 a = addAction(ocioMenu, colorSpace)
                 group.addAction(a)
-            group.triggered.connect(setColorSpace)
+            group.triggered.connect(setOcioColorSpace)
             self._ui.ocioColorSpacesActionGroup = group
 
         # TODO Populate looks menu (config.getLooks())
@@ -1853,6 +1831,7 @@ class AppController(QtCore.QObject):
                     makeTimer=self._makeTimer)
 
                 self._stageView.allowAsync = self._allowAsync
+                self._stageView.bboxstandin = self._bboxstandin
 
                 self._stageView.fpsHUDInfo = self._fpsHUDInfo
                 self._stageView.fpsHUDKeys = self._fpsHUDKeys
@@ -2168,6 +2147,7 @@ class AppController(QtCore.QObject):
 
     def _stepSizeChanged(self):
         value = float(self._ui.stepSize.text())
+        self._dataModel.viewSettings.stepSize = value
         if value != self.step:
             self.step = value
             self._UpdateTimeSamples(resetStageDataOnly=False)
@@ -4256,21 +4236,12 @@ class AppController(QtCore.QObject):
                     "references", "specializes",
                     "payload", "subLayers"]
 
-
         for k in compKeys:
             v = obj.GetMetadata(k)
             if not v is None:
                 m[k] = v
 
-        clipMetadata = obj.GetMetadata("clips")
-        if clipMetadata is None:
-            clipMetadata = {}
-        numClipRows = 0
-        for (clip, data) in clipMetadata.items():
-            numClipRows += len(data)
-        m["clips"] = clipMetadata
-        
-        numMetadataRows = (len(m) - 1) + numClipRows
+        m["clips"] = obj.GetMetadata("clips") or {}
 
         # Variant selections that don't have a defined variant set will be 
         # displayed as well to aid debugging. Collect them separately from
@@ -4305,9 +4276,6 @@ class AppController(QtCore.QObject):
                 # Remove found variant set from setless.
                 setlessVariantSelections.pop(variantSetName, None)
 
-        tableWidget.setRowCount(numMetadataRows + len(variantSets) + 
-                                len(setlessVariantSelections) + 2)
-
         rowIndex = 0
 
         # Although most metadata should be presented alphabetically,the most 
@@ -4315,6 +4283,7 @@ class AppController(QtCore.QObject):
         # list, these consist of [object type], [path], variant sets, active, 
         # assetInfo, and kind.
         def populateMetadataTable(key, val, rowIndex):
+            tableWidget.insertRow(rowIndex)
             attrName = QtWidgets.QTableWidgetItem(str(key))
             tableWidget.setItem(rowIndex, 0, attrName)
 
@@ -4323,6 +4292,12 @@ class AppController(QtCore.QObject):
             attrVal.setToolTip(ttStr)
 
             tableWidget.setItem(rowIndex, 1, attrVal)
+
+        def populateMetadataTableVariant(key, val, rowIndex):
+            tableWidget.insertRow(rowIndex)
+            attrName = QtWidgets.QTableWidgetItem(str(key + ' variant'))
+            tableWidget.setItem(rowIndex, 0, attrName)
+            tableWidget.setCellWidget(rowIndex, 1, val)
 
         sortedKeys = sorted(m.keys())
         reorderedKeys = ["kind", "assetInfo", "active"]
@@ -4338,13 +4313,19 @@ class AppController(QtCore.QObject):
                else "Unknown"
         populateMetadataTable("[object type]", object_type, rowIndex)
         rowIndex += 1
+
+        # Represent applied API schemas
+        if type(obj) is Usd.Prim:
+            populateMetadataTable("[applied API schemas]",
+                                  str(obj.GetAppliedSchemas()),
+                                  rowIndex)
+            rowIndex += 1
+
         populateMetadataTable("[path]", str(obj.GetPath()), rowIndex)
         rowIndex += 1
 
         for variantSetName, combo in variantSets.items():
-            attrName = QtWidgets.QTableWidgetItem(str(variantSetName+ ' variant'))
-            tableWidget.setItem(rowIndex, 0, attrName)
-            tableWidget.setCellWidget(rowIndex, 1, combo)
+            populateMetadataTableVariant(variantSetName, combo, rowIndex)
             combo.currentIndexChanged.connect(
                 lambda i, combo=combo:
                 combo.updateVariantSelection(i, self._makeTimer))
@@ -4353,15 +4334,12 @@ class AppController(QtCore.QObject):
         # Add all the setless variant selections directly after the variant 
         # combo boxes
         for variantSetName, variantSelection in setlessVariantSelections.items():
-            attrName = QtWidgets.QTableWidgetItem(str(variantSetName+ ' variant'))
-            tableWidget.setItem(rowIndex, 0, attrName)
-
             valStr, ttStr = self._formatMetadataValueView(variantSelection)
             # Italicized label to stand out when debugging a scene.
             label = QtWidgets.QLabel('<i>' + valStr + '</i>')
             label.setIndent(3)
             label.setToolTip(ttStr)
-            tableWidget.setCellWidget(rowIndex, 1, label)
+            populateMetadataTableVariant(variantSetName, label, rowIndex)
 
             rowIndex += 1
 
@@ -4369,8 +4347,11 @@ class AppController(QtCore.QObject):
             if key == "clips":
                 for (clip, metadataGroup) in m[key].items():
                     attrName = QtWidgets.QTableWidgetItem(str('clips:' + clip))
-                    tableWidget.setItem(rowIndex, 0, attrName)
-                    for metadata in metadataGroup.keys():
+                    for i, metadata in enumerate(metadataGroup.keys()):
+                        tableWidget.insertRow(rowIndex)
+                        if i == 0:
+                            tableWidget.setItem(rowIndex, 0, attrName)
+
                         dataPair = (metadata, metadataGroup[metadata])
                         valStr, ttStr = self._formatMetadataValueView(dataPair)
                         attrVal = QtWidgets.QTableWidgetItem(valStr)
@@ -5287,6 +5268,7 @@ class AppController(QtCore.QObject):
         self._refreshHUDMenu()
         self._refreshShowPrimMenu()
         self._refreshRedrawOnScrub()
+        self._refreshStepSize()
         self._refreshRolloverPrimInfoMenu()
         self._refreshSelectionHighlightingMenu()
         self._refreshSelectionHighlightColorMenu()
@@ -5423,6 +5405,10 @@ class AppController(QtCore.QObject):
     def _refreshRedrawOnScrub(self):
         self._ui.redrawOnScrub.setChecked(
             self._dataModel.viewSettings.redrawOnScrub)
+
+    def _refreshStepSize(self):
+        stepSize = self._dataModel.viewSettings.stepSize
+        self._ui.stepSize.setText(str(stepSize))
 
     def _refreshRolloverPrimInfoMenu(self):
         self._ui.actionRollover_Prim_Info.setChecked(

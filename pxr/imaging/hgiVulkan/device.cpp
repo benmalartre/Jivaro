@@ -1,25 +1,8 @@
 //
 // Copyright 2020 Pixar
 //
-// Licensed under the Apache License, Version 2.0 (the "Apache License")
-// with the following modification; you may not use this file except in
-// compliance with the Apache License and the following modification to it:
-// Section 6. Trademarks. is deleted and replaced with:
-//
-// 6. Trademarks. This License does not grant permission to use the trade
-//    names, trademarks, service marks, or product names of the Licensor
-//    and its affiliates, except as required to comply with Section 4(c) of
-//    the License and to reproduce the content of the NOTICE file.
-//
-// You may obtain a copy of the Apache License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the Apache License with the above modification is
-// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied. See the Apache License for the specific
-// language governing permissions and limitations under the Apache License.
+// Licensed under the terms set forth in the LICENSE.txt file available at
+// https://openusd.org/license.
 //
 #include "pxr/imaging/hgiVulkan/capabilities.h"
 #include "pxr/imaging/hgiVulkan/commandQueue.h"
@@ -71,7 +54,7 @@ _SupportsPresentation(
             DefaultVisual(dsp, DefaultScreen(dsp)));
         return vkGetPhysicalDeviceXlibPresentationSupportKHR(
                     physicalDevice, familyIndex, dsp, visualID);
-    #elif defined(VK_USE_PLATFORM_MACOS_MVK)
+    #elif defined(VK_USE_PLATFORM_METAL_EXT)
         // Presentation currently always supported on Metal / MoltenVk
         return true;
     #else
@@ -170,9 +153,12 @@ HgiVulkanDevice::HgiVulkanDevice(HgiVulkanInstance* instance)
     queueInfo.queueCount = 1;
     queueInfo.pQueuePriorities = queuePriorities;
 
-    std::vector<const char*> extensions = {
-        VK_KHR_SWAPCHAIN_EXTENSION_NAME
-    };
+    std::vector<const char*> extensions;
+
+    // Not available if we're surfaceless (minimal Lavapipe build for example).
+    if (IsSupportedExtension(VK_KHR_SWAPCHAIN_EXTENSION_NAME)) {
+        extensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+    }
 
     // Allow certain buffers/images to have dedicated memory allocations to
     // improve performance on some GPUs.
@@ -282,15 +268,12 @@ HgiVulkanDevice::HgiVulkanDevice(HgiVulkanInstance* instance)
     // Needed to write to storage buffers from fragment shader (eg. OIT).
     features.features.fragmentStoresAndAtomics =
         _capabilities->vkDeviceFeatures.fragmentStoresAndAtomics;
-
-    #if !defined(VK_USE_PLATFORM_MACOS_MVK)
-        // Needed for buffer address feature
-        features.features.shaderInt64 =
-            _capabilities->vkDeviceFeatures.shaderInt64;
-        // Needed for gl_primtiveID
-        features.features.geometryShader =
-            _capabilities->vkDeviceFeatures.geometryShader;
-    #endif
+    // Needed for buffer address feature
+    features.features.shaderInt64 =
+        _capabilities->vkDeviceFeatures.shaderInt64;
+    // Needed for gl_primtiveID
+    features.features.geometryShader =
+        _capabilities->vkDeviceFeatures.geometryShader;
 
     VkDeviceCreateInfo createInfo = {VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO};
     createInfo.queueCreateInfoCount = 1;

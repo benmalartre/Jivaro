@@ -1,25 +1,8 @@
 //
 // Copyright 2017 Pixar
 //
-// Licensed under the Apache License, Version 2.0 (the "Apache License")
-// with the following modification; you may not use this file except in
-// compliance with the Apache License and the following modification to it:
-// Section 6. Trademarks. is deleted and replaced with:
-//
-// 6. Trademarks. This License does not grant permission to use the trade
-//    names, trademarks, service marks, or product names of the Licensor
-//    and its affiliates, except as required to comply with Section 4(c) of
-//    the License and to reproduce the content of the NOTICE file.
-//
-// You may obtain a copy of the Apache License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the Apache License with the above modification is
-// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied. See the Apache License for the specific
-// language governing permissions and limitations under the Apache License.
+// Licensed under the terms set forth in the LICENSE.txt file available at
+// https://openusd.org/license.
 //
 #ifndef PXR_IMAGING_HD_ST_UNIT_TEST_HELPER_H
 #define PXR_IMAGING_HD_ST_UNIT_TEST_HELPER_H
@@ -58,9 +41,10 @@
 #include <memory>
 #include <vector>
 
-class HdSt_ResourceBinder;
 
 PXR_NAMESPACE_OPEN_SCOPE
+
+class HdSt_ResourceBinder;
 
 using HgiUniquePtr = std::unique_ptr<class Hgi>;
 
@@ -301,7 +285,7 @@ HdSt_TestDriverBase<SceneDelegate>::SetCamera(
                 _cameraId));
     TF_VERIFY(camera);
 
-    for (const HdRenderPassStateSharedPtr &renderPassState: _renderPassStates) {
+    for (const HdStRenderPassStateSharedPtr &renderPassState: _renderPassStates) {
         renderPassState->SetCamera(camera);
         renderPassState->SetFraming(framing);
         renderPassState->SetOverrideWindowPolicy(std::nullopt);
@@ -321,7 +305,7 @@ template<typename SceneDelegate>
 void
 HdSt_TestDriverBase<SceneDelegate>::SetCullStyle(HdCullStyle cullStyle)
 {
-    for (const HdRenderPassStateSharedPtr &renderPassState: _renderPassStates) {
+    for (const HdStRenderPassStateSharedPtr &renderPassState: _renderPassStates) {
         renderPassState->SetCullStyle(cullStyle);
     }
 }
@@ -399,7 +383,7 @@ HdSt_TestDriverBase<SceneDelegate>::SetupAovs(int width, int height)
         }
     }
 
-    for (const HdRenderPassStateSharedPtr &renderPassState: _renderPassStates) {
+    for (const HdStRenderPassStateSharedPtr &renderPassState: _renderPassStates) {
         renderPassState->SetAovBindings(_aovBindings);
     }
 }
@@ -502,19 +486,24 @@ HdSt_TestDriverBase<SceneDelegate>::Present(
 class HdSt_DrawTask final : public HdTask
 {
 public:
+    HDST_API
     HdSt_DrawTask(HdRenderPassSharedPtr const &renderPass,
                   HdStRenderPassStateSharedPtr const &renderPassState,
                   const TfTokenVector &renderTags);
     
+    HDST_API
     void Sync(HdSceneDelegate*,
               HdTaskContext*,
               HdDirtyBits*) override;
 
+    HDST_API
     void Prepare(HdTaskContext* ctx,
                  HdRenderIndex* renderIndex) override;
 
+    HDST_API
     void Execute(HdTaskContext* ctx) override;
 
+    HDST_API
     const TfTokenVector &GetRenderTags() const override
     {
         return _renderTags;
@@ -539,25 +528,34 @@ private:
 class HdSt_TestDriver final : public HdSt_TestDriverBase<HdUnitTestDelegate>
 {
 public:
+    HDST_API
     HdSt_TestDriver();
+    HDST_API
     HdSt_TestDriver(TfToken const &reprName);
+    HDST_API
     HdSt_TestDriver(HdReprSelector const &reprSelector);
 
     /// Draw
+    HDST_API
     void Draw(bool withGuides=false);
 
     /// Draw with external renderPass
+    HDST_API
     void Draw(HdRenderPassSharedPtr const &renderPass, bool withGuides);
 
+    HDST_API
     const HdStRenderPassStateSharedPtr &GetRenderPassState() const {
         return _renderPassStates[0];
     }
 
+    HDST_API
     const HdRenderPassSharedPtr &GetRenderPass();
 
 private:
     void _CreateRenderPassState();
 };
+
+using HdSt_TestDriverUniquePtr = std::unique_ptr<HdSt_TestDriver>;
 
 // --------------------------------------------------------------------------
 
@@ -617,16 +615,21 @@ private:
 class HdSt_TextureTestDriver
 {
 public:
+    HDST_API
     HdSt_TextureTestDriver();
+    HDST_API
     ~HdSt_TextureTestDriver();
 
-    void Draw(HgiTextureHandle const &colorDst, 
+    HDST_API
+    void Draw(HgiTextureHandle const &colorDst,
               HgiTextureHandle const &inputTexture,
               HgiSamplerHandle const &inputSampler);
 
-    bool WriteToFile(HgiTextureHandle const &dstTexture, 
+    HDST_API
+    bool WriteToFile(HgiTextureHandle const &dstTexture,
                      std::string filename) const;
 
+    HDST_API
     Hgi * GetHgi() { return _hgi.get(); }
 
 private:

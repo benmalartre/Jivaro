@@ -571,6 +571,10 @@ down the asset into meaningful groups) with other collections.
 
 We create and query Collections using :usdcpp:`UsdCollectionAPI`.
 
+For more details on Collections, including pattern-based collections that use
+a path expression to determine collection membership, 
+see :ref:`collections_and_patterns`.`
+
 .. _usdglossary-component:
 
 Component
@@ -1090,6 +1094,10 @@ for easy integration within pipelines that have their own scene data, as well
 as their own renderers. Pixar uses Hydra for asset preview in many of its
 tools, including :program:`usdview` and the `Presto Animation System
 <http://www.cartoonbrew.com/tech/watch-a-rare-demo-of-pixars-animation-system-presto-98099.html>`_.
+
+If you're interested in developing with Hydra components, see the 
+`Hydra Getting Started Guide <api/_page__hydra__getting__started__guide.html>`__
+and other Hydra developer documentation in our `Developer Guides <api/_developer__guides.html>`__.
 
 .. _usdglossary-index:
 

@@ -1,25 +1,8 @@
 //
 // Copyright 2023 Pixar
 //
-// Licensed under the Apache License, Version 2.0 (the "Apache License")
-// with the following modification; you may not use this file except in
-// compliance with the Apache License and the following modification to it:
-// Section 6. Trademarks. is deleted and replaced with:
-//
-// 6. Trademarks. This License does not grant permission to use the trade
-//    names, trademarks, service marks, or product names of the Licensor
-//    and its affiliates, except as required to comply with Section 4(c) of
-//    the License and to reproduce the content of the NOTICE file.
-//
-// You may obtain a copy of the Apache License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the Apache License with the above modification is
-// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied. See the Apache License for the specific
-// language governing permissions and limitations under the Apache License.
+// Licensed under the terms set forth in the LICENSE.txt file available at
+// https://openusd.org/license.
 //
 
 #include "pxr/pxr.h"
@@ -121,8 +104,15 @@ UsdUtils_AssetLocalizationPackage::Write(
             continue;
         }
 
-        success &= _AddLayerToPackage(SdfLayer::FindOrOpen(layerDep.first), 
-            layerDep.second);
+        const SdfLayerRefPtr &layerToAdd = SdfLayer::FindOrOpen(layerDep.first);
+        if (!layerToAdd) {
+            TF_WARN("Unable to open layer at path \"%s\" while writing package."
+                " Skipping export of dependency @%s@.",  
+                layerDep.first.c_str(), layerDep.second.c_str());
+            continue;
+        }
+
+        success &= _AddLayerToPackage(layerToAdd, layerDep.second);
     }
 
     for (const auto & fileDep : _filesToCopy) {
@@ -155,21 +145,28 @@ UsdUtils_AssetLocalizationPackage::_ProcessDependency(
             return UsdUtilsDependencyInfo();
         }
 
-        return _AddDependenciesToPackage(
-            layer, processedInfo);
+        return _AddDependenciesToPackage(layer, processedInfo);
     }
 
-    return _AddDependenciesToPackage(
-        layer, depInfo);
+    return _AddDependenciesToPackage(layer, depInfo);
 }
 
 UsdUtilsDependencyInfo 
 UsdUtils_AssetLocalizationPackage::_AddDependenciesToPackage( 
-    const SdfLayerRefPtr &layer, 
+    const SdfLayerRefPtr &layer,
     const UsdUtilsDependencyInfo &depInfo)
 {
     // If there are no dependencies then there is no need for remapping
     if (depInfo.GetAssetPath().empty()) {
+        return depInfo;
+    }
+
+    // We do not want to add individual dependencies of packages or layers
+    // contained within them. The entire package itself will be included in
+    // the final output.
+    if (layer->GetFileFormat()->IsPackage() || 
+        ArIsPackageRelativePath(layer->GetRealPath())) {
+
         return depInfo;
     }
 
@@ -225,6 +222,18 @@ UsdUtils_AssetLocalizationPackage::_AddDependencyToPackage(
     }
 }
 
+static bool _PathIsURIResolvable(const std::string & path) {
+    size_t uriEnd = path.find(':');
+    if (uriEnd == std::string::npos) {
+        return false;
+    }
+
+    std::string scheme = path.substr(0, uriEnd);
+    const auto& registeredSchemes = ArGetRegisteredURISchemes();
+    return std::binary_search(
+        registeredSchemes.begin(), registeredSchemes.end(), scheme);
+}
+
 std::string 
 UsdUtils_AssetLocalizationPackage::_ProcessAssetPath(
     const SdfLayerRefPtr &layer, 
@@ -240,7 +249,11 @@ UsdUtils_AssetLocalizationPackage::_ProcessAssetPath(
     // assets as close as possible to their original layout. However, we
     // skip this for context-dependent paths because those must be resolved
     // to determine what asset is being referred to.
-    if (!isContextDependentPath) {
+    //
+    // Due to the open ended nature of URI based paths, there may not be a
+    // straightforward way to map them to a filesystem directory structure so
+    // we will always send them down the remap path.
+    if (!isContextDependentPath && !_PathIsURIResolvable(refPath)) {
         // We determine if refPath is relative by creating identifiers with
         // and without the anchoring layer and seeing if they're the same.
         // If they aren't, then refPath depends on the anchor, so we assume

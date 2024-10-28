@@ -1,25 +1,8 @@
 //
 // Copyright 2016 Pixar
 //
-// Licensed under the Apache License, Version 2.0 (the "Apache License")
-// with the following modification; you may not use this file except in
-// compliance with the Apache License and the following modification to it:
-// Section 6. Trademarks. is deleted and replaced with:
-//
-// 6. Trademarks. This License does not grant permission to use the trade
-//    names, trademarks, service marks, or product names of the Licensor
-//    and its affiliates, except as required to comply with Section 4(c) of
-//    the License and to reproduce the content of the NOTICE file.
-//
-// You may obtain a copy of the Apache License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the Apache License with the above modification is
-// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied. See the Apache License for the specific
-// language governing permissions and limitations under the Apache License.
+// Licensed under the terms set forth in the LICENSE.txt file available at
+// https://openusd.org/license.
 //
 
 #include "pxr/pxr.h"
@@ -295,7 +278,7 @@ _Remove(const Sdf_PathNode *pathNode,
     auto iter = mapAndMutex.map.find(pat);
     if (iter != mapAndMutex.map.end() &&
         iter->second.GetPtr() == reinterpret_cast<char const *>(pathNode)) {
-        mapAndMutex.map.erase(iter);
+        mapAndMutex.map.erase_fast(iter);
     }
 }
 
@@ -765,11 +748,17 @@ Sdf_PathNode::_WriteText(Buffer &out) const
 }
 
 Sdf_PrimPathNode::~Sdf_PrimPathNode() {
-    _Remove(this, *_primNodes, GetParentNode(), _name);
+    _Remove(this, *_primNodes,
+            Sdf_PathNodeConstRefPtr(
+                TfDelegatedCountIncrementTag, GetParentNode()),
+            _name);
 }
 
 Sdf_PrimPropertyPathNode::~Sdf_PrimPropertyPathNode() {
-    _Remove(this, *_primPropertyNodes, GetParentNode(), _name);
+    _Remove(this, *_primPropertyNodes,
+            Sdf_PathNodeConstRefPtr(
+                TfDelegatedCountIncrementTag, GetParentNode()),
+            _name);
 }
 
 const TfToken &
@@ -790,7 +779,10 @@ Sdf_PrimVariantSelectionNode::_WriteTextImpl(Buffer &out) const
 }
 
 Sdf_PrimVariantSelectionNode::~Sdf_PrimVariantSelectionNode() {
-    _Remove(this, *_primVarSelNodes, GetParentNode(), *_variantSelection);
+    _Remove(this, *_primVarSelNodes,
+            Sdf_PathNodeConstRefPtr(
+                TfDelegatedCountIncrementTag, GetParentNode()),
+            *_variantSelection);
 }
 
 template <class Buffer>
@@ -802,11 +794,17 @@ Sdf_TargetPathNode::_WriteTextImpl(Buffer &out) const {
 }
 
 Sdf_TargetPathNode::~Sdf_TargetPathNode() {
-    _Remove(this, *_targetNodes, GetParentNode(), _targetPath);
+    _Remove(this, *_targetNodes,
+            Sdf_PathNodeConstRefPtr(
+                TfDelegatedCountIncrementTag, GetParentNode()),
+            _targetPath);
 }
 
 Sdf_RelationalAttributePathNode::~Sdf_RelationalAttributePathNode() {
-    _Remove(this, *_relAttrNodes, GetParentNode(), _name);
+    _Remove(this, *_relAttrNodes,
+            Sdf_PathNodeConstRefPtr(
+                TfDelegatedCountIncrementTag, GetParentNode()),
+            _name);
 }
 
 template <class Buffer>
@@ -820,7 +818,10 @@ Sdf_MapperPathNode::_WriteTextImpl(Buffer &out) const {
 }
 
 Sdf_MapperPathNode::~Sdf_MapperPathNode() {
-    _Remove(this, *_mapperNodes, GetParentNode(), _targetPath);
+    _Remove(this, *_mapperNodes,
+            Sdf_PathNodeConstRefPtr(
+                TfDelegatedCountIncrementTag, GetParentNode()),
+            _targetPath);
 }
 
 template <class Buffer>
@@ -830,7 +831,10 @@ Sdf_MapperArgPathNode::_WriteTextImpl(Buffer &out) const {
 }
 
 Sdf_MapperArgPathNode::~Sdf_MapperArgPathNode() {
-    _Remove(this, *_mapperArgNodes, GetParentNode(), _name);
+    _Remove(this, *_mapperArgNodes,
+            Sdf_PathNodeConstRefPtr(
+                TfDelegatedCountIncrementTag, GetParentNode()),
+            _name);
 }
 
 template <class Buffer>
@@ -841,7 +845,9 @@ Sdf_ExpressionPathNode::_WriteTextImpl(Buffer &out) const {
 }
 
 Sdf_ExpressionPathNode::~Sdf_ExpressionPathNode() {
-    _Remove(this, *_expressionNodes, GetParentNode());
+    _Remove(this, *_expressionNodes,
+            Sdf_PathNodeConstRefPtr(
+                TfDelegatedCountIncrementTag, GetParentNode()));
 }
 
 struct Sdf_Stats {
@@ -867,6 +873,7 @@ _GatherChildrenFrom(Sdf_PathNode const *parent,
         TF_FOR_ALL(i, mapAndMutex.map) {
             if (i->first.parent == parent)
                 result->emplace_back(
+                    TfDelegatedCountIncrementTag,
                     reinterpret_cast<Sdf_PathNode const *>(i->second.GetPtr()));
         }
     }
