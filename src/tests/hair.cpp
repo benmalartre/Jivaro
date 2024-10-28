@@ -108,10 +108,10 @@ TestHair::_HairEmit(UsdStageRefPtr& stage, Curve* curve, UsdGeomMesh& mesh,
     colors[sampleIdx * 4 + 3] = GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
 
 
-    points[sampleIdx * 4] = xform.Transform(position);
-    points[sampleIdx * 4 + 1] = xform.Transform(position + normal * 0.33 * _length + bitangent * tangentFactor * 0.2);
-    points[sampleIdx * 4 + 2] = xform.Transform(position + normal * 0.66 * _length + bitangent * tangentFactor * 0.6);
-    points[sampleIdx * 4 + 3] = xform.Transform(position + normal * _length + bitangent * tangentFactor);
+    points[sampleIdx * 4] = GfVec3f(xform.Transform(position));
+    points[sampleIdx * 4 + 1] = GfVec3f(xform.Transform(position + normal * 0.33 * _length + bitangent * tangentFactor * 0.2));
+    points[sampleIdx * 4 + 2] = GfVec3f(xform.Transform(position + normal * 0.66 * _length + bitangent * tangentFactor * 0.6));
+    points[sampleIdx * 4 + 3] = GfVec3f(xform.Transform(position + normal * _length + bitangent * tangentFactor));
 
     radii[sampleIdx * 4] = _width * 1.f;
     radii[sampleIdx * 4 + 1] = _width * 0.8f;

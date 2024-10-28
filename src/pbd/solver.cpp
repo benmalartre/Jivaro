@@ -1,8 +1,8 @@
 #include <iostream>
 
 #include <pxr/base/work/loops.h>
-#include <usdPbd/solver.h>
-#include <usdPbd/bodyAPI.h>
+#include <pxr/usd/usdPbd/solver.h>
+#include <pxr/usd/usdPbd/bodyAPI.h>
 
 #include "../utils/color.h"
 #include "../acceleration/bvh.h"
@@ -651,7 +651,7 @@ void Solver::UpdateInputs(UsdStageRefPtr& stage, float time)
       const GfMatrix4d& matrix = _bodies[i]->GetGeometry()->GetMatrix();
 
       for (size_t p = 0; p < inputs.size(); ++p)
-        _particles.input[_bodies[i]->GetOffset() + p] = matrix.Transform(inputs[p]);
+        _particles.input[_bodies[i]->GetOffset() + p] = GfVec3f(matrix.Transform(inputs[p]));
 
     }
   }
@@ -686,7 +686,7 @@ void Solver::UpdateGeometries()
         size_t offset = body->GetOffset();
         GfRange3f range;
         for (size_t p = 0; p < numPoints; ++p) {
-          const GfVec3f& local = deformable->GetInverseMatrix().Transform(positions[offset + p]);
+          const GfVec3f local(deformable->GetInverseMatrix().Transform(positions[offset + p]));
           range.UnionWith(local);
           output[p] = local;
         }

@@ -86,10 +86,10 @@ Edge::GetBoundingBox(const GfVec3f* positions, const GfMatrix4d& m) const
   const GfVec3f extent(radius);
 
   GfRange3f range;
-  range.UnionWith(m.Transform(positions[vertices[0]] - extent));
-  range.UnionWith(m.Transform(positions[vertices[0]] + extent));
-  range.UnionWith(m.Transform(positions[vertices[1]] - extent));
-  range.UnionWith(m.Transform(positions[vertices[1]] + extent));
+  range.UnionWith(GfVec3f(m.Transform(positions[vertices[0]] - extent)));
+  range.UnionWith(GfVec3f(m.Transform(positions[vertices[0]] + extent)));
+  range.UnionWith(GfVec3f(m.Transform(positions[vertices[1]] - extent)));
+  range.UnionWith(GfVec3f(m.Transform(positions[vertices[1]] + extent)));
   return range;
 }
 

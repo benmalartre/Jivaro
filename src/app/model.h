@@ -81,7 +81,7 @@ public:
   virtual void InitExec();
   virtual void UpdateExec(float time);
   virtual void TerminateExec();
-  virtual void SendExecViewEvent(const ViewEventData *data);
+  virtual void SendExecViewEvent(const ViewEventData &data);
 
     // usd stages
   //std::vector<UsdStageRefPtr>& GetStages(){return _stages;};

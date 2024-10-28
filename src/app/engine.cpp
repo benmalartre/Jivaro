@@ -189,7 +189,7 @@ Engine::GetRendererPluginName(TfToken plugin)
   // TODO: fix that will be eventually delegate to Hgi
 #if defined(__APPLE__)
   if (pluginDescriptor.id == TfToken("HdStormRendererPlugin")) {
-     =return "Metal";
+    return "Metal";
   }
 #endif
 

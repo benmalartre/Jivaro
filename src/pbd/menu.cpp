@@ -1,9 +1,9 @@
 #include <pxr/usd/usd/stage.h>
 
-#include <usdPbd/solver.h>
-#include <usdPbd/bodyAPI.h>
-#include <usdPbd/collisionAPI.h>
-#include <usdPbd/constraintAPI.h>
+#include <pxr/usd/usdPbd/solver.h>
+#include <pxr/usd/usdPbd/bodyAPI.h>
+#include <pxr/usd/usdPbd/collisionAPI.h>
+#include <pxr/usd/usdPbd/constraintAPI.h>
 
 #include "../utils/strings.h"
 #include "../ui/menu.h"

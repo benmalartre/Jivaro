@@ -25,7 +25,7 @@ Location::ComputePosition(const GfVec3f* positions, const int* elements, size_t 
   else 
     result += positions[_compId];
 
-  if(m)return m->Transform(result);
+  if(m)return GfVec3f(m->Transform(result));
   else return result;
 }
 
@@ -40,7 +40,7 @@ Location::ComputeNormal(const GfVec3f* normals, const int* elements, size_t sz,
   else
     result += normals[_compId];
 
-  if(m)return m->TransformDir(result).GetNormalized();
+  if(m)return GfVec3f(m->TransformDir(result).GetNormalized());
   else return result.GetNormalized();
 }
 
@@ -55,7 +55,7 @@ Location::ComputeVelocity(const GfVec3f* positions, const GfVec3f* previous,
   else
     result += positions[_compId] - previous[_compId];
 
-  if(m)return m->TransformDir(result);
+  if(m)return GfVec3f(m->TransformDir(result));
   else return result;
 }
 

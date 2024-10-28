@@ -1,8 +1,8 @@
 #include <algorithm>
 
-#include <usdPbd/bodyAPI.h>
-#include <usdPbd/collisionAPI.h>
-#include <usdPbd/constraintAPI.h>
+#include <pxr/usd/usdPbd/bodyAPI.h>
+#include <pxr/usd/usdPbd/collisionAPI.h>
+#include <pxr/usd/usdPbd/constraintAPI.h>
 
 #include "../geometry/geometry.h"
 #include "../geometry/points.h"
@@ -73,7 +73,7 @@ void Particles::AddBody(Body* item, const GfMatrix4d& matrix)
   size_t idx;
   for (size_t idx = base; idx < size; ++idx) {
     
-    pos = matrix.Transform(points[idx - base]);
+    pos = GfVec3f(matrix.Transform(points[idx - base]));
     float bY = float(idx) / float(size);
     mass[idx] = m;
     invMass[idx] = w;

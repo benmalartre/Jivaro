@@ -261,7 +261,7 @@ void ViewportUI::MouseButton(int button, int action, int mods)
   Application* app = Application::Get();
   Model* model = app->GetModel();
   if(model->GetExec()) 
-    model->SendExecViewEvent(&_MouseButtonEventData(button, action, mods, x, y));
+    model->SendExecViewEvent(_MouseButtonEventData(button, action, mods, x, y));
   
 }
 

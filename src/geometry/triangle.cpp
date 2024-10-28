@@ -90,9 +90,9 @@ Triangle::GetBoundingBox(const GfVec3f* positions, const GfMatrix4d& m) const
 {
   GfRange3f range;
 
-  range.UnionWith(m.Transform(positions[vertices[0]]));
-  range.UnionWith(m.Transform(positions[vertices[1]]));
-  range.UnionWith(m.Transform(positions[vertices[2]]));
+  range.UnionWith(GfVec3f(m.Transform(positions[vertices[0]])));
+  range.UnionWith(GfVec3f(m.Transform(positions[vertices[1]])));
+  range.UnionWith(GfVec3f(m.Transform(positions[vertices[2]])));
  
   return range;
 }
@@ -370,14 +370,14 @@ TrianglePair::GetBoundingBox(const GfVec3f* positions, const GfMatrix4d& m) cons
 {
   GfRange3f range;
 
-  range.UnionWith(m.Transform(positions[left->vertices[0]]));
-  range.UnionWith(m.Transform(positions[left->vertices[1]]));
-  range.UnionWith(m.Transform(positions[left->vertices[2]]));
+  range.UnionWith(GfVec3f(m.Transform(positions[left->vertices[0]])));
+  range.UnionWith(GfVec3f(m.Transform(positions[left->vertices[1]])));
+  range.UnionWith(GfVec3f(m.Transform(positions[left->vertices[2]])));
 
   if (right) {
-    range.UnionWith(m.Transform(positions[right->vertices[0]]));
-    range.UnionWith(m.Transform(positions[right->vertices[1]]));
-    range.UnionWith(m.Transform(positions[right->vertices[2]]));
+    range.UnionWith(GfVec3f(m.Transform(positions[right->vertices[0]])));
+    range.UnionWith(GfVec3f(m.Transform(positions[right->vertices[1]])));
+    range.UnionWith(GfVec3f(m.Transform(positions[right->vertices[2]])));
   }
 
   return range;

@@ -1,5 +1,5 @@
 #include <pxr/base/work/loops.h>
-#include <usdPbd/constraintAPI.h>
+#include <pxr/usd/usdPbd/constraintAPI.h>
 
 #include "../geometry/geometry.h"
 #include "../geometry/mesh.h"
@@ -765,10 +765,10 @@ DihedralConstraint::DihedralConstraint(Body* body, const VtArray<int>& elems,
   const size_t numElements = _elements.size() / ELEM_SIZE;
   _rest.resize(numElements);
   for(size_t elemIdx = 0; elemIdx < numElements; ++elemIdx) {
-    const GfVec3f x0 = m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 0]]);
-    const GfVec3f x1 = m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 1]]);
-    const GfVec3f x2 = m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 2]]);
-    const GfVec3f x3 = m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 3]]);
+    const GfVec3f x0(m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 0]]));
+    const GfVec3f x1(m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 1]]));
+    const GfVec3f x2(m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 2]]));
+    const GfVec3f x3(m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 3]]));
 
     GfVec3f n1 = GfCross(x1 - x0, x2 - x0).GetNormalized();
     GfVec3f n2 = GfCross(x1 - x0, x3 - x0).GetNormalized();

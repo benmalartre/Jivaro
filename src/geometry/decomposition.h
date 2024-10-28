@@ -2,12 +2,13 @@
 #ifndef JVR_GEOMETRY_DECOMPOSITION_H
 #define JVR_GEOMETRY_DECOMPOSITION_H
 
-
 #include <pxr/base/gf/matrixData.h>
 #include <pxr/base/gf/matrix3f.h>
 #include <pxr/base/gf/matrix3d.h>
 
+#include "../common.h"
 
+JVR_NAMESPACE_OPEN_SCOPE
 
 template <typename Matrix, typename Vector>
 class Matrix3Decomposition
@@ -431,5 +432,7 @@ class Matrix3Decomposition
     }
     */
 };
+
+JVR_NAMESPACE_CLOSE_SCOPE
 
 #endif // JVR_GEOMETRY_DECOMPOSITION_H

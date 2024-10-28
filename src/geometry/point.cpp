@@ -77,8 +77,8 @@ Point::GetBoundingBox(const GfVec3f* positions, const GfMatrix4d& m) const
   const GfVec3f extent(0.05f);
 
   GfRange3f range;
-  range.UnionWith(m.Transform(positions[id])-extent);
-  range.UnionWith(m.Transform(positions[id])+extent);
+  range.UnionWith(GfVec3f(m.Transform(positions[id])-extent));
+  range.UnionWith(GfVec3f(m.Transform(positions[id])+extent));
   return range;
 }
 

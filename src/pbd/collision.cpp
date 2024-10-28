@@ -1,4 +1,4 @@
-#include <usdPbd/collisionAPI.h>
+#include <pxr/usd/usdPbd/collisionAPI.h>
 #include <pxr/base/work/loops.h>
 
 #include "../utils/color.h"
@@ -441,7 +441,7 @@ GfVec3f _PointOnBox(const GfVec3f& local, double size, const GfMatrix4d& m)
     normal = local[2] > 0.f ? GfVec3f(0.f, 0.f, -1.f) : GfVec3f(0.f, 0.f, 1.f);
   }
 
-  return m.Transform(normal * d);
+  return GfVec3f(m.Transform(normal * d));
 }
 
 void BoxCollision::_FindContact(Particles* particles, size_t index, float ft)
@@ -464,7 +464,7 @@ void BoxCollision::_StoreContactLocation(Particles* particles, int index, Contac
   const GfVec3d scale = _collider->GetScale();
   const float scaleFactor = (scale[0] + scale[1] + scale[2]) / 3.f + 1e-9;
   
-  const GfVec3f local = _collider->GetInverseMatrix().Transform(predicted);
+  const GfVec3f local(_collider->GetInverseMatrix().Transform(predicted));
   
   const GfVec3f closest = _PointOnBox(local, _size, _collider->GetMatrix());
 
@@ -485,7 +485,7 @@ float BoxCollision::GetValue(Particles* particles, size_t index)
   
 GfVec3f BoxCollision::GetGradient(Particles* particles, size_t index)
 {
-  const GfVec3f local = _collider->GetInverseMatrix().Transform(particles->predicted[index]);
+  const GfVec3f local(_collider->GetInverseMatrix().Transform(particles->predicted[index]));
 
   const GfVec3f closest = _PointOnBox(local, _size, _collider->GetMatrix());
 
@@ -523,8 +523,7 @@ void SphereCollision::_UpdateCenterAndRadius()
 void SphereCollision::_FindContact(Particles* particles, size_t index, float ft)
 {
   const GfVec3f velocity = particles->velocity[index] * ft;
-  GfVec3f predicted(particles->position[index] + velocity);
-  predicted = _collider->GetInverseMatrix().Transform(predicted);
+  GfVec3f predicted(_collider->GetInverseMatrix().Transform(particles->position[index] + velocity));
   SetHit(index, predicted.GetLength() - particles->radius[index] < _radius);
 }
 
@@ -647,11 +646,11 @@ float CapsuleCollision::GetValue(Particles* particles, size_t index)
 GfVec3f CapsuleCollision::GetGradient(Particles* particles, size_t index)
 {
   Capsule* capsule = (Capsule*)_collider;
-  const GfVec3f local = _collider->GetInverseMatrix().Transform(particles->predicted[index]);
+  const GfVec3f local(_collider->GetInverseMatrix().Transform(particles->predicted[index]));
   const GfVec3f closest = _PointOnCapsuleSegment(local, capsule->GetAxis(), capsule->GetHeight());
 
   const GfVec3f surface = closest + (local - closest).GetNormalized() * _radius;
-  GfVec3f world = _collider->GetMatrix().Transform(surface);
+  GfVec3f world(_collider->GetMatrix().Transform(surface));
 
   if((local - closest).GetLengthSq() < _radius * _radius)
     return (world - particles->predicted[index]).GetNormalized();
@@ -862,9 +861,10 @@ MeshCollision::GetVelocities(Particles* particles, VtArray<GfVec3f>& points,
         counts.push_back(2);
       } else {
         Triangle* triangle = mesh->GetTriangle(_closest[index].GetComponentIndex());
-        const GfVec3f velocity = mesh->GetMatrix().TransformDir(triangle->GetVelocity(mesh->GetPositionsCPtr(), mesh->GetPreviousCPtr()));
-        const GfVec3f position =
-          _closest[index].ComputePosition(mesh->GetPositionsCPtr(), &triangle->vertices[0], 3, &mesh->GetMatrix());
+        const GfVec3f velocity(mesh->GetMatrix().TransformDir(
+          triangle->GetVelocity(mesh->GetPositionsCPtr(), mesh->GetPreviousCPtr())));
+        const GfVec3f position(_closest[index].ComputePosition(mesh->GetPositionsCPtr(), 
+          &triangle->vertices[0], 3, &mesh->GetMatrix()));
 
         points.push_back(position);
         points.push_back(position + velocity);

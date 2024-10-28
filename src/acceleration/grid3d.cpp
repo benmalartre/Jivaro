@@ -79,9 +79,9 @@ void Grid3D::InsertMesh(Mesh* mesh)
     GfVec3f tmin(FLT_MAX,FLT_MAX,FLT_MAX);
     GfVec3f tmax(-FLT_MAX,-FLT_MAX,-FLT_MAX);
     Triangle* triangle = mesh->GetTriangle(t);
-    GfVec3f A = matrix.Transform(positions[triangle->vertices[0]]);
-    GfVec3f B = matrix.Transform(positions[triangle->vertices[1]]);
-    GfVec3f C = matrix.Transform(positions[triangle->vertices[2]]);
+    GfVec3f A(matrix.Transform(positions[triangle->vertices[0]]));
+    GfVec3f B(matrix.Transform(positions[triangle->vertices[1]]));
+    GfVec3f C(matrix.Transform(positions[triangle->vertices[2]]));
 
     for (uint8_t k = 0; k < 3; ++k) {
       if (A[k] < tmin[k]) tmin[k] = A[k];

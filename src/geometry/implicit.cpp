@@ -52,7 +52,7 @@ Plane::Plane(const UsdGeomPlane& plane, const GfMatrix4d& world)
 
 GfVec3f Plane::GetNormal() 
 {
-  return _matrix.TransformDir(_normal);
+  return GfVec3f(_matrix.TransformDir(_normal));
 };
 
 GfVec3f Plane::GetOrigin() 
@@ -189,8 +189,8 @@ Sphere::Raycast(const GfRay& ray, Location* hit,
 bool Sphere::Closest(const GfVec3f& point, Location* hit,
   double maxDistance, double* minDistance) const
 {
-  GfVec3f local = GetInverseMatrix().Transform(point).GetNormalized() * _radius;
-  GfVec3f closest = GetMatrix().Transform(local);  
+  GfVec3f local(GetInverseMatrix().Transform(point).GetNormalized() * _radius);
+  GfVec3f closest(GetMatrix().Transform(local));  
   float distance = (point - closest).GetLength();
   if(distance < maxDistance && distance < *minDistance) {
     *minDistance = distance;
@@ -205,7 +205,7 @@ bool Sphere::Closest(const GfVec3f& point, Location* hit,
 
 float Sphere::SignedDistance(const GfVec3f& point) const
 {
-  GfVec3f local = _invMatrix.Transform(point);
+  GfVec3f local(_invMatrix.Transform(point));
   return local.GetLength() - _radius;
 }
 
@@ -268,7 +268,7 @@ Cube::Raycast(const GfRay& ray, Location* hit,
 
   if(invRay.Intersect(GfRange3d(GfVec3f(-_size*0.5f), GfVec3f(_size*0.5)), &distance, NULL)) {
     const GfVec3f intersection(ray.GetPoint(distance));
-    const GfVec3f world = GetMatrix().Transform(intersection);
+    const GfVec3f world(GetMatrix().Transform(intersection));
     distance = (world - GfVec3f(ray.GetStartPoint())).GetLength();
     if(distance < maxDistance && distance < *minDistance) {
       *minDistance = distance;
@@ -281,7 +281,7 @@ Cube::Raycast(const GfRay& ray, Location* hit,
 
 float Cube::SignedDistance(const GfVec3f& point) const
 {
-  GfVec3f local = _invMatrix.Transform(point);
+  GfVec3f local(_invMatrix.Transform(point));
 
   GfVec3f q(
     GfAbs(local[0]) - _size * 0.5f,
@@ -326,7 +326,7 @@ bool
 Cube::Closest(const GfVec3f& point, Location* hit,
   double maxDistance, double* minDistance) const
 {
-  const GfVec3f relative = GetInverseMatrix().Transform(point);
+  const GfVec3f relative(GetInverseMatrix().Transform(point));
   const GfRange3d range(GfVec3f(-_size*0.5), GfVec3f(_size*0.5));
   const GfVec3f closest = _PointToBox(relative, range);
  
@@ -400,8 +400,8 @@ bool
 Cone::Closest(const GfVec3f& point, Location* hit,
   double maxDistance, double* minDistance) const
 {
-  GfVec3f local = GetInverseMatrix().Transform(point).GetNormalized() * _radius;
-  GfVec3f closest = GetMatrix().Transform(local);  
+  GfVec3f local(GetInverseMatrix().Transform(point).GetNormalized() * _radius);
+  GfVec3f closest(GetMatrix().Transform(local));  
   float distance = (point - closest).GetLength();
   if(distance < maxDistance && distance < *minDistance) {
     *minDistance = distance;
@@ -482,8 +482,8 @@ bool
 Cylinder::Closest(const GfVec3f& point, Location* hit,
   double maxDistance, double* minDistance) const
 {
-  GfVec3f local = GetInverseMatrix().Transform(point).GetNormalized() * _radius;
-  GfVec3f closest = GetMatrix().Transform(local);  
+  GfVec3f local(GetInverseMatrix().Transform(point).GetNormalized() * _radius);
+  GfVec3f closest(GetMatrix().Transform(local));  
   float distance = (point - closest).GetLength();
   if(distance < maxDistance && distance < *minDistance) {
     *minDistance = distance;
@@ -574,7 +574,7 @@ float
 Capsule::SignedDistance(const GfVec3f& point) const
 {
   GfVec3f a, b, p;
-  p = _invMatrix.Transform(point);
+  p = GfVec3f(_invMatrix.Transform(point));
   if (_axis == UsdGeomTokens->x) {
     a = GfVec3f(-_height * 0.5f, 0.f, 0.f);
     b = GfVec3f(_height * 0.5f, 0.f, 0.f);

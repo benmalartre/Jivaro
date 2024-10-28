@@ -69,8 +69,8 @@ void TestGrid::_UpdateRays()
     counts[r] = 2;
     radiis[r*2]   = 0.01f;
     radiis[r*2+1]   = 0.01f;
-    points[r*2]   = matrix.Transform(positions[r]);
-    points[r*2+1] = matrix.Transform(positions[r] + normals[r] * 0.2);
+    points[r*2]   = GfVec3f(matrix.Transform(positions[r]));
+    points[r*2+1] = GfVec3f(matrix.Transform(positions[r] + normals[r] * 0.2));
     colors[r*2]   = GfVec3f(0.66f,0.66f,0.66f);
     colors[r*2+1] = GfVec3f(0.66f,0.66f,0.66f);
   }

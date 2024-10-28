@@ -1,8 +1,8 @@
 #include <pxr/usd/usd/prim.h>
-#include <usdPbd/solver.h>
-#include <usdPbd/bodyAPI.h>
-#include <usdPbd/collisionAPI.h>
-#include <usdPbd/constraintAPI.h>
+#include <pxr/usd/usdPbd/solver.h>
+#include <pxr/usd/usdPbd/bodyAPI.h>
+#include <pxr/usd/usdPbd/collisionAPI.h>
+#include <pxr/usd/usdPbd/constraintAPI.h>
 
 #include "../geometry/sampler.h"
 #include "../geometry/geometry.h"

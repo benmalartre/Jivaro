@@ -158,9 +158,9 @@ Model::TerminateExec()
 }
 
 void 
-Model::SendExecViewEvent(const ViewEventData *data)
+Model::SendExecViewEvent(const ViewEventData &data)
 {
-  _exec->ViewEvent(data);
+  _exec->ViewEvent(&data);
 }
 
 

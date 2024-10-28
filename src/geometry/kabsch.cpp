@@ -17,7 +17,7 @@ KabschSolver::Bind(const VtArray<GfVec3f>& positions,
   _bndCentroid = GfVec3f(0.f);
 
   // get world points
-  for(int i = 0; i < numBinds; ++i)_binds[i] = matrix.Transform(positions[indices[i]]);
+  for(int i = 0; i < numBinds; ++i)_binds[i] = GfVec3f(matrix.Transform(positions[indices[i]]));
 
   // compute centroid
   for (int i = 0; i < numBinds; ++i) _bndCentroid += _binds[i];
@@ -44,7 +44,7 @@ KabschSolver::Update(const VtArray<GfVec3f>& positions,
     _points.resize(_numPoints);
 
     // get world points
-    for(int i=0;i<_numPoints;++i)_points[i] = matrix.Transform(positions[indices[i]]);
+    for(int i=0;i<_numPoints;++i)_points[i] = GfVec3f(matrix.Transform(positions[indices[i]]));
 
     // compute centroid
     for (int i = 0; i < _numPoints; i++) _pntCentroid += _points[i];

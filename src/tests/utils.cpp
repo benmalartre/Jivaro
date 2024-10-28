@@ -13,10 +13,10 @@
 #include <pxr/usd/usdGeom/primvarsApi.h>
 #include <pxr/imaging/hd/changeTracker.h>
 
-#include <usdPbd/collisionAPI.h>
-#include <usdPbd/constraintAPI.h>
-#include <usdPbd/bodyAPI.h>
-#include <usdPbd/solver.h>
+#include <pxr/usd/usdPbd/collisionAPI.h>
+#include <pxr/usd/usdPbd/constraintAPI.h>
+#include <pxr/usd/usdPbd/bodyAPI.h>
+#include <pxr/usd/usdPbd/solver.h>
 
 #include "../tests/utils.h"
 #include "../geometry/implicit.h"
