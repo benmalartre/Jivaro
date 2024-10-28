@@ -113,6 +113,8 @@ public:
   void SetHeight(int height){_height = height;};
   void Resize(unsigned width, unsigned height);
 
+  int GetMenuBarHeight();
+
   // views
   SplitterUI* GetSplitter(){return _splitter;};
   View* SplitView(View* view, double perc = 0.5, bool horizontal=true, 

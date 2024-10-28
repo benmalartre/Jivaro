@@ -13,6 +13,10 @@ JVR_NAMESPACE_OPEN_SCOPE
 class Window;
 class BaseUI;
 class ViewTabUI;
+
+
+typedef int (*ViewFixedSizeFunc) (BaseUI* ui);
+
 class View
 {
 public:
@@ -60,12 +64,15 @@ public:
   void RescalePixels( GfVec2d ratio);
   void RescaleLeft();
   void RescaleRight();
+  void ComputeFixedSize();
+  int GetFixedSize();
 
   void GetChildMinMax(bool , GfVec2f& , GfVec2f&);
   void Split(double perc, bool horizontal, int fixed=false, int numPixels=-1);
   void GetSplitInfos(GfVec2f& sMin, GfVec2f& sMax, 
     const int width, const int height);
 
+  void SetFixedSizeFunc(ViewFixedSizeFunc func){_fixedSizeFn = func;};
   void SetLeft(View* view){_left = view; if(view)view->_parent=this;};
   void SetRight(View* view){_right = view; if(view)view->_parent=this;};
   void SetParent(View* view){_parent = view;};
@@ -142,6 +149,7 @@ private:
   BaseUI*               _current;
   std::vector<BaseUI*>  _uis;
   size_t                _currentIdx;
+  ViewFixedSizeFunc     _fixedSizeFn;
 };
 
 

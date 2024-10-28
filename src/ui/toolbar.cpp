@@ -104,6 +104,13 @@ bool ToolbarButton::Draw()
   return clicked;
 }
 
+int
+ToolbarUIFixedSizeFunc(BaseUI* ui)
+{
+  std::cout << "Toolbar Fixed Size : " << ((ToolbarUI*)ui)->GetFixedSize() << std::endl;
+  return ((ToolbarUI*)ui)->GetFixedSize();
+}
+
 ToolbarUI::ToolbarUI(View* parent, bool vertical) 
   : BaseUI(parent, UIType::TOOLBAR) 
   , _vertical(vertical)
@@ -149,6 +156,9 @@ ToolbarUI::ToolbarUI(View* parent, bool vertical)
     OnPlayCallback
   );
   _items.push_back(playItem);
+
+  _parent->SetFixedSizeFunc(&ToolbarUIFixedSizeFunc);
+
 }
 
 ToolbarUI::~ToolbarUI() 
@@ -156,6 +166,8 @@ ToolbarUI::~ToolbarUI()
   for(auto& item: _items) delete item;
   _items.clear();
 }
+
+
 
 void ToolbarUI::Update()
 {
@@ -169,6 +181,14 @@ void ToolbarUI::Update()
       }
     }
   }
+}
+
+int
+ToolbarUI::GetFixedSize()
+{
+  const ImGuiStyle &style = ImGui::GetStyle(); 
+  if(_vertical)return BUTTON_NORMAL_SIZE[0] + 2 * (style.WindowPadding.x + style.ItemSpacing.x);
+  else return BUTTON_NORMAL_SIZE[1] + 2 * (style.WindowPadding.y + style.ItemSpacing.y);
 }
 
 bool ToolbarUI::Draw()
@@ -186,7 +206,7 @@ bool ToolbarUI::Draw()
     _parent->GetMax(), 
     false);
  
-  ImGui::SetCursorPosY(4.f);
+  const ImGuiStyle& style = ImGui::GetStyle();
   for (auto& item : _items) {
     item->Draw();
     if(!_vertical) ImGui::SameLine();

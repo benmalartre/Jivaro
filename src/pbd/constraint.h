@@ -314,7 +314,7 @@ public:
 
 protected:
   static size_t                 TYPE_ID;
-  VtArray<Contact>         _contacts;
+  VtArray<Contact>              _contacts;
   Collision*                    _collision;
 };
 

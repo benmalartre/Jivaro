@@ -17,12 +17,12 @@ struct CurveEditorGrabUI {
   GfVec2f end;
 };
 
-typedef std::vector<UsdAnimXCurve*> AnimXCurves;
-typedef TfHashMap <SdfPath, AnimXCurves, SdfPath::Hash> AnimXCurvesMap;
+//typedef std::vector<UsdAnimXCurve*> AnimXCurves;
+//typedef TfHashMap <SdfPath, AnimXCurves, SdfPath::Hash> AnimXCurvesMap;
 
 class CurveEditorUI : public BaseUI
 {
-friend UsdAnimXData;
+//friend UsdAnimXData;
 public:
   CurveEditorUI(View* parent);
   ~CurveEditorUI() override;
@@ -36,12 +36,12 @@ public:
   bool Draw() override;
 
   void DrawBackground();
-  void DrawCurve(UsdAnimXCurve* crv);
+  void DrawCurve(/*UsdAnimXCurve* crv*/);
   void DrawCurves();
   void DrawTime();
 
   void SetLayer(SdfLayerHandle layer);
-  void SetDatas(const UsdAnimXDataRefPtr& datas);
+  //void SetDatas(const UsdAnimXDataRefPtr& datas);
   void PopulateCurves();
   /*
   void RecurseStage();
@@ -59,13 +59,13 @@ private:
   float _GetTimeStep(float width, float scale);
   size_t _GetNumSamples(float width);
 
-  AnimXCurvesMap                _curves;
-  SdfLayerHandle           _layer;
-  UsdAnimXDataRefPtr       _datas;
+  //AnimXCurvesMap                _curves;
+  SdfLayerHandle                _layer;
+  //UsdAnimXDataRefPtr            _datas;
 
-  GfVec2f                  _offset;
-  GfVec2f                  _scale;
-  GfVec2f                  _invScale;
+  GfVec2f                       _offset;
+  GfVec2f                       _scale;
+  GfVec2f                       _invScale;
   float                         _lastX;
   float                         _lastY;
   bool                          _drag;

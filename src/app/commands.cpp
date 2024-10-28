@@ -269,6 +269,10 @@ DuplicatePrimCommand::DuplicatePrimCommand(UsdStageRefPtr stage, const SdfPath& 
   SdfCopySpec(SdfLayerHandle(sourceLayer),
     path, destinationLayer, destinationPath);
   UndoRouter::Get().TransferEdits(&_inverse);
+
+  selection->Clear();
+  selection->AddItem(destinationPath);
+  
   SceneChangedNotice().Send();
 }
 
@@ -288,7 +292,7 @@ DeletePrimCommand::DeletePrimCommand(UsdStageRefPtr stage, const SdfPathVector& 
   : Command(true)
 {
   Selection* selection = Application::Get()->GetModel()->GetSelection();
-  _previous = selection->GetItems();
+  _selection = selection->GetItems();
 
   for (auto& path : paths) {
     stage->RemovePrim(path);

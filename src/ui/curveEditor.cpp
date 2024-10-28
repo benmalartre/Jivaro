@@ -137,6 +137,7 @@ void CurveEditorUI::MouseMove(int x, int y)
 
 void CurveEditorUI::Keyboard(int key, int scancode, int action, int mods)
 {
+  /*
   if (action == GLFW_PRESS)
   {
     SdfPath path = SdfPath("/Cube").AppendProperty(TfToken("size"));
@@ -155,6 +156,7 @@ void CurveEditorUI::Keyboard(int key, int scancode, int action, int mods)
         VtValue(keyframe.value));
     }
   }
+  */
 }
 
 void CurveEditorUI::MouseWheel(int x, int y)
@@ -182,6 +184,7 @@ void CurveEditorUI::MouseWheel(int x, int y)
 
 void CurveEditorUI::SetLayer(SdfLayerHandle layer)
 {
+  /*
   std::cout << "### CURVE EDITOR UI : SET LAYER!!!" << std::endl;
   _layer = layer;
   UsdAnimXFileFormatConstPtr fileFormat =
@@ -196,23 +199,28 @@ void CurveEditorUI::SetLayer(SdfLayerHandle layer)
   std::cout << "##############################################" << std::endl;
   std::cout << "###   " << _layer.GetUniqueIdentifier() << std::endl;
   std::cout << "##############################################" << std::endl;
+  */
 }
 
+/*
 void CurveEditorUI::SetDatas(const UsdAnimXDataRefPtr& datas)
 {
   _curves.clear();
   _datas = datas;
 }
+*/
 
 void CurveEditorUI::PopulateCurves()
 {
+  /*
   if (_datas) {
     std::vector<SdfPath> animatedPrims;
     _datas->GetAnimatedPrims(animatedPrims);
     for (auto& animatedPrim : animatedPrims) {
-      _datas->GetCurves(animatedPrim, _curves);
+      //_datas->GetCurves(animatedPrim, _curves);
     }
   }
+  */
 }
 
 void CurveEditorUI::DrawBackground()
@@ -226,7 +234,7 @@ void CurveEditorUI::DrawBackground()
   vMax.y += ImGui::GetWindowPos().y;
 }
 
-void CurveEditorUI::DrawCurve(UsdAnimXCurve* crv)
+void CurveEditorUI::DrawCurve(/*UsdAnimXCurve* crv*/)
 {
 
 }
@@ -268,6 +276,7 @@ size_t CurveEditorUI::_GetNumSamples(float width)
 
 void CurveEditorUI::DrawCurves()
 {
+  /*
   UsdAnimXKeyframe keyframe;
   UsdAnimXKeyframe lastKeyframe;
   ImDrawList* drawList = ImGui::GetWindowDrawList();
@@ -278,14 +287,14 @@ void CurveEditorUI::DrawCurves()
   static ImU32 blue = ImColor(64, 32, 255);
   size_t cid = 0;
 
-  /*
+ 
   adsk::evaluateCurveSegment(interpolationMethod,
     CurveInterpolatorMethod curveInterpolatorMethod,
     double time,
     double startX, double startY,
     double x1, double y1,
     double x2, double y2,
-    double endX, double endY);*/
+    double endX, double endY);
 
   
   for (auto& it : _curves) {
@@ -340,6 +349,7 @@ void CurveEditorUI::DrawCurves()
     }
     cid++;
   }
+  */
 }
 
 bool CurveEditorUI::Draw()

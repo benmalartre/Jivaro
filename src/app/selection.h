@@ -31,7 +31,7 @@ public:
 
   struct Item {
     Type                type;
-    SdfPath        path;
+    SdfPath             path;
     std::vector<int>    components;
     std::vector<float>  weights;
     size_t              hash;

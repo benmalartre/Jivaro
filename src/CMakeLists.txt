@@ -32,6 +32,7 @@ add_executable(${TARGET}
   ui/popup.cpp
   ui/debug.cpp
   ui/fileBrowser.cpp
+  ui/contentBrowser.cpp
   ui/splitter.cpp
   ui/tab.cpp
   ui/menu.cpp
@@ -43,7 +44,7 @@ add_executable(${TARGET}
   ui/explorer.cpp
   ui/propertyEditor.cpp
   ui/attributeEditor.cpp
-  #ui/curveEditor.cpp
+  ui/curveEditor.cpp
 
   graph/graph.cpp
   graph/execution.cpp
@@ -113,7 +114,6 @@ add_executable(${TARGET}
   pbd/solver.cpp
   pbd/menu.cpp
 
-  command/command.cpp
   command/inverse.cpp
   command/block.cpp
   command/router.cpp

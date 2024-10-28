@@ -80,7 +80,7 @@ Window::Window(const std::string& name, const GfVec4i& dimension, bool fullscree
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
   
-  glfwWindowHint(GLFW_DOUBLEBUFFER, false);
+  glfwWindowHint(GLFW_DOUBLEBUFFER, true);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
 
   glfwWindowHint(GLFW_STENCIL_BITS, 8);
@@ -225,7 +225,7 @@ static void _StandardLayout(Window* window)
 
   int width, height;
   glfwGetWindowSize(window->GetGlfwWindow(), &width, &height);
-  window->SplitView(mainView, 0.5, true, View::LFIXED, 22);
+  window->SplitView(mainView, 0.5, true, View::LFIXED, window->GetMenuBarHeight());
 
   View* bottomView = mainView->GetRight();
   window->SplitView(bottomView, 0.9, true, false);
@@ -436,6 +436,15 @@ Window::Resize(unsigned width, unsigned height)
   DirtyAllViews();
 }
 
+int
+Window::GetMenuBarHeight()
+{
+  const ImGuiStyle& style = ImGui::GetStyle();
+  ImGuiContext* context = GetContext(); 
+  
+  return FONT_SIZE_LARGE + style.FramePadding.y * 2.0f;
+}
+
 // Layout
 //------------------------------------------------------------------------------
 void
@@ -457,6 +466,7 @@ Window::SetLayout()
       _RandomLayout(this);
       break;
     }
+    Resize(_width, _height);
     _needUpdateLayout = false;
   }
 }

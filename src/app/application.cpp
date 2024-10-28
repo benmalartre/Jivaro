@@ -290,27 +290,27 @@ Application::Update()
   }
   */
  Time* time = Time::Get();
- 
+  
+  float currentTime(time->GetActiveTime());
+  int playback = time->Playback();
+  if( playback == Time::PLAYBACK_WAITING) return true;
+
   static bool vSync = true;
   if(vSync && time->IsPlaying())
     glfwPollEvents();
   else
     glfwWaitEvents();
-
-  float currentTime(time->GetActiveTime());
-  int playback = time->Playback();
-  if( playback == Time::PLAYBACK_WAITING) return true;
   
   // update model
   if (!_popup && (playback > Time::PLAYBACK_IDLE || Application::Get()->IsToolInteracting())) {
     if(_model->GetExec() ) 
       _model->UpdateExec(currentTime);
+
+    _model->Update(currentTime);
     SetAllWindowsDirty();
   }
 
-  _model->Update(currentTime);
-    //
-  //}
+  
   
   // draw popup
   if (_popup) {
@@ -479,12 +479,11 @@ Application::NewSceneCallback(const NewSceneNotice& n)
 void 
 Application::SceneChangedCallback(const SceneChangedNotice& n)
 {
-  Application::Get()->
   _mainWindow->GetTool()->ResetSelection();
   for (auto& window : _childWindows) {
     window->GetTool()->ResetSelection();
   }
-  
+  _model->Update(Time::Get()->GetActiveTime());
   SetAllWindowsDirty();
 }
 
@@ -498,7 +497,7 @@ Application::AttributeChangedCallback(const AttributeChangedNotice& n)
   for (auto& window : _childWindows) {
     window->GetTool()->ResetSelection();
   }
-
+  _model->Update(Time::Get()->GetActiveTime());
   SetAllWindowsDirty();
 
 }

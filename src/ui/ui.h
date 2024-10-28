@@ -37,6 +37,7 @@ enum UIType {
   EXPLORER,
   PROPERTYEDITOR,
   ATTRIBUTEEDITOR,
+  CONTENTBROWSER,
   CURVEEDITOR,
   GRAPHEDITOR,
   DEBUG,
@@ -57,6 +58,7 @@ static const char* UITypeName[UIType::COUNT] = {
   "explorer",
   "propertyEditor",
   "attributeEditor",
+  "contentBrowser",
   "curveEditor",
   "graphEditor", 
   "debug",
@@ -110,6 +112,9 @@ public:
 
   // get parent window height
   int GetWindowHeight();
+
+  // get available font from window
+  ImFont* GetFont(size_t size, size_t index=0);
 
   // mouse position in the view space
   // (0, 0) left top corner

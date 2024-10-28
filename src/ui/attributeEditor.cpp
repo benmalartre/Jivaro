@@ -30,7 +30,7 @@ ImGuiWindowFlags AttributeEditorUI::_flags =
 
 
 AttributeEditorUI::AttributeEditorUI(View* parent)
-  : BaseUI(parent, UIType::DEMO)
+  : BaseUI(parent, UIType::ATTRIBUTEEDITOR)
 {
 }
 

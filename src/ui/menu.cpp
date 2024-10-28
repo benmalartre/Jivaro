@@ -62,6 +62,10 @@ void MenuUI::Item::Draw(bool* modified, size_t itemIdx)
 {
   View* view = ui->GetView();
   Window* window = view->GetWindow();
+  if(!parent)
+    ImGui::PushFont(ui->GetFont(FONT_LARGE));
+  else
+    ImGui::PushFont(ui->GetFont(FONT_MEDIUM));
   if (items.size()) {
     if (ImGui::BeginMenu(label.c_str())) {
       ui->_opened.push_back(itemIdx);
@@ -72,13 +76,13 @@ void MenuUI::Item::Draw(bool* modified, size_t itemIdx)
       }
       ImGui::EndMenu();
     }
-  }
-  else {
+  } else {
     if (ImGui::MenuItem(label.c_str(), NULL, selected, enabled) && callback) {
       callback();
       Application::Get()->SetAllWindowsDirty();
     }
   }
+  ImGui::PopFont();
 }
 
 MenuUI::Item* MenuUI::Add(const std::string& label, bool selected, bool enabled, CALLBACK_FN cb)
@@ -98,8 +102,10 @@ MenuUI::MenuUI(View* parent)
   fileMenu->Add("New", false, true, std::bind(NewFileCallback));
 
   MenuUI::Item* testItem = Add("Create", false, true, NULL);
+  testItem->Add("Create Plane", false, true, std::bind(CreatePrimCallback, Geometry::PLANE));
   testItem->Add("Create Cube", false, true, std::bind(CreatePrimCallback, Geometry::CUBE));
   testItem->Add("Create Sphere", false, true, std::bind(CreatePrimCallback, Geometry::SPHERE));
+  testItem->Add("Create Cylinder", false, true, std::bind(CreatePrimCallback, Geometry::CYLINDER));
   testItem->Add("Create Capsule", false, true, std::bind(CreatePrimCallback, Geometry::CAPSULE));
   testItem->Add("Create Cone", false, true, std::bind(CreatePrimCallback, Geometry::CONE));
 
@@ -116,6 +122,7 @@ MenuUI::MenuUI(View* parent)
   layoutItem->Add("Standard", false, true, std::bind(SetLayoutCallback, GetWindow(), 2));
   layoutItem->Add("Random", false, true, std::bind(SetLayoutCallback, GetWindow(), 3));
 
+  _parent->SetFixedSizeFunc(&MenuUIFixedSizeFunc);
   _parent->SetFlag(View::DISCARDMOUSEBUTTON);
 }
 
@@ -123,6 +130,13 @@ MenuUI::MenuUI(View* parent)
 MenuUI::~MenuUI()
 {
   for(auto & item: _items)delete item;
+}
+
+int
+MenuUIFixedSizeFunc(BaseUI* ui)
+{
+  std::cout << "Menu Fixed Size : " << ui->GetView()->GetWindow()->GetMenuBarHeight() << std::endl;
+  return ui->GetView()->GetWindow()->GetMenuBarHeight();
 }
 
 GfVec2f
@@ -228,6 +242,7 @@ MenuUI::Draw()
   else { SetInteracting(false); };
 
   ImGui::PopStyleColor(3);
+
   return dirty || ImGui::IsAnyItemHovered();
 
 }

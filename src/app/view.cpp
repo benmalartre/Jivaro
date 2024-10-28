@@ -9,10 +9,11 @@
 #include "../ui/splitter.h"
 #include "../ui/menu.h"
 #include "../ui/viewport.h"
+#include "../ui/contentBrowser.h"
 #include "../ui/graphEditor.h"
 #include "../ui/propertyEditor.h"
 #include "../ui/attributeEditor.h"
-//#include "../ui/curveEditor.h"
+#include "../ui/curveEditor.h"
 #include "../ui/debug.h"
 #include "../ui/demo.h"
 #include "../ui/icon.h"
@@ -34,6 +35,7 @@ View::View(View* parent, const GfVec2f& min, const GfVec2f& max, unsigned flags)
   , _fixed(-1)
   , _current(NULL)
   , _currentIdx(-1)
+  , _fixedSizeFn(NULL)
 {
   if(_parent)_window = _parent->_window;
   if (_flags & View::TAB)CreateTab();
@@ -51,6 +53,7 @@ View::View(View* parent, int x, int y, int w, int h, unsigned flags)
   , _fixed(-1)
   , _current(NULL)
   , _currentIdx(-1)
+  , _fixedSizeFn(NULL)
 {
   if(_parent)_window = _parent->_window;
   if (_flags & View::TAB)CreateTab();
@@ -103,9 +106,12 @@ View::CreateUI(UIType type)
   case UIType::GRAPHEDITOR:
     _current = new AttributeEditorUI(this);
     break;
-  //case UIType::CURVEEDITOR:
-  //  _current = new CurveEditorUI(this);
-  //  break;
+  case UIType::CURVEEDITOR:
+    _current = new CurveEditorUI(this);
+    break;
+  case UIType::CONTENTBROWSER:
+    _current = new ContentBrowserUI(this);
+    break;
   case UIType::DEMO:
     _current = new DemoUI(this);
     break;
@@ -496,10 +502,13 @@ View::Resize(int x, int y, int w, int h)
 
   if(!GetFlag(LEAF))
   {
+    if(_left)_left->ComputeFixedSize();
+    if(_right)_right->ComputeFixedSize();
+    
     if(GetFlag(HORIZONTAL))
     {
-      if (GetFlag(LFIXED)) _perc = (double)_fixed / (double)h;
-      else if (GetFlag(RFIXED)) _perc = ((double)h - _fixed) / (double)h;
+      if (GetFlag(LFIXED)) _perc = (double)_left->GetFixedSize() / (double)h;
+      else if (GetFlag(RFIXED)) _perc = ((double)h - _right->GetFixedSize()) / (double)h;
       
       double ph = (double)h * _perc;
       if (_left)_left->Resize(x, y, w, ph);
@@ -507,8 +516,8 @@ View::Resize(int x, int y, int w, int h)
     }
     else
     {
-      if (GetFlag(LFIXED)) _perc = (float)_fixed / (float)w;
-      else if (GetFlag(RFIXED)) _perc = (float)(w - _fixed) / (float)w;
+      if (GetFlag(LFIXED)) _perc = (float)_left->GetFixedSize() / (float)w;
+      else if (GetFlag(RFIXED)) _perc = (float)(w - _right->GetFixedSize()) / (float)w;
       
       double pw = (double)w * _perc;
       if (_left)_left->Resize(x, y, pw, h);
@@ -626,6 +635,19 @@ View::RescaleRight()
       _right->RescaleRight();
     }
   }
+}
+
+void
+View::ComputeFixedSize()
+{
+  if(_fixedSizeFn)
+    _fixed = (*_fixedSizeFn)(GetCurrentUI());
+}
+
+int
+View::GetFixedSize() {
+  ComputeFixedSize();
+  return _fixed;
 }
 
 void

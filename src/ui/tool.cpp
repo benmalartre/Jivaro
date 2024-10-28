@@ -38,7 +38,6 @@ ToolUI::~ToolUI()
 {
 }
 
-
 UsdGeomMesh _GetSelectedMesh()
 {
   UsdStageRefPtr stage = Application::Get()->GetModel()->GetStage();

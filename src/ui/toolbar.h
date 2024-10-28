@@ -66,6 +66,9 @@ struct ToolbarButton : public ToolbarItem {
   bool Draw() override;
 };
 
+
+int ToolbarUIFixedSizeFunc(BaseUI* ui);
+
 class ToolbarUI : BaseUI
 {
 public:
@@ -77,9 +80,11 @@ public:
   bool Draw() override;
   void Update();
 
+  int GetFixedSize();
+
 private:
   bool                        _vertical;
-  GfVec3f                _color;
+  GfVec3f                     _color;
   std::vector<ToolbarItem*>   _items;
   ToolbarItem*                _current;
   static ImGuiWindowFlags     _flags;

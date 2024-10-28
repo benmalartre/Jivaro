@@ -16,6 +16,8 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 class Command;
 
+int MenuUIFixedSizeFunc(BaseUI* ui);
+
 class MenuUI : public BaseUI
 {
 public:
@@ -33,6 +35,7 @@ public:
     Item* Add(const std::string& label, bool selected, bool enabled, CALLBACK_FN cb = NULL);
 
     void Draw(bool* modified, size_t itemIdx);
+
     friend MenuUI;
   };
   
@@ -47,8 +50,9 @@ public:
   Item* Add(const std::string& label, bool selected, bool enabled, CALLBACK_FN cb = NULL);
 
 private:
-  GfVec2f            _ComputeSize(const Item* item);
-  GfVec2f            _ComputePos(const Item* item);
+
+  GfVec2f                 _ComputeSize(const Item* item);
+  GfVec2f                 _ComputePos(const Item* item);
   std::vector<Item*>      _items;
   std::vector<size_t>     _opened;
   static ImGuiWindowFlags _flags;

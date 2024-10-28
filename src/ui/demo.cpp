@@ -11,11 +11,16 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
+
 ImGuiWindowFlags DemoUI::_flags =
   ImGuiWindowFlags_None |
+  ImGuiWindowFlags_NoMove |
   ImGuiWindowFlags_NoResize |
   ImGuiWindowFlags_NoTitleBar |
-  ImGuiWindowFlags_NoMove;
+  ImGuiWindowFlags_NoCollapse |
+  ImGuiWindowFlags_NoNav |
+  ImGuiWindowFlags_NoScrollWithMouse |
+  ImGuiWindowFlags_NoScrollbar;
 
 
 DemoUI::DemoUI(View* parent)

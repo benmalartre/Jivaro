@@ -105,6 +105,12 @@ BaseUI::GetWindowHeight()
   return _parent->GetWindow()->GetHeight();
 };
 
+ImFont* 
+BaseUI::GetFont(size_t size, size_t index)
+{
+  return _parent->GetWindow()->GetFont(size, index);
+}
+
 // ui dimensions
 GfVec2f BaseUI::GetPosition()
 {
