@@ -656,9 +656,9 @@ void
 View::SetClean()
 {
   if(!GetFlag(View::LEAF))return;
-  _buffered--;
+  if(_current && _current->GetType() != UIType::VIEWPORT)return;
 
-  if (_buffered <= 0 && _current && _current->GetType() != UIType::VIEWPORT)
+  if (_buffered-- <= 0)
     ClearFlag(DIRTY);
 }
 
@@ -666,7 +666,7 @@ void
 View::SetDirty()
 {
   SetFlag(DIRTY);
-  _buffered = 16;
+  _buffered = 2;
 }
 
 void 
