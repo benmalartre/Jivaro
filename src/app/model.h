@@ -88,7 +88,7 @@ public:
   UsdStageRefPtr GetDisplayStage();
   UsdStageRefPtr GetWorkStage();
 
-  SdfLayerRefPtr GetCurrentLayer();
+  SdfLayerRefPtr GetSessionLayer();
 
   void AddSceneIndexBase(HdSceneIndexBaseRefPtr sceneIndex);
   HdSceneIndexBaseRefPtr GetEditableSceneIndex();
@@ -100,9 +100,11 @@ public:
   UsdPrim GetUsdPrim(SdfPath primPath);
   UsdPrimRange GetAllPrims();
 
+  void SetEmptyStage();
+  void LoadUsdStage(const std::string usdFilePath);
+
 protected:
-  void _SetEmptyStage();
-  void _LoadUsdStage(const std::string usdFilePath);
+  void _UpdateAllEnginesSelection();
 
 
 private:
@@ -115,7 +117,6 @@ private:
 
   // stage
   UsdStageRefPtr                    _stage;
-  SdfLayerRefPtr                    _layer;
 
   // engines
   std::vector<Engine*>              _engines;

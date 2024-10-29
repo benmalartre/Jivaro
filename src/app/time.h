@@ -24,6 +24,7 @@ public:
   };
 
   void Init(float start, float end, float fps);
+
   inline float GetMinTime(){return _minTime;};
   inline float GetStartTime(){return _startTime;};
   inline float GetEndTime(){return _endTime;};
@@ -32,8 +33,8 @@ public:
   inline float GetFPS(){return _fps;};
   inline float GetSpeed(){return _speed;};
   inline bool  GetLoop(){return _loop;};
-  inline float GetFrameDuration() { return _frame;};
-  inline int    GetMode(){return _mode;};
+  inline float GetFrameDuration() { return static_cast<float>(_frame) * 1e-6;};
+  inline int   GetMode(){return _mode;};
 
   inline void SetMinTime(float time){_minTime = time;};
   inline void SetStartTime(float time){_startTime = time;};

@@ -16,7 +16,6 @@
 #include "../common.h"
 #include "../geometry/intersection.h"
 #include "../app/handle.h"
-#include "../app/delegate.h"
 
 #include <memory>
 
@@ -53,7 +52,6 @@ public:
   void SetHighlightSelection(bool state) { _highlightSelection = state; };
   bool GetHighlightSelection() { return _highlightSelection; };
 
-  Delegate* GetDelegate() { return _delegate; };
   GfFrustum GetFrustum();
 
   bool PollForAsynchronousUpdates() const;
@@ -91,8 +89,6 @@ private:
 
   bool                                _highlightSelection;
   bool                                _allowAsynchronousSceneProcessing;
-
-  Delegate*                           _delegate;
 
 };
 

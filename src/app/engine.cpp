@@ -203,9 +203,8 @@ Engine::SetCameraMatrices(GfMatrix4d view, GfMatrix4d proj)
   _camProj = proj;
 }
 
-/*
 void 
-Engine::_SetSelection(SdfPathVector paths)
+Engine::SetSelection(SdfPathVector paths)
 {
   HdSelectionSharedPtr const selection = std::make_shared<HdSelection>();
 
@@ -219,7 +218,6 @@ Engine::_SetSelection(SdfPathVector paths)
 
   _selTracker->SetSelection(selection);
 }
-*/
 
 void
 Engine::SetRenderSize(int width, int height)
@@ -409,7 +407,6 @@ Engine::PollForAsynchronousUpdates() const
       si->AddObserver(HdSceneIndexObserverPtr(&ob));
       si->SystemMessage(HdSystemMessageTokens->asyncPoll, nullptr);
       si->RemoveObserver(HdSceneIndexObserverPtr(&ob));
-      std::cout << "ASYNC SHIT CHANGED ? "<< ob.IsChanged() << std::endl;
       return ob.IsChanged();
     }
   }

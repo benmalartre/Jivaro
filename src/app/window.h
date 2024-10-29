@@ -18,6 +18,7 @@ extern bool LEGACY_OPENGL;
 
 class UsdEmbreeContext;
 class Application;
+class Selection;
 class View;
 class SplitterUI;
 class BaseUI;

@@ -53,9 +53,11 @@ Model::Model()
   UsdImagingCreateSceneIndicesInfo info;
   info.displayUnloadedPrimsWithBounds = true;
   const UsdImagingSceneIndices sceneIndices = UsdImagingCreateSceneIndices(info);
+
   _stageSceneIndex = sceneIndices.stageSceneIndex;
 
-  AddSceneIndexBase(_stageSceneIndex);
+  AddSceneIndexBase(sceneIndices.finalSceneIndex);
+  SetEmptyStage();
   
 };
 
@@ -69,8 +71,8 @@ void
 Model::SetStage(UsdStageRefPtr& stage)
 {
   _stage = stage;
-  _layer = stage->GetRootLayer();
-    
+  _rootLayer = stage->GetRootLayer();
+  _sessionLayer = _stage->GetSessionLayer();
   _stageSceneIndex->SetStage(_stage);
   _stageSceneIndex->SetTime(UsdTimeCode::Default());
 
@@ -78,7 +80,7 @@ Model::SetStage(UsdStageRefPtr& stage)
 
 
 void 
-Model::_SetEmptyStage()
+Model::SetEmptyStage()
 {
   _stage = UsdStage::CreateInMemory();
   UsdGeomSetStageUpAxis(_stage, UsdGeomTokens->y);
@@ -92,7 +94,7 @@ Model::_SetEmptyStage()
 }
 
 void 
-Model::_LoadUsdStage(const std::string usdFilePath)
+Model::LoadUsdStage(const std::string usdFilePath)
 {
   _rootLayer = SdfLayer::FindOrOpen(usdFilePath);
   _sessionLayer = SdfLayer::CreateAnonymous();
@@ -295,9 +297,16 @@ Model::GetWorkStage()
 
 // get current layer
 SdfLayerRefPtr
-Model::GetCurrentLayer()
+Model::GetSessionLayer()
 {
-  return _layer;
+  return _sessionLayer;
+}
+
+void
+Model::_UpdateAllEnginesSelection()
+{
+  for(auto& engine: _engines)
+    engine->SetSelection(_selection.GetSelectedPaths());
 }
 
 // selection
@@ -305,30 +314,35 @@ void
 Model::SetSelection(const SdfPathVector& selection)
 {
   ADD_COMMAND(SelectCommand, Selection::PRIM, selection, SelectCommand::SET);
+  _UpdateAllEnginesSelection();
 }
 
 void
 Model::ToggleSelection(const SdfPathVector& selection)
 {
   ADD_COMMAND(SelectCommand, Selection::PRIM, selection, SelectCommand::TOGGLE);
+  _UpdateAllEnginesSelection();
 }
 
 void 
 Model::AddToSelection(const SdfPathVector& paths)
 {
   ADD_COMMAND(SelectCommand, Selection::PRIM, paths, SelectCommand::ADD);
+  _UpdateAllEnginesSelection();
 }
 
 void 
 Model::RemoveFromSelection(const SdfPathVector& paths)
 {
   ADD_COMMAND(SelectCommand, Selection::PRIM, paths, SelectCommand::REMOVE);
+  _UpdateAllEnginesSelection();
 }
 
 void 
 Model::ClearSelection()
 {
   ADD_COMMAND(SelectCommand, Selection::PRIM, {}, SelectCommand::SET);
+  _UpdateAllEnginesSelection();
 }
 
 GfBBox3d

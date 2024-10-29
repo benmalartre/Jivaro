@@ -367,7 +367,7 @@ void ViewportUI::Render()
   Application* app = Application::Get();
   Window* window = GetWindow();
 
-  _engine->PollForAsynchronousUpdates();
+  //_engine->PollForAsynchronousUpdates();
   _engine->SetRenderViewport(
     pxr::GfVec4i(0, window->GetHeight() - GetHeight(), GetWidth(), GetHeight()));
 
@@ -527,7 +527,7 @@ bool ViewportUI::Draw()
       0xFFFFFFFF, 
       msg.c_str());
 
-    msg = "fps : "+ std::to_string(ImGui::GetIO().Framerate);
+    msg = "fps : "+ std::to_string(Time::Get()->IsPlaying() ?  ImGui::GetIO().Framerate : 0.f);
     drawList->AddText(
       ImVec2((min[0] + size[0]) - 128.f, (min[1] + size[1]) - 20),
       0xFFFFFFFF,

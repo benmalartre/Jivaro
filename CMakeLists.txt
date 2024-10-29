@@ -151,9 +151,6 @@ list(APPEND BOOST_LIB_NAMES
   regex
   system
 )
-if(DEFINED PYTHON_BUILD)
-#  list(APPEND BOOST_LIB_NAMES python310)
-endif()
 
 set(BOOST_LIBRARIES "")
 set(BOOST_VERSION "")

@@ -290,8 +290,7 @@ Application::Update()
     _needCaptureFramebuffers = false;
   }
   */
- Time* time = Time::Get();
-  
+  Time* time = Time::Get();
   float currentTime(time->GetActiveTime());
   int playback = time->Playback();
   if( playback == Time::PLAYBACK_WAITING) return true;
@@ -311,8 +310,6 @@ Application::Update()
     SetAllWindowsDirty();
   }
 
-  
-  
   // draw popup
   if (_popup) {
     Window* window = _popup->GetView()->GetWindow();
@@ -463,6 +460,7 @@ void Application::SaveSceneAs(const std::string& filename)
 void 
 Application::SelectionChangedCallback(const SelectionChangedNotice& n)
 {  
+  
   if(_mainWindow->GetTool()->IsActive())
     _mainWindow->GetTool()->ResetSelection();
 
@@ -470,6 +468,7 @@ Application::SelectionChangedCallback(const SelectionChangedNotice& n)
     if(window->GetTool()->IsActive())
       window->GetTool()->ResetSelection();
   }
+  
   SetAllWindowsDirty();
 }
 

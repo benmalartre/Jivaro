@@ -134,7 +134,6 @@ add_executable(${TARGET}
   app/picking.cpp
   app/selection.cpp
   app/tools.cpp
-  app/delegate.cpp
   app/application.cpp
 
   #tests/location.cpp

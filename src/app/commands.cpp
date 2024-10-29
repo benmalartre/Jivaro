@@ -39,13 +39,10 @@ OpenSceneCommand::OpenSceneCommand(const std::string& filename)
 {
   Application* app = Application::Get();
   if (strlen(filename.c_str()) > 0) {
-     std::vector<std::string> tokens = SplitString(GetFileName(filename), ".");
-    std::string name = tokens.front();
-    SdfPath path("/" + name);
     UndoBlock editBlock;
-    UsdStageRefPtr stage = UsdStage::Open(filename);
-    app->GetModel()->SetStage(stage);
-    UndoRouter::Get().TrackLayer(stage->GetRootLayer());
+    Model* model = app->GetModel();
+    model->LoadUsdStage(filename);
+    UndoRouter::Get().TrackLayer(model->GetSessionLayer());
   }
 
   UndoInverse inverse;
