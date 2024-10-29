@@ -70,8 +70,7 @@ AddCheckableIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN fu
   }
   bool clicked = false;
   ImGui::PushID(id);
-  ImVec2 pos = ImGui::GetCursorPos();
-  ImGui::SetCursorPos(ImVec2(pos.x + style->ItemSpacing.x, pos.y + style->ItemSpacing.y));
+
   if (ImGui::Button(icon, BUTTON_NORMAL_SIZE))
   {
     func();

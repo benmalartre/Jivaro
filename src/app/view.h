@@ -140,6 +140,7 @@ private:
   double                _perc;
   double                _lastPerc;
   unsigned              _pixels[2];
+  short                 _buffered;
   int                   _fixed;
   ViewTabUI*            _tab;
   Window*               _window;

@@ -106,7 +106,7 @@ SplitterUI::Draw()
   ImDrawList* drawList = ImGui::GetForegroundDrawList();
   const ImGuiStyle& style = ImGui::GetStyle();
   for(auto view : views)
-    if(view->GetFlag(View::LEAF))
+    if(view->GetFlag(View::LEAF) && view->GetFlag(View::DIRTY))
       drawList->AddRect(view->GetMin(), view->GetMax(), color, 0.f, 0, 2.f);
 
   ImGui::End();

@@ -384,15 +384,19 @@ Window::SetViewportMessage(const std::string &message)
 void 
 Window::DirtyAllViews()
 {
+  Application* app = Application::Get();
   // when playback is ON we only dirty playback viewport
-  for(auto& view: _views) {
-    BaseUI* ui = view->GetCurrentUI();
-    if(ui && ui->GetType() == UIType::VIEWPORT) {
-      if(!Time::Get()->IsPlaying() || Application::Get()->IsPlaybackViewport((ViewportUI*)ui))
+  if(Time::Get()->IsPlaying())
+    for (auto& view : _views) {
+      BaseUI* ui = view->GetCurrentUI();
+      bool isPlaybackView = app->IsPlaybackView(view);
+      bool isTimeVaryingView = view->GetFlag(View::TIMEVARYING);
+      if (isPlaybackView || isTimeVaryingView)
         view->SetDirty();
-    } 
-    else view->SetDirty();
-  }
+    }
+  else
+    for(auto& view: _views)
+      view->SetDirty();
 }
 
 // Resize
@@ -507,7 +511,7 @@ Window::SetActiveView(View* view)
 
     BaseUI* ui = _activeView->GetCurrentUI();
     if(ui && ui->GetType() == UIType::VIEWPORT)
-      Application::Get()->SetPlaybackViewport((ViewportUI*)ui);
+      Application::Get()->SetPlaybackView(_activeView);
   }
   else _activeView = NULL;
 }

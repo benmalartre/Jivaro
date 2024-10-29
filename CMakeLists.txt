@@ -109,6 +109,7 @@ list(APPEND USD_LIB_NAMES
   vt
   cameraUtil
   pxOsd
+  python
 )
 
 set(USD_LIBRARIES "")
@@ -151,13 +152,13 @@ list(APPEND BOOST_LIB_NAMES
   system
 )
 if(DEFINED PYTHON_BUILD)
-  list(APPEND BOOST_LIB_NAMES python310)
+#  list(APPEND BOOST_LIB_NAMES python310)
 endif()
 
 set(BOOST_LIBRARIES "")
 set(BOOST_VERSION "")
 if(NOT UNIX)
-	set(BOOST_VERSION "-vc142-mt-x64-1_78")
+	set(BOOST_VERSION "-vc142-mt-x64-1_76")
 endif()
 foreach(BOOST_LIB_NAME IN LISTS BOOST_LIB_NAMES)
   set(BOOST_LIBRARIES 

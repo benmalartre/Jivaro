@@ -297,13 +297,15 @@ bool FileBrowserUI::Draw()
 
   ImGui::Begin(_name.c_str(), &opened, flags);
 
-  
   ImGui::PushStyleColor(ImGuiCol_ChildBg, { 0,0,0,0 });
+  ImGui::PushFont(DEFAULT_FONT);
 
   _DrawPath();
   _DrawEntries();
+
   _DrawButtons();
 
+  ImGui::PopFont();
   ImGui::PopStyleColor();
   ImGui::End();
   return true;

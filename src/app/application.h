@@ -17,6 +17,7 @@ class ViewportUI;
 class Engine;
 class Window;
 class Scene;
+class View;
 
 class Application : public TfWeakBase
 {
@@ -71,8 +72,8 @@ public:
   void SetAllWindowsDirty();
 
   // playback viewport
-  bool IsPlaybackViewport(ViewportUI* viewport);
-  void SetPlaybackViewport(ViewportUI* viewport);
+  bool IsPlaybackView(View* view);
+  void SetPlaybackView(View* view);
 
   // popup
   PopupUI* GetPopup() { return _popup; };
@@ -111,7 +112,7 @@ public:
 
   // singleton 
   static Application *Get();
-  static bool         PlaybackAllViewports;
+  static bool         PlaybackAllViews;
 
 protected:
   static Application*               _singleton;
@@ -128,7 +129,7 @@ private:
 
   // uis
   PopupUI*                          _popup;
-  ViewportUI*                       _viewport;
+  View*                             _playbackView;
 
    // command
   std::vector<CALLBACK_FN>          _deferred;

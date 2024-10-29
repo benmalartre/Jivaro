@@ -51,7 +51,7 @@ GLuint CreateIconFromImage(const std::string& filename,
   storage.width = s;
   storage.height = s ;
   storage.flipped = false;
-  storage.format = HioFormat::HioFormatInt32Vec4;
+  storage.format = img->GetFormat();
   storage.data = new char[(size_t)storage.width * (size_t)storage.height * img->GetBytesPerPixel()];
 
   img->Read(storage);

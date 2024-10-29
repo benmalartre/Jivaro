@@ -251,7 +251,7 @@ View::Draw(bool force)
   if (_current && (GetFlag(INTERACTING) || GetFlag(DIRTY))) {
     bool isViewport = _current->GetType() == UIType::VIEWPORT;
     bool isPlaybackViewport = isViewport && 
-      Application::Get()->IsPlaybackViewport((ViewportUI*)_current);
+      Application::Get()->IsPlaybackView(this);
 
     bool isPlaying = Time::Get()->IsPlaying();
     bool isTimeVarying = GetFlag(TIMEVARYING) && isPlaying;
@@ -653,13 +653,16 @@ View::GetFixedSize() {
 void
 View::SetClean()
 {
-  ClearFlag(DIRTY);
+  if(_buffered-- <= 0)
+    ClearFlag(DIRTY);
+  _buffered--;
 }
 
 void
 View::SetDirty()
 {
   SetFlag(DIRTY);
+  _buffered = 2;
 }
 
 void 

@@ -84,7 +84,7 @@ ToolbarButton::ToolbarButton(BaseUI* ui, short tool, const std::string& label,
 bool ToolbarButton::Draw()
 {
   Window* window = ui->GetView()->GetWindow();
-  //ImGui::PushFont(window->GetRegularFont(0));
+  ImGui::PushFont(DEFAULT_FONT);
   bool clicked = false;
   if(toggable) {
     if (UI::AddCheckableIconButton(
@@ -95,7 +95,7 @@ bool ToolbarButton::Draw()
     clicked = UI::AddCheckableIconButton(
       0, icon, (window->GetActiveTool() == tool) ? ICON_SELECTED : ICON_DEFAULT, func);
   }
-  //ImGui::PopFont();
+  ImGui::PopFont();
 
   if (tooltip.length() && ImGui::IsItemHovered()) {
     ui->AttachTooltip(tooltip.c_str());
@@ -207,9 +207,14 @@ bool ToolbarUI::Draw()
     false);
  
   const ImGuiStyle& style = ImGui::GetStyle();
+  ImGui::SetCursorPos(ImVec2(
+    style.WindowPadding.x + style.ItemSpacing.x,
+    style.WindowPadding.y + style.ItemSpacing.y
+  ));
   for (auto& item : _items) {
     item->Draw();
     if(!_vertical) ImGui::SameLine();
+    else ImGui::SetCursorPosX(style.WindowPadding.x + style.ItemSpacing.x);
   }
   ImGui::PopClipRect();
   ImGui::End();

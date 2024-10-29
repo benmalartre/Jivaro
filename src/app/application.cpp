@@ -40,7 +40,7 @@ const char* Application::name = "Jivaro";
 // singleton
 //----------------------------------------------------------------------------
 Application* Application::_singleton=nullptr;
-bool Application::PlaybackAllViewports = false;
+bool Application::PlaybackAllViews = false;
 
 Application* Application::Get() { 
   if(_singleton==nullptr){
@@ -55,6 +55,7 @@ Application::Application()
   : _mainWindow(nullptr)
   , _activeWindow(nullptr)
   , _popup(nullptr)
+  , _playbackView(nullptr)
 {  
 };
 
@@ -366,14 +367,19 @@ Application::SetAllWindowsDirty()
 
 // playback viewport
 bool 
-Application::IsPlaybackViewport(ViewportUI* viewport) 
+Application::IsPlaybackView(View* view) 
 { 
-  return viewport == _viewport || PlaybackAllViewports; 
+  return view == _playbackView || PlaybackAllViews; 
 };
 
 void 
-Application::SetPlaybackViewport(ViewportUI* viewport){
-  _viewport = viewport;
+Application::SetPlaybackView(View* view)
+{
+  if(view == _playbackView)return;
+  if(_playbackView)_playbackView->ClearFlag(View::TIMEVARYING);
+
+  _playbackView = view;
+  if(_playbackView)_playbackView->SetFlag(View::TIMEVARYING);
 };
 
 void 
