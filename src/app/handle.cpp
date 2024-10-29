@@ -1379,7 +1379,10 @@ ScaleHandle::_UpdateTargets(bool interacting)
 // BRUSH HANDLE IMPLEMENTATION
 //==================================================================================
 BrushHandle::BrushHandle()
-  : BaseHandle(false), _minRadius(1.f), _maxRadius(2.f), _color(GfVec4f(1.f,0.f,0.f,1.f))
+  : BaseHandle(false)
+  , _minRadius(1.f)
+  , _maxRadius(2.f)
+  , _color(GfVec4f(1.f,0.f,0.f,1.f))
 {
   Shape::Component cylinder = _shape.AddCylinder(
     AXIS_NORMAL, 0.02f, 1.f, 16, 2, HANDLE_ACTIVE_COLOR, HANDLE_Z_MATRIX);
@@ -1390,7 +1393,7 @@ BrushHandle::BrushHandle()
   Shape::Component outerRadius = _shape.AddTorus(
     AXIS_NORMAL, _maxRadius, 0.025f, 32, 8, HANDLE_HELP_COLOR, HANDLE_Z_MATRIX);
   AddComponent(outerRadius);
-
+  
 }
 
 void 
@@ -1438,6 +1441,7 @@ BrushHandle::_BuildStroke(bool replace)
 void 
 BrushHandle::BeginUpdate(float x, float y, float width, float height)
 {
+
   _path.clear();
   GfRay ray = _camera->GetRay(x, y, width, height);
 

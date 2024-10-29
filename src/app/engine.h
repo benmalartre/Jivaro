@@ -23,6 +23,19 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 using HgiUniquePtr = std::unique_ptr<class Hgi>;
 
+
+struct EnginePickHit {
+    SdfPath objectId;
+
+    SdfPath instancerId;
+    int     instanceIndex;
+
+    GfVec3d hitPoint;
+    GfVec3f hitNormal;
+
+    float   hitNormalizedDepth;
+};
+
 class Engine {
 public:
   Engine(HdSceneIndexBaseRefPtr sceneIndex, TfToken plugin);
@@ -46,7 +59,13 @@ public:
   void SetRenderSize(int width, int height);
   void SetRenderViewport(const pxr::GfVec4d &viewport);
 
-  SdfPath FindIntersection(GfVec2f screenPos);
+  bool TestIntersection(
+    const GfMatrix4d& frustumView,
+    const GfMatrix4d& frustumProj,
+    const SdfPath& root, 
+    EnginePickHit* hit
+  );
+
   void ActivateShadows(bool active);
 
   void SetHighlightSelection(bool state) { _highlightSelection = state; };

@@ -300,6 +300,7 @@ private:
 };
 */
 
+class Scene;
 class BrushHandle : public BaseHandle {
 public:
 enum Mode {
@@ -327,8 +328,8 @@ private:
   float                         _minRadius;
   float                         _maxRadius;
   HandleTargetGeometryDescList  _geometries;
-  std::vector<GfVec3f>     _path;
-  GfVec4f                  _color;
+  std::vector<GfVec3f>          _path;
+  GfVec4f                       _color;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

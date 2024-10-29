@@ -468,7 +468,7 @@ Application::SelectionChangedCallback(const SelectionChangedNotice& n)
     if(window->GetTool()->IsActive())
       window->GetTool()->ResetSelection();
   }
-  
+  _model->Update(Time::Get()->GetActiveTime());
   SetAllWindowsDirty();
 }
 

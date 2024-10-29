@@ -310,32 +310,22 @@ Engine::IsConverged() const
 }
 
 
-SdfPath 
-Engine::FindIntersection(GfVec2f screenPos)
+bool 
+Engine::TestIntersection(
+  const GfMatrix4d& frustumView,
+  const GfMatrix4d& frustumProj,
+  const SdfPath& root, 
+  EnginePickHit* hit)
 {
-  // create a narrowed frustum on the given position
-  float normalizedXPos = screenPos[0] / _width;
-  float normalizedYPos = screenPos[1] / _height;
-
-  GfVec2d size(1.0 / _width, 1.0 / _height);
-
-  GfCamera gfCam;
-  gfCam.SetFromViewAndProjectionMatrix(_camView, _camProj);
-  GfFrustum frustum = gfCam.GetFrustum();
-
-  auto nFrustum = frustum.ComputeNarrowedFrustum(
-    GfVec2d(2.0 * normalizedXPos - 1.0,
-            2.0 * (1.0 - normalizedYPos) - 1.0),
-    size);
-
   // check the intersection from the narrowed frustum
   HdxPickHitVector allHits;
   HdxPickTaskContextParams pickParams;
   pickParams.resolveMode = HdxPickTokens->resolveNearestToCenter;
-  pickParams.viewMatrix = nFrustum.ComputeViewMatrix();
-  pickParams.projectionMatrix = nFrustum.ComputeProjectionMatrix();
+  pickParams.viewMatrix = frustumView;
+  pickParams.projectionMatrix = frustumProj;
   pickParams.collection = _collection;
   pickParams.outHits = &allHits;
+
   const VtValue vtPickParams(pickParams);
 
   _engine.SetTaskContextData(HdxPickTokens->pickParams, vtPickParams);
@@ -344,13 +334,18 @@ Engine::FindIntersection(GfVec2f screenPos)
   HdTaskSharedPtrVector tasks = _taskController->GetPickingTasks();
   _engine.Execute(_renderIndex, &tasks);
 
-  // get the hitting point
-  if (allHits.size() != 1) return SdfPath();
+  // did we hit something
+  if (allHits.size() != 1) return false;
 
-  const SdfPath path = allHits[0].objectId.ReplacePrefix(
-    _taskControllerId, SdfPath::AbsoluteRootPath());
+  if(hit) {
+    hit->objectId = allHits[0].objectId.ReplacePrefix(
+      _taskControllerId, SdfPath::AbsoluteRootPath());
+    hit->hitPoint = allHits[0].worldSpaceHitPoint;
+    hit->hitNormal = allHits[0].worldSpaceHitNormal;
+    hit->hitNormalizedDepth = allHits[0].normalizedDepth;
+  }
 
-  return path;
+  return true;
 }
 
 GfFrustum 

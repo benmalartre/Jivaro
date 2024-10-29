@@ -10,10 +10,10 @@
 #include <pxr/usd/usdGeom/camera.h>
 #include <pxr/usd/usdLux/domeLight.h>
 #include <pxr/base/gf/camera.h>
-#include "pxr/imaging/glf/simpleMaterial.h"
-#include "pxr/imaging/glf/simpleLight.h"
-#include "pxr/imaging/glf/simpleLightingContext.h"
-#include "pxr/imaging/glf/drawTarget.h"
+#include <pxr/imaging/glf/simpleMaterial.h>
+#include <pxr/imaging/glf/simpleLight.h>
+#include <pxr/imaging/glf/simpleLightingContext.h>
+#include <pxr/imaging/glf/drawTarget.h>
 
 #include "../common.h"
 #include "../ui/ui.h"
@@ -76,6 +76,7 @@ class ViewportUI : public BaseUI
     
     GfFrustum _ComputePickFrustum(int x, int y);
     bool Pick(int x, int y, int mods);
+    bool Select(int x, int y, int mods);
 
     void SetMessage(const std::string& message){_message = message;};
 
@@ -112,10 +113,11 @@ class ViewportUI : public BaseUI
     int                                 _pickMode;
     int                                 _rendererIndex;
     static ImGuiWindowFlags             _flags;
+    EnginePickHit                       _pickHit;
 
     const char**                        _rendererNames;
     int                                 _numRenderers;
-    CameraUtilConformWindowPolicy  _conformWindowPolicy;
+    CameraUtilConformWindowPolicy       _conformWindowPolicy;
 
 
 

@@ -305,8 +305,11 @@ Model::GetSessionLayer()
 void
 Model::_UpdateAllEnginesSelection()
 {
+  const SdfPathVector affected = 
+    _selection.ComputeAffectedPaths(_stage);
+    
   for(auto& engine: _engines)
-    engine->SetSelection(_selection.GetSelectedPaths());
+    engine->SetSelection(affected);
 }
 
 // selection

@@ -406,6 +406,7 @@ ActivateCommand::ActivateCommand(SdfPathVector& paths, Mode mode)
 {
   Application* app = Application::Get();
   UsdStageRefPtr stage = app->GetModel()->GetStage();
+
   switch (mode) {
   case ACTIVATE:
     for (auto& path : paths) {

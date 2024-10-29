@@ -61,29 +61,29 @@ bool
 Selection::IsObject() const
 {
   for (auto& item : _items) {
-    if (item.type == Type::PRIM) return true;
+    if (item.type != Type::PRIM) return false;
   }
-  return false;
+  return true;
 }
 
 bool 
 Selection::IsComponent() const
 {
   for (auto& item : _items) {
-    if (item.type == Type::VERTEX ||
-        item.type == Type::EDGE ||
-        item.type == Type::FACE) return true;
+    if (!(item.type == Type::VERTEX ||
+      item.type == Type::EDGE ||
+      item.type == Type::FACE)) return false;
   }
-  return false;
+  return true;
 }
 
 bool 
 Selection::IsAttribute() const
 {
   for (auto& item : _items) {
-    if (item.type == Type::ATTRIBUTE) return true;
+    if (item.type != Type::ATTRIBUTE) return false;
   }
-  return false;
+  return true;
 }
 
 bool 
@@ -191,6 +191,30 @@ Selection::GetAnchorPath() const
   SdfPathVector paths = GetSelectedPaths();
   if(!paths.size()) return SdfPath::AbsoluteRootPath();
   return paths[0];
+}
+
+
+
+void _RecurseAffectedPrims(const UsdPrim& prim, SdfPathVector& results)
+{
+  results.push_back(prim.GetPath());
+  for(auto& child: prim.GetChildren()) {
+    _RecurseAffectedPrims(child, results);
+  }
+}
+
+SdfPathVector 
+Selection::ComputeAffectedPaths(UsdStageRefPtr& stage)
+{
+  SdfPathVector results;
+  for(auto& item: _items) {
+    if(item.type == Selection::PRIM) {
+      UsdPrim prim = stage->GetPrimAtPath(item.path);
+      if(prim.IsValid())
+        _RecurseAffectedPrims(prim, results);
+    }
+  }
+  return results;
 }
 
 SdfPathVector 

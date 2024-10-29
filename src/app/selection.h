@@ -67,6 +67,7 @@ public:
     const SdfPath& path);
   SdfPathVector GetSelectedPaths() const;
   SdfPath GetAnchorPath() const;
+  SdfPathVector ComputeAffectedPaths(UsdStageRefPtr& stage);
 
   size_t GetNumSelectedItems() { return _items.size(); };
   Item& operator[](size_t index) {

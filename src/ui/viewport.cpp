@@ -1,8 +1,10 @@
 #include <pxr/imaging/hd/light.h>
+#include <pxr/imaging/hdx/shadowTask.h>
+#include <pxr/imaging/hdx/pickTask.h>
 #include <pxr/imaging/cameraUtil/conformWindow.h>
-#include "pxr/imaging/hdx/shadowTask.h"
 #include <pxr/usdImaging/usdImaging/sceneIndices.h>
 #include <pxr/usdImaging/usdImaging/stageSceneIndex.h>
+
 
 #include "../utils/strings.h"
 #include "../utils/glutils.h"
@@ -200,6 +202,8 @@ void ViewportUI::MouseButton(int button, int action, int mods)
   double x, y;
   Window* window = _parent->GetWindow();
   Tool* tool = window->GetTool();
+
+
   glfwGetCursorPos(window->GetGlfwWindow(), &x, &y);
 
   const float width = GetWidth();
@@ -215,7 +219,7 @@ void ViewportUI::MouseButton(int button, int action, int mods)
         tool->EndUpdate(x - GetX(), y - GetY(), width, height);
       }
       else {
-        Pick(x, y, mods);
+        Select(x, y, mods);
       }
     }
   }
@@ -697,6 +701,16 @@ ViewportUI::_ComputePickFrustum(int x, int y)
 bool ViewportUI::Pick(int x, int y, int mods)
 {
   if (y - GetY() < 32) return false;
+
+  GfFrustum pickFrustum = _ComputePickFrustum(x, y);
+
+  return _engine->TestIntersection(pickFrustum.ComputeViewMatrix(), 
+    pickFrustum.ComputeProjectionMatrix(), pxr::SdfPath("/"), &_pickHit);
+}
+
+bool ViewportUI::Select(int x, int y, int mods)
+{
+  if (y - GetY() < 32) return false;
   Application* app = Application::Get();
   Model* model = app->GetModel();
   Selection* selection = model->GetSelection();
@@ -704,44 +718,29 @@ bool ViewportUI::Pick(int x, int y, int mods)
   if (!stage)return false;
 
   GfFrustum pickFrustum = _ComputePickFrustum(x, y);
-  GfVec3d outHitPoint;
-  GfVec3d outHitNormal;
-  SdfPath outHitPrimPath;
-  SdfPath outHitInstancerPath;
-  int outHitInstanceIndex;
-  HdInstancerContext outInstancerContext;
-
-  /*
-  if (_engine->TestIntersection(
-    pickFrustum.ComputeViewMatrix(),
-    pickFrustum.ComputeProjectionMatrix(),
-    Application::Get()->GetDisplayStage()->GetPseudoRoot(),
-    _renderParams,
-    &outHitPoint,
-    &outHitNormal,
-    &outHitPrimPath,
-    &outHitInstancerPath,
-    &outHitInstanceIndex,
-    &outInstancerContext)) {
-      while (!selection->IsPickablePath(*stage, outHitPrimPath)) {
-        outHitPrimPath = outHitPrimPath.GetParentPath();
+  EnginePickHit hit;
+  
+  if(_engine->TestIntersection(pickFrustum.ComputeViewMatrix(), 
+    pickFrustum.ComputeProjectionMatrix(), pxr::SdfPath("/"), &hit)) {
+      while (!selection->IsPickablePath(*stage, hit.objectId)) {
+        hit.objectId = hit.objectId.GetParentPath();
       }
 
       if (mods & GLFW_MOD_CONTROL && mods & GLFW_MOD_SHIFT) {
-        app->ToggleSelection({ outHitPrimPath });
+        model->ToggleSelection({ hit.objectId });
       }
       else if (mods & GLFW_MOD_SHIFT) {
-        app->AddToSelection({ outHitPrimPath });
+        model->AddToSelection({ hit.objectId });
       }
       else {
-        app->SetSelection({ outHitPrimPath });
+        model->SetSelection({ hit.objectId });
       }
     return true;
   } else {
-    app->ClearSelection();
+    model->ClearSelection();
     return false;
   }
-  */
+  
   return false;
 }
 
