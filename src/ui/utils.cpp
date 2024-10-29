@@ -110,6 +110,7 @@ AddComboWidget(const char* label, const char** names, const size_t count, int &l
     {
       const bool isSelected = (last == n);
       if (ImGui::Selectable(names[n], isSelected)) {
+        std::cout << "char* combo changed!" << std::endl;
         last = n;
         changed = true;
       }
@@ -138,6 +139,7 @@ AddComboWidget(const char* label, const TfToken* tokens, const size_t count, TfT
     {
       const bool isSelected = (tokens[n] == token);
       if (ImGui::Selectable(tokens[n].GetString().c_str(), isSelected)){
+        std::cout << "token combo changed!" << std::endl;
         token = tokens[n]; 
         changed = true;
       }

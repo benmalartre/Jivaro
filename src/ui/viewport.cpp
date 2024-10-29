@@ -58,7 +58,7 @@ ViewportUI::ViewportUI(View* parent)
   : BaseUI(parent, UIType::VIEWPORT)
   , _texture(0)
   , _drawMode(0)
-  , _pickMode(2)
+  , _pickMode(Selection::OBJECT)
   , _camera(new Camera("Camera"))
   , _valid(true)
   , _interactionMode(INTERACTION_NONE)
@@ -424,8 +424,8 @@ ViewportUI::_DrawPickMode()
   };
 
   Selection* selection = Application::Get()->GetModel()->GetSelection();
-  int pickModeIdx = 0;
   if (UI::AddComboWidget("Pick", pickModeStr, numPickModes, _pickMode, 250)) {
+    std::cout << "PICK MODE : " << _pickMode << std::endl;
     selection->SetMode((Selection::Mode)_pickMode);
     GetView()->SetFlag(View::DISCARDMOUSEBUTTON);
   }
