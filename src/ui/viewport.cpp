@@ -418,27 +418,15 @@ ViewportUI::_DrawPickMode()
 { 
   static const size_t numPickModes = 3;
   static const char *pickModeStr[numPickModes] = {
-    ICON_FA_HAND_POINTER " Assembly",
+    ICON_FA_HAND_POINTER " Prim",
     ICON_FA_HAND_POINTER " Model",
-    ICON_FA_HAND_POINTER " Component"
+    ICON_FA_HAND_POINTER " Assembly"
   };
 
   Selection* selection = Application::Get()->GetModel()->GetSelection();
   int pickModeIdx = 0;
   if (UI::AddComboWidget("Pick", pickModeStr, numPickModes, _pickMode, 250)) {
-    switch(_pickMode) {
-      case 0:
-        selection->SetMode(Selection::Mode::ASSEMBLY);
-        break;
-      
-      case 1:
-        selection->SetMode(Selection::Mode::MODEL);
-        break;
-
-      case 2:
-        selection->SetMode(Selection::Mode::COMPONENT);
-        break;
-    }
+    selection->SetMode((Selection::Mode)_pickMode);
     GetView()->SetFlag(View::DISCARDMOUSEBUTTON);
   }
   ImGui::SameLine();

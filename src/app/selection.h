@@ -22,11 +22,9 @@ public:
   };
 
   enum Mode {
-    ASSEMBLY,
+    OBJECT,
     MODEL,
-    GROUP,
-    COMPONENT,
-    SUBCOMPONENT
+    ASSEMBLY
   };
 
   struct Item {
@@ -83,7 +81,6 @@ public:
   bool IsSelected(const SdfPrimSpec& prim) const;
 
 private:
-  bool                        _CheckKind(Mode mode, const TfToken& kind);
   Mode                        _mode = Mode::MODEL;
   std::vector<Item>           _items;
   size_t                      _hash;

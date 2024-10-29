@@ -93,15 +93,6 @@ public:
   // stages
   UsdStageCache& GetStageCache() { return _stageCache; }
 
-  // engines
-  /*
-  void AddEngine(Engine* engine);
-  void RemoveEngine(Engine* engine);
-  void SetActiveEngine(Engine* engine);
-  Engine* GetActiveEngine();
-  std::vector<Engine*> GetEngines() { return _engines; };
-  */
-
   // notices callback
   void SelectionChangedCallback(const SelectionChangedNotice& n);
   void NewSceneCallback(const NewSceneNotice& n); 
@@ -112,6 +103,8 @@ public:
 
   // singleton 
   static Application *Get();
+
+  // preferences
   static bool         PlaybackAllViews;
 
 protected:

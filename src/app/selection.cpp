@@ -87,32 +87,31 @@ Selection::IsAttribute() const
 }
 
 bool 
-Selection::_CheckKind(Mode mode, const TfToken& kind)
-{
-  switch (mode) {
-  case Mode::COMPONENT:
-    return KindRegistry::GetInstance().IsA(kind, KindTokens->model);
-  case Mode::GROUP:
-    return KindRegistry::GetInstance().IsA(kind, KindTokens->group);
-  case Mode::ASSEMBLY:
-    return KindRegistry::GetInstance().IsA(kind, KindTokens->assembly);
-  case Mode::SUBCOMPONENT:
-    return true;
-  case Mode::MODEL:
-    return KindRegistry::GetInstance().IsA(kind, KindTokens->model);
-  }
-}
-
-bool 
 Selection::IsPickablePath(const UsdStage& stage,
-  const SdfPath& path) {
+  const SdfPath& path) 
+{
   auto prim = stage.GetPrimAtPath(path);
   if (prim.IsPseudoRoot())
+    return true;
+  if (_mode == Selection::PRIM)
     return true;
 
   TfToken primKind;
   UsdModelAPI(prim).GetKind(&primKind);
-  return(_CheckKind(_mode, primKind));
+  if (_mode == Selection::MODEL && KindRegistry::GetInstance().IsA(primKind, KindTokens->model)) {
+    return true;
+  }
+  if (_mode == Selection::ASSEMBLY &&
+    KindRegistry::GetInstance().IsA(primKind, KindTokens->assembly)) {
+    return true;
+  }
+
+    // Other possible tokens
+    // KindTokens->component
+    // KindTokens->group
+    // KindTokens->subcomponent
+
+    // We can also test for xformable or other schema API
 }
 
 void 
