@@ -469,9 +469,12 @@ bool ViewportUI::Draw()
   Window* window = GetWindow();
   if (!_initialized)Init();
   if(!_valid)return false;  
+
+
   
   if (_model->GetStage() != nullptr) {
-    Render();
+    if(!(Time::Get()->IsPlaying() && !app->IsPlaybackView(_parent)))
+      Render();
     
     Tool* tool = window->GetTool();
     
