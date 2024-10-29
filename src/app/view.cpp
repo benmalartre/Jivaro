@@ -33,7 +33,7 @@ View::View(View* parent, const GfVec2f& min, const GfVec2f& max, unsigned flags)
   , _flags(flags)
   , _perc(0.5)
   , _fixed(-1)
-  , _buffered(3)
+  , _buffered(2)
   , _current(NULL)
   , _currentIdx(-1)
   , _fixedSizeFn(NULL)
@@ -52,7 +52,7 @@ View::View(View* parent, int x, int y, int w, int h, unsigned flags)
   , _flags(flags)
   , _perc(0.5)
   , _fixed(-1)
-  , _buffered(3)
+  , _buffered(2)
   , _current(NULL)
   , _currentIdx(-1)
   , _fixedSizeFn(NULL)
@@ -656,9 +656,9 @@ void
 View::SetClean()
 {
   if(!GetFlag(View::LEAF))return;
-  if(_current && _current->GetType() != UIType::VIEWPORT)return;
-
-  if (_buffered-- <= 0)
+  if(!_current || (_current->GetType() == UIType::VIEWPORT))return;
+  _buffered--;
+  if (_buffered <= 0)
     ClearFlag(DIRTY);
 }
 
