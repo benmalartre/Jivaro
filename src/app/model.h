@@ -103,8 +103,7 @@ public:
   void SetEmptyStage();
   void LoadUsdStage(const std::string usdFilePath);
 
-protected:
-  void _UpdateAllEnginesSelection();
+  void UpdateAllEnginesSelection();
 
 
 private:

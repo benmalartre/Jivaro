@@ -303,7 +303,7 @@ Model::GetSessionLayer()
 }
 
 void
-Model::_UpdateAllEnginesSelection()
+Model::UpdateAllEnginesSelection()
 {
   const SdfPathVector affected = 
     _selection.ComputeAffectedPaths(_stage);
@@ -317,35 +317,30 @@ void
 Model::SetSelection(const SdfPathVector& selection)
 {
   ADD_COMMAND(SelectCommand, Selection::PRIM, selection, SelectCommand::SET);
-  _UpdateAllEnginesSelection();
 }
 
 void
 Model::ToggleSelection(const SdfPathVector& selection)
 {
   ADD_COMMAND(SelectCommand, Selection::PRIM, selection, SelectCommand::TOGGLE);
-  _UpdateAllEnginesSelection();
 }
 
 void 
 Model::AddToSelection(const SdfPathVector& paths)
 {
   ADD_COMMAND(SelectCommand, Selection::PRIM, paths, SelectCommand::ADD);
-  _UpdateAllEnginesSelection();
 }
 
 void 
 Model::RemoveFromSelection(const SdfPathVector& paths)
 {
   ADD_COMMAND(SelectCommand, Selection::PRIM, paths, SelectCommand::REMOVE);
-  _UpdateAllEnginesSelection();
 }
 
 void 
 Model::ClearSelection()
 {
   ADD_COMMAND(SelectCommand, Selection::PRIM, {}, SelectCommand::SET);
-  _UpdateAllEnginesSelection();
 }
 
 GfBBox3d

@@ -331,6 +331,7 @@ SelectCommand::SelectCommand(short type,
     for (auto& path : paths) selection->ToggleItem(path);
     break;
   }
+  Application::Get()->GetModel()->UpdateAllEnginesSelection();
   SelectionChangedNotice().Send();
 }
 
@@ -340,6 +341,7 @@ void SelectCommand::Do()
   std::vector<Selection::Item> current = selection->GetItems();
   selection->SetItems(_previous);
   _previous = current;
+  Application::Get()->GetModel()->UpdateAllEnginesSelection();
   SelectionChangedNotice().Send();
 }
 
