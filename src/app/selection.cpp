@@ -93,6 +93,7 @@ Selection::IsPickablePath(const UsdStage& stage,
   auto prim = stage.GetPrimAtPath(path);
   if (prim.IsPseudoRoot())
     return true;
+
   if (_mode == Selection::PRIM)
     return true;
 
@@ -112,6 +113,7 @@ Selection::IsPickablePath(const UsdStage& stage,
     // KindTokens->subcomponent
 
     // We can also test for xformable or other schema API
+  return false;
 }
 
 void 

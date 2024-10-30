@@ -23,8 +23,12 @@ JVR_NAMESPACE_OPEN_SCOPE
 //==================================================================================
 // Create XformCommonAPI
 //==================================================================================
-void _EnsureXformCommonAPI(UsdPrim& prim, const UsdTimeCode& timeCode)
+void  _EnsureXformCommonAPI(UsdPrim& prim, const UsdTimeCode& timeCode)
 {
+  UsdGeomXformable xformable(prim);
+  if(xformable.GetXformOpOrderAttr().IsDefined()) {
+    std::cout << prim.GetPath() << " have already xform ops" << std::endl;
+  }
   GfVec3d translation;
   GfVec3f rotation;
   GfVec3f scale;
@@ -32,7 +36,7 @@ void _EnsureXformCommonAPI(UsdPrim& prim, const UsdTimeCode& timeCode)
   UsdGeomXformCommonAPI::RotationOrder rotOrder;
   UsdGeomXformCommonAPI api(prim);
   api.GetXformVectors(&translation, &rotation, &scale, &pivot, &rotOrder, timeCode);
-  UsdGeomXformable xformable(prim);
+  xformable.SetResetXformStack(true);
   xformable.ClearXformOpOrder();
   api.SetXformVectors(translation, rotation, scale, pivot, rotOrder, timeCode);
 }
@@ -201,6 +205,7 @@ BaseHandle::ResetSelection()
       GfMatrix4f invParentMatrix(
         parentMatrix.GetInverse());
       ManipXformVectors vectors;
+      _EnsureXformCommonAPI(prim, UsdTimeCode::Default());
       UsdGeomXformCommonAPI xformApi(prim);
       xformApi.GetXformVectors(&vectors.translation, &vectors.rotation, &vectors.scale,
         &vectors.pivot, &vectors.rotOrder, activeTime); 

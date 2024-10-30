@@ -226,7 +226,7 @@ void TestPBD::InitExec(UsdStageRefPtr& stage)
   }
   
   
-  _solver->Reset();
+  _solver->Reset(stage);
   
   
   

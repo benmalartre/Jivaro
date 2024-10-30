@@ -39,14 +39,11 @@ enum InteractionMode{
 };
 
 static const char* DRAW_MODE_NAMES[] = { 
-  "Points", 
-  "Wireframe", 
-  "Wireframe On Surface", 
-  "Shaded Flat", 
-  "Shaded Smooth", 
-  "Geom Only",
-  "Geom Flat",
-  "Geom Smooth"
+  "points",
+  "shaded flat",
+  "shaded smooth",
+  "wireframe",
+  "wireframe on shaded"
 };
 
 class ViewportUI : public BaseUI

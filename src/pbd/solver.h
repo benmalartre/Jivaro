@@ -110,8 +110,8 @@ public:
   void UpdateParameters(UsdStageRefPtr& stage, float time);
   void UpdateCollisions(UsdStageRefPtr& stage, float time);
   void UpdateGeometries();
-  void Reset();
-  void Step();
+  void Reset(UsdStageRefPtr& stage);
+  void Step(UsdStageRefPtr& stage, float time);
 
   // elements
   void AddElement(Element* element, Geometry* geom, const SdfPath& path);
@@ -137,6 +137,7 @@ private:
   float                               _frameTime;
   float                               _stepTime;
 
+  bool                                _initialized;
   bool                                _paused;	
 
   // system
@@ -155,9 +156,9 @@ private:
   Scene*                              _scene;
   Points*                             _points;
   Curve*                              _curves;
-  SdfPath                        _pointsId;
-  SdfPath                        _curvesId;
-  SdfPath                        _solverId;
+  SdfPath                             _pointsId;
+  SdfPath                             _curvesId;
+  SdfPath                             _solverId;
 
   // display
   bool                                _showPoints;

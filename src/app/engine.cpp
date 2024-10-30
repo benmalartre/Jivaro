@@ -65,6 +65,8 @@ Engine::Engine(HdSceneIndexBaseRefPtr sceneIndex, TfToken plugin)
 {
   _width = 512;
   _height = 512;
+  _params.drawMode = Engine::DRAW_SHADED_SMOOTH;
+  _params.complexity = 1.f;
 
   _Initialize();
 }
@@ -306,6 +308,13 @@ Engine::Prepare()
 void
 Engine::Render()
 {
+  _params.enableLighting = RANDOM_0_1;
+  _params.enableSceneLights = RANDOM_0_1;
+  _params.cullStyle = (HdCullStyle)RANDOM_0_X(6);
+
+  _UpdateHydraCollection(&_collection, { SdfPath::AbsoluteRootPath() }, _params);
+  _taskController->SetCollection(_collection);
+
   HdTaskSharedPtrVector tasks = _taskController->GetRenderingTasks();
   _engine.Execute(_renderIndex, &tasks);
 }
@@ -439,12 +448,12 @@ Engine::_UpdateHydraCollection(
   
   if (params.drawMode == Engine::DRAW_POINTS) {
     reprSelector = HdReprSelector(HdReprTokens->points);
-  } else if (params.drawMode == DRAW_GEOM_FLAT ||
+  } else if (params.drawMode == Engine::DRAW_SHADED_FLAT ||
     params.drawMode == Engine::DRAW_SHADED_FLAT) {
     // Flat shading
     reprSelector = HdReprSelector(HdReprTokens->hull);
   } else if (
-    params.drawMode == Engine::DRAW_WIREFRAME_ON_SURFACE) {
+    params.drawMode == Engine::DRAW_WIREFRAME_ON_SHADED) {
     // Wireframe on surface
     reprSelector = HdReprSelector(refined ?
       HdReprTokens->refinedWireOnSurf : HdReprTokens->wireOnSurf);

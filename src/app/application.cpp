@@ -510,6 +510,7 @@ Application::AttributeChangedCallback(const AttributeChangedNotice& n)
 void
 Application::TimeChangedCallback(const TimeChangedNotice& n)
 {
+  std::cout << "time changed callback.............." << std::endl;
   if (_model->GetExec()) 
     _model->UpdateExec(Time::Get()->GetActiveTime());
 

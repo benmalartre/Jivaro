@@ -27,15 +27,36 @@ class Engine {
 public:
   enum DrawMode {
     DRAW_POINTS,
-    DRAW_GEOM_FLAT,
     DRAW_SHADED_FLAT,
+    DRAW_SHADED_SMOOTH,
     DRAW_WIREFRAME,
-    DRAW_WIREFRAME_ON_SURFACE
+    DRAW_WIREFRAME_ON_SHADED
   };
 
   struct RenderParams {
     float complexity;
-    short drawMode;
+    int drawMode;
+
+    GfVec3f overrideColor;
+    GfVec3f wireframeColor;
+    GfVec3f pointColor;
+    float pointSize;
+    bool enableLighting;
+    bool enableIdRender;
+    bool enableSceneMaterials;
+    bool enableSceneLights;
+    bool enableClipping;
+    GfVec3f maskColor;
+    GfVec3f indicatorColor;
+    float pointSelectedSize;
+    float alphaThreshold;
+
+    SdfPath camera;
+    CameraUtilFraming framing;
+    // Only used if framing is invalid.
+    GfVec4d viewport;
+    HdCullStyle cullStyle;
+    std::optional<CameraUtilConformWindowPolicy> overrideWindowPolicy;
   };
 
   struct PickHit {
@@ -70,6 +91,8 @@ public:
   void SetSelection(SdfPathVector paths);
   void SetRenderSize(int width, int height);
   void SetRenderViewport(const pxr::GfVec4d &viewport);
+
+  RenderParams* GetRenderParams(){return &_params;};
 
   bool TestIntersection(
     const GfMatrix4d& frustumView,
@@ -122,6 +145,7 @@ private:
   HdxSelectionTrackerSharedPtr        _selTracker;
 
   TfToken                             _curRendererPlugin;
+  RenderParams                        _params;
 
   bool                                _highlightSelection;
   bool                                _allowAsynchronousSceneProcessing;

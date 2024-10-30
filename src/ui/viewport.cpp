@@ -408,7 +408,6 @@ ViewportUI::_DrawPickMode()
 
   Selection* selection = Application::Get()->GetModel()->GetSelection();
   if (UI::AddComboWidget("Pick", pickModeStr, numPickModes, _pickMode, 250)) {
-    std::cout << "PICK MODE : " << _pickMode << std::endl;
     selection->SetMode((Selection::Mode)_pickMode);
     GetView()->SetFlag(View::DISCARDMOUSEBUTTON);
   }
@@ -520,8 +519,9 @@ bool ViewportUI::Draw()
     }
     ImGui::SameLine();
 
+    Engine::RenderParams* params = _engine->GetRenderParams();
     // shaded mode
-    if (UI::AddComboWidget("Draw", DRAW_MODE_NAMES, IM_ARRAYSIZE(DRAW_MODE_NAMES), _drawMode, 250)) {
+    if (UI::AddComboWidget("Draw", DRAW_MODE_NAMES, IM_ARRAYSIZE(DRAW_MODE_NAMES), params->drawMode, 250)) {
       GetView()->SetFlag(View::DISCARDMOUSEBUTTON);
     }
     ImGui::SameLine();

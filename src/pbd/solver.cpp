@@ -64,8 +64,6 @@ Solver::Solver(Scene* scene, const UsdGeomXform& xform, const GfMatrix4d& world)
    _gravity = new GravityForce(gravityAttr);
   AddElement(_gravity, NULL, _solverId.AppendProperty(gravityAttr.GetName()));
 
-  Reset();
-
 }
 
 Solver::~Solver()
@@ -109,15 +107,12 @@ void Solver::AddElement(Element* element, Geometry* geom, const SdfPath& path)
       break;
   }
 
-  Reset();
-
   //else TF_WARN("There is already an element named %s", path.GetText());
 }
 
 void Solver::RemoveElement(Element* element)
 {
   _elements.erase(element);
-  Reset();
 }
 
 SdfPath Solver::GetElementPath(Element* element)
@@ -518,17 +513,16 @@ Solver::_SolveVelocities(std::vector<Constraint*>& constraints)
 
 void Solver::Update(UsdStageRefPtr& stage, float time)
 {
-  UpdateInputs(stage, time);
-  UpdateParameters(stage, time);
-  UpdateCollisions(stage, time);
- 
+
+ std::cout << "update particles..." << std::endl;
   size_t numParticles = _particles.GetNumParticles();
-  if (GfIsClose(time, _startTime, 0.001f)) {
-    Reset();
+  if (!_initialized ||GfIsClose(time, _startTime, 0.001f)) {
+    Reset(stage);
   } else {
-    Step();
+    Step(stage, time);
   }
 
+  std::cout << "update geometries..." << std::endl;
   if(_showPoints)UpdatePoints();
   else ClearPoints();
   if(_showConstraints)UpdateCurves();
@@ -538,8 +532,15 @@ void Solver::Update(UsdStageRefPtr& stage, float time)
 }
 
 
-void Solver::Reset()
+void Solver::Reset(UsdStageRefPtr& stage)
 {
+  std::cout << "reset update inputs..." << std::endl;
+  UpdateInputs(stage, _startTime);
+  std::cout << "reset update parameters..." << std::endl;
+  UpdateParameters(stage, _startTime);
+  std::cout << "reset update collisions..." << std::endl;
+  UpdateCollisions(stage, _startTime);
+
   // reset
   _particles.RemoveAllBodies();
 
@@ -589,8 +590,16 @@ void Solver::Reset()
   UpdateCurves();
 }
 
-void Solver::Step()
+void Solver::Step(UsdStageRefPtr& stage, float time)
 {
+
+  std::cout << "step update inputs..." << std::endl;
+  UpdateInputs(stage, time);
+  std::cout << "step update parameters..." << std::endl;
+  UpdateParameters(stage, time);
+  std::cout << "step update collisions..." << std::endl;
+  UpdateCollisions(stage, time);
+
   const size_t numParticles = _particles.GetNumParticles();
   if (!numParticles)return;
 

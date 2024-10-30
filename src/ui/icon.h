@@ -19,10 +19,10 @@ public:
 
 private:
   static ImGuiWindowFlags _flags;
-  GfVec2f            _offset;
+  GfVec2f                 _offset;
   float                   _scale;
   bool                    _drag;
-  GfVec2f            _origin;
+  GfVec2f                 _origin;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

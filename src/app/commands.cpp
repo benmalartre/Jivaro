@@ -450,9 +450,7 @@ TranslateCommand::TranslateCommand(UsdStageRefPtr stage,
   for (auto& target : targets) {
     UsdPrim prim = stage->GetPrimAtPath(target.path);
     UsdGeomXformCommonAPI xformApi(prim);
-    if (!xformApi) {
-      _EnsureXformCommonAPI(prim, timeCode);
-    }
+   
     xformApi.SetTranslate(target.previous.translation, timeCode);
   }
   UndoRouter::Get().TransferEdits(&_inverse);
@@ -481,9 +479,6 @@ RotateCommand::RotateCommand(UsdStageRefPtr stage,
   for (auto& target: targets) {
     UsdPrim prim = stage->GetPrimAtPath(target.path);
     UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
-    if (!xformApi) {
-      _EnsureXformCommonAPI(prim, timeCode);
-    }
     xformApi.SetRotate(target.previous.rotation, target.previous.rotOrder, timeCode);
   }
   UndoRouter::Get().TransferEdits(&_inverse);
@@ -513,10 +508,8 @@ ScaleCommand::ScaleCommand(UsdStageRefPtr stage,
   UsdGeomXformCache xformCache(timeCode);
   for (auto& target : targets) {
     UsdPrim prim = stage->GetPrimAtPath(target.path);
+  
     UsdGeomXformCommonAPI xformApi(prim);
-    if (!xformApi) {
-      _EnsureXformCommonAPI(prim, timeCode);
-    }
     xformApi.SetScale(target.previous.scale, timeCode);
   }
   UndoRouter::Get().TransferEdits(&_inverse);
@@ -545,11 +538,7 @@ PivotCommand::PivotCommand(UsdStageRefPtr stage,
 {
   UsdGeomXformCache xformCache(timeCode);
   for (auto& target : targets) {
-    UsdPrim prim = stage->GetPrimAtPath(target.path);
-    UsdGeomXformCommonAPI xformApi(prim);
-    if (!xformApi) {
-      _EnsureXformCommonAPI(prim, timeCode);
-    }
+    UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
     xformApi.SetPivot(target.previous.pivot, timeCode);
   }
   UndoRouter::Get().TransferEdits(&_inverse);

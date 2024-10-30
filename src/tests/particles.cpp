@@ -255,7 +255,7 @@ void TestParticles::InitExec(UsdStageRefPtr& stage)
 
   Particles* particles = _solver->GetParticles();
 
-  _solver->Reset();
+  _solver->Reset(stage);
 
 }
 
