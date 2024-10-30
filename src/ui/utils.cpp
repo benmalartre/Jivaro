@@ -98,7 +98,6 @@ HelpMarker(const char* desc)
 bool 
 AddComboWidget(const char* label, const char** names, const size_t count, int &last, size_t width)
 {
-  bool changed(false);
   size_t lw = width / 3;
   ImGui::SetNextItemWidth(lw);
   ImGui::Text("%s", label);
@@ -109,24 +108,21 @@ AddComboWidget(const char* label, const char** names, const size_t count, int &l
     for (int n = 0; n < count; ++n)
     {
       const bool isSelected = (last == n);
-      if (ImGui::Selectable(names[n], isSelected)) {
-        std::cout << "char* combo changed!" << std::endl;
+      if (ImGui::Selectable(names[n], isSelected))
         last = n;
-        changed = true;
-      }
 
       if (isSelected)
         ImGui::SetItemDefaultFocus();
     }
     ImGui::EndCombo();
+    return true;
   }
-  return changed;
+  return false;
 }
 
 bool 
 AddComboWidget(const char* label, const TfToken* tokens, const size_t count, TfToken &token, size_t width)
 {
-  bool changed(false);
   size_t lw = width / 3;
   ImGui::SetNextItemWidth(lw);
   ImGui::Text("%s", label);
@@ -138,19 +134,17 @@ AddComboWidget(const char* label, const TfToken* tokens, const size_t count, TfT
     for (int n = 0; n < count; ++n)
     {
       const bool isSelected = (tokens[n] == token);
-      if (ImGui::Selectable(tokens[n].GetString().c_str(), isSelected)){
-        std::cout << "token combo changed!" << std::endl;
+      if (ImGui::Selectable(tokens[n].GetString().c_str(), isSelected))
         token = tokens[n]; 
-        changed = true;
-      }
 
       if (isSelected) 
         ImGui::SetItemDefaultFocus();
     }
 
     ImGui::EndCombo();
+    return true;
   }
-  return changed;
+  return false;
 }
 
 VtValue 
