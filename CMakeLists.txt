@@ -109,8 +109,11 @@ list(APPEND USD_LIB_NAMES
   vt
   cameraUtil
   pxOsd
-  python
 )
+
+if(PYTHON_BUILD)
+  list(APPEND USD_LIB_NAMES python)
+endif()
 
 set(USD_LIBRARIES "")
 foreach(USD_LIB_NAME IN LISTS USD_LIB_NAMES)
@@ -127,7 +130,7 @@ endif()
 endforeach()
 
 # python
-if(DEFINED PYTHON_BUILD)
+if(PYTHON_BUILD)
   find_package(Python3 COMPONENTS Development)
 endif()
 
@@ -230,9 +233,6 @@ foreach(USD_PLUGINS_LIB_NAME IN LISTS USD_PLUGINS_LIB_NAMES)
       "${USD_PLUGINS_LIBRARY_DIR}/${LIB_PREFIX}${USD_PLUGINS_LIB_NAME}${LIB_DYNAMIC_EXT}"
   )
 endforeach()
-
-message("USD PLUGINS : " ${USD_PLUGINS_LIBRARIES})
-
 
 # system
 IF(APPLE)

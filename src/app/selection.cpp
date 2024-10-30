@@ -199,7 +199,7 @@ Selection::GetAnchorPath() const
 void _RecurseAffectedPrims(const UsdPrim& prim, SdfPathVector& results)
 {
   results.push_back(prim.GetPath());
-  for(auto& child: prim.GetChildren()) {
+  for(const UsdPrim child: prim.GetChildren()) {
     _RecurseAffectedPrims(child, results);
   }
 }

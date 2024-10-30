@@ -30,7 +30,7 @@ struct Polygon : public Component {
   virtual bool Closest(const GfVec3f* points, const GfVec3f& point, Location* hit) const override;
   virtual bool Touch(const GfVec3f* points, const GfVec3f& center, const GfVec3f& halfSize) const override;
 
-  virtual bool Intersect(const Edge& other, float epsilon=0.0001);
+  virtual bool Intersect(const Polygon& other, float epsilon=0.0001);
 
   virtual GfRange3f GetBoundingBox(const GfVec3f* positions, const GfMatrix4d& m) const override;
   virtual short GetType() const override { return Component::POLYGON; };

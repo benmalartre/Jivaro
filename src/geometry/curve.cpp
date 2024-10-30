@@ -3,6 +3,7 @@
 #include <pxr/usd/usdGeom/basisCurves.h>
 #include "../geometry/curve.h"
 #include "../geometry/utils.h"
+#include "../geometry/edge.h"
 #include "../geometry/sampler.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -115,6 +116,8 @@ Curve::Closest(const GfVec3f& point, Location* hit,
 void
 Curve::_ComputeEdges()
 {
+
+  /*
   _edges.clear();
   _edges.reserve(_positions.size());
 
@@ -129,6 +132,7 @@ Curve::_ComputeEdges()
     }
     offset += cvCount;
   } 
+  */
 }
 
 size_t

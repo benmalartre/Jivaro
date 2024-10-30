@@ -4,6 +4,13 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
+short 
+Edge::GetType() const
+{
+  return Component::EDGE;
+}
+
+/*
 //-------------------------------------------------------
 // Edge Center
 //-------------------------------------------------------
@@ -60,7 +67,7 @@ Edge::Intersect(const Edge& other, float epsilon)
 {
   return false;
 }
-
+*/
 bool 
 Edge::Raycast(const GfVec3f* points, const GfRay& ray, Location* hit) const
 {

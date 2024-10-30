@@ -160,7 +160,6 @@ if(MSVC)
     target_sources(${TARGET} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/resources.rc)
 endif()
 
-
 target_include_directories(${TARGET} 
   PUBLIC
     ${USD_INCLUDE_DIR}
@@ -175,9 +174,9 @@ target_include_directories(${TARGET}
     ${EIGEN_INCLUDE_DIR}
 )
 
-if(DEFINED PYTHON_BUILD)
-  target_include_directories(${TARGET}  PUBLIC ${Python3_INCLUDE_DIRS})
-endif()
+#if(DEFINED PYTHON_BUILD)
+#target_include_directories(${TARGET}  PUBLIC ${Python3_INCLUDE_DIRS})
+#endif()
 
 target_link_libraries(${TARGET}
   ${OPENGL_LIBRARY}

@@ -24,6 +24,7 @@ struct Edge : public Component {
   GfVec2i vertices;    
   float radius;
 
+/*
   uint32_t GetStartIndex(){return vertices[0];};
   uint32_t GetEndIndex(){return vertices[1];};
   float GetRadius(){return radius;};
@@ -31,14 +32,14 @@ struct Edge : public Component {
   GfVec3f GetPosition(Deformable* geom, short idx);
   GfVec3f GetNormal(Deformable* geom);
 
+  bool Intersect(const Edge& other, float epsilon=0.0001);
+*/
+  virtual bool Touch(const GfVec3f* points, const GfVec3f& center, const GfVec3f& halfSize) const override;
   virtual bool Raycast(const GfVec3f* points, const GfRay& ray, Location* hit) const override;
   virtual bool Closest(const GfVec3f* points, const GfVec3f& point, Location* hit) const override;
-  virtual bool Touch(const GfVec3f* points, const GfVec3f& center, const GfVec3f& halfSize) const override;
-
-  bool Intersect(const Edge& other, float epsilon=0.0001);
 
   virtual GfRange3f GetBoundingBox(const GfVec3f* positions, const GfMatrix4d& m) const override;
-  virtual short GetType() const override { return Component::EDGE; };
+  virtual short GetType() const override;
 
 };
 

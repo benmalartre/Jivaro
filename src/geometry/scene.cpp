@@ -1,4 +1,3 @@
-#include <usdPbd/collisionAPI.h>
 
 #include <pxr/base/vt/value.h>
 #include <pxr/base/tf/token.h>
@@ -9,6 +8,7 @@
 #include <pxr/usd/usdGeom/basisCurves.h>
 #include <pxr/usd/usdGeom/points.h>
 #include <pxr/usd/usdShade/material.h>
+
 
 #include "../utils/strings.h"
 #include "../utils/files.h"
