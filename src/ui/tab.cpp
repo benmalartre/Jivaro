@@ -195,7 +195,7 @@ void ViewTabUI::MouseButton(int button, int action, int mods)
 {
   if (action == GLFW_RELEASE && button == GLFW_MOUSE_BUTTON_LEFT) {
     if (_invade)
-      _parent->GetWindow()->DirtyAllViews();
+      _parent->GetWindow()->DirtyAllViews(false);
     
     _invade = false;
   }

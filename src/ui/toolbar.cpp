@@ -107,7 +107,6 @@ bool ToolbarButton::Draw()
 int
 ToolbarUIFixedSizeFunc(BaseUI* ui)
 {
-  std::cout << "Toolbar Fixed Size : " << ((ToolbarUI*)ui)->GetFixedSize() << std::endl;
   return ((ToolbarUI*)ui)->GetFixedSize();
 }
 

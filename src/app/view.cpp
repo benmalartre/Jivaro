@@ -251,17 +251,12 @@ View::Draw(bool force)
   if(_tab) DrawTab();
 
   if (_current && (GetFlag(INTERACTING) || GetFlag(DIRTY))) {
-    bool isViewport = _current->GetType() == UIType::VIEWPORT;
-    bool isPlaybackViewport = isViewport && 
-      Application::Get()->IsPlaybackView(this);
 
     bool isPlaying = Time::Get()->IsPlaying();
     bool isTimeVarying = GetFlag(TIMEVARYING) && isPlaying;
     bool isEdited = _current->Draw();
 
-    bool doClean = isViewport ? 
-      !isPlaybackViewport && isPlaying: 
-      !force && !IsActive() && !isEdited && !isTimeVarying;
+    bool doClean = !force && !IsActive() && !isEdited && !isTimeVarying;
 
     if ( doClean) 
       SetClean();
@@ -530,6 +525,7 @@ View::Resize(int x, int y, int w, int h)
   {
     if(_current)_current->Resize();
   }
+  SetFlag(DIRTY);
 }
 
 void 
@@ -656,7 +652,7 @@ void
 View::SetClean()
 {
   if(!GetFlag(View::LEAF))return;
-  if(!_current || (_current->GetType() == UIType::VIEWPORT))return;
+  if(!_current || Application::Get()->IsPlaybackView(this))return;
   _buffered--;
   if (_buffered <= 0)
     ClearFlag(DIRTY);

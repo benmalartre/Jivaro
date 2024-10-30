@@ -138,7 +138,7 @@ public:
   void SetLayout();
   void SetDesiredLayout(size_t layout);
   size_t GetLayout();
-  void DirtyAllViews();
+  void DirtyAllViews(bool force);
   
   // draw
   void SetGLContext();

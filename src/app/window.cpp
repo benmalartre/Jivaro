@@ -382,7 +382,7 @@ Window::SetViewportMessage(const std::string &message)
 }
 
 void 
-Window::DirtyAllViews()
+Window::DirtyAllViews(bool force)
 {
   Application* app = Application::Get();
   // when playback is ON we only dirty playback viewport
@@ -391,7 +391,7 @@ Window::DirtyAllViews()
       BaseUI* ui = view->GetCurrentUI();
       bool isPlaybackView = app->IsPlaybackView(view);
       bool isTimeVaryingView = view->GetFlag(View::TIMEVARYING);
-      if (isPlaybackView || isTimeVaryingView)
+      if (force || isPlaybackView || isTimeVaryingView)
         view->SetDirty();
     }
   else
@@ -437,7 +437,7 @@ Window::Resize(unsigned width, unsigned height)
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
   }
 
-  DirtyAllViews();
+  DirtyAllViews(true);
 }
 
 int
@@ -876,7 +876,7 @@ void Window::DragSplitter(int x, int y)
     _activeView->GetPercFromMousePosition(x, y);
     _mainView->Resize(0, 0, _width, _height);
     _splitter->Resize(_width, _height);
-    DirtyAllViews();
+    DirtyAllViews(true);
   }
 }
 

@@ -135,7 +135,6 @@ MenuUI::~MenuUI()
 int
 MenuUIFixedSizeFunc(BaseUI* ui)
 {
-  std::cout << "Menu Fixed Size : " << ui->GetView()->GetWindow()->GetMenuBarHeight() << std::endl;
   return ui->GetView()->GetWindow()->GetMenuBarHeight();
 }
 

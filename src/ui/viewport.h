@@ -113,7 +113,7 @@ class ViewportUI : public BaseUI
     int                                 _pickMode;
     int                                 _rendererIndex;
     static ImGuiWindowFlags             _flags;
-    EnginePickHit                       _pickHit;
+    Engine::PickHit                     _pickHit;
 
     const char**                        _rendererNames;
     int                                 _numRenderers;

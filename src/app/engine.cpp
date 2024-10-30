@@ -290,6 +290,17 @@ Engine::Prepare()
 {
   _PrepareDefaultLighting();
   _taskController->SetFreeCameraMatrices(_camView, _camProj);
+
+/*
+  if (_materialPruningSceneIndex) {
+    _materialPruningSceneIndex->SetEnabled(
+      !params.enableSceneMaterials);
+  }
+  if (_lightPruningSceneIndex) {
+    _lightPruningSceneIndex->SetEnabled(
+      !params.enableSceneLights);
+  }
+*/
 }
 
 void
@@ -315,7 +326,7 @@ Engine::TestIntersection(
   const GfMatrix4d& frustumView,
   const GfMatrix4d& frustumProj,
   const SdfPath& root, 
-  EnginePickHit* hit)
+  Engine::PickHit* hit)
 {
   // check the intersection from the narrowed frustum
   HdxPickHitVector allHits;
@@ -406,6 +417,82 @@ Engine::PollForAsynchronousUpdates() const
     }
   }
   return false;
+}
+
+
+
+/* static */
+bool
+Engine::_UpdateHydraCollection(
+  HdRprimCollection *collection,
+  SdfPathVector const& roots,
+  RenderParams const& params)
+{
+  if (collection == nullptr) {
+    TF_CODING_ERROR("Null passed to _UpdateHydraCollection");
+    return false;
+  }
+
+  // choose repr
+  HdReprSelector reprSelector = HdReprSelector(HdReprTokens->smoothHull);
+  const bool refined = params.complexity > 1.0;
+  
+  if (params.drawMode == Engine::DRAW_POINTS) {
+    reprSelector = HdReprSelector(HdReprTokens->points);
+  } else if (params.drawMode == DRAW_GEOM_FLAT ||
+    params.drawMode == Engine::DRAW_SHADED_FLAT) {
+    // Flat shading
+    reprSelector = HdReprSelector(HdReprTokens->hull);
+  } else if (
+    params.drawMode == Engine::DRAW_WIREFRAME_ON_SURFACE) {
+    // Wireframe on surface
+    reprSelector = HdReprSelector(refined ?
+      HdReprTokens->refinedWireOnSurf : HdReprTokens->wireOnSurf);
+  } else if (params.drawMode == Engine::DRAW_WIREFRAME) {
+    // Wireframe
+    reprSelector = HdReprSelector(refined ?
+      HdReprTokens->refinedWire : HdReprTokens->wire);
+  } else {
+    // Smooth shading
+    reprSelector = HdReprSelector(refined ?
+      HdReprTokens->refined : HdReprTokens->smoothHull);
+  }
+
+  // By default our main collection will be called geometry
+  const TfToken colName = HdTokens->geometry;
+
+  // Check if the collection needs to be updated (so we can avoid the sort).
+  SdfPathVector const& oldRoots = collection->GetRootPaths();
+
+  // inexpensive comparison first
+  bool match = collection->GetName() == colName &&
+               oldRoots.size() == roots.size() &&
+               collection->GetReprSelector() == reprSelector;
+
+  // Only take the time to compare root paths if everything else matches.
+  if (match) {
+    // Note that oldRoots is guaranteed to be sorted.
+    for(size_t i = 0; i < roots.size(); i++) {
+      // Avoid binary search when both vectors are sorted.
+      if (oldRoots[i] == roots[i])
+          continue;
+      // Binary search to find the current root.
+      if (!std::binary_search(oldRoots.begin(), oldRoots.end(), roots[i])) 
+      {
+        match = false;
+        break;
+      }
+    }
+
+      // if everything matches, do nothing.
+      if (match) return false;
+  }
+
+  // Recreate the collection.
+  *collection = HdRprimCollection(colName, reprSelector);
+  collection->SetRootPaths(roots);
+
+  return true;
 }
 
 

@@ -23,21 +23,33 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 using HgiUniquePtr = std::unique_ptr<class Hgi>;
 
-
-struct EnginePickHit {
-    SdfPath objectId;
-
-    SdfPath instancerId;
-    int     instanceIndex;
-
-    GfVec3d hitPoint;
-    GfVec3f hitNormal;
-
-    float   hitNormalizedDepth;
-};
-
 class Engine {
 public:
+  enum DrawMode {
+    DRAW_POINTS,
+    DRAW_GEOM_FLAT,
+    DRAW_SHADED_FLAT,
+    DRAW_WIREFRAME,
+    DRAW_WIREFRAME_ON_SURFACE
+  };
+
+  struct RenderParams {
+    float complexity;
+    short drawMode;
+  };
+
+  struct PickHit {
+      SdfPath objectId;
+
+      SdfPath instancerId;
+      int     instanceIndex;
+
+      GfVec3d hitPoint;
+      GfVec3f hitNormal;
+
+      float   hitNormalizedDepth;
+  };
+
   Engine(HdSceneIndexBaseRefPtr sceneIndex, TfToken plugin);
   ~Engine();
 
@@ -63,7 +75,7 @@ public:
     const GfMatrix4d& frustumView,
     const GfMatrix4d& frustumProj,
     const SdfPath& root, 
-    EnginePickHit* hit
+    PickHit* hit
   );
 
   void ActivateShadows(bool active);
@@ -78,6 +90,11 @@ public:
 protected:
   static HdPluginRenderDelegateUniqueHandle 
     _GetRenderDelegateFromPlugin(TfToken plugin);
+
+  static bool 
+    _UpdateHydraCollection( HdRprimCollection *collection,
+                            SdfPathVector const& roots,
+                            RenderParams const& params  );
 
   void _Initialize();
   void _PrepareDefaultLighting();

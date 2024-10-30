@@ -50,7 +50,6 @@ void Time::SetFPS(float fps)
 // time
 bool Time::PreviousFrame()
 {
-  _lastT = CurrentTime();
   float currentTime = _activeTime - _GetIncrement();
   if(currentTime < _startTime) {
     _activeTime = _loop ? _endTime : _startTime;
@@ -62,7 +61,6 @@ bool Time::PreviousFrame()
 
 bool Time::NextFrame()
 {
-  _lastT = CurrentTime();
   float currentTime = _activeTime + _GetIncrement();
   if(currentTime > _endTime) {
     _activeTime = _loop ? _startTime : _endTime;
@@ -74,19 +72,16 @@ bool Time::NextFrame()
 
 void Time::FirstFrame()
 {
-  _lastT = CurrentTime();
   _activeTime = _startTime;
 }
 
 void Time::LastFrame()
 {
-  _lastT = CurrentTime();
   _activeTime = _endTime;
 }
 
 void Time::StartPlayback(bool backward)
 {
-  _lastT = CurrentTime();
   _playback = true;
   _backward = backward;
   Playback();
@@ -103,6 +98,7 @@ int Time::Playback()
   if(_mode == PLAYBACK_REALTIME && ((CurrentTime() - _lastT) < _frame))
     return PLAYBACK_WAITING;
 
+  _lastT = CurrentTime();
   // idle
   if(!_playback)return PLAYBACK_IDLE;
 

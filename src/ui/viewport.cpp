@@ -67,6 +67,7 @@ ViewportUI::ViewportUI(View* parent)
   , _rendererNames(NULL)
   , _highlightSelection(true)
   , _lightingContext(nullptr)
+  , _aov(HdAovTokens->color)
 {
   _camera->Set(GfVec3d(12,24,12),
               GfVec3d(0,0,0),
@@ -380,32 +381,14 @@ void ViewportUI::Render()
     _camera->GetProjectionMatrix()
   );
 
-  // set selection
-  /*SdfPathVector paths;
-  for (auto&& prim : GetModel()->GetSelection())
-      paths.push_back(prim.GetPrimPath());*/
-  //_engine->SetRendererAov(_aov);
-
-  /*
-  if (_highlightSelection) {
-    Selection* selection = app->GetSelection();
-    if (!selection->IsEmpty() && selection->IsObject()) {
-      _engine->SetSelected(selection->GetSelectedPaths());
-    } else {
-      _engine->ClearSelected();
-    }
-  } else {
-    _engine->ClearSelected();
-  }
-  */
-  // clear to black
+  // clear to grey
   _drawTarget->Bind();
-  //_drawTarget->SetSize(GfVec2i(GetWidth(), GetHeight()));
   glEnable(GL_DEPTH_TEST);
   glClearColor(0.5,0.5,0.5,1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   if (_model->GetStage()->HasDefaultPrim()) {
+
     _engine->Prepare();
     _engine->Render();
   }
@@ -538,7 +521,7 @@ bool ViewportUI::Draw()
     ImGui::SameLine();
 
     // shaded mode
-    if (UI::AddComboWidget("DrawMode", DRAW_MODE_NAMES, IM_ARRAYSIZE(DRAW_MODE_NAMES), _drawMode, 250)) {
+    if (UI::AddComboWidget("Draw", DRAW_MODE_NAMES, IM_ARRAYSIZE(DRAW_MODE_NAMES), _drawMode, 250)) {
       GetView()->SetFlag(View::DISCARDMOUSEBUTTON);
     }
     ImGui::SameLine();
@@ -706,7 +689,7 @@ bool ViewportUI::Select(int x, int y, int mods)
   if (!stage)return false;
 
   GfFrustum pickFrustum = _ComputePickFrustum(x, y);
-  EnginePickHit hit;
+  Engine::PickHit hit;
   
   if(_engine->TestIntersection(pickFrustum.ComputeViewMatrix(), 
     pickFrustum.ComputeProjectionMatrix(), pxr::SdfPath("/"), &hit)) {
