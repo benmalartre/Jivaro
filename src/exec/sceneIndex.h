@@ -25,6 +25,7 @@ class ExecSceneIndex : public HdSingleInputFilteringSceneIndexBase {
 
     void Populate(bool populate);
     void SetExec(Execution* exec);
+    void UpdateExec();
 
     virtual HdSceneIndexPrim GetPrim(
       const SdfPath &primPath) const override;

@@ -97,13 +97,13 @@ protected:
   // vertex data
   VtArray<GfVec3f>          _previous;
   VtArray<GfVec3f>          _positions;
-  bool                                _haveNormals;
+  bool                      _haveNormals;
   VtArray<GfVec3f>          _normals;
-  bool                                _haveColors;
+  bool                      _haveColors;
   VtArray<GfVec3f>          _colors;
-  bool                                _haveWidths;
-  VtArray<float>                 _widths;
-  VtArray<Point>                 _points;
+  bool                      _haveWidths;
+  VtArray<float>            _widths;
+  VtArray<Point>            _points;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

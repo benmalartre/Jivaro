@@ -139,12 +139,14 @@ Model::InitExec()
   _execSceneIndex = ExecSceneIndex::New(_sceneIndexBases);
   _execSceneIndex->SetExec(_exec);
   SetCurrentSceneIndex(_execSceneIndex);
+  _execSceneIndex->UpdateExec();
 }
 
 void
 Model::UpdateExec(float time)
 {
   _exec->UpdateExec(_stage, time);
+  _execSceneIndex->UpdateExec();
 }
 
 void

@@ -133,8 +133,8 @@ protected:
     const UsdTimeCode& code=UsdTimeCode::Default()) = 0;
 
   // infos
-  short                               _mode;
-  int                                 _type;
+  short                          _mode;
+  int                            _type;
   SdfPath                        _path;
   UsdPrim                        _prim;
 
