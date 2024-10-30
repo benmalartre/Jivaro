@@ -1,4 +1,4 @@
-#include <pxr/usd/usdPbd/collisionAPI.h>
+#include <usdPbd/collisionAPI.h>
 
 #include <pxr/base/vt/value.h>
 #include <pxr/base/tf/token.h>

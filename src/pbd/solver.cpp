@@ -1,8 +1,8 @@
 #include <iostream>
 
 #include <pxr/base/work/loops.h>
-#include <pxr/usd/usdPbd/solver.h>
-#include <pxr/usd/usdPbd/bodyAPI.h>
+#include <usdPbd/solver.h>
+#include <usdPbd/bodyAPI.h>
 
 #include "../utils/color.h"
 #include "../acceleration/bvh.h"

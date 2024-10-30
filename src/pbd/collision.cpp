@@ -1,4 +1,4 @@
-#include <pxr/usd/usdPbd/collisionAPI.h>
+#include <usdPbd/collisionAPI.h>
 #include <pxr/base/work/loops.h>
 
 #include "../utils/color.h"

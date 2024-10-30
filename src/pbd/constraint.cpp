@@ -1,5 +1,5 @@
 #include <pxr/base/work/loops.h>
-#include <pxr/usd/usdPbd/constraintAPI.h>
+#include <usdPbd/constraintAPI.h>
 
 #include "../geometry/geometry.h"
 #include "../geometry/mesh.h"

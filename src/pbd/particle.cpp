@@ -1,8 +1,8 @@
 #include <algorithm>
 
-#include <pxr/usd/usdPbd/bodyAPI.h>
-#include <pxr/usd/usdPbd/collisionAPI.h>
-#include <pxr/usd/usdPbd/constraintAPI.h>
+#include <usdPbd/bodyAPI.h>
+#include <usdPbd/collisionAPI.h>
+#include <usdPbd/constraintAPI.h>
 
 #include "../geometry/geometry.h"
 #include "../geometry/points.h"
