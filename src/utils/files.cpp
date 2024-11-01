@@ -206,6 +206,9 @@ size_t GetFilesInDirectory(const char* path, std::vector<std::string>& filenames
 
 std::string GetInstallationFolder()
 {
+
+  return "C:\\Users\\graph\\Documents\\bmal\\src\\Jivaro\\build\\src\\Debug";
+
   std::string exePath = ArchGetExecutablePath();
   std::vector<std::string> tokens = SplitString(exePath, SEPARATOR);
   tokens.pop_back();

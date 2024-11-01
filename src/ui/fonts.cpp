@@ -34,7 +34,6 @@ void CreateFontAtlas()
   ImFontConfig iconsConfig;
   iconsConfig.MergeMode = true;
   iconsConfig.PixelSnapH = true;
-  
   SHARED_ATLAS->AddFontFromMemoryCompressedTTF(
     FontAwesomeFree6_compressed_data,
     FontAwesomeFree6_compressed_size,

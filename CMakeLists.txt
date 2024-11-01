@@ -145,7 +145,7 @@ if(UNIX)
 
   endif()
 else()
-	set(BOOST_INCLUDE_DIR "${USD_INCLUDE_DIR}/boost-1_78")
+	set(BOOST_INCLUDE_DIR "${USD_INCLUDE_DIR}/boost-1_76")
 endif()
 
 set(BOOST_LIBRARY_DIR "{USD_LIBRARY_DIR}")
@@ -158,7 +158,7 @@ list(APPEND BOOST_LIB_NAMES
 set(BOOST_LIBRARIES "")
 set(BOOST_VERSION "")
 if(NOT UNIX)
-	set(BOOST_VERSION "-vc142-mt-x64-1_76")
+	set(BOOST_VERSION "-vc142-mt-gd-x64-1_76")
 endif()
 foreach(BOOST_LIB_NAME IN LISTS BOOST_LIB_NAMES)
   set(BOOST_LIBRARIES 
@@ -175,6 +175,7 @@ list(APPEND TBB_LIB_NAMES
   tbb
   #tbbmalloc_proxy
   tbbmalloc
+  tbb_debug
 )
 
 set(TBB_LIBRARIES "")

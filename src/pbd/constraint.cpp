@@ -993,16 +993,12 @@ void CollisionConstraint::_SolveVelocityGeom(Particles* particles, float dt)
     _collision->SetContactTouching(index, false); 
     if(_collision->GetContactDepth(index) > _collision->GetMargin()) continue;
 
-    float dot = RESCALE(GfDot(_collision->GetContactNormal(index), 
-      -particles->velocity[index].GetNormalized()),
-      -1.f, 1.f, 1.f, 0.f);
-
     const GfVec3f previous = particles->previous[index];
     const GfVec3f normal = _collision->GetContactNormal(index);
     const GfVec3f normalVelocity = GfDot(previous, normal) * normal;
     const GfVec3f tangentVelocity = previous - normalVelocity;
 
-    _correction[elem] += (-particles->velocity[index] * dot +
+    _correction[elem] += (-particles->velocity[index] +
        (-_collision->GetRestitution() * normalVelocity + (1.f - _collision->GetFriction()) * tangentVelocity) + 
        _collision->GetContactVelocity(index)) * 0.5f;
 

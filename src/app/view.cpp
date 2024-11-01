@@ -106,7 +106,7 @@ View::CreateUI(UIType type)
     _current = new ViewportUI(this);
     break;
   case UIType::GRAPHEDITOR:
-    _current = new AttributeEditorUI(this);
+    _current = new GraphEditorUI(this);
     break;
   case UIType::CURVEEDITOR:
     _current = new CurveEditorUI(this);

@@ -9,59 +9,61 @@
 #include <pxr/imaging/hdx/simpleLightTask.h>
 #include <pxr/imaging/hdx/shadowTask.h>
 #include <pxr/imaging/hdx/shadowMatrixComputation.h>
+#include <pxr/imaging/hdx/taskController.h>
 #include <pxr/imaging/hgi/tokens.h>
 
 #include "../app/time.h"
 #include "../app/engine.h"
+#include "../app/application.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
 namespace {
-  class ShadowMatrix : public HdxShadowMatrixComputation
-  {
-  public:
-    ShadowMatrix(GlfSimpleLight const& light) {
-      GfFrustum frustum;
-      frustum.SetProjectionType(GfFrustum::Orthographic);
-      frustum.SetWindow(GfRange2d(GfVec2d(-10, -10), GfVec2d(10, 10)));
-      frustum.SetNearFar(GfRange1d(0, 100));
-      const GfVec4d pos = light.GetPosition();
-      frustum.SetPosition(GfVec3d(0, 0, 10));
-      frustum.SetRotation(GfRotation(GfVec3d(0, 0, 1),
-        GfVec3d(pos[0], pos[1], pos[2])));
+class ShadowMatrix : public HdxShadowMatrixComputation
+{
+public:
+  ShadowMatrix(GlfSimpleLight const &light) {
+    GfFrustum frustum;
+    frustum.SetProjectionType(GfFrustum::Orthographic);
+    frustum.SetWindow(GfRange2d(GfVec2d(-10, -10), GfVec2d(10, 10)));
+    frustum.SetNearFar(GfRange1d(0, 100));
+    const GfVec4d pos = light.GetPosition();
+    frustum.SetPosition(GfVec3d(0, 0, 10));
+    frustum.SetRotation(GfRotation(GfVec3d(0, 0, 1),
+                                    GfVec3d(pos[0], pos[1], pos[2])));
 
-      _shadowMatrix =
+    _shadowMatrix =
         frustum.ComputeViewMatrix() * frustum.ComputeProjectionMatrix();
-    }
+  }
 
-    std::vector<GfMatrix4d> Compute(
-      const GfVec4f& viewport,
-      CameraUtilConformWindowPolicy policy) override {
+  std::vector<GfMatrix4d> Compute(
+    const GfVec4f &viewport,
+    CameraUtilConformWindowPolicy policy) override {
       return { _shadowMatrix };
-    }
+  }
 
-    std::vector<GfMatrix4d> Compute(
-      const CameraUtilFraming& framing,
-      CameraUtilConformWindowPolicy policy) override {
+  std::vector<GfMatrix4d> Compute(
+    const CameraUtilFraming &framing,
+    CameraUtilConformWindowPolicy policy) override {
       return { _shadowMatrix };
-    }
+  }
 
-  private:
+private:
     GfMatrix4d _shadowMatrix;
-  };
+};
 }
 
 Engine::Engine(HdSceneIndexBaseRefPtr sceneIndex, TfToken plugin)
-  : _sceneIndex(sceneIndex),
-    _curRendererPlugin(plugin),
-    _hgi(Hgi::CreatePlatformDefaultHgi()),
-    _hgiDriver{HgiTokens->renderDriver, VtValue(_hgi.get())},
-    _engine(),
-    _renderDelegate(nullptr),
-    _renderIndex(nullptr),
-    _taskController(nullptr),
-    _taskControllerId("/defaultTaskController"),
-    _allowAsynchronousSceneProcessing(true)
+  : _sceneIndex(sceneIndex)
+  , _rendererPlugin(plugin)
+  , _hgi(Hgi::CreatePlatformDefaultHgi())
+  , _hgiDriver{HgiTokens->renderDriver, VtValue(_hgi.get())}
+  , _renderDelegate(nullptr)
+  , _renderIndex(nullptr)
+  , _taskController(nullptr)
+  , _taskControllerId("/defaultTaskController")
+  , _allowAsynchronousSceneProcessing(true)
+  , _lightingContext(nullptr)
 {
   _width = 512;
   _height = 512;
@@ -73,14 +75,13 @@ Engine::Engine(HdSceneIndexBaseRefPtr sceneIndex, TfToken plugin)
 
 Engine::~Engine()
 {
-  // Destroy objects in opposite order of construction.
   delete _taskController;
 
   if (_renderIndex && _sceneIndex) {
     _renderIndex->RemoveSceneIndex(_sceneIndex);
     _sceneIndex = nullptr;
   }
-
+  
   delete _renderIndex;
   _renderDelegate = nullptr;
 }
@@ -89,7 +90,7 @@ void Engine::_Initialize()
 {
 
   // init render delegate
-  _renderDelegate = _GetRenderDelegateFromPlugin(_curRendererPlugin);
+  _renderDelegate = _GetRenderDelegateFromPlugin(_rendererPlugin);
 
   // init render index
   _renderIndex = HdRenderIndex::New(_renderDelegate.Get(), {&_hgiDriver});
@@ -139,7 +140,7 @@ void Engine::_Initialize()
   _taskController->SetSelectionColor(selectionColor);
 
   VtValue selectionValue(_selTracker);
-  _engine.SetTaskContextData(HdxTokens->selectionState, selectionValue);
+  SetTaskContextData(HdxTokens->selectionState, selectionValue);
 
   _taskController->SetOverrideWindowPolicy(CameraUtilFit);
 }
@@ -165,7 +166,7 @@ TfToken Engine::GetDefaultRendererPlugin()
 
 TfToken Engine::GetCurrentRendererPlugin()
 {
-    return _curRendererPlugin;
+    return _rendererPlugin;
 }
 
 HdPluginRenderDelegateUniqueHandle 
@@ -244,46 +245,50 @@ Engine::SetRenderViewport(const pxr::GfVec4d &viewport)
   _taskController->SetRenderViewport(viewport);
 }
 
+
 void 
 Engine::_PrepareDefaultLighting()
 {
+
+  // get default light
+  SdfPath defaultLightId = _taskController->GetControllerId().AppendChild(TfToken("light0"));
+
   // set a animated spot light
   const float t = Time::Get()->GetActiveTime();
-  GfVec3d lightPos(pxr::GfSin(t)*10, 8.f, GfCos(t)*10);
-  GlfSimpleLight l;
-  l.SetAmbient(GfVec4f(0, 0, 0, 0));
-  l.SetPosition(GfVec4f(lightPos[0], lightPos[1], lightPos[2], 1));
-  l.SetHasShadow(true);
+  const GfVec3d lightPos(pxr::GfSin(t*0.1)*10, 32.f, GfCos(t*0.1)*10);
+  const pxr::GfVec3f direction(-lightPos.GetNormalized());
+
+
+  _light.SetID(defaultLightId);
+  _light.SetAmbient(GfVec4f(0.1,0.1,0.1, 0));
+  _light.SetPosition(GfVec4f(lightPos[0], lightPos[1], lightPos[2], 1));
+  _light.SetSpotDirection(direction);
+  _light.SetIsDomeLight(false);
+
+  _light.SetHasShadow(true);
+  _light.SetShadowResolution(512);
+  _light.SetShadowBlur(0.25f);
+  _light.SetShadowBias(-0.005f);
 
   GlfSimpleMaterial material;
-  material.SetAmbient(GfVec4f(2, 2, 2, 1.0));
+  material.SetAmbient(GfVec4f(1.0, 1.0, 1.0, 1.0));
   material.SetSpecular(GfVec4f(0.1, 0.1, 0.1, 1.0));
   material.SetShininess(32.0);
 
   GfVec4f sceneAmbient(0.01, 0.01, 0.01, 1.0);
 
-  GlfSimpleLightingContextRefPtr lightingContextState =
-      GlfSimpleLightingContext::New();
+  if (!_lightingContext) {
+    _lightingContext = GlfSimpleLightingContext::New();
+  }
 
-  lightingContextState->SetLights({l});
-  lightingContextState->SetMaterial(material);
-  lightingContextState->SetSceneAmbient(sceneAmbient);
-  lightingContextState->SetUseLighting(true);
-  _taskController->SetLightingState(lightingContextState);
+  _lightingContext->SetLights({_light});
+  _lightingContext->SetMaterial(material);
+  _lightingContext->SetSceneAmbient(sceneAmbient);
+  _lightingContext->SetUseLighting(true);
+  _taskController->SetLightingState(_lightingContext);
 
-  // try enabling shadow 
+    // try enabling shadow 
   _taskController->SetEnableShadows(true);
-
-  HdxShadowParams shadowParams;
-  shadowParams.enabled = true;
-  shadowParams.resolution = 512;
-  shadowParams.shadowMatrix
-      = HdxShadowMatrixComputationSharedPtr(new ShadowMatrix(l));
-  shadowParams.bias = -0.001;
-  shadowParams.blur = 0.1;
-  const VtValue vtShadowParams(shadowParams);
-
-  _engine.SetTaskContextData(HdLightTokens->shadowParams, vtShadowParams);
 
 }
 
@@ -291,6 +296,7 @@ void
 Engine::Prepare()
 {
   _PrepareDefaultLighting();
+  _taskController->ComputeInverseProjectionViewMatrix(_camView, _camProj);
   _taskController->SetFreeCameraMatrices(_camView, _camProj);
 
 /*
@@ -308,15 +314,23 @@ Engine::Prepare()
 void
 Engine::Render()
 {
-  _params.enableLighting = RANDOM_0_1;
-  _params.enableSceneLights = RANDOM_0_1;
+  _params.enableLighting = RANDOM_0_1 > 0.5;
+  _params.enableSceneLights = RANDOM_0_1 > 0.5;
   _params.cullStyle = (HdCullStyle)RANDOM_0_X(6);
 
   _UpdateHydraCollection(&_collection, { SdfPath::AbsoluteRootPath() }, _params);
   _taskController->SetCollection(_collection);
 
+  // init render paramss
+  HdxRenderTaskParams params;
+  params.enableLighting = true;
+  params.enableSceneLights = true;
+  //params.cullStyle = _params.cullStyle;
+
+  _taskController->SetRenderParams(params);
+
   HdTaskSharedPtrVector tasks = _taskController->GetRenderingTasks();
-  _engine.Execute(_renderIndex, &tasks);
+  Execute(_renderIndex, &tasks);
 }
 
 bool
@@ -348,11 +362,11 @@ Engine::TestIntersection(
 
   const VtValue vtPickParams(pickParams);
 
-  _engine.SetTaskContextData(HdxPickTokens->pickParams, vtPickParams);
+  SetTaskContextData(HdxPickTokens->pickParams, vtPickParams);
 
   // render with the picking task
   HdTaskSharedPtrVector tasks = _taskController->GetPickingTasks();
-  _engine.Execute(_renderIndex, &tasks);
+  Execute(_renderIndex, &tasks);
 
   // did we hit something
   if (allHits.size() != 1) return false;

@@ -10,14 +10,20 @@
 //   return 0;
 //}
 
-#include "window.h"
+#include "../../src/common.h"
+#include "../../src/app/window.h"
+
+JVR_NAMESPACE_USING_DIRECTIVE
 
 int main(){
+  
   glfwInit();
-  Window* window = Window::CreateStandardWindow(800,600);
-  window->MainLoop();
+  Window* window = Window::CreateStandardWindow("zob", GfVec4i(0,0, 800,600));
+  while (!glfwWindowShouldClose(window->GetGlfwWindow()))
+    window->Update();
 
   delete window;
   glfwTerminate();
+  
   
 }

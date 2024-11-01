@@ -18,6 +18,7 @@
 #include "../app/view.h"
 #include "../app/camera.h"
 #include "../app/tools.h"
+#include "../app/layout.h"
 
 #include "../tests/grid.h"
 #include "../tests/raycast.h"
@@ -171,14 +172,15 @@ Application::BrowseFile(int x, int y, const char* folder, const char* filters[],
 void 
 Application::Init(unsigned width, unsigned height, bool fullscreen)
 {
-
+  std::cout << "create window" << std::endl;
   if(fullscreen) {
     _mainWindow = CreateFullScreenWindow(name);
   } else {
     _mainWindow = CreateStandardWindow(name, GfVec4i(0,0,width, height));
   }
-
+  std::cout << "created window" << std::endl;
   _activeWindow = _mainWindow;
+
   Time::Get()->Init(1, 101, 24);
 
   // setup notifications
@@ -199,6 +201,7 @@ Application::Init(unsigned width, unsigned height, bool fullscreen)
   //TfDebug::Enable(LOFI_REGISTRY);
 
   // create window
+  std::cout << "set layout" << std::endl;
   _mainWindow->SetDesiredLayout(WINDOW_LAYOUT_STANDARD);
 
   _model = new Model();
@@ -282,6 +285,7 @@ Application::Term()
 bool
 Application::Update()
 {
+  std::cout << "UPDATE..." << std::endl;
   ExecuteDeferredCommands();
   /*
   if (_needCaptureFramebuffers) {
@@ -333,7 +337,6 @@ void
 Application::AddWindow(Window* window)
 {
  _childWindows.push_back(window);
-  window->Init();
   window->SetGLContext();
 }
 
@@ -399,6 +402,8 @@ Application::IsToolInteracting()
   return tool->IsInteracting();
 }
 
+
+// COMMANDS
 void 
 Application::Undo()
 {

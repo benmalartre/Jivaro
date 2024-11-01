@@ -310,6 +310,7 @@ static void OpenChildWindowCallback()
 
 static void SetLayoutCallback(Window* window, short layout)
 {
+  Application* app = Application::Get();
   window->SetDesiredLayout(layout);
 }
 

@@ -45,6 +45,7 @@ static uint16_t GetIconResolution(ICON_SIZE size)
 GLuint CreateIconFromImage(const std::string& filename,
   int index, ICON_SIZE size)
 {
+  std::cout << "create icon from image start " << std::endl;
   HioImageSharedPtr img = HioImage::OpenForReading(filename);
   int s = GetIconResolution(size); 
   HioImage::StorageSpec storage;
@@ -72,13 +73,15 @@ GLuint CreateIconFromImage(const std::string& filename,
 
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, storage.width, storage.height, 0,
     ICON_FORMAT, ICON_TYPE, storage.data);
+  std::cout << "create icon from image end " << std::endl;
   return tex;
 }
 
 void InitializeIcons()
 {
   std::string installDir = GetInstallationFolder();
-  std::string iconDir = installDir + "/icons";
+  std::string iconDir = installDir + SEPARATOR + "icons";
+  std::cout << "icon dir : " << iconDir << std::endl;
 
   for (size_t i=0; i < ICON_MAX_ID; ++i) {
     //ICONS[size][index] = { s, tex };
@@ -89,9 +92,10 @@ void InitializeIcons()
     for(size_t j=0; j < 3; ++j) {
       std::string filename = 
         iconDir + SEPARATOR + ICON_NAMES[i] + "_" + ICON_SUFFIX[j] + ".png";
-
+      std::cout << filename << std::endl;
       if (FileExists(filename) &&
         HioImage::IsSupportedImageFile(filename)) {
+          std::cout << "image is supported.." << std::endl;
         tex_small[j] = CreateIconFromImage(filename, i, ICON_SIZE_SMALL);
         tex_medium[j] = CreateIconFromImage(filename, i, ICON_SIZE_MEDIUM);
         tex_large[j] = CreateIconFromImage(filename, i, ICON_SIZE_LARGE);

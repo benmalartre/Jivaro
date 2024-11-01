@@ -64,13 +64,6 @@ WindowSizeCallback(GLFWwindow* window, int width, int height);
 JVR_EXPORT void
 FocusCallback(GLFWwindow* window, int focused);
 
-enum WindowLayout {
-  WINDOW_LAYOUT_BASE,
-  WINDOW_LAYOUT_RAW,
-  WINDOW_LAYOUT_STANDARD,
-  WINDOW_LAYOUT_RANDOM
-};
-
 class Window
 {
 public:
@@ -135,10 +128,10 @@ public:
   void DiscardKeyboardEvents();
   void InvalidateViews();
   void ClearViews();
+  void DirtyAllViews(bool force);
   void SetLayout();
   void SetDesiredLayout(size_t layout);
   size_t GetLayout();
-  void DirtyAllViews(bool force);
   
   // draw
   void SetGLContext();

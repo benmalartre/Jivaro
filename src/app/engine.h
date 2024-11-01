@@ -23,7 +23,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 using HgiUniquePtr = std::unique_ptr<class Hgi>;
 
-class Engine {
+class Engine : public HdEngine {
 public:
   enum DrawMode {
     DRAW_POINTS,
@@ -124,7 +124,6 @@ protected:
   bool _CheckPrimSelectable(const SdfPath& path);
 
 private:
-  UsdStageRefPtr                      _stage;
   GfMatrix4d                          _camView;
   GfMatrix4d                          _camProj;
   int                                 _width;
@@ -133,7 +132,6 @@ private:
   HgiUniquePtr                        _hgi;
   HdDriver                            _hgiDriver;
 
-  HdEngine                            _engine;
   HdPluginRenderDelegateUniqueHandle  _renderDelegate;
   HdRenderIndex*                      _renderIndex;
   HdxTaskController*                  _taskController;
@@ -144,8 +142,10 @@ private:
   HgiInterop                          _interop;
   HdxSelectionTrackerSharedPtr        _selTracker;
 
-  TfToken                             _curRendererPlugin;
+  TfToken                             _rendererPlugin;
   RenderParams                        _params;
+  GlfSimpleLight                      _light;
+  GlfSimpleLightingContextRefPtr      _lightingContext;
 
   bool                                _highlightSelection;
   bool                                _allowAsynchronousSceneProcessing;

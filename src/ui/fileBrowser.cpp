@@ -204,7 +204,8 @@ bool FileBrowserUI::_DrawEntry(ImDrawList* drawList, size_t idx, bool flip)
     ImGui::GetCursorPosY() - ImGui::GetScrollY() + ImGui::GetTextLineHeight());
 
   const float width = (float)GetWidth();
-  if (_selected[idx]) {
+  const bool isSelected = idx < _selected.size() && _selected[idx];
+  if (isSelected) {
     drawList->AddRectFilled(
       { 0, pos.y },
       { width, pos.y + FILEBROWSER_LINE_HEIGHT },
@@ -237,7 +238,7 @@ bool FileBrowserUI::_DrawEntry(ImDrawList* drawList, size_t idx, bool flip)
       ImVec2(fileIcon->size, fileIcon->size));
   }
   ImGui::SameLine();
-  ImGui::TextColored(_selected[idx] ? style.Colors[ImGuiCol_TabActive] : style.Colors[ImGuiCol_Text], "%s", info.path.c_str());
+  ImGui::TextColored(isSelected ? style.Colors[ImGuiCol_TabActive] : style.Colors[ImGuiCol_Text], "%s", info.path.c_str());
 
   return true;
 }

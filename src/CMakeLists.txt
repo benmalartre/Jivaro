@@ -2,10 +2,11 @@ set(TARGET jivaro)
 
 set(USDIMAGINGGL_ENGINE_ENABLE_SCENE_INDEX true)
 
-add_definitions(
-  -DTASKING_TBB
-  -DNOMINMAX
-)
+  add_definitions(
+    -DTASKING_TBB
+    -DNOMINMAX
+    -DTBB_USE_DEBUG
+  )
 
 add_executable(${TARGET}
   imgui/imgui_demo.cpp
@@ -128,12 +129,14 @@ add_executable(${TARGET}
   app/camera.cpp
   app/model.cpp
   app/view.cpp
+  app/layout.cpp
   app/window.cpp
   app/modal.cpp
   app/engine.cpp
   app/picking.cpp
   app/selection.cpp
   app/tools.cpp
+  app/registry.cpp
   app/application.cpp
 
   #tests/location.cpp

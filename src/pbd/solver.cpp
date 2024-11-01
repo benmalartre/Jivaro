@@ -514,7 +514,6 @@ Solver::_SolveVelocities(std::vector<Constraint*>& constraints)
 void Solver::Update(UsdStageRefPtr& stage, float time)
 {
 
- std::cout << "update particles..." << std::endl;
   size_t numParticles = _particles.GetNumParticles();
   if (!_initialized ||GfIsClose(time, _startTime, 0.001f)) {
     Reset(stage);
@@ -522,7 +521,6 @@ void Solver::Update(UsdStageRefPtr& stage, float time)
     Step(stage, time);
   }
 
-  std::cout << "update geometries..." << std::endl;
   if(_showPoints)UpdatePoints();
   else ClearPoints();
   if(_showConstraints)UpdateCurves();
@@ -534,11 +532,8 @@ void Solver::Update(UsdStageRefPtr& stage, float time)
 
 void Solver::Reset(UsdStageRefPtr& stage)
 {
-  std::cout << "reset update inputs..." << std::endl;
   UpdateInputs(stage, _startTime);
-  std::cout << "reset update parameters..." << std::endl;
   UpdateParameters(stage, _startTime);
-  std::cout << "reset update collisions..." << std::endl;
   UpdateCollisions(stage, _startTime);
 
   // reset
@@ -593,11 +588,8 @@ void Solver::Reset(UsdStageRefPtr& stage)
 void Solver::Step(UsdStageRefPtr& stage, float time)
 {
 
-  std::cout << "step update inputs..." << std::endl;
   UpdateInputs(stage, time);
-  std::cout << "step update parameters..." << std::endl;
   UpdateParameters(stage, time);
-  std::cout << "step update collisions..." << std::endl;
   UpdateCollisions(stage, time);
 
   const size_t numParticles = _particles.GetNumParticles();
@@ -642,7 +634,7 @@ void Solver::Step(UsdStageRefPtr& stage, float time)
   }
   
   _timer->Update();
-  _timer->Log();
+  //u_timer->Log();
 }
 
 

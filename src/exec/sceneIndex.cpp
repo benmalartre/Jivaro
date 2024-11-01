@@ -62,6 +62,9 @@ void ExecSceneIndex::SetExec(Execution* exec)
 
       case Geometry::POINT:
         std::cout << "exec populate points : " << path << std::endl;
+        if(path.IsEmpty()) continue;
+        indexPrim = _GetInputSceneIndex()->GetPrim(path);
+        _SendPrimsAdded({{path, HdPrimTypeTokens->points}});
         break;
 
       case Geometry::CURVE:
@@ -124,7 +127,6 @@ ExecSceneIndex::UpdateExec()
       HdDataSourceLocator locator(HdPrimvarsSchemaTokens->primvars);
         entries.push_back({prim.first, locator});
     }
-    std::cout << "EXEC SCENE INDEX UPDATE EXEC" << prim.first << std::endl;
   }
   _SendPrimsDirtied(entries);
 }
@@ -138,8 +140,6 @@ HdSceneIndexPrim ExecSceneIndex::GetPrim(const SdfPath &primPath) const
       switch (prim->geom->GetType()) {
         case Geometry::MESH:
         {
-          std::cout << "we have a mesh hydra 2.0 to update : " << prim->geom->GetPrim().GetPath() << std::endl;
-
           HdSceneIndexPrim siPrim = _GetInputSceneIndex()->GetPrim(primPath);
           VtArray<GfVec3f> points();
 

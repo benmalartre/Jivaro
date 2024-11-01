@@ -72,12 +72,13 @@ SplitterUI::Pick(int x, int y)
   if(!_valid || x<0 || y <0 || x >= _width || y >= _height) 
     return -1;
 
-  int idx = y * _width + x;
-  if(idx >= 0 && idx < (_width * _height))
+  int pixelIdx = y * _width + x;
+  if(pixelIdx >= 0 && pixelIdx < (_width * _height))
   {
     const std::vector<View*>& views = GetWindow()->GetViews();
-    _hovered = views[_pixels[idx] - 1];
-    return _pixels[idx] - 1;
+    int viewIdx = _pixels[pixelIdx] - 1;
+    _hovered = viewIdx >= 0 ? views[viewIdx] : nullptr;
+    return viewIdx;
   }
   return -1;
 }
