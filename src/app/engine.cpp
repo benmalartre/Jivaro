@@ -58,10 +58,11 @@ Engine::Engine(HdSceneIndexBaseRefPtr sceneIndex, TfToken plugin)
   , _rendererPlugin(plugin)
   , _hgi(Hgi::CreatePlatformDefaultHgi())
   , _hgiDriver{HgiTokens->renderDriver, VtValue(_hgi.get())}
+  , _engine(nullptr)
   , _renderDelegate(nullptr)
   , _renderIndex(nullptr)
   , _taskController(nullptr)
-  , _taskControllerId("/defaultTaskController")
+  , _taskControllerId("/taskController")
   , _allowAsynchronousSceneProcessing(true)
   , _lightingContext(nullptr)
 {
@@ -75,31 +76,38 @@ Engine::Engine(HdSceneIndexBaseRefPtr sceneIndex, TfToken plugin)
 
 Engine::~Engine()
 {
-  delete _taskController;
-
+  _engine = nullptr;
+  _taskController = nullptr;
   if (_renderIndex && _sceneIndex) {
     _renderIndex->RemoveSceneIndex(_sceneIndex);
-    _sceneIndex = nullptr;
   }
   
-  delete _renderIndex;
+  _renderIndex = nullptr;
+  
   _renderDelegate = nullptr;
 }
 
 void Engine::_Initialize()
 {
-
   // init render delegate
   _renderDelegate = _GetRenderDelegateFromPlugin(_rendererPlugin);
 
+  // Use the render delegate ptr (rather than 'this' ptr) for generating the unique id.
+  const std::string renderInstanceId =
+    TfStringPrintf("Engine_%s_%p",
+      _renderDelegate.GetPluginId().GetText(),
+      (void*)_renderDelegate.Get());
+
   // init render index
-  _renderIndex = HdRenderIndex::New(_renderDelegate.Get(), {&_hgiDriver});
+  _renderIndex.reset(HdRenderIndex::New(
+    _renderDelegate.Get(), {&_hgiDriver}, renderInstanceId));
 
   _renderIndex->InsertSceneIndex(_sceneIndex, _taskControllerId);
 
   // init task controller
 
-  _taskController = new HdxTaskController(_renderIndex, _taskControllerId);
+  _taskController = std::make_unique<HdxTaskController>(_renderIndex.get(), _taskControllerId);
+  _engine = std::make_unique<HdEngine>();
 
   // init render paramss
   HdxRenderTaskParams params;
@@ -140,7 +148,7 @@ void Engine::_Initialize()
   _taskController->SetSelectionColor(selectionColor);
 
   VtValue selectionValue(_selTracker);
-  SetTaskContextData(HdxTokens->selectionState, selectionValue);
+  _engine->SetTaskContextData(HdxTokens->selectionState, selectionValue);
 
   _taskController->SetOverrideWindowPolicy(CameraUtilFit);
 }
@@ -330,7 +338,7 @@ Engine::Render()
   _taskController->SetRenderParams(params);
 
   HdTaskSharedPtrVector tasks = _taskController->GetRenderingTasks();
-  Execute(_renderIndex, &tasks);
+  _engine->Execute(_renderIndex.get(), &tasks);
 }
 
 bool
@@ -362,11 +370,11 @@ Engine::TestIntersection(
 
   const VtValue vtPickParams(pickParams);
 
-  SetTaskContextData(HdxPickTokens->pickParams, vtPickParams);
+  _engine->SetTaskContextData(HdxPickTokens->pickParams, vtPickParams);
 
   // render with the picking task
   HdTaskSharedPtrVector tasks = _taskController->GetPickingTasks();
-  Execute(_renderIndex, &tasks);
+  _engine->Execute(_renderIndex.get(), &tasks);
 
   // did we hit something
   if (allHits.size() != 1) return false;

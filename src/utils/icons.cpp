@@ -45,7 +45,6 @@ static uint16_t GetIconResolution(ICON_SIZE size)
 GLuint CreateIconFromImage(const std::string& filename,
   int index, ICON_SIZE size)
 {
-  std::cout << "create icon from image start " << std::endl;
   HioImageSharedPtr img = HioImage::OpenForReading(filename);
   int s = GetIconResolution(size); 
   HioImage::StorageSpec storage;
@@ -73,7 +72,6 @@ GLuint CreateIconFromImage(const std::string& filename,
 
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, storage.width, storage.height, 0,
     ICON_FORMAT, ICON_TYPE, storage.data);
-  std::cout << "create icon from image end " << std::endl;
   return tex;
 }
 

@@ -146,6 +146,7 @@ void ViewportUI::Init()
   if (_engine) {
     app->GetModel()->RemoveEngine(_engine);
     delete _engine;
+    _engine = nullptr;
   }
 
   TfTokenVector rendererTokens = _engine->GetRendererPlugins();

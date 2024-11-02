@@ -23,7 +23,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 using HgiUniquePtr = std::unique_ptr<class Hgi>;
 
-class Engine : public HdEngine {
+class Engine {
 public:
   enum DrawMode {
     DRAW_POINTS,
@@ -131,10 +131,11 @@ private:
 
   HgiUniquePtr                        _hgi;
   HdDriver                            _hgiDriver;
+  std::unique_ptr<HdEngine>           _engine;
 
   HdPluginRenderDelegateUniqueHandle  _renderDelegate;
-  HdRenderIndex*                      _renderIndex;
-  HdxTaskController*                  _taskController;
+  std::unique_ptr<HdRenderIndex>      _renderIndex;
+  std::unique_ptr<HdxTaskController>  _taskController;
   HdRprimCollection                   _collection;
   HdSceneIndexBaseRefPtr              _sceneIndex;
   SdfPath                             _taskControllerId;

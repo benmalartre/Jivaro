@@ -285,7 +285,6 @@ Application::Term()
 bool
 Application::Update()
 {
-  std::cout << "UPDATE..." << std::endl;
   ExecuteDeferredCommands();
   /*
   if (_needCaptureFramebuffers) {

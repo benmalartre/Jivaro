@@ -634,7 +634,7 @@ void Solver::Step(UsdStageRefPtr& stage, float time)
   }
   
   _timer->Update();
-  //u_timer->Log();
+  _timer->Log();
 }
 
 
