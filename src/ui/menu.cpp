@@ -262,7 +262,7 @@ _BrowseFile(int x, int y, const char* folder, const char* filters[],
     ModalFileBrowser::Mode::SAVE : ModalFileBrowser::Mode::OPEN;
 
   const std::string label = forWriting ? "New" : "Open";
-  Window* window = WindowRegistry::Get()->GetActiveWindow();
+  Window* window = WindowRegistry::GetActiveWindow();
   ModalFileBrowser browser(window, x, y, label, mode);
   browser.Loop();
   if (browser.GetStatus() == ModalBase::Status::OK) {
@@ -314,7 +314,7 @@ static void NewFileCallback(MenuUI* menu)
 
 static void OpenDemoCallback(MenuUI* menu)
 {
-  Window* window = WindowRegistry::Get()->GetActiveWindow();
+  Window* window = WindowRegistry::GetActiveWindow();
   ModalDemo demo(window, 0, 0, "Demo");
   demo.Loop();
   demo.Term();

@@ -11,46 +11,42 @@ JVR_NAMESPACE_OPEN_SCOPE
 //----------------------------------------------------------------------------
 static WindowRegistry* WindowRegistrySingleton=nullptr;
 
-WindowRegistry* WindowRegistry::New() 
-{
+WindowRegistry* WindowRegistry::Get() { 
   if(WindowRegistrySingleton == nullptr) 
     WindowRegistrySingleton = new WindowRegistry();
   return WindowRegistrySingleton;
-}
-
-WindowRegistry* WindowRegistry::Get() { 
-  return WindowRegistrySingleton; 
 };
 
 bool
 WindowRegistry::Update()
 {
   size_t  updated = 0;
+  PopupUI* popup = WindowRegistrySingleton->_popup;
   // draw popup
-  if (_popup) {
-    Window* window = _popup->GetView()->GetWindow();
-    window->DrawPopup(_popup);
-    if (_popup->IsDone() || _popup->IsCancel()) {
-      _popup->Terminate();
-      delete _popup;
-      _popup = nullptr;
+  if (popup) {
+    Window* window = popup->GetView()->GetWindow();
+    window->DrawPopup(popup);
+    if (popup->IsDone() || popup->IsCancel()) {
+      popup->Terminate();
+      delete popup;
+      WindowRegistrySingleton->_popup = nullptr;
     }
   }
   else 
-    for (auto& window : _windows)
+    for (auto& window : WindowRegistrySingleton->_windows)
       updated += window->Update();
 
-  return updated == _windows.size();
+  return updated == WindowRegistrySingleton->_windows.size();
 
 }
 
 void 
 WindowRegistry::SetActiveTool(size_t t)
 {
-  Tool* tool = _windows[0]->GetTool();
+  Tool* tool = WindowRegistrySingleton->_windows[0]->GetTool();
   size_t lastActiveTool = tool->GetActiveTool();
   if(t != lastActiveTool) {
-    for (auto& window : _windows) {
+    for (auto& window : WindowRegistrySingleton->_windows) {
       window->GetTool()->SetActiveTool(t);
     }
   }
@@ -59,27 +55,53 @@ WindowRegistry::SetActiveTool(size_t t)
 bool
 WindowRegistry::IsToolInteracting()
 {
-  for(auto& window: _windows)
+  for(auto& window: WindowRegistrySingleton->_windows)
     if(window->GetTool()->IsInteracting())
       return true;
   return false;
 }
 
+Window*
+WindowRegistry::GetActiveWindow()
+{
+  return WindowRegistrySingleton->_activeWindow;
+}
+
+void
+WindowRegistry::SetActiveWindow(Window* window)
+{
+  WindowRegistrySingleton->_activeWindow = window;
+}
+
+std::vector<Window*>& 
+WindowRegistry::GetWindows()
+{
+  return WindowRegistrySingleton->_windows;
+}
+
+Window*
+WindowRegistry::GetWindow(size_t index)
+{
+  if(index < WindowRegistrySingleton->_windows.size())
+    return WindowRegistrySingleton->_windows[index];
+  return nullptr;
+}
+
 void
 WindowRegistry::AddWindow(Window* window)
 {
-  _windows.push_back(window);
+  WindowRegistrySingleton->_windows.push_back(window);
   window->SetGLContext();
-  _activeWindow = window;
+  WindowRegistrySingleton->_activeWindow = window;
 }
 
 void 
 WindowRegistry::RemoveWindow(Window* window)
 {
-  std::vector<Window*>::iterator it = _windows.begin();
-  for (; it < _windows.end(); ++it) {
+  std::vector<Window*>::iterator it = WindowRegistrySingleton->_windows.begin();
+  for (; it < WindowRegistrySingleton->_windows.end(); ++it) {
     if(*it == window) {
-      _windows.erase(it);
+      WindowRegistrySingleton->_windows.erase(it);
       delete window;
       break;
     }
@@ -95,19 +117,25 @@ WindowRegistry::SetWindowDirty(Window* window)
 void 
 WindowRegistry::SetAllWindowsDirty()
 {
-  for(auto& window: _windows)
+  for(auto& window: WindowRegistrySingleton->_windows)
     window->DirtyAllViews(false);
 }
 
 
 // popup
 //----------------------------------------------------------------------------
+PopupUI* 
+WindowRegistry::GetPopup()
+{
+  return WindowRegistrySingleton->_popup;
+}
+
 void
 WindowRegistry::SetPopup(PopupUI* popup)
 {
-  popup->SetParent(GetActiveWindow()->GetMainView());
-  _popup = popup;
-  for (auto& window: _windows)
+  popup->SetParent(WindowRegistrySingleton->_activeWindow->GetMainView());
+  WindowRegistrySingleton->_popup = popup;
+  for (auto& window: WindowRegistrySingleton->_windows)
     window->CaptureFramebuffer();
 }
 
@@ -124,12 +152,13 @@ WindowRegistry::SetPopupDeferred(PopupUI* popup)
 void
 WindowRegistry::UpdatePopup()
 {
-  if (_popup) {
-    if (!_popup->IsDone())return;
-    _popup->Terminate();
-    delete _popup;
+  WindowRegistry* registry = Get();
+  if (WindowRegistrySingleton->_popup) {
+    if (!WindowRegistrySingleton->_popup->IsDone())return;
+    WindowRegistrySingleton->_popup->Terminate();
+    delete WindowRegistrySingleton->_popup;
   }
-  _popup = nullptr;
+  WindowRegistrySingleton->_popup = nullptr;
   SetAllWindowsDirty();
 }
 
@@ -139,8 +168,9 @@ WindowRegistry::UpdatePopup()
 Window*
 WindowRegistry::CreateFullScreenWindow(const std::string& name)
 {
+  WindowRegistry* registry = Get();
   Window* window = new Window("Jivaro", GfVec4i(), true);
-  AddWindow(window);
+  WindowRegistrySingleton->AddWindow(window);
   return window;
 }
 
@@ -149,8 +179,9 @@ WindowRegistry::CreateFullScreenWindow(const std::string& name)
 Window*
 WindowRegistry::CreateStandardWindow(const std::string& name, const GfVec4i& dimension)
 {
+  WindowRegistry* registry = Get();
   Window* window = new Window(name, dimension, false);
-  AddWindow(window);
+  WindowRegistrySingleton->AddWindow(window);
   return window;
 }
 
@@ -160,8 +191,9 @@ WindowRegistry::CreateStandardWindow(const std::string& name, const GfVec4i& dim
 Window*
 WindowRegistry::CreateChildWindow(const std::string& name, const GfVec4i& dimension, Window* parent)
 {
+  WindowRegistry* registry = Get();
   Window* child = new Window(name, dimension, false, parent);
-  AddWindow(child);
+  WindowRegistrySingleton->AddWindow(child);
   return child;
     
 }

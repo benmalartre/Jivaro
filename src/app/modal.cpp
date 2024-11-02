@@ -28,11 +28,10 @@ ModalBase::~ModalBase()
 
 void ModalBase::Init()
 {
-  WindowRegistry* registry = WindowRegistry::Get();
-  Window* window = registry->GetActiveWindow();
+  Window* window = WindowRegistry::GetActiveWindow();
   window->SetIdle(true);
 
-  _window = WindowRegistry::Get()->CreateChildWindow(_title, GfVec4i(_x, _y, _width, _height), window);
+  _window = WindowRegistry::CreateChildWindow(_title, GfVec4i(_x, _y, _width, _height), window);
   _window->SetDesiredLayout(_window->GetLayout());
 }
 
@@ -40,7 +39,7 @@ void ModalBase::Term()
 {
   WindowRegistry* registry = WindowRegistry::Get();
   if(_window)
-    registry->RemoveWindow(_window);
+    WindowRegistry::RemoveWindow(_window);
 
   _parent->SetIdle(false);
   _parent->SetGLContext();

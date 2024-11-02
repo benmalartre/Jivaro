@@ -54,7 +54,6 @@ Application* Application::Get() {
 //----------------------------------------------------------------------------
 Application::Application()
   : _playbackView(nullptr)
-  , _windows(WindowRegistry::New())
 {  
 
 };
@@ -98,7 +97,7 @@ Application::BrowseFile(int x, int y, const char* folder, const char* filters[],
     ModalFileBrowser::Mode::SAVE : ModalFileBrowser::Mode::OPEN;
 
   const std::string label = readOrWrite ? "New" : "Open";
-  Window* parent = WindowRegistry::Get()->GetActiveWindow();
+  Window* parent = WindowRegistry::GetActiveWindow();
   ModalFileBrowser browser(parent, x, y, label, mode);
   browser.Loop();
   if(browser.GetStatus() == ModalBase::Status::OK) {
@@ -118,9 +117,9 @@ Application::Init(unsigned width, unsigned height, bool fullscreen)
   std::cout << "create window" << std::endl;
   Window* window;
   if(fullscreen) {
-    window = _windows->CreateFullScreenWindow(name);
+    window = WindowRegistry::CreateFullScreenWindow(name);
   } else {
-    window = _windows->CreateStandardWindow(name, GfVec4i(0,0,width, height));
+    window = WindowRegistry::CreateStandardWindow(name, GfVec4i(0,0,width, height));
   }
   std::cout << "created window" << std::endl;
 
@@ -184,15 +183,15 @@ Application::Update()
     glfwWaitEvents();
   
   // update model
-  if (!_windows->GetPopup() && (playback > Time::PLAYBACK_IDLE || _windows->IsToolInteracting())) {
+  if (!WindowRegistry::GetPopup() && (playback > Time::PLAYBACK_IDLE || WindowRegistry::IsToolInteracting())) {
     if(_model->GetExec() ) 
       _model->UpdateExec(currentTime);
 
     _model->Update(currentTime);
-    _windows->SetAllWindowsDirty();
+    WindowRegistry::SetAllWindowsDirty();
   }
 
-  if(!_windows->Update())
+  if(!WindowRegistry::Update())
     return false;
 
   CommandManager::Get()->ExecuteCommands();
@@ -280,13 +279,13 @@ void Application::SaveSceneAs(const std::string& filename)
 void 
 Application::SelectionChangedCallback(const SelectionChangedNotice& n)
 {  
-  for (Window* window : _windows->GetWindows())
+  for (Window* window : WindowRegistry::GetWindows())
     if(window->GetTool()->IsActive())
       window->GetTool()->ResetSelection();
   
  
   _model->Update(Time::Get()->GetActiveTime());
-  _windows->SetAllWindowsDirty();
+  WindowRegistry::SetAllWindowsDirty();
 }
 
 void 
@@ -295,20 +294,20 @@ Application::NewSceneCallback(const NewSceneNotice& n)
   if(_model->GetExec()) _model->TerminateExec();
 
   _model->ClearSelection();
-  _windows->SetAllWindowsDirty();
+  WindowRegistry::SetAllWindowsDirty();
 }
 
 void 
 Application::SceneChangedCallback(const SceneChangedNotice& n)
 {
   /*
-  _windows->GetMainWindow()->GetTool()->ResetSelection();
-  for (auto& window : _windows->GetChildWindows()) {
+  WindowRegistry::GetMainWindow()->GetTool()->ResetSelection();
+  for (auto& window : WindowRegistry::GetChildWindows()) {
     window->GetTool()->ResetSelection();
   }
   */
   _model->Update(Time::Get()->GetActiveTime());
-  _windows->SetAllWindowsDirty();
+  WindowRegistry::SetAllWindowsDirty();
 }
 
 void
@@ -318,13 +317,13 @@ Application::AttributeChangedCallback(const AttributeChangedNotice& n)
     _model->UpdateExec(Time::Get()->GetActiveTime());
   
   /*
-  _windows->GetMainWindow()->GetTool()->ResetSelection();
-  for (auto& child : _windows->GetChildWindows()) {
+  WindowRegistry::GetMainWindow()->GetTool()->ResetSelection();
+  for (auto& child : WindowRegistry::GetChildWindows()) {
     child->GetTool()->ResetSelection();
   }
   */
   _model->Update(Time::Get()->GetActiveTime());
-  _windows->SetAllWindowsDirty();
+  WindowRegistry::SetAllWindowsDirty();
 
 }
 
@@ -334,7 +333,7 @@ Application::TimeChangedCallback(const TimeChangedNotice& n)
   if (_model->GetExec()) 
     _model->UpdateExec(Time::Get()->GetActiveTime());
 
-  _windows->SetAllWindowsDirty();
+  WindowRegistry::SetAllWindowsDirty();
 }
 
 void

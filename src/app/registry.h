@@ -23,37 +23,35 @@ public:
   WindowRegistry() : _activeWindow(nullptr), _popup(nullptr){};
   
   // singleton
-  static WindowRegistry* New();
   static WindowRegistry* Get();
 
-  Window* GetWindow(size_t index) {return _windows[index];};
-  std::vector<Window*>& GetWindows(){return _windows;};
-  const std::vector<Window*>& GetWindows() const {return _windows;};
-  Window* GetActiveWindow() { return _activeWindow;};
-  void SetActiveWindow(Window* window) { _activeWindow = window; };
-  void AddWindow(Window* window);
-  void RemoveWindow(Window* window);
-  void SetWindowDirty(Window* window);
-  void SetAllWindowsDirty();
+  static Window* GetWindow(size_t index);
+  static std::vector<Window*>& GetWindows();
+  static Window* GetActiveWindow();
+  static void SetActiveWindow(Window* window);
+  static void AddWindow(Window* window);
+  static void RemoveWindow(Window* window);
+  static void SetWindowDirty(Window* window);
+  static void SetAllWindowsDirty();
 
-  bool Update();
+  static bool Update();
 
-  void SetActiveTool(size_t t);
-  bool IsToolInteracting();
+  static void SetActiveTool(size_t t);
+  static bool IsToolInteracting();
 
   // popup
-  PopupUI* GetPopup() { return _popup; };
-  void SetPopup(PopupUI* popup);
-  void UpdatePopup();
+  static PopupUI* GetPopup();
+  static void SetPopup(PopupUI* popup);
+  static void UpdatePopup();
 
   // create a fullscreen window
-  Window* CreateFullScreenWindow(const std::string& name);
+  static Window* CreateFullScreenWindow(const std::string& name);
 
   // create a standard window of specified size
-  Window* CreateStandardWindow(const std::string& name, const GfVec4i& dimension);
+  static Window* CreateStandardWindow(const std::string& name, const GfVec4i& dimension);
 
   // create a child window
-  Window* CreateChildWindow(const std::string& name, const GfVec4i& dimension, Window* parent);
+  static Window* CreateChildWindow(const std::string& name, const GfVec4i& dimension, Window* parent);
 
 private:
   std::vector<Window*>              _windows;
@@ -61,7 +59,6 @@ private:
 
   // uis
   PopupUI*                          _popup;
-
 };
 
 
