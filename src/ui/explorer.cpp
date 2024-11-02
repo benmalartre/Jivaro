@@ -8,7 +8,7 @@
 
 #include "../ui/style.h"
 #include "../ui/explorer.h"
-#include "../app/application.h"
+#include "../app/model.h"
 #include "../app/commands.h"
 #include "../app/notice.h"
 #include "../app/window.h"
@@ -229,10 +229,9 @@ ExplorerUI::DrawVisibility(const UsdPrim& prim, bool visible, bool selected)
   const char* visibleIcon = ICON_FA_EYE;
   const char* invisibleIcon = ICON_FA_EYE_SLASH;
 
-  Application* app = Application::Get();
   if (ImGui::Button(visible ? visibleIcon : invisibleIcon)) {
     _current = prim.GetPath();
-    SdfPathVector paths = app->GetModel()->GetSelection()->GetSelectedPaths();
+    SdfPathVector paths = _model->GetSelection()->GetSelectedPaths();
     _PushCurrentPath(_current, paths);
     ADD_COMMAND(ShowHideCommand, paths, ShowHideCommand::TOGGLE);
   }
@@ -253,8 +252,7 @@ ExplorerUI::DrawActive(const UsdPrim& prim, bool selected)
   const char* activeIcon = ICON_FA_RIGHT_TO_BRACKET;
   const char* inactiveIcon = ICON_FA_PAUSE;
 
-  Application* app = Application::Get();
-  Selection* selection = app->GetModel()->GetSelection();
+  Selection* selection = _model->GetSelection();
   
  
   if (ImGui::Button(selected ? activeIcon : inactiveIcon)) {
@@ -299,23 +297,22 @@ static ImVec4 GetPrimColor(const UsdPrim& prim) {
   glfwGetCursorPos(_parent->GetWindow()->GetGlfwWindow(), &x, &y);
   if (x > GetX() + (GetWidth() - 50)) return;
 
-  Application* app = Application::Get();
   if (button == GLFW_MOUSE_BUTTON_LEFT) {
     if (action == GLFW_PRESS) {
       ExplorerUI::Item* item = _GetItemUnderMouse(GfVec2f(x - GetX(), y - GetY()));
       if (!item) return;
 
       _current = item->path;
-      if (app->GetModel()->GetStage()->GetPrimAtPath(_current).IsValid()) {
+      if (_model->GetStage()->GetPrimAtPath(_current).IsValid()) {
         if (mods & GLFW_MOD_CONTROL) {
-          app->ToggleSelection({ _current });
+          _model->ToggleSelection({ _current });
         }
         else {
-          app->SetSelection({ _current });
+          _model->SetSelection({ _current });
         }
       }
       _drag = true;
-      _dragItems = app->GetSelection()->GetSelectedPaths();
+      _dragItems = _model->GetSelection()->GetSelectedPaths();
     } else if(action == GLFW_RELEASE) {
       _drag = false; 
     }
@@ -327,7 +324,6 @@ static ImVec4 GetPrimColor(const UsdPrim& prim) {
 void 
 ExplorerUI::DrawPrim(const UsdPrim& prim, Selection* selection) 
 {
-  Model* model = Application::Get()->GetModel();
   ImGuiTreeNodeFlags flags = _treeFlags;
   
   const auto& children = prim.GetFilteredChildren(
@@ -348,12 +344,12 @@ ExplorerUI::DrawPrim(const UsdPrim& prim, Selection* selection)
 
     ImGuiIO& io = ImGui::GetIO();
 
-    if (model->GetStage()->GetPrimAtPath(_current).IsValid()) {
+    if (_model->GetStage()->GetPrimAtPath(_current).IsValid()) {
       if (io.KeysDown[GLFW_KEY_LEFT_CONTROL] || io.KeysDown[GLFW_KEY_RIGHT_CONTROL]) {
-        model->ToggleSelection({ _current });
+        _model->ToggleSelection({ _current });
       }
       else {
-        model->SetSelection({ _current });
+        _model->SetSelection({ _current });
       }
     }
   }
@@ -393,9 +389,8 @@ bool
 ExplorerUI::Draw()
 {
   /// Draw the hierarchy of the stage
-  Model* model = Application::Get()->GetModel();
-  Selection* selection = model->GetSelection();
-  UsdStageRefPtr stage = model->GetStage();
+  Selection* selection = _model->GetSelection();
+  UsdStageRefPtr stage = _model->GetStage();
   const ImGuiStyle& style = ImGui::GetStyle();
   if (!stage) return false;
 
@@ -477,8 +472,7 @@ ExplorerUI::Draw()
 void 
 ExplorerUI::OnSelectionChangedNotice(const SelectionChangedNotice& n)
 {
-  Application* app = Application::Get();
-  Selection* selection = app->GetModel()->GetSelection();
+  Selection* selection = _model->GetSelection();
 
   std::cout << "Explorer Recieved Selection Change Event!!" << std::endl;
 }

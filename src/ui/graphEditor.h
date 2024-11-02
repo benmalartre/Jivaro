@@ -73,12 +73,6 @@ class GraphEditorUI : public BaseUI
 public:
   static const TfToken NodeExpendState[3];
 
-  enum GraphType {
-    PIPELINE,
-    HIERARCHY,
-    MATERIAL,
-    EXECUTION
-  };
 
   enum GraphDirection {
     VERTICAL,
@@ -342,8 +336,8 @@ private:
   
   int                                   _id;
   int                                   _depth;
-  GfVec2f                          _offset;  
-  GfVec2f                          _dragOffset;
+  GfVec2f                               _offset;  
+  GfVec2f                               _dragOffset;
   float                                 _scale;
   float                                 _invScale;
   float                                 _currentX;
@@ -358,7 +352,7 @@ private:
   size_t                                _fontIndex;
 
   int                                   _nodeId;
-  UsdStageRefPtr                   _stage;
+  UsdStageRefPtr                        _stage;
   Graph*                                _graph;
   std::set<Node*>                       _selectedNodes;
   std::set<Connexion*>                  _selectedConnexions;

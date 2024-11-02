@@ -67,20 +67,22 @@ ViewTabUI::Draw()
   const ImVec4* colors = style.Colors;
   ImDrawList* drawList = ImGui::GetWindowDrawList();
   
-  drawList->AddRectFilled(
-    min,
-    min + size,
-    ImColor(style.Colors[ImGuiCol_FrameBgHovered])
-  );
-
-  
   if (_parent->IsActive()) {
     drawList->AddRectFilled(
       min + GfVec2f(0, size[1] - 4),
       min + size,
-      ImColor(GfVec4f(1.f, 1.f, 1.f, 0.25f))
+      ImColor(style.Colors[ImGuiCol_TabUnfocusedActive])
+    );
+  } else {
+
+    drawList->AddRectFilled(
+      min,
+      min + size,
+      ImColor(style.Colors[ImGuiCol_TabUnfocused])
     );
   }
+
+
   
   static ImGuiTabBarFlags tabBarFlags = 
     ImGuiTabBarFlags_AutoSelectNewTabs | 

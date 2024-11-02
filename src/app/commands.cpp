@@ -142,6 +142,10 @@ static void _SetTypeNameFromType(SdfPrimSpecHandle& primSpec, short type)
     primSpec->SetTypeName(TfToken("Xform"));
     break;
 
+  case Geometry::PLANE:
+    primSpec->SetTypeName(TfToken("Plane"));
+    break;
+
   case Geometry::CUBE:
     primSpec->SetTypeName(TfToken("Cube"));
     break;

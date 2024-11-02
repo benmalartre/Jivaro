@@ -18,7 +18,7 @@
 
 #include "../ui/attributeEditor.h"
 #include "../app/view.h"
-#include "../app/application.h"
+#include "../app/model.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -65,7 +65,7 @@ AttributeEditorUI::Draw()
 SdfPath 
 AttributeEditorUI::_GetPrimToDisplay()
 {
-  SdfPathVector primPaths = Application::Get()->GetModel()->GetSelection()->GetSelectedPaths();
+  SdfPathVector primPaths = _model->GetSelection()->GetSelectedPaths();
 
   if (primPaths.size() > 0 && !primPaths[0].IsEmpty())
     _path = primPaths[0];
@@ -125,7 +125,7 @@ AttributeEditorUI::_AppendDataSourceAttrs(
 void AttributeEditorUI::_AppendAllPrimAttrs(SdfPath primPath)
 {
   
-  HdSceneIndexPrim prim = Application::Get()->GetModel()->GetEditableSceneIndex()->GetPrim(primPath);
+  HdSceneIndexPrim prim = _model->GetEditableSceneIndex()->GetPrim(primPath);
   TfTokenVector tokens = prim.dataSource->GetNames();
 
   if (tokens.size() < 1) return;

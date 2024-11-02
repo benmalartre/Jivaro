@@ -23,7 +23,7 @@
 #include "../app/commands.h"
 #include "../app/view.h"
 #include "../app/window.h"
-#include "../app/application.h"
+#include "../app/model.h"
 #include "../app/commands.h"
 #include "../graph/execution.h"
 #include "../graph/hierarchy.h"
@@ -749,12 +749,12 @@ GraphEditorUI::~GraphEditorUI()
 static void
 RefreshGraphCallback(GraphEditorUI* editor)
 {
-  Selection* selection = Application::Get()->GetModel()->GetSelection();
+  Selection* selection = editor->GetModel()->GetSelection();
 
   if (selection->GetNumSelectedItems()) {
     Selection::Item& item = selection->GetItem(0);
     if (item.type == Selection::PRIM) {
-      UsdStageRefPtr stage = Application::Get()->GetModel()->GetStage();
+      UsdStageRefPtr stage = editor->GetModel()->GetStage();
       UsdPrim selected = stage->GetPrimAtPath(item.path);
       
       if (selected.IsValid()) {
@@ -999,12 +999,12 @@ GraphEditorUI::Draw()
   }
   DiscardEventsIfMouseInsideBox(GfVec2f(0, 0), GfVec2f(100, 64));
   if (ImGui::Button("TEST")) {
-    Selection* selection = Application::Get()->GetModel()->GetSelection();
+    Selection* selection = _model->GetSelection();
     bool done = false;
     if (selection->GetNumSelectedItems()) {
       Selection::Item& item = selection->GetItem(0);
       if (item.type == Selection::PRIM) {
-        UsdStageRefPtr stage = Application::Get()->GetModel()->GetStage();
+        UsdStageRefPtr stage = _model->GetStage();
         UsdPrim selected = stage->GetPrimAtPath(item.path);
         if (selected.IsValid() && selected.IsA<UsdShadeNodeGraph>()) {
           std::cout << "test button!" << std::endl;
@@ -1025,9 +1025,9 @@ GraphEditorUI::Draw()
   if (ImGui::Button("SAVE")) {
     const std::string identifier = "./usd/graph.usda";
     //UsdStageRefPtr stage = UsdStage::CreateInMemory();
-    //stage->GetRootLayer()->TransferContent(Application::Get()->GetStage()->GetRootLayer());
-    std::cout << "ON SAVE DEFAULT PRIM : " << Application::Get()->GetModel()->GetStage()->GetDefaultPrim().GetPath() << std::endl;
-    Application::Get()->GetModel()->GetDisplayStage()->Export(identifier);
+    //stage->GetRootLayer()->TransferContent(_model->GetStage()->GetRootLayer());
+    std::cout << "ON SAVE DEFAULT PRIM : " << _model->GetStage()->GetDefaultPrim().GetPath() << std::endl;
+    _model->GetDisplayStage()->Export(identifier);
   }
   ImGui::SameLine();
 
@@ -1266,11 +1266,11 @@ GraphEditorUI::MouseButton(int button, int action, int mods)
       } else if(diff_ms > 10 && diff_ms < 250){
         switch(mods) {
         case GLFW_MOD_SHIFT :
-          Application::Get()->GetModel()->AddToSelection(GetSelectedNodesPath());
+          _model->AddToSelection(GetSelectedNodesPath());
           break;
          
         default :
-          Application::Get()->GetModel()->SetSelection(GetSelectedNodesPath());
+          _model->SetSelection(GetSelectedNodesPath());
           break;
         }
       }
@@ -1325,10 +1325,11 @@ GraphEditorUI::Keyboard(int key, int scancode, int action, int mods)
       FrameAll();
     }
     else if (mappedKey == GLFW_KEY_TAB) {
-      Application* app = Application::Get();
+      /*
       GraphPopupUI* popup = new GraphPopupUI(
         (int)GetX() + GetWidth() * 0.5f - 100, (int)GetY() + GetHeight() * 0.5 - 50, 200, 100);
-      app->AddDeferredCommand(std::bind(&Application::SetPopup, app, popup));
+      ADD_DEFERRED_CMD(std::bind(&Application::SetPopup, app, popup));
+      */
     }
   }
 }
@@ -1475,6 +1476,7 @@ GraphEditorUI::ClearSelection()
 void 
 GraphEditorUI::AddToSelection(Node* node, bool bringToFront) 
 {
+
   node->SetState(ITEM_STATE_SELECTED, true);
   _selectedNodes.insert(node);
   
@@ -1484,6 +1486,9 @@ GraphEditorUI::AddToSelection(Node* node, bool bringToFront)
         std::swap(_nodes[i], _nodes.back());
       }
     }
+  }
+  if(_graph->GetGraphType() == GraphType::HIERARCHY) {
+    //_model->SetSelection()
   }
 }
 

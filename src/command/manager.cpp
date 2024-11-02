@@ -20,13 +20,28 @@ CommandManager::AddCommand(std::shared_ptr<Command> command)
 }
 
 void
+CommandManager::AddDeferredCommand(std::shared_ptr<Command> command)
+{
+  _deferredStack.push(command);
+}
+
+void
 CommandManager::ExecuteCommands() 
 {
   if(_todoStack.size()) {
-    _redoStack = CommandStack_t();             // clear the redo stack
+    _redoStack = CommandQueue_t();             // clear the redo stack
     std::shared_ptr<Command> command = _todoStack.back();
     _todoStack.pop_back();
     _undoStack.push_back(command);
+  }
+}
+
+void
+CommandManager::ExecuteDeferredCommands() 
+{
+  while (!_deferredStack.empty()) {
+    _deferredStack.top()->Do();
+    _deferredStack.pop();
   }
 }
 

@@ -112,8 +112,8 @@ public:
       virtual void                _PopulatePorts() {};
       
       Node*                       _parent;
-      TfToken                _name;
-      UsdPrim                _prim;
+      TfToken                     _name;
+      UsdPrim                     _prim;
       std::vector<Port>           _ports;
   };
 
@@ -129,6 +129,8 @@ public:
 
   virtual void AddConnexion(Connexion* connexion);
   virtual void RemoveConnexion(Connexion* connexion);
+
+  short GetType(){return _type;};
 
   const std::vector<Node*>& GetNodes() const { return _nodes; };
   std::vector<Node*>& GetNodes() { return _nodes; };
@@ -147,10 +149,11 @@ public:
 protected:
   virtual void _DiscoverNodes() = 0;
   virtual void _DiscoverConnexions() = 0;
+  short                           _type;
   
   std::vector<Node*>              _nodes;
   std::vector<Connexion*>         _connexions;
-  UsdPrim                    _prim;
+  UsdPrim                         _prim;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

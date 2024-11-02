@@ -1,5 +1,5 @@
 #include "../ui/curveEditor.h"
-#include "../app/application.h"
+#include "../app/model.h"
 #include "../app/notice.h"
 #include "../app/window.h"
 #include "../app/view.h"
@@ -40,7 +40,7 @@ void CurveEditorUI::Init()
 
 void CurveEditorUI::Update()
 {
-  if (Application::Get()->GetModel()->GetStage()) {
+  if (_model->GetStage()) {
     //RecurseStage();
   }
 }
@@ -367,7 +367,6 @@ bool CurveEditorUI::Draw()
   ImGui::Begin(_name.c_str(), NULL, _flags);
   
   ImGui::PushClipRect(min, max, false);
-  Application* app = Application::Get();
   /*
   if (app->GetStage())
   {

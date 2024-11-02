@@ -140,6 +140,9 @@ public:
   // get the height of the parent view
   virtual int GetHeight();
 
+  // get the related model
+  virtual Model* GetModel(){return _model;};
+
   // discard events if mouse cursor inside relative bbox
   void DiscardEventsIfMouseInsideBox(const GfVec2f& min, const GfVec2f& max);
 

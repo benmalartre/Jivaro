@@ -1,8 +1,9 @@
 #include <pxr/usd/sdf/layer.h>
+#include <pxr/usd/usd/stageCache.h>
 #include "../ui/contentBrowser.h"
 #include "../utils/strings.h"
 #include "../app/view.h"
-#include "../app/application.h"
+#include "../app/model.h"
 #include "../app/commands.h"
 
 
@@ -280,15 +281,13 @@ bool ContentBrowserUI::Draw()
   static ContentBrowserOptions options;
   DrawContentBrowserMenuBar(options);
 
-  //Workspace* workspace = Application::Get()->GetWorkspace();
-  Application* app = Application::Get();
   // TODO: we might want to remove completely the editor here, just pass as selected layer and a selected stage
   
-  SdfLayerHandle selectedLayer(app->GetModel()->GetSessionLayer());
-  SdfLayerHandle selectedStage(app->GetModel()->GetStage() 
-    ? app->GetModel()->GetStage()->GetRootLayer() : SdfLayerHandle());
+  SdfLayerHandle selectedLayer(_model->GetSessionLayer());
+  SdfLayerHandle selectedStage(_model->GetStage() 
+    ? _model->GetStage()->GetRootLayer() : SdfLayerHandle());
   auto layers = SdfLayer::GetLoadedLayers();
-  DrawLayerSet(app->GetStageCache(), layers, &selectedLayer, &selectedStage, options);
+  //DrawLayerSet(app->GetStageCache(), layers, &selectedLayer, &selectedStage, options);
   
   /*
   if (selected != editor.GetSessionLayer()) {
