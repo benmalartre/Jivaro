@@ -69,7 +69,7 @@ Engine::Engine(HdSceneIndexBaseRefPtr sceneIndex, TfToken plugin)
   _width = 512;
   _height = 512;
   _params.drawMode = Engine::DRAW_SHADED_SMOOTH;
-  _params.complexity = 1.f;
+  _params.complexity = 1.0f;
 
   _Initialize();
 }

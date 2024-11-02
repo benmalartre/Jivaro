@@ -38,7 +38,6 @@ void TestPush::InitExec(UsdStageRefPtr& stage)
   const SdfPath  rootId = rootPrim.GetPath();
   _TraverseStageFindingMeshes(stage);
 
-  UpdateExec(stage, 1);
 }
 
 

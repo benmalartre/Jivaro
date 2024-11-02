@@ -128,8 +128,8 @@ Model::InitExec()
   //_exec = new TestParticles();
   //_exec = new TestInstancer();
   //_exec = new TestRaycast();
-  _exec = new TestPBD();
-  //_exec = new TestPush();
+  //_exec = new TestPBD();
+  _exec = new TestPush();
   //_exec = new TestHair();
   //_exec = new TestGeodesic();
   //_exec = new TestBVH();
