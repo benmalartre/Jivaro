@@ -32,6 +32,9 @@ public:
   explicit HierarchyGraph(const SdfLayerRefPtr &layer, const UsdPrim& prim);
   ~HierarchyGraph()         override;
 
+
+  virtual short GetType() override { return Graph::Type::HIERARCHY; };
+
   virtual void Populate(const UsdPrim& prim) override;
 
 protected:

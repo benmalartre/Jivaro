@@ -16,6 +16,7 @@ class ExecutionGraph : public Graph
   public:
     ExecutionNode(UsdPrim& prim);
     ~ExecutionNode() {};
+
   protected:
     void _PopulatePorts() override;
   };
@@ -23,6 +24,8 @@ class ExecutionGraph : public Graph
 public:
   explicit ExecutionGraph(const UsdPrim& prim);
   ~ExecutionGraph();
+
+  short GetType() override { return Graph::Type::EXECUTION; };
 
 protected:
   virtual void _DiscoverNodes() override;

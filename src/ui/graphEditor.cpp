@@ -1487,7 +1487,7 @@ GraphEditorUI::AddToSelection(Node* node, bool bringToFront)
       }
     }
   }
-  if(_graph->GetGraphType() == GraphType::HIERARCHY) {
+  if(_graph->GetType() == Graph::Type::HIERARCHY) {
     //_model->SetSelection()
   }
 }

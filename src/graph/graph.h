@@ -19,6 +19,13 @@ static TfToken ChildrenPortToken("Children");
 class Graph 
 {
 public:
+
+  enum Type {
+    PIPELINE,
+    HIERARCHY,
+    MATERIAL,
+    EXECUTION
+  };
  
   class Node;
   class Port;
@@ -130,7 +137,7 @@ public:
   virtual void AddConnexion(Connexion* connexion);
   virtual void RemoveConnexion(Connexion* connexion);
 
-  short GetType(){return _type;};
+  virtual short GetType() = 0;
 
   const std::vector<Node*>& GetNodes() const { return _nodes; };
   std::vector<Node*>& GetNodes() { return _nodes; };
@@ -149,7 +156,6 @@ public:
 protected:
   virtual void _DiscoverNodes() = 0;
   virtual void _DiscoverConnexions() = 0;
-  short                           _type;
   
   std::vector<Node*>              _nodes;
   std::vector<Connexion*>         _connexions;

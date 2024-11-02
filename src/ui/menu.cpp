@@ -11,13 +11,15 @@
 #include "../ui/style.h"
 #include "../ui/menu.h"
 #include "../geometry/geometry.h"
+#include "../command/manager.h"
 #include "../app/view.h"
 #include "../app/window.h"
-#include "../app/application.h"
+#include "../app/registry.h"
 #include "../app/modal.h"
 #include "../app/selection.h"
 #include "../app/notice.h"
 #include "../app/commands.h"
+#include "../app/model.h"
 
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -79,7 +81,7 @@ void MenuUI::Item::Draw(bool* modified, size_t itemIdx)
   } else {
     if (ImGui::MenuItem(label.c_str(), NULL, selected, enabled) && callback) {
       callback();
-      Application::Get()->SetAllWindowsDirty();
+      RegistryWindow::Get()->SetAllWindowsDirty();
     }
   }
   ImGui::PopFont();
@@ -97,23 +99,23 @@ MenuUI::MenuUI(View* parent)
 {
   MenuUI::Item* fileMenu = Add("File", false, true, NULL);
 
-  fileMenu->Add("Open", false, true, std::bind(OpenFileCallback));
-  fileMenu->Add("Save", false, true, std::bind(SaveFileCallback));
-  fileMenu->Add("New", false, true, std::bind(NewFileCallback));
+  fileMenu->Add("Open", false, true, std::bind(OpenFileCallback, this));
+  fileMenu->Add("Save", false, true, std::bind(SaveFileCallback, this));
+  fileMenu->Add("New", false, true, std::bind(NewFileCallback, this));
 
   MenuUI::Item* testItem = Add("Create", false, true, NULL);
-  testItem->Add("Create Plane", false, true, std::bind(CreatePrimCallback, Geometry::PLANE));
-  testItem->Add("Create Cube", false, true, std::bind(CreatePrimCallback, Geometry::CUBE));
-  testItem->Add("Create Sphere", false, true, std::bind(CreatePrimCallback, Geometry::SPHERE));
-  testItem->Add("Create Cylinder", false, true, std::bind(CreatePrimCallback, Geometry::CYLINDER));
-  testItem->Add("Create Capsule", false, true, std::bind(CreatePrimCallback, Geometry::CAPSULE));
-  testItem->Add("Create Cone", false, true, std::bind(CreatePrimCallback, Geometry::CONE));
+  testItem->Add("Create Plane", false, true, std::bind(CreatePrimCallback, this, Geometry::PLANE));
+  testItem->Add("Create Cube", false, true, std::bind(CreatePrimCallback, this, Geometry::CUBE));
+  testItem->Add("Create Sphere", false, true, std::bind(CreatePrimCallback, this, Geometry::SPHERE));
+  testItem->Add("Create Cylinder", false, true, std::bind(CreatePrimCallback, this, Geometry::CYLINDER));
+  testItem->Add("Create Capsule", false, true, std::bind(CreatePrimCallback, this, Geometry::CAPSULE));
+  testItem->Add("Create Cone", false, true, std::bind(CreatePrimCallback, this, Geometry::CONE));
 
   AddPbdMenu(this);
 
   MenuUI::Item* demoItem = Add("Demo", false, true);
-  demoItem->Add("Open Demo", false, true, std::bind(OpenDemoCallback));
-  demoItem->Add("Child Window", false, true, std::bind(OpenChildWindowCallback));
+  demoItem->Add("Open Demo", false, true, std::bind(OpenDemoCallback, this));
+  demoItem->Add("Child Window", false, true, std::bind(OpenChildWindowCallback, this));
 
   static int layoutIdx = 0;
   MenuUI::Item* layoutItem = Add("Layout", false, true);
@@ -246,10 +248,34 @@ MenuUI::Draw()
 
 }
 
+// browse for file
+//----------------------------------------------------------------------------
+std::string
+_BrowseFile(int x, int y, const char* folder, const char* filters[],
+  const int numFilters, const char* name, bool forWriting)
+{
+  std::string result =
+    "/Users/malartrebenjamin/Documents/RnD/Jivaro/assets/Kitchen_set 3/Kitchen_set.usd";
+
+  ModalFileBrowser::Mode mode = forWriting ?
+    ModalFileBrowser::Mode::SAVE : ModalFileBrowser::Mode::OPEN;
+
+  const std::string label = forWriting ? "New" : "Open";
+
+  ModalFileBrowser browser(x, y, label, mode);
+  browser.Loop();
+  if (browser.GetStatus() == ModalBase::Status::OK) {
+    result = browser.GetResult();
+  }
+  browser.Term();
+
+  return result;
+}
+
 // --------------------------------------------------------------
 // Callbacks (maybe should live in another file)
 // --------------------------------------------------------------
-static void OpenFileCallback() {
+static void OpenFileCallback(MenuUI* menu) {
   std::string folder = GetInstallationFolder();
   const char* filters[] = {
     ".usd",
@@ -259,18 +285,17 @@ static void OpenFileCallback() {
   };
   int numFilters = 4;
 
-  Application* app = Application::Get();
   std::string filename =
-    app->BrowseFile(200, 200, folder.c_str(), filters, numFilters, "open usd file");
-  app->OpenScene(filename);
+    _BrowseFile(200, 200, folder.c_str(), filters, numFilters, "open usd file", false);
+  ADD_COMMAND(OpenSceneCommand, filename);
 }
 
-static void SaveFileCallback()
+static void SaveFileCallback(MenuUI* menu)
 {
-  Application::Get()->SaveScene();
+  menu->GetModel()->GetStage()->GetRootLayer()->Save(true);
 }
 
-static void NewFileCallback()
+static void NewFileCallback(MenuUI* menu)
 {
   std::string folder = GetInstallationFolder();
   std::cout << "new file callback" << std::endl;
@@ -282,26 +307,23 @@ static void NewFileCallback()
   };
   int numFilters = 4;
 
-  std::cout << "get app" << std::endl;
-  Application* app = Application::Get();
-  std::cout << "app " << app << std::endl;
-  std::string filename = "hello_world";
+  std::string filename = "hello_world.usda";
   ADD_COMMAND(NewSceneCommand, filename);
 }
 
-static void OpenDemoCallback()
+static void OpenDemoCallback(MenuUI* menu)
 {
   ModalDemo demo(0, 0, "Demo");
   demo.Loop();
   demo.Term();
 }
 
-static void OpenChildWindowCallback()
+static void OpenChildWindowCallback(MenuUI* menu)
 {
-  Application* app = Application::Get();
-  Window* mainWindow = app->GetMainWindow();
-  Window* childWindow = Application::CreateChildWindow("Child Window", GfVec4i(200, 200, 400, 400), mainWindow);
-  app->AddWindow(childWindow);
+  RegistryWindow* registry = RegistryWindow::Get();
+  Window* mainWindow = registry->GetMainWindow();
+  Window* childWindow = registry->CreateChildWindow("Child Window", GfVec4i(200, 200, 400, 400), mainWindow);
+  registry->AddWindow(childWindow);
 
   childWindow->SetDesiredLayout(1);
 
@@ -310,101 +332,25 @@ static void OpenChildWindowCallback()
 
 static void SetLayoutCallback(Window* window, short layout)
 {
-  Application* app = Application::Get();
+
   window->SetDesiredLayout(layout);
 }
 
-static void CreatePrimCallback(short type)
+static void CreatePrimCallback(MenuUI* menu, short type)
 {
-  Application* app = Application::Get();
-  UsdStageRefPtr stage = app->GetModel()->GetStage();
+  UsdStageRefPtr stage = menu->GetModel()->GetStage();
   const UsdPrim root = stage->GetPseudoRoot();
   SdfLayerHandle layer = stage->GetSessionLayer();
 
   SdfPath name(RandomString(6));
 
-  Selection* selection = app->GetModel()->GetSelection();
+  Selection* selection = menu->GetModel()->GetSelection();
 
   if(selection->GetNumSelectedItems()) {
-    SdfPrimSpecHandle spec = app->GetModel()->GetStage()->GetEditTarget().GetLayer()->GetPrimAtPath((*selection)[0].path);
+    SdfPrimSpecHandle spec = menu->GetModel()->GetStage()->GetEditTarget().GetLayer()->GetPrimAtPath((*selection)[0].path);
     ADD_COMMAND(CreatePrimCommand, spec, name, type);
   } else {
     ADD_COMMAND(CreatePrimCommand, layer, name, type);
-  }
-  
-}
-
-static void TriangulateCallback()
-{
-  Application* app = Application::Get();
-  const UsdStageRefPtr& stage = app->GetModel()->GetStage();
-  Selection* selection = app->GetModel()->GetSelection();
-  for (size_t i = 0; i < selection->GetNumSelectedItems(); ++i) {
-    Selection::Item& item = selection->GetItem(i);
-    UsdPrim prim = stage->GetPrimAtPath(item.path);
-    /*
-    if (prim.IsValid() && prim.IsA<UsdGeomMesh>()) {
-      UsdGeomMesh mesh(prim);
-      Mesh triangulated(mesh);
-      triangulated.UpdateTopologyFromHalfEdges();
-      mesh.GetPointsAttr().Set(VtValue(triangulated.GetPositions()));
-      mesh.GetFaceVertexCountsAttr().Set(VtValue(triangulated.GetFaceCounts()));
-      mesh.GetFaceVertexIndicesAttr().Set(VtValue(triangulated.GetFaceConnects()));
-    }
-    */
-    std::cout << "triangulate : " << prim.GetPath() << std::endl;
-  }
-}
-
-static void FlattenGeometryCallback()
-{
-  Application* app = Application::Get();
-  const UsdStageRefPtr& stage = app->GetModel()->GetStage();
-  Selection* selection = app->GetModel()->GetSelection();
-  for (size_t i = 0; i < selection->GetNumSelectedItems(); ++i) {
-    Selection::Item& item = selection->GetItem(i);
-    UsdPrim prim = stage->GetPrimAtPath(item.path);
-    if (prim.IsValid() && prim.IsA<UsdGeomMesh>()) {
-      UsdGeomMesh mesh(prim);
-      TfToken uvToken("st");
-      /*
-      if (mesh.HasPrimvar(uvToken)) {
-        std::cout << "WE FOUND UVS :)" << std::endl;
-        UsdGeomPrimvar uvPrimvar = mesh.GetPrimvar(uvToken);
-        TfToken interpolation = uvPrimvar.GetInterpolation();
-        if (interpolation == UsdGeomTokens->vertex) {
-          std::cout << "UV INTERPOLATION VERTEX !" << std::endl;
-          VtArray<GfVec2d> uvs;
-          uvPrimvar.Get(&uvs);
-          std::cout << "UVS COUNT : " << uvs.size() << std::endl;
-        }
-        else if (interpolation == UsdGeomTokens->faceVarying) {
-          std::cout << "UV INTERPOLATION FACE VARYING !" << std::endl;
-          VtArray<GfVec2d> uvs;
-          uvPrimvar.Get(&uvs);
-
-          std::cout << "UVS COUNT : " << uvs.size() << std::endl;
-          // UsdGeomMesh usdFlattened = UsdGeomMesh::Define(stage, SdfPath(item.path.GetString() + "_flattened"));
-          Mesh flattened(mesh);
-          std::cout << flattened.GetNumPoints() << std::endl;
-          VtArray<int> cuts;
-          flattened.GetCutEdgesFromUVs(uvs, &cuts);
-
-          //cuts.clear();
-          //flattened.GetCutVerticesFromUVs(uvs, &cuts);
-
-          flattened.DisconnectEdges(cuts);
-          flattened.Flatten(uvs, interpolation);
-
-          mesh.GetPointsAttr().Set(VtValue(flattened.GetPositions()));
-          mesh.GetFaceVertexCountsAttr().Set(VtValue(flattened.GetFaceCounts()));
-          mesh.GetFaceVertexIndicesAttr().Set(VtValue(flattened.GetFaceConnects()));
-
-          //VtArray<GfVec2d> uvs = uvPrimvar.Get< VtArray<GfVec2d>>()
-        }
-      }
-      */
-    }
   }
 }
 

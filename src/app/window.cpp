@@ -590,6 +590,7 @@ Window::SetGLContext()
 void 
 Window::Draw(bool force)
 {
+  std::cout << "window draw..." << std::endl;
   if (!_valid || _idle)return;
 
   SetGLContext();
@@ -646,7 +647,7 @@ Window::DrawPopup(PopupUI* popup)
       ImVec2(0, 0), ImVec2(1, 1), ImColor(100, 100, 100, 255));
     ImGui::End();
   } else {
-    Application::Get()->SetWindowDirty(this);
+    RegistryWindow::Get()->SetWindowDirty(this);
     GetMainView()->Draw(false);
   }
 
@@ -756,7 +757,7 @@ bool Window::Update()
   if (IsIdle())return true;
   if (glfwWindowShouldClose(_window)) {
     if (!_shared) {
-      Application::Get()->RemoveWindow(this);
+      RegistryWindow::Get()->RemoveWindow(this);
       delete this;
     }
     return false;
@@ -1103,7 +1104,7 @@ FocusCallback(GLFWwindow* window, int focused)
 {
   if (focused) {
     Window* parent = Window::GetUserData(window);
-    Application::Get()->SetFocusWindow(parent);
+    RegistryWindow::Get()->SetFocusWindow(parent);
   }
 }
 

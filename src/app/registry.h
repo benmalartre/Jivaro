@@ -21,6 +21,8 @@ public:
 
   Window* GetMainWindow() {return _mainWindow;};
   Window* GetChildWindow(size_t index) {return _childWindows[index];};
+  std::vector<Window*>& GetChildWindows(){return _childWindows;};
+  const std::vector<Window*>& GetChildWindows() const {return _childWindows;};
   Window* GetActiveWindow() { return _activeWindow ? _activeWindow : _mainWindow; };
   void SetActiveWindow(Window* window) { _activeWindow = window; };
   void SetFocusWindow(Window* window) { _focusWindow = window; };
@@ -28,6 +30,20 @@ public:
   void RemoveWindow(Window* window);
   void SetWindowDirty(Window* window);
   void SetAllWindowsDirty();
+
+  void Update();
+
+  void SetActiveTool(size_t t);
+  bool IsToolInteracting();
+
+  // create a fullscreen window
+  Window* CreateFullScreenWindow(const std::string& name);
+
+  // create a standard window of specified size
+  Window* CreateStandardWindow(const std::string& name, const GfVec4i& dimension);
+
+  // create a child window
+  Window* CreateChildWindow(const std::string& name, const GfVec4i& dimension, Window* parent);
 
 private:
   static RegistryWindow*            _singleton;

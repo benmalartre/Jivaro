@@ -17,8 +17,8 @@ ImGuiWindowFlags ToolbarUI::_flags =
 static void _SetActiveTool(short tool) 
 {
   Application* app = Application::Get();
-  app->SetActiveTool(tool);
-  app->GetMainWindow()->SetActiveTool(tool);
+  RegistryWindow::Get()->SetActiveTool(tool);
+  RegistryWindow::Get()->GetMainWindow()->SetActiveTool(tool);
   SelectionChangedNotice().Send();
 }
 

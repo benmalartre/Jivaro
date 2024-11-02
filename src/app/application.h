@@ -7,6 +7,7 @@
 #include "../common.h"
 #include "../exec/execution.h"
 #include "../app/model.h"
+#include "../app/registry.h"
 #include "../command/manager.h"
 
 
@@ -29,14 +30,6 @@ public:
   // destructor
   ~Application();
 
-    // create a fullscreen window
-  static Window* CreateFullScreenWindow(const std::string& name);
-
-  // create a standard window of specified size
-  static Window* CreateStandardWindow(const std::string& name, const GfVec4i& dimension);
-
-  // create a child window
-  static Window* CreateChildWindow(const std::string& name, const GfVec4i& dimension, Window* parent);
 
   // browse file
   std::string BrowseFile(int x, int y, const char* folder, const char* filters[], 
@@ -61,15 +54,16 @@ public:
   void Delete();
 
   // window
-  Window* GetMainWindow() {return _mainWindow;};
-  Window* GetChildWindow(size_t index) {return _childWindows[index];};
-  Window* GetActiveWindow() { return _activeWindow ? _activeWindow : _mainWindow; };
-  void SetActiveWindow(Window* window) { _activeWindow = window; };
-  void SetFocusWindow(Window* window) { _focusWindow = window; };
+  Window* GetMainWindow() {return _windows->GetMainWindow();};
+  Window* GetChildWindow(size_t index) {return _windows->GetChildWindow(index);};
+  Window* GetActiveWindow() { return _windows->GetActiveWindow(); };
+  void SetActiveWindow(Window* window) { _windows->SetActiveWindow(window); };
+  /*
   void AddWindow(Window* window);
   void RemoveWindow(Window* window);
   void SetWindowDirty(Window* window);
   void SetAllWindowsDirty();
+  */
 
   // playback viewport
   bool IsPlaybackView(View* view);
@@ -79,10 +73,6 @@ public:
   PopupUI* GetPopup() { return _popup; };
   void SetPopup(PopupUI* popup);
   void UpdatePopup();
-
-  // tools
-  void SetActiveTool(size_t tool);
-  bool IsToolInteracting();
 
   void AddDeferredCommand(CALLBACK_FN fn);
   void ExecuteDeferredCommands();
@@ -113,10 +103,7 @@ protected:
 
 private:
   // windows
-  Window*                           _mainWindow;
-  std::vector<Window*>              _childWindows;
-  Window*                           _activeWindow;
-  Window*                           _focusWindow;
+  RegistryWindow*                   _windows;
   Model*                            _model;
   float                             _lastTime;
 

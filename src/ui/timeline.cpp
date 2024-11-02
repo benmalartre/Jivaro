@@ -151,14 +151,14 @@ void TimelineUI::DrawButtons()
     [&](){
       _currentTime = _startTime;
       time->SetActiveTime(_currentTime);
-      Application::Get()->SetAllWindowsDirty();
+      RegistryWindow::Get()->SetAllWindowsDirty();
     });
   ImGui::SameLine();
 
   UI::AddIconButton(1, ICON_FA_BACKWARD_STEP, ICON_DEFAULT,
     [&](){
       time->PreviousFrame();
-      Application::Get()->SetAllWindowsDirty();
+      RegistryWindow::Get()->SetAllWindowsDirty();
     });
   ImGui::SameLine();
 
@@ -180,7 +180,7 @@ void TimelineUI::DrawButtons()
   UI::AddIconButton(3, ICON_FA_FORWARD_STEP, ICON_DEFAULT,
     [&](){
       time->NextFrame();
-      Application::Get()->SetAllWindowsDirty();
+      RegistryWindow::Get()->SetAllWindowsDirty();
     });
   ImGui::SameLine();
 
@@ -188,7 +188,7 @@ void TimelineUI::DrawButtons()
     [&](){
       _currentTime = _endTime;
       time->SetActiveTime(_currentTime);
-      Application::Get()->SetAllWindowsDirty();
+      RegistryWindow::Get()->SetAllWindowsDirty();
     });
   ImGui::SameLine();
 

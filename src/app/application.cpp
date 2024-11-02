@@ -53,10 +53,9 @@ Application* Application::Get() {
 // constructor
 //----------------------------------------------------------------------------
 Application::Application()
-  : _mainWindow(nullptr)
-  , _activeWindow(nullptr)
-  , _popup(nullptr)
+  : _popup(nullptr)
   , _playbackView(nullptr)
+  , _windows(RegistryWindow::Get())
 {  
 };
 
@@ -64,33 +63,9 @@ Application::Application()
 //----------------------------------------------------------------------------
 Application::~Application()
 {
-  if(_mainWindow) delete _mainWindow;
+
 };
 
-// create full screen window
-//----------------------------------------------------------------------------
-Window*
-Application::CreateFullScreenWindow(const std::string& name)
-{
-  return Window::CreateFullScreenWindow(name);
-}
-
-// create child window
-//----------------------------------------------------------------------------
-Window*
-Application::CreateChildWindow(const std::string& name, const GfVec4i& dimension, Window* parent)
-{
-  return
-    Window::CreateChildWindow(name, dimension, parent);
-}
-
-// create standard window
-//----------------------------------------------------------------------------
-Window*
-Application::CreateStandardWindow(const std::string& name, const GfVec4i& dimension)
-{
-  return Window::CreateStandardWindow(name, dimension);
-}
 
 // popup
 //----------------------------------------------------------------------------
@@ -99,8 +74,9 @@ Application::SetPopup(PopupUI* popup)
 {
   popup->SetParent(GetActiveWindow()->GetMainView());
   _popup = popup;
-  _mainWindow->CaptureFramebuffer();
-  for (auto& childWindow : _childWindows)childWindow->CaptureFramebuffer();
+  RegistryWindow::Get()->GetMainWindow()->CaptureFramebuffer();
+  for (auto& childWindow : RegistryWindow::Get()->GetChildWindows())
+    childWindow->CaptureFramebuffer();
 }
 
 /*
@@ -122,7 +98,7 @@ Application::UpdatePopup()
     delete _popup;
   }
   _popup = nullptr;
-  SetAllWindowsDirty();
+  _windows->SetAllWindowsDirty();
 }
 
 void
@@ -173,13 +149,13 @@ void
 Application::Init(unsigned width, unsigned height, bool fullscreen)
 {
   std::cout << "create window" << std::endl;
+  Window* window;
   if(fullscreen) {
-    _mainWindow = CreateFullScreenWindow(name);
+    window = RegistryWindow::Get()->CreateFullScreenWindow(name);
   } else {
-    _mainWindow = CreateStandardWindow(name, GfVec4i(0,0,width, height));
+    window = RegistryWindow::Get()->CreateStandardWindow(name, GfVec4i(0,0,width, height));
   }
   std::cout << "created window" << std::endl;
-  _activeWindow = _mainWindow;
 
   Time::Get()->Init(1, 101, 24);
 
@@ -202,7 +178,8 @@ Application::Init(unsigned width, unsigned height, bool fullscreen)
 
   // create window
   std::cout << "set layout" << std::endl;
-  _mainWindow->SetDesiredLayout(WINDOW_LAYOUT_STANDARD);
+
+  window->SetDesiredLayout(WINDOW_LAYOUT_STANDARD);
 
   _model = new Model();
 
@@ -305,12 +282,12 @@ Application::Update()
     glfwWaitEvents();
   
   // update model
-  if (!_popup && (playback > Time::PLAYBACK_IDLE || Application::Get()->IsToolInteracting())) {
+  if (!_popup && (playback > Time::PLAYBACK_IDLE || RegistryWindow::Get()->IsToolInteracting())) {
     if(_model->GetExec() ) 
       _model->UpdateExec(currentTime);
 
     _model->Update(currentTime);
-    SetAllWindowsDirty();
+    RegistryWindow::Get()->SetAllWindowsDirty();
   }
 
   // draw popup
@@ -323,8 +300,12 @@ Application::Update()
       _popup = nullptr;
     }
   } else {
-    if (!_mainWindow->Update()) return false;
-    for (auto& childWindow : _childWindows)childWindow->Update();
+    if (!_windows->GetMainWindow()->Update()) 
+      return false;
+      
+    for (auto& childWindow : _windows->GetChildWindows())
+      childWindow->Update();
+
   }
   
 
@@ -332,37 +313,6 @@ Application::Update()
   return true;
 }
 
-void
-Application::AddWindow(Window* window)
-{
- _childWindows.push_back(window);
-  window->SetGLContext();
-}
-
-void 
-Application::RemoveWindow(Window* window)
-{
-  std::vector<Window*>::iterator it = _childWindows.begin();
-  for (; it < _childWindows.end(); ++it) {
-    if(*it == window) {
-      _childWindows.erase(it);
-    }
-  }
-}
-
-void 
-Application::SetWindowDirty(Window* window)
-{
-  window->DirtyAllViews(false);
-}
-
-void 
-Application::SetAllWindowsDirty()
-{
-  _mainWindow->DirtyAllViews(false);
-  for(auto& childWindow: _childWindows)
-    childWindow->DirtyAllViews(false);
-}
 
 // playback viewport
 bool 
@@ -380,26 +330,6 @@ Application::SetPlaybackView(View* view)
   _playbackView = view;
   if(_playbackView)_playbackView->SetFlag(View::TIMEVARYING);
 };
-
-void 
-Application::SetActiveTool(size_t t)
-{
-  Tool* tool = _mainWindow->GetTool();
-  size_t lastActiveTool = tool->GetActiveTool();
-  if(t != lastActiveTool) {
-    tool->SetActiveTool(t);
-    for (auto& window : _childWindows) {
-      window->GetTool()->SetActiveTool(t);
-    }
-  }
-}
-
-bool
-Application::IsToolInteracting()
-{
-  Tool* tool = _mainWindow->GetTool();
-  return tool->IsInteracting();
-}
 
 
 // COMMANDS
@@ -464,16 +394,17 @@ void Application::SaveSceneAs(const std::string& filename)
 void 
 Application::SelectionChangedCallback(const SelectionChangedNotice& n)
 {  
-  
-  if(_mainWindow->GetTool()->IsActive())
-    _mainWindow->GetTool()->ResetSelection();
+  RegistryWindow* registry = RegistryWindow::Get();
+  Window* window = registry->GetMainWindow();
+  if(window->GetTool()->IsActive())
+    window->GetTool()->ResetSelection();
 
-  for (auto& window : _childWindows) {
-    if(window->GetTool()->IsActive())
-      window->GetTool()->ResetSelection();
+  for (Window* child : registry->GetChildWindows()) {
+    if(child->GetTool()->IsActive())
+      child->GetTool()->ResetSelection();
   }
   _model->Update(Time::Get()->GetActiveTime());
-  SetAllWindowsDirty();
+  registry->SetAllWindowsDirty();
 }
 
 void 
@@ -482,18 +413,19 @@ Application::NewSceneCallback(const NewSceneNotice& n)
   if(_model->GetExec()) _model->TerminateExec();
 
   _model->ClearSelection();
-  SetAllWindowsDirty();
+  RegistryWindow::Get()->SetAllWindowsDirty();
 }
 
 void 
 Application::SceneChangedCallback(const SceneChangedNotice& n)
 {
-  _mainWindow->GetTool()->ResetSelection();
-  for (auto& window : _childWindows) {
+  RegistryWindow* registry = RegistryWindow::Get();
+  registry->GetMainWindow()->GetTool()->ResetSelection();
+  for (auto& window : registry->GetChildWindows()) {
     window->GetTool()->ResetSelection();
   }
   _model->Update(Time::Get()->GetActiveTime());
-  SetAllWindowsDirty();
+  RegistryWindow::Get()->SetAllWindowsDirty();
 }
 
 void
@@ -502,12 +434,13 @@ Application::AttributeChangedCallback(const AttributeChangedNotice& n)
   if (_model->GetExec()) 
     _model->UpdateExec(Time::Get()->GetActiveTime());
   
-  _mainWindow->GetTool()->ResetSelection();
-  for (auto& window : _childWindows) {
+  RegistryWindow* registry = RegistryWindow::Get();
+  registry->GetMainWindow()->GetTool()->ResetSelection();
+  for (auto& window : registry->GetChildWindows()) {
     window->GetTool()->ResetSelection();
   }
   _model->Update(Time::Get()->GetActiveTime());
-  SetAllWindowsDirty();
+  registry->SetAllWindowsDirty();
 
 }
 
@@ -517,7 +450,7 @@ Application::TimeChangedCallback(const TimeChangedNotice& n)
   if (_model->GetExec()) 
     _model->UpdateExec(Time::Get()->GetActiveTime());
 
-  SetAllWindowsDirty();
+  RegistryWindow::Get()->SetAllWindowsDirty();
 }
 
 void

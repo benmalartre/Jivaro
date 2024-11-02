@@ -58,15 +58,13 @@ private:
   static ImGuiWindowFlags _flags;
 };
 
-static void OpenFileCallback();
-static void SaveFileCallback();
-static void NewFileCallback();
-static void OpenDemoCallback();
-static void OpenChildWindowCallback();
+static void OpenFileCallback(MenuUI* menu);
+static void SaveFileCallback(MenuUI* menu);
+static void NewFileCallback(MenuUI* menu);
+static void OpenDemoCallback(MenuUI* menu);
+static void OpenChildWindowCallback(MenuUI* menu);
 static void SetLayoutCallback(Window* window, short layout);
-static void CreatePrimCallback(short type);
-static void TriangulateCallback();
-static void FlattenGeometryCallback();
+static void CreatePrimCallback(MenuUI* menu, short type);
 
 JVR_NAMESPACE_CLOSE_SCOPE
 
