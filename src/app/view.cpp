@@ -251,7 +251,6 @@ View::Draw(bool force)
   if(_tab) DrawTab();
 
   if (_current && (GetFlag(INTERACTING) || GetFlag(DIRTY))) {
-
     bool isPlaying = Time::Get()->IsPlaying();
     bool isTimeVarying = GetFlag(TIMEVARYING) && isPlaying;
     bool isEdited = _current->Draw();

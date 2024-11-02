@@ -6,25 +6,26 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 // Registry Window singleton
 //----------------------------------------------------------------------------
-RegistryWindow* RegistryWindow::_singleton=nullptr;
+WindowRegistry* WindowRegistry::_singleton=nullptr;
 
-RegistryWindow* RegistryWindow::Get() { 
+WindowRegistry* WindowRegistry::Get() { 
   if(_singleton==nullptr){
-    _singleton = new RegistryWindow();
+    _singleton = new WindowRegistry();
   }
   return _singleton; 
 };
 
 void
-RegistryWindow::Update()
+WindowRegistry::Update()
 {
   _mainWindow->Update();
   for (auto& childWindow : _childWindows)childWindow->Update();
 }
 
 void 
-RegistryWindow::SetActiveTool(size_t t)
+WindowRegistry::SetActiveTool(size_t t)
 {
+  std::cout << "Set Active Tool : " << t << std::endl;
   Tool* tool = _mainWindow->GetTool();
   size_t lastActiveTool = tool->GetActiveTool();
   if(t != lastActiveTool) {
@@ -36,21 +37,21 @@ RegistryWindow::SetActiveTool(size_t t)
 }
 
 bool
-RegistryWindow::IsToolInteracting()
+WindowRegistry::IsToolInteracting()
 {
   Tool* tool = _mainWindow->GetTool();
   return tool->IsInteracting();
 }
 
 void
-RegistryWindow::AddWindow(Window* window)
+WindowRegistry::AddWindow(Window* window)
 {
  _childWindows.push_back(window);
   window->SetGLContext();
 }
 
 void 
-RegistryWindow::RemoveWindow(Window* window)
+WindowRegistry::RemoveWindow(Window* window)
 {
   std::vector<Window*>::iterator it = _childWindows.begin();
   for (; it < _childWindows.end(); ++it) {
@@ -61,13 +62,13 @@ RegistryWindow::RemoveWindow(Window* window)
 }
 
 void 
-RegistryWindow::SetWindowDirty(Window* window)
+WindowRegistry::SetWindowDirty(Window* window)
 {
   window->DirtyAllViews(false);
 }
 
 void 
-RegistryWindow::SetAllWindowsDirty()
+WindowRegistry::SetAllWindowsDirty()
 {
   _mainWindow->DirtyAllViews(false);
   for(auto& childWindow: _childWindows)
@@ -77,7 +78,7 @@ RegistryWindow::SetAllWindowsDirty()
 // create full screen window
 //----------------------------------------------------------------------------
 Window*
-RegistryWindow::CreateFullScreenWindow(const std::string& name)
+WindowRegistry::CreateFullScreenWindow(const std::string& name)
 {
   _mainWindow = Window::CreateFullScreenWindow(name);
   _activeWindow = _mainWindow;
@@ -87,7 +88,7 @@ RegistryWindow::CreateFullScreenWindow(const std::string& name)
 // create child window
 //----------------------------------------------------------------------------
 Window*
-RegistryWindow::CreateChildWindow(const std::string& name, const GfVec4i& dimension, Window* parent)
+WindowRegistry::CreateChildWindow(const std::string& name, const GfVec4i& dimension, Window* parent)
 {
   Window* childWindow = Window::CreateChildWindow(name, dimension, parent);
   AddWindow(childWindow);
@@ -99,7 +100,7 @@ RegistryWindow::CreateChildWindow(const std::string& name, const GfVec4i& dimens
 // create standard window
 //----------------------------------------------------------------------------
 Window*
-RegistryWindow::CreateStandardWindow(const std::string& name, const GfVec4i& dimension)
+WindowRegistry::CreateStandardWindow(const std::string& name, const GfVec4i& dimension)
 {
   _mainWindow = Window::CreateStandardWindow(name, dimension);
   _activeWindow = _mainWindow;
@@ -109,11 +110,11 @@ RegistryWindow::CreateStandardWindow(const std::string& name, const GfVec4i& dim
 
 // Registry UI singleton
 //----------------------------------------------------------------------------
-RegistryUI* RegistryUI::_singleton=nullptr;
+UIRegistry* UIRegistry::_singleton=nullptr;
 
-RegistryUI* RegistryUI::Get() { 
+UIRegistry* UIRegistry::Get() { 
   if(_singleton==nullptr){
-    _singleton = new RegistryUI();
+    _singleton = new UIRegistry();
   }
   return _singleton; 
 };

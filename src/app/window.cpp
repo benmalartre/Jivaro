@@ -590,7 +590,6 @@ Window::SetGLContext()
 void 
 Window::Draw(bool force)
 {
-  std::cout << "window draw..." << std::endl;
   if (!_valid || _idle)return;
 
   SetGLContext();

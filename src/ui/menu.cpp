@@ -81,7 +81,7 @@ void MenuUI::Item::Draw(bool* modified, size_t itemIdx)
   } else {
     if (ImGui::MenuItem(label.c_str(), NULL, selected, enabled) && callback) {
       callback();
-      RegistryWindow::Get()->SetAllWindowsDirty();
+      WindowRegistry::Get()->SetAllWindowsDirty();
     }
   }
   ImGui::PopFont();
@@ -320,7 +320,7 @@ static void OpenDemoCallback(MenuUI* menu)
 
 static void OpenChildWindowCallback(MenuUI* menu)
 {
-  RegistryWindow* registry = RegistryWindow::Get();
+  WindowRegistry* registry = WindowRegistry::Get();
   Window* mainWindow = registry->GetMainWindow();
   Window* childWindow = registry->CreateChildWindow("Child Window", GfVec4i(200, 200, 400, 400), mainWindow);
   registry->AddWindow(childWindow);

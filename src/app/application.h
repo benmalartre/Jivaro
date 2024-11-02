@@ -103,7 +103,7 @@ protected:
 
 private:
   // windows
-  RegistryWindow*                   _windows;
+  WindowRegistry*                   _windows;
   Model*                            _model;
   float                             _lastTime;
 

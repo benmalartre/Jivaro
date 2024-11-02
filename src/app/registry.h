@@ -11,13 +11,13 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-class RegistryWindow {
+class WindowRegistry {
 public:
   // constructor
-  RegistryWindow() : _mainWindow(nullptr), _activeWindow(nullptr), _focusWindow(nullptr){};
+  WindowRegistry() : _mainWindow(nullptr), _activeWindow(nullptr), _focusWindow(nullptr){};
   
   // singleton
-  static RegistryWindow* Get();
+  static WindowRegistry* Get();
 
   Window* GetMainWindow() {return _mainWindow;};
   Window* GetChildWindow(size_t index) {return _childWindows[index];};
@@ -46,7 +46,7 @@ public:
   Window* CreateChildWindow(const std::string& name, const GfVec4i& dimension, Window* parent);
 
 private:
-  static RegistryWindow*            _singleton;
+  static WindowRegistry*            _singleton;
 
   Window*                           _mainWindow;
   std::vector<Window*>              _childWindows;
@@ -57,7 +57,7 @@ private:
 
 
 
-class RegistryUI
+class UIRegistry
 {
   typedef std::function<BaseUI*(View*)> Creator;
   typedef std::map<std::string, Creator> Creators;
@@ -65,7 +65,7 @@ class RegistryUI
 public:
 
   // singleton
-  static RegistryUI* Get();
+  static UIRegistry* Get();
 
   template <class ConcreteUI>
   void Register(const std::string &identifier)
@@ -93,7 +93,7 @@ protected:
 
 private:
   Creators            _creators;
-  static RegistryUI*  _singleton;
+  static UIRegistry*  _singleton;
 
 };
 

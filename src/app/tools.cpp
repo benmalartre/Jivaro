@@ -11,7 +11,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 Tool::Tool()
   : _interacting(false)
-  , _active(NULL)
+  , _active(nullptr)
   , _last(Tool::NONE)
   , _current(Tool::NONE)
 {
