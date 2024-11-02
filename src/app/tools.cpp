@@ -171,7 +171,7 @@ void Tool::Update(float x, float y, float width, float height)
 
 void Tool::ResetSelection()
 {
-  if(_active) {
+  if(_active != nullptr) {
     _active->ResetSelection();
   }
 }

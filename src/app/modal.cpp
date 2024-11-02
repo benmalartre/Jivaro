@@ -1,6 +1,6 @@
-#include "modal.h"
-#include "application.h"
-#include "window.h"
+#include "../app/modal.h"
+#include "../app/window.h"
+#include "../app/registry.h"
 #include "../ui/fileBrowser.h"
 #include "../ui/demo.h"
 
@@ -10,8 +10,9 @@ JVR_NAMESPACE_OPEN_SCOPE
 //==============================================================================
 // Base Modal Window
 //==============================================================================
-ModalBase::ModalBase(int x, int y, int width, int height, const std::string& name)
-  : _x(x)
+ModalBase::ModalBase(Window* parent, int x, int y, int width, int height, const std::string& name)
+  : _parent(parent)
+  , _x(x)
   , _y(y)
   , _width(width)
   , _height(height)
@@ -27,23 +28,22 @@ ModalBase::~ModalBase()
 
 void ModalBase::Init()
 {
-  Application* app = Application::Get();
-  Window* mainWindow = app->GetMainWindow();
-  mainWindow->SetIdle(true);
+  WindowRegistry* registry = WindowRegistry::Get();
+  Window* window = registry->GetActiveWindow();
+  window->SetIdle(true);
 
-  _window = WindowRegistry::Get()->CreateChildWindow(_title, GfVec4i(_x, _y, _width, _height), mainWindow);
+  _window = WindowRegistry::Get()->CreateChildWindow(_title, GfVec4i(_x, _y, _width, _height), window);
   _window->SetDesiredLayout(_window->GetLayout());
 }
 
 void ModalBase::Term()
 {
-  if(_window) delete _window;
-  
-  Application* app = Application::Get();
-  Window* mainWindow = app->GetMainWindow();
-  
-  mainWindow->SetIdle(false);
-  mainWindow->SetGLContext();
+  WindowRegistry* registry = WindowRegistry::Get();
+  if(_window)
+    registry->RemoveWindow(_window);
+
+  _parent->SetIdle(false);
+  _parent->SetGLContext();
 }
 
 void ModalBase::Loop()
@@ -58,9 +58,9 @@ void ModalBase::Loop()
 //==============================================================================
 // File Browser Modal Window
 //==============================================================================
-ModalFileBrowser::ModalFileBrowser(int x, int y, const std::string& title, 
+ModalFileBrowser::ModalFileBrowser(Window* parent, int x, int y, const std::string& title, 
   ModalFileBrowser::Mode mode)
-  : ModalBase(x, y, 600, 400, title)
+  : ModalBase(parent, x, y, 600, 400, title)
   , _mode( mode )
 {
   ModalBase::Init();
@@ -110,8 +110,8 @@ void ModalFileBrowser::_LoopImpl()
 //==============================================================================
 // Demo Modal Window
 //==============================================================================
-ModalDemo::ModalDemo(int x, int y, const std::string& title)
-  : ModalBase(x, y, 800, 800, title)
+ModalDemo::ModalDemo(Window* parent, int x, int y, const std::string& title)
+  : ModalBase(parent, x, y, 800, 800, title)
 {
   ModalBase::Init();
   View* view = _window->GetMainView();

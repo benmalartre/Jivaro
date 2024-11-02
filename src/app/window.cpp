@@ -113,7 +113,7 @@ Window::Init()
   glfwSetKeyCallback(_window, KeyboardCallback);
   glfwSetCharCallback(_window, CharCallback);
   glfwSetCursorPosCallback(_window, MouseMoveCallback);
-  glfwSetWindowFocusCallback(_window, FocusCallback);
+  //glfwSetWindowFocusCallback(_window, FocusCallback);
   glfwSetInputMode(_window, GLFW_STICKY_KEYS, GLFW_TRUE);
 
   // create main splittable view
@@ -127,11 +127,11 @@ Window::Init()
 
   GLSLProgram* pgm = InitShapeShader((void*)this);
   _tool.SetProgram(pgm);
+  _tool.SetActiveTool(Tool::NONE);
     
   // ui
   SetupImgui();
   glfwMakeContextCurrent(NULL);
-  std::cout << "window initialized.." << std::endl;
 }
 
 // window destructor
@@ -141,39 +141,14 @@ Window::~Window()
   if (_fbo) glDeleteFramebuffers(1, &_fbo);
   if (_tex) glDeleteTextures(1, &_tex);
   ClearImgui();
-  if(_splitter)delete _splitter;
-  if(_mainView)delete _mainView;
+  if(_splitter) delete _splitter;
+  if(_mainView) delete _mainView;
   if(_window)glfwDestroyWindow(_window);
 
-  if(_shared) {
+  if(_shared) 
     DeleteFontAtlas();
-  }
-}
 
-// create full screen window
-//----------------------------------------------------------------------------
-Window* 
-Window::CreateFullScreenWindow(const std::string& name)
-{
-  return new Window("Jivaro", GfVec4i(), true);
 }
-
-// create standard window
-//----------------------------------------------------------------------------
-Window*
-Window::CreateStandardWindow(const std::string& name, const GfVec4i& dimension)
-{
-  return new Window(name, dimension, false);
-}
-
-// child window
-//----------------------------------------------------------------------------
-Window*
-Window::CreateChildWindow(const std::string& name, const GfVec4i& dimension, Window* parent)
-{
-  return new Window(name, dimension, false, parent);
-}
-
 
 void
 Window::ClearViews()
@@ -646,7 +621,7 @@ Window::DrawPopup(PopupUI* popup)
       ImVec2(0, 0), ImVec2(1, 1), ImColor(100, 100, 100, 255));
     ImGui::End();
   } else {
-    RegistryWindow::Get()->SetWindowDirty(this);
+    WindowRegistry::Get()->SetWindowDirty(this);
     GetMainView()->Draw(false);
   }
 
@@ -745,7 +720,7 @@ void Window::DragSplitter(int x, int y)
 
 void Window::UpdateActiveTool(int x, int y)
 {
-  if(_tool.IsActive() && _tool.IsInteracting() &&GetActiveView())
+  if(_tool.IsActive() && _tool.IsInteracting() && GetActiveView())
     GetActiveView()->MouseMove(x, y);
   else if(GetHoveredView())
     GetHoveredView()->MouseMove(x, y);
@@ -756,8 +731,9 @@ bool Window::Update()
   if (IsIdle())return true;
   if (glfwWindowShouldClose(_window)) {
     if (!_shared) {
-      RegistryWindow::Get()->RemoveWindow(this);
+      WindowRegistry::Get()->RemoveWindow(this);
       delete this;
+      return true;
     }
     return false;
   }
@@ -801,10 +777,11 @@ KeyboardCallback(
   Window* parent = (Window*)glfwGetWindowUserPointer(window);
 
   Application* app = Application::Get();
-  PopupUI* popup = app->GetPopup();
+  WindowRegistry* registry = WindowRegistry::Get();
+  PopupUI* popup = registry->GetPopup();
   if (popup) {
     popup->Keyboard(key, scancode, action, mods);
-    app->UpdatePopup();
+    registry->UpdatePopup();
     return;
   }
 
@@ -989,9 +966,9 @@ KeyboardCallback(
 void 
 ClickCallback(GLFWwindow* window, int button, int action, int mods)
 { 
+  WindowRegistry* registry = WindowRegistry::Get();
   Window* parent = Window::GetUserData(window);
-  Application* app = Application::Get();
-  app->SetActiveWindow(parent);
+  registry->SetActiveWindow(parent);
   ImGui::SetCurrentContext(parent->GetContext());
   
   ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
@@ -1001,10 +978,10 @@ ClickCallback(GLFWwindow* window, int button, int action, int mods)
   glfwGetWindowSize(window, &width, &height);
   bool splitterHovered = parent->PickSplitter(x, y);
 
-  PopupUI* popup = app->GetPopup();
+  PopupUI* popup = registry->GetPopup();
   if (popup) {
     popup->MouseButton(button, action, mods);
-    app->UpdatePopup();
+    registry->UpdatePopup();
   } else if(button == GLFW_MOUSE_BUTTON_RIGHT && mods == 0) {
     View* view = parent->GetActiveView();
     if (view) {
@@ -1045,7 +1022,7 @@ void
 ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
   Window* parent = Window::GetUserData(window);
-  PopupUI* popup = Application::Get()->GetPopup();
+  PopupUI* popup = WindowRegistry::Get()->GetPopup();
   ImGui::SetCurrentContext(parent->GetContext());
   ImGui_ImplGlfw_ScrollCallback(window, xoffset, yoffset);
   if (popup) {
@@ -1059,7 +1036,7 @@ void
 CharCallback(GLFWwindow* window, unsigned c)
 {
   Window* parent = Window::GetUserData(window);
-  PopupUI* popup = Application::Get()->GetPopup();
+  PopupUI* popup = WindowRegistry::Get()->GetPopup();
   ImGui_ImplGlfw_CharCallback(window, c);
   if (popup) {
     popup->Input(c);
@@ -1072,7 +1049,7 @@ void
 MouseMoveCallback(GLFWwindow* window, double x, double y)
 {
   Window* parent = Window::GetUserData(window);
-  PopupUI* popup = Application::Get()->GetPopup();
+  PopupUI* popup = WindowRegistry::Get()->GetPopup();
   ImGui::SetCurrentContext(parent->GetContext());
   View* hovered = parent->GetViewUnderMouse((int)x, (int)y);
   View* active = parent->GetActiveView();
@@ -1098,14 +1075,16 @@ MouseMoveCallback(GLFWwindow* window, double x, double y)
   }
 }
 
+/*
 void 
 FocusCallback(GLFWwindow* window, int focused)
 {
   if (focused) {
     Window* parent = Window::GetUserData(window);
-    RegistryWindow::Get()->SetFocusWindow(parent);
+    WindowRegistry::Get()->SetFocusWindow(parent);
   }
 }
+*/
 
 void 
 DisplayCallback(GLFWwindow* window)

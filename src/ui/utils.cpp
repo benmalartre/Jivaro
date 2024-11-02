@@ -305,9 +305,10 @@ AddColorWidget(const UsdAttribute& attribute, const UsdTimeCode& timeCode)
 
     ColorPopupUI* popup = new ColorPopupUI((int)position[0], (int)position[1], 
       200, 300, attribute, timeCode);
+    /*
     Application::Get()->AddDeferredCommand(
-      std::bind(&Application::SetPopup, Application::Get(), popup)
-    );
+      std::bind(&WindowRegistry::SetPopup, WindowRegistry::Get(), popup)
+    );*/
     ImGui::PopStyleColor(3);
     return VtValue();
   }

@@ -1328,7 +1328,7 @@ GraphEditorUI::Keyboard(int key, int scancode, int action, int mods)
       /*
       GraphPopupUI* popup = new GraphPopupUI(
         (int)GetX() + GetWidth() * 0.5f - 100, (int)GetY() + GetHeight() * 0.5 - 50, 200, 100);
-      ADD_DEFERRED_CMD(std::bind(&Application::SetPopup, app, popup));
+      ADD_DEFERRED_COMMAND(std::bind(&Application::SetPopup, app, popup));
       */
     }
   }

@@ -53,29 +53,12 @@ public:
   void Duplicate();
   void Delete();
 
-  // window
-  Window* GetMainWindow() {return _windows->GetMainWindow();};
-  Window* GetChildWindow(size_t index) {return _windows->GetChildWindow(index);};
-  Window* GetActiveWindow() { return _windows->GetActiveWindow(); };
-  void SetActiveWindow(Window* window) { _windows->SetActiveWindow(window); };
-  /*
-  void AddWindow(Window* window);
-  void RemoveWindow(Window* window);
-  void SetWindowDirty(Window* window);
-  void SetAllWindowsDirty();
-  */
-
   // playback viewport
   bool IsPlaybackView(View* view);
   void SetPlaybackView(View* view);
 
-  // popup
-  PopupUI* GetPopup() { return _popup; };
-  void SetPopup(PopupUI* popup);
-  void UpdatePopup();
-
-  void AddDeferredCommand(CALLBACK_FN fn);
-  void ExecuteDeferredCommands();
+  //void AddDeferredCommand(CALLBACK_FN fn);
+  //void ExecuteDeferredCommands();
 
   // model
   Model* GetModel() {return _model;};
@@ -100,15 +83,11 @@ public:
 protected:
   static Application*               _singleton;
 
-
 private:
-  // windows
   WindowRegistry*                   _windows;
   Model*                            _model;
   float                             _lastTime;
 
-  // uis
-  PopupUI*                          _popup;
   View*                             _playbackView;
 
    // command

@@ -53,10 +53,10 @@ Application* Application::Get() {
 // constructor
 //----------------------------------------------------------------------------
 Application::Application()
-  : _popup(nullptr)
-  , _playbackView(nullptr)
-  , _windows(RegistryWindow::Get())
+  : _playbackView(nullptr)
+  , _windows(WindowRegistry::New())
 {  
+
 };
 
 // destructor
@@ -67,40 +67,7 @@ Application::~Application()
 };
 
 
-// popup
-//----------------------------------------------------------------------------
-void
-Application::SetPopup(PopupUI* popup)
-{
-  popup->SetParent(GetActiveWindow()->GetMainView());
-  _popup = popup;
-  _windows->GetMainWindow()->CaptureFramebuffer();
-  for (auto& childWindow : _windows->GetChildWindows())
-    childWindow->CaptureFramebuffer();
-}
-
 /*
-void
-Application::SetPopupDeferred(PopupUI* popup)
-{
-  popup->SetParent(GetActiveWindow()->GetMainView());
-  _popup = popup;
-  _needCaptureFramebuffers = true;
-}
-*/
-
-void
-Application::UpdatePopup()
-{
-  if (_popup) {
-    if (!_popup->IsDone())return;
-    _popup->Terminate();
-    delete _popup;
-  }
-  _popup = nullptr;
-  _windows->SetAllWindowsDirty();
-}
-
 void
 Application::AddDeferredCommand(CALLBACK_FN fn)
 {
@@ -116,7 +83,7 @@ Application::ExecuteDeferredCommands()
     _deferred.clear();
   }
 }
-
+*/
 
 // browse for file
 //----------------------------------------------------------------------------
@@ -131,8 +98,8 @@ Application::BrowseFile(int x, int y, const char* folder, const char* filters[],
     ModalFileBrowser::Mode::SAVE : ModalFileBrowser::Mode::OPEN;
 
   const std::string label = readOrWrite ? "New" : "Open";
-
-  ModalFileBrowser browser(x, y, label, mode);
+  Window* parent = WindowRegistry::Get()->GetActiveWindow();
+  ModalFileBrowser browser(parent, x, y, label, mode);
   browser.Loop();
   if(browser.GetStatus() == ModalBase::Status::OK) {
     result = browser.GetResult();
@@ -151,9 +118,9 @@ Application::Init(unsigned width, unsigned height, bool fullscreen)
   std::cout << "create window" << std::endl;
   Window* window;
   if(fullscreen) {
-    window = RegistryWindow::Get()->CreateFullScreenWindow(name);
+    window = _windows->CreateFullScreenWindow(name);
   } else {
-    window = RegistryWindow::Get()->CreateStandardWindow(name, GfVec4i(0,0,width, height));
+    window = _windows->CreateStandardWindow(name, GfVec4i(0,0,width, height));
   }
   std::cout << "created window" << std::endl;
 
@@ -178,74 +145,10 @@ Application::Init(unsigned width, unsigned height, bool fullscreen)
 
   // create window
 
-  window->SetDesiredLayout(WINDOW_LAYOUT_BASE);
+  window->SetDesiredLayout(WINDOW_LAYOUT_STANDARD);
 
   _model = new Model();
 
-
-  //_stage = TestAnimXFromFile(filename, editor);
-  //UsdStageRefPtr stage = TestAnimX(editor);
-  //_scene->GetRootStage()->GetRootLayer()->InsertSubLayerPath(stage->GetRootLayer()->GetIdentifier());
-
-  /*
-  // Create the layer to populate.
-  std::string shotFilePath = "E:/Projects/RnD/USD_BUILD/assets/AnimX/test.usda";
-  std::string animFilePath = "E:/Projects/RnD/USD_BUILD/assets/AnimX/anim.animx";
-  //SdfLayerRefPtr baseLayer = SdfLayer::FindOrOpen(shotFilePath);
-  
-  // Create a UsdStage with that root layer.
-  UsdStageRefPtr stage = UsdStage::Create(shotFilePath);
-  stage->SetStartTimeCode(1);
-  stage->SetEndTimeCode(100);
-  
-  UsdGeomCube cube =
-    UsdGeomCube::Define(stage, SdfPath("/Cube"));
-    
-
-  stage->GetRootLayer()->Save();
-
-  // we use Sdf, a lower level library, to obtain the 'anim' layer.
-  SdfLayerRefPtr animLayer = SdfLayer::FindOrOpen(animFilePath);
-  std::cout << "HAS LOCAL LAYER : " << stage->HasLocalLayer(animLayer) << std::endl;
-
-  stage->SetEditTarget(animLayer);
-  std::cout << "HAS LOCAL LAYER : " << stage->HasLocalLayer(animLayer) << std::endl;
-  */
-  
-  /*
-  // Create a mesh for the group.
-        UsdGeomMesh mesh =
-            UsdGeomMesh::Define(stage, SdfPath("/" + group.name));*/
-  
-  //_stage = UsdStage::CreateNew("test_stage");
-  //_stage = UsdStage::Open(filename);
-
-  //_stage = UsdStage::CreateNew("test.usda", TfNullPtr);
-  //_stage = UsdStage::CreateInMemory();
-
-  //_mesh = MakeColoredPolygonSoup(_scene->GetCurrentStage(), TfToken("/polygon_soup"));
-  //Mesh* vdbMesh = MakeOpenVDBSphere(_stage, TfToken("/openvdb_sphere"));
-/*
-  for(size_t i=0; i< 12; ++i) {
-    SdfPath path(TfToken("/cube_"+std::to_string(i)));
-    UsdGeomCube cube = UsdGeomCube::Define(_stage, path);
-    cube.AddTranslateOp().Set(GfVec3d(i * 3, 0, 0), UsdTimeCode::Default());
-  }
-*/
-  //_stages.push_back(stage1);
-  //TestStageUI(graph, _stages);
-
- 
-  //_mainWindow->CollectLeaves();
- 
-  /*Window* childWindow = CreateChildWindow(200, 200, 400, 400, _mainWindow);
-  AddWindow(childWindow);
-  
-  ViewportUI* viewport2 = new ViewportUI(childWindow->GetMainView());
-  
-  //DummyUI* dummy = new DummyUI(childWindow->GetMainView(), "Dummy");
-  
-  childWindow->CollectLeaves();*/
 
 }
 
@@ -261,7 +164,7 @@ Application::Term()
 bool
 Application::Update()
 {
-  ExecuteDeferredCommands();
+  //ExecuteDeferredCommands();
   /*
   if (_needCaptureFramebuffers) {
     _mainWindow->CaptureFramebuffer();
@@ -281,32 +184,16 @@ Application::Update()
     glfwWaitEvents();
   
   // update model
-  if (!_popup && (playback > Time::PLAYBACK_IDLE || RegistryWindow::Get()->IsToolInteracting())) {
+  if (!_windows->GetPopup() && (playback > Time::PLAYBACK_IDLE || _windows->IsToolInteracting())) {
     if(_model->GetExec() ) 
       _model->UpdateExec(currentTime);
 
     _model->Update(currentTime);
-    RegistryWindow::Get()->SetAllWindowsDirty();
+    _windows->SetAllWindowsDirty();
   }
 
-  // draw popup
-  if (_popup) {
-    Window* window = _popup->GetView()->GetWindow();
-    window->DrawPopup(_popup);
-    if (_popup->IsDone() || _popup->IsCancel()) {
-      _popup->Terminate();
-      delete _popup;
-      _popup = nullptr;
-    }
-  } else {
-    if (!_windows->GetMainWindow()->Update()) 
-      return false;
-
-    for (auto& childWindow : _windows->GetChildWindows())
-      childWindow->Update();
-
-  }
-  
+  if(!_windows->Update())
+    return false;
 
   CommandManager::Get()->ExecuteCommands();
   return true;
@@ -393,15 +280,11 @@ void Application::SaveSceneAs(const std::string& filename)
 void 
 Application::SelectionChangedCallback(const SelectionChangedNotice& n)
 {  
-  std::cout << "selection changed callback" << std::endl;
-  Window* window = _windows->GetMainWindow();
-  if(window->GetTool()->IsActive())
-    window->GetTool()->ResetSelection();
-
-  for (Window* child : _windows->GetChildWindows()) {
-    if(child->GetTool()->IsActive())
-      child->GetTool()->ResetSelection();
-  }
+  for (Window* window : _windows->GetWindows())
+    if(window->GetTool()->IsActive())
+      window->GetTool()->ResetSelection();
+  
+ 
   _model->Update(Time::Get()->GetActiveTime());
   _windows->SetAllWindowsDirty();
 }
@@ -418,11 +301,12 @@ Application::NewSceneCallback(const NewSceneNotice& n)
 void 
 Application::SceneChangedCallback(const SceneChangedNotice& n)
 {
-  RegistryWindow* registry = RegistryWindow::Get();
-  registry->GetMainWindow()->GetTool()->ResetSelection();
-  for (auto& window : registry->GetChildWindows()) {
+  /*
+  _windows->GetMainWindow()->GetTool()->ResetSelection();
+  for (auto& window : _windows->GetChildWindows()) {
     window->GetTool()->ResetSelection();
   }
+  */
   _model->Update(Time::Get()->GetActiveTime());
   _windows->SetAllWindowsDirty();
 }
@@ -433,10 +317,12 @@ Application::AttributeChangedCallback(const AttributeChangedNotice& n)
   if (_model->GetExec()) 
     _model->UpdateExec(Time::Get()->GetActiveTime());
   
+  /*
   _windows->GetMainWindow()->GetTool()->ResetSelection();
   for (auto& child : _windows->GetChildWindows()) {
     child->GetTool()->ResetSelection();
   }
+  */
   _model->Update(Time::Get()->GetActiveTime());
   _windows->SetAllWindowsDirty();
 

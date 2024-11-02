@@ -32,7 +32,7 @@ PopupUI::PopupUI(int x, int y, int w, int h)
   , _sync(false)
   , _cancel(false)
 {
-  _parent = Application::Get()->GetActiveWindow()->GetMainView();
+  _parent = WindowRegistry::Get()->GetActiveWindow()->GetMainView();
 }
 
 PopupUI::~PopupUI()

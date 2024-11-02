@@ -333,7 +333,7 @@ void ViewportUI::MouseWheel(int x, int y)
 
 void ViewportUI::Keyboard(int key, int scancode, int action, int mods)
 {
-  Application* app = Application::Get();
+  WindowRegistry* registry = WindowRegistry::Get();
   int mappedKey = GetMappedKey(key);
   if (action == GLFW_PRESS) {
     switch (mappedKey) {
@@ -344,24 +344,23 @@ void ViewportUI::Keyboard(int key, int scancode, int action, int mods)
       }
       case GLFW_KEY_F:
       {
-        Model* model = app->GetModel();
-        if (model->GetSelection()->IsEmpty())return;
-        _camera->FrameSelection(model->GetSelectionBoundingBox());
+        if (_model->GetSelection()->IsEmpty())return;
+        _camera->FrameSelection(_model->GetSelectionBoundingBox());
         break;
       }
       case GLFW_KEY_S:
       {
-        RegistryWindow::Get()->SetActiveTool(Tool::SCALE);
+        registry->SetActiveTool(Tool::SCALE);
         break;
       }
       case GLFW_KEY_R:
       {
-        RegistryWindow::Get()->SetActiveTool(Tool::ROTATE);
+        registry->SetActiveTool(Tool::ROTATE);
         break;
       }
       case GLFW_KEY_T:
       {
-        RegistryWindow::Get()->SetActiveTool(Tool::TRANSLATE);
+        registry->SetActiveTool(Tool::TRANSLATE);
         break;
       }
     }
@@ -370,7 +369,6 @@ void ViewportUI::Keyboard(int key, int scancode, int action, int mods)
 
 void ViewportUI::Render()
 {
-  Application* app = Application::Get();
   Window* window = GetWindow();
 
   //_engine->PollForAsynchronousUpdates();
@@ -407,7 +405,7 @@ ViewportUI::_DrawPickMode()
     ICON_FA_HAND_POINTER " Assembly"
   };
 
-  Selection* selection = Application::Get()->GetModel()->GetSelection();
+  Selection* selection = _model->GetSelection();
   if (UI::AddComboWidget("Pick", pickModeStr, numPickModes, _pickMode, 250)) {
     selection->SetMode((Selection::Mode)_pickMode);
     GetView()->SetFlag(View::DISCARDMOUSEBUTTON);
@@ -683,10 +681,9 @@ bool ViewportUI::Pick(int x, int y, int mods)
 bool ViewportUI::Select(int x, int y, int mods)
 {
   if (y - GetY() < 32) return false;
-  Application* app = Application::Get();
-  Model* model = app->GetModel();
-  Selection* selection = model->GetSelection();
-  UsdStageRefPtr stage = model->GetWorkStage();
+
+  Selection* selection = _model->GetSelection();
+  UsdStageRefPtr stage = _model->GetWorkStage();
   if (!stage)return false;
 
   GfFrustum pickFrustum = _ComputePickFrustum(x, y);
@@ -699,17 +696,17 @@ bool ViewportUI::Select(int x, int y, int mods)
       }
 
       if (mods & GLFW_MOD_CONTROL && mods & GLFW_MOD_SHIFT) {
-        model->ToggleSelection({ hit.objectId });
+        _model->ToggleSelection({ hit.objectId });
       }
       else if (mods & GLFW_MOD_SHIFT) {
-        model->AddToSelection({ hit.objectId });
+        _model->AddToSelection({ hit.objectId });
       }
       else {
-        model->SetSelection({ hit.objectId });
+        _model->SetSelection({ hit.objectId });
       }
     return true;
   } else {
-    model->ClearSelection();
+    _model->ClearSelection();
     return false;
   }
   

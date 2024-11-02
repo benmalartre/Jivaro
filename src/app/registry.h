@@ -2,39 +2,49 @@
 #define JVR_WINDOW_REGISTRY_H
 
 #include <vector>
+#include <map>
 #include <functional>
 
-#include "../app/window.h"
-#include "../app/view.h"
-#include "../ui/ui.h"
+#include <pxr/base/gf/vec4i.h>
 
+#include "../common.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
+class Window;
+class View;
+class BaseUI;
+class PopupUI;
+
 class WindowRegistry {
 public:
+  
   // constructor
-  WindowRegistry() : _mainWindow(nullptr), _activeWindow(nullptr), _focusWindow(nullptr){};
+  WindowRegistry() : _activeWindow(nullptr), _popup(nullptr){};
   
   // singleton
+  static WindowRegistry* New();
   static WindowRegistry* Get();
 
-  Window* GetMainWindow() {return _mainWindow;};
-  Window* GetChildWindow(size_t index) {return _childWindows[index];};
-  std::vector<Window*>& GetChildWindows(){return _childWindows;};
-  const std::vector<Window*>& GetChildWindows() const {return _childWindows;};
-  Window* GetActiveWindow() { return _activeWindow ? _activeWindow : _mainWindow; };
+  Window* GetWindow(size_t index) {return _windows[index];};
+  std::vector<Window*>& GetWindows(){return _windows;};
+  const std::vector<Window*>& GetWindows() const {return _windows;};
+  Window* GetActiveWindow() { return _activeWindow;};
   void SetActiveWindow(Window* window) { _activeWindow = window; };
-  void SetFocusWindow(Window* window) { _focusWindow = window; };
   void AddWindow(Window* window);
   void RemoveWindow(Window* window);
   void SetWindowDirty(Window* window);
   void SetAllWindowsDirty();
 
-  void Update();
+  bool Update();
 
   void SetActiveTool(size_t t);
   bool IsToolInteracting();
+
+  // popup
+  PopupUI* GetPopup() { return _popup; };
+  void SetPopup(PopupUI* popup);
+  void UpdatePopup();
 
   // create a fullscreen window
   Window* CreateFullScreenWindow(const std::string& name);
@@ -46,15 +56,13 @@ public:
   Window* CreateChildWindow(const std::string& name, const GfVec4i& dimension, Window* parent);
 
 private:
-  static WindowRegistry*            _singleton;
-
-  Window*                           _mainWindow;
-  std::vector<Window*>              _childWindows;
+  std::vector<Window*>              _windows;
   Window*                           _activeWindow;
-  Window*                           _focusWindow;
+
+  // uis
+  PopupUI*                          _popup;
 
 };
-
 
 
 class UIRegistry

@@ -150,23 +150,24 @@ ViewTabUI::Draw()
       if (_invade)_parent->SetFlag(View::DISCARDMOUSEBUTTON);
       ImGui::Selectable("Split Horizontaly");
       if (ImGui::IsItemClicked()) {
+        /*
         Application::Get()->AddDeferredCommand(
-          std::bind(&View::Split, _parent, 0.5, true, false, 0));
+          std::bind(&View::Split, _parent, 0.5, true, false, 0));*/
         _invade = false;
       }
 
       ImGui::Selectable("Split Verticaly");
       if (ImGui::IsItemClicked()) {
-        Application::Get()->AddDeferredCommand(
-          std::bind(&View::Split, _parent, 0.5, false, false, 0));
+        /*Application::Get()->AddDeferredCommand(
+          std::bind(&View::Split, _parent, 0.5, false, false, 0));*/
         _invade = false;
       }
 
       ImGui::Selectable("Delete View");
       if (ImGui::IsItemClicked()) {
         Window* window = _parent->GetWindow();
-        Application::Get()->AddDeferredCommand(
-          std::bind(&Window::RemoveView, window, _parent));
+        /*Application::Get()->AddDeferredCommand(
+          std::bind(&Window::RemoveView, window, _parent));*/
         _invade = false;
       }
       

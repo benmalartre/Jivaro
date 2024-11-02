@@ -285,7 +285,7 @@ void TestBVH::UpdateExec(UsdStageRefPtr& stage, float time)
   _scene.MarkPrimDirty(_hitsId, HdChangeTracker::AllDirty);
   double elapsedT = (double)(CurrentTime() - startT)*1e-6;
   size_t numRays = _mesh->GetNumPoints();
-  Window* mainWindow = Application::Get()->GetMainWindow();
+  Window* mainWindow = WindowRegistry::Get()->GetWindow(0);
   mainWindow->SetViewportMessage("launch " + std::to_string(numRays) + " took " +std::to_string(elapsedT) + " seconds.");
 }
 

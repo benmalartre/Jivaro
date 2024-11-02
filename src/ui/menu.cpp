@@ -236,7 +236,8 @@ MenuUI::Draw()
   if (ImGui::BeginMainMenuBar())
   {
     size_t itemIdx = 0;
-    for (auto& item : _items)item->Draw(&dirty, itemIdx++);
+    for (auto& item : _items)
+      item->Draw(&dirty, itemIdx++);
     ImGui::EndMainMenuBar();
   }
   if (dirty || ImGui::IsAnyItemHovered()) { DirtyViewsBehind(); }
@@ -261,8 +262,8 @@ _BrowseFile(int x, int y, const char* folder, const char* filters[],
     ModalFileBrowser::Mode::SAVE : ModalFileBrowser::Mode::OPEN;
 
   const std::string label = forWriting ? "New" : "Open";
-
-  ModalFileBrowser browser(x, y, label, mode);
+  Window* window = WindowRegistry::Get()->GetActiveWindow();
+  ModalFileBrowser browser(window, x, y, label, mode);
   browser.Loop();
   if (browser.GetStatus() == ModalBase::Status::OK) {
     result = browser.GetResult();
@@ -313,7 +314,8 @@ static void NewFileCallback(MenuUI* menu)
 
 static void OpenDemoCallback(MenuUI* menu)
 {
-  ModalDemo demo(0, 0, "Demo");
+  Window* window = WindowRegistry::Get()->GetActiveWindow();
+  ModalDemo demo(window, 0, 0, "Demo");
   demo.Loop();
   demo.Term();
 }
@@ -321,7 +323,7 @@ static void OpenDemoCallback(MenuUI* menu)
 static void OpenChildWindowCallback(MenuUI* menu)
 {
   WindowRegistry* registry = WindowRegistry::Get();
-  Window* mainWindow = registry->GetMainWindow();
+  Window* mainWindow = registry->GetWindow(0);
   Window* childWindow = registry->CreateChildWindow("Child Window", GfVec4i(200, 200, 400, 400), mainWindow);
   registry->AddWindow(childWindow);
 

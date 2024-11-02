@@ -56,6 +56,7 @@ void Layout::RandomLayout(Window* window)
 
 void Layout::StandardLayout(Window* window)
 {
+  window->SetGLContext();
   window->ClearViews();
   View* mainView = window->GetMainView();
 

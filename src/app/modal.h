@@ -21,7 +21,7 @@ public:
 
 
   // constructor
-  ModalBase(int x, int y, int width, int height, const std::string& title);
+  ModalBase(Window* parent, int x, int y, int width, int height, const std::string& title);
   virtual ~ModalBase();
 
   // get data
@@ -40,6 +40,7 @@ protected:
   size_t        _y;
   size_t        _width;
   size_t        _height;
+  Window*       _parent;
   Window*       _window;
   BaseUI*       _ui;
   std::string   _title;
@@ -57,7 +58,7 @@ public:
     MULTI
   };
 
-  ModalFileBrowser(int x, int y, const std::string& title, Mode mode);
+  ModalFileBrowser(Window* parent, int x, int y, const std::string& title, Mode mode);
   std::string& GetResult(){return _result;};
 
   void _LoopImpl() override;
@@ -66,13 +67,13 @@ private:
   std::string               _result;
   std::string               _folder;
   Mode                      _mode;
-};
+}; 
 
 // folder browser
 class ModalFolderBrowser : public ModalBase
 {
 public:
-  ModalFolderBrowser(int x, int y, const std::string& title);
+  ModalFolderBrowser(Window* parent, int x, int y, const std::string& title);
   std::string& GetResult(){return _result;};
 
   void _LoopImpl() override;
@@ -85,7 +86,7 @@ private:
 class ModalDemo : public ModalBase
 {
 public:
-  ModalDemo(int x, int y, const std::string& title);
+  ModalDemo(Window* parent, int x, int y, const std::string& title);
   void _LoopImpl() override;
 };
 

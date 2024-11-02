@@ -219,12 +219,6 @@ private:
   GLuint                _tex;
   UITypeCounter         _uic;
 
-public:
-  // static constructor
-  //----------------------------------------------------------------------------
-  static Window* CreateFullScreenWindow(const std::string& name);
-  static Window* CreateStandardWindow(const std::string& name, const GfVec4i& dimension);
-  static Window* CreateChildWindow(const std::string& name, const GfVec4i& dimension, Window* parent);
 };
 
 // fonts

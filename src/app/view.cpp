@@ -63,12 +63,13 @@ View::View(View* parent, int x, int y, int w, int h, unsigned flags)
 
 View::~View()
 {
-  for (auto& ui : _uis)
-    delete ui;
- 
-  if (_tab) delete _tab;
   if (_left) delete _left;
   if (_right) delete _right;
+
+  for (auto& ui : _uis)
+    delete ui;
+
+  if (_tab) delete _tab;
 }
 
 void 
@@ -292,6 +293,10 @@ void View::Clear()
   if (_left) delete _left;
   if (_right) delete _right;
   _left = _right = NULL;
+
+  for(auto& ui: _uis)
+    delete ui;
+  _uis.clear();
   _current = NULL;
   _currentIdx = -1;
   SetFlag(LEAF);
