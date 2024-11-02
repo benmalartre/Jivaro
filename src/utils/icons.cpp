@@ -79,7 +79,6 @@ void InitializeIcons()
 {
   std::string installDir = GetInstallationFolder();
   std::string iconDir = installDir + SEPARATOR + "icons";
-  std::cout << "icon dir : " << iconDir << std::endl;
 
   for (size_t i=0; i < ICON_MAX_ID; ++i) {
     //ICONS[size][index] = { s, tex };
@@ -93,13 +92,9 @@ void InitializeIcons()
       std::cout << filename << std::endl;
       if (FileExists(filename) &&
         HioImage::IsSupportedImageFile(filename)) {
-          std::cout << "image is supported.." << std::endl;
         tex_small[j] = CreateIconFromImage(filename, i, ICON_SIZE_SMALL);
         tex_medium[j] = CreateIconFromImage(filename, i, ICON_SIZE_MEDIUM);
         tex_large[j] = CreateIconFromImage(filename, i, ICON_SIZE_LARGE);
-      }
-      else {
-        std::cout << "DID NOT FOUND " << filename << std::endl;
       }
     }
     ICONS[ICON_SIZE_SMALL][i] = Icon {

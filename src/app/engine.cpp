@@ -258,38 +258,41 @@ void
 Engine::_PrepareDefaultLighting()
 {
 
-  // get default light
-  SdfPath defaultLightId = _taskController->GetControllerId().AppendChild(TfToken("light0"));
+  // get default lights
+  _lights.resize(3);
 
   // set a animated spot light
   const float t = Time::Get()->GetActiveTime();
-  const GfVec3d lightPos(pxr::GfSin(t*0.1)*10, 32.f, GfCos(t*0.1)*10);
-  const pxr::GfVec3f direction(-lightPos.GetNormalized());
 
+  for (size_t i = 0; i < 3; ++i) {
+    const GfVec3d lightPos(GfSin(i + (t *0.1)) * 20.f, 20.f, GfCos(i + (t *0.1))*20.f);
+    const pxr::GfVec3f direction(-lightPos.GetNormalized());
 
-  _light.SetID(defaultLightId);
-  _light.SetAmbient(GfVec4f(0.1,0.1,0.1, 0));
-  _light.SetPosition(GfVec4f(lightPos[0], lightPos[1], lightPos[2], 1));
-  _light.SetSpotDirection(direction);
-  _light.SetIsDomeLight(false);
+    SdfPath defaultLightId = _taskController->GetControllerId().AppendChild(TfToken("light" +std::to_string(i)));
+    _lights[i].SetID(defaultLightId);
+    _lights[i].SetAmbient(GfVec4f(GfSin(i + (t *0.1)),0.5f,GfCos(i + (t *0.1)), 0));
+    _lights[i].SetPosition(GfVec4f(lightPos[0], lightPos[1], lightPos[2], 1));
+    _lights[i].SetSpotDirection(direction);
+    _lights[i].SetIsDomeLight(false);
 
-  _light.SetHasShadow(true);
-  _light.SetShadowResolution(512);
-  _light.SetShadowBlur(0.25f);
-  _light.SetShadowBias(-0.005f);
+    _lights[i].SetHasShadow(true);
+    _lights[i].SetShadowResolution(512);
+    _lights[i].SetShadowBlur(0.25f);
+    _lights[i].SetShadowBias(-0.005f);
+
+  }
+  if (!_lightingContext) {
+    _lightingContext = GlfSimpleLightingContext::New();
+  }
 
   GlfSimpleMaterial material;
-  material.SetAmbient(GfVec4f(1.0, 1.0, 1.0, 1.0));
+  material.SetAmbient(GfVec4f(0.2,0.2,0.2, 1.0));
   material.SetSpecular(GfVec4f(0.1, 0.1, 0.1, 1.0));
   material.SetShininess(32.0);
 
   GfVec4f sceneAmbient(0.01, 0.01, 0.01, 1.0);
 
-  if (!_lightingContext) {
-    _lightingContext = GlfSimpleLightingContext::New();
-  }
-
-  _lightingContext->SetLights({_light});
+  _lightingContext->SetLights(_lights);
   _lightingContext->SetMaterial(material);
   _lightingContext->SetSceneAmbient(sceneAmbient);
   _lightingContext->SetUseLighting(true);

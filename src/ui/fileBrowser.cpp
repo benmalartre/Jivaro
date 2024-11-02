@@ -81,7 +81,7 @@ void FileBrowserUI::SetFilters(const std::vector<std::string>& filters)
 
 void FileBrowserUI::_GetPathEntries()
 {
-  size_t numEntries = GetEntriesInDirectory(_path.c_str(), _entries);
+  size_t numEntries = GetEntriesInDirectory(_path.c_str(), _nextEntries);
 }
 
 void FileBrowserUI::_GetRootEntries()
@@ -92,7 +92,7 @@ void FileBrowserUI::_GetRootEntries()
 #else
   _path = SEPARATOR;
 #endif
-  GetVolumes(_entries);
+  GetVolumes(_nextEntries);
 }
 
 void FileBrowserUI::SetResult(const std::string& name)
@@ -128,7 +128,7 @@ bool FileBrowserUI::GetResult(size_t index, std::string& result)
 
 size_t FileBrowserUI::_ResetSelected()
 {
-  size_t numEntries = _entries.size();
+  size_t numEntries = _nextEntries.size();
   _selected.resize(numEntries);
   for(size_t i=0; i < numEntries; ++i) _selected[i] = false;
   _current = FILEBROWSER_INVALID_INDEX;
@@ -204,7 +204,7 @@ bool FileBrowserUI::_DrawEntry(ImDrawList* drawList, size_t idx, bool flip)
     ImGui::GetCursorPosY() - ImGui::GetScrollY() + ImGui::GetTextLineHeight());
 
   const float width = (float)GetWidth();
-  const bool isSelected = idx < _selected.size() && _selected[idx];
+  const bool isSelected = ((idx < _selected.size()) && _selected[idx]);
   if (isSelected) {
     drawList->AddRectFilled(
       { 0, pos.y },
@@ -238,7 +238,10 @@ bool FileBrowserUI::_DrawEntry(ImDrawList* drawList, size_t idx, bool flip)
       ImVec2(fileIcon->size, fileIcon->size));
   }
   ImGui::SameLine();
-  ImGui::TextColored(isSelected ? style.Colors[ImGuiCol_TabActive] : style.Colors[ImGuiCol_Text], "%s", info.path.c_str());
+  if(isSelected)
+    ImGui::TextColored(style.Colors[ImGuiCol_TabActive], info.path.c_str());
+  else
+    ImGui::TextColored(style.Colors[ImGuiCol_Text], info.path.c_str());
 
   return true;
 }
@@ -300,7 +303,8 @@ bool FileBrowserUI::Draw()
 
   ImGui::PushStyleColor(ImGuiCol_ChildBg, { 0,0,0,0 });
   ImGui::PushFont(DEFAULT_FONT);
-
+  
+  _entries = _nextEntries;
   _DrawPath();
   _DrawEntries();
 

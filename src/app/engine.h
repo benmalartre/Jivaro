@@ -145,7 +145,7 @@ private:
 
   TfToken                             _rendererPlugin;
   RenderParams                        _params;
-  GlfSimpleLight                      _light;
+  std::vector<GlfSimpleLight>         _lights;
   GlfSimpleLightingContextRefPtr      _lightingContext;
 
   bool                                _highlightSelection;

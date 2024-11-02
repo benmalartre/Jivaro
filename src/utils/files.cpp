@@ -137,6 +137,7 @@ size_t GetEntriesInDirectory(const char* path, std::vector<EntryInfo>& entries,
     // print all the files and directories within directory
     while ((ent = readdir (dir)) != NULL) 
     {
+      std::cout << ent->d_name << " : " << ent->d_type << std::endl;
       if(ent->d_type == DT_REG) {
         entries.push_back({
           (std::string)ent->d_name,

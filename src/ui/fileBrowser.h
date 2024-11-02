@@ -68,6 +68,7 @@ public:
 private:
   std::string              _path;
   std::vector<std::string> _pathTokens;
+  std::vector<EntryInfo>   _nextEntries;
   std::vector<EntryInfo>   _entries;
   std::vector<std::string> _directories;
   std::vector<std::string> _files;
