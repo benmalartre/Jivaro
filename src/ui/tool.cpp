@@ -38,10 +38,10 @@ ToolUI::~ToolUI()
 {
 }
 
-UsdGeomMesh _GetSelectedMesh()
+UsdGeomMesh _GetSelectedMesh(Model* model)
 {
-  UsdStageRefPtr stage = Application::Get()->GetModel()->GetStage();
-  Selection* selection = Application::Get()->GetModel()->GetSelection();
+  UsdStageRefPtr stage = model->GetStage();
+  Selection* selection = model->GetSelection();
   if (selection->GetNumSelectedItems() > 0) {
     Selection::Item& item = selection->GetItem(0);
     UsdPrim prim = stage->GetPrimAtPath(item.path);
@@ -52,9 +52,9 @@ UsdGeomMesh _GetSelectedMesh()
   return UsdGeomMesh();
 }
 
-static void _SetRandomColor()
+static void _SetRandomColor(Model* model)
 {
-  UsdGeomMesh usdMesh = _GetSelectedMesh();
+  UsdGeomMesh usdMesh = _GetSelectedMesh(model);
   UsdGeomPrimvarsAPI primvarsApi(usdMesh);
   UsdGeomPrimvar colorPrimvar =
     primvarsApi.CreatePrimvar(UsdGeomTokens->primvarsDisplayColor, SdfValueTypeNames->Color3fArray);
@@ -129,9 +129,9 @@ static void _SetMesh(UsdGeomMesh& mesh, const VtVec3fArray& points,
   SceneChangedNotice().Send();
 }
 
-static void _CollapseEdges(float factor) 
+static void _CollapseEdges(Model* model, float factor) 
 {
-  UsdGeomMesh usdMesh = _GetSelectedMesh();
+  UsdGeomMesh usdMesh = _GetSelectedMesh(model);
   if (usdMesh.GetPrim().IsValid()) {
     UndoBlock block;
     Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(UsdTimeCode::Default()));
@@ -149,9 +149,9 @@ static void _CollapseEdges(float factor)
   }
 }
 
-static void _Voxelize(float radius, short axis)
+static void _Voxelize(Model* model, float radius, short axis)
 {
-  UsdGeomMesh usdMesh = _GetSelectedMesh();
+  UsdGeomMesh usdMesh = _GetSelectedMesh(model);
   if (usdMesh.GetPrim().IsValid()) {
     UndoBlock block;
     Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(UsdTimeCode::Default()));
@@ -165,9 +165,8 @@ static void _Voxelize(float radius, short axis)
 
 
     const VtArray<GfVec3f>& positions = voxels.GetPositions();
-    UsdStageRefPtr stage = Application::Get()->GetModel()->GetStage();
 
-    _SetupBVHInstancer(stage, voxels.GetTree());
+    _SetupBVHInstancer(model->GetStage(), voxels.GetTree());
 
     std::cout << "hash grid radius : " << (voxels.GetRadius() * 2.f) << std::endl;
     HashGrid grid(voxels.GetRadius() * 2.f);
@@ -176,8 +175,8 @@ static void _Voxelize(float radius, short axis)
     size_t numPoints = positions.size();
     UsdGeomPoints points =
       UsdGeomPoints::Define(
-        stage,
-        stage->GetDefaultPrim().GetPath().AppendChild(TfToken("Voxels")));
+        model->GetStage(),
+        model->GetStage()->GetDefaultPrim().GetPath().AppendChild(TfToken("Voxels")));
 
     points.CreatePointsAttr().Set(VtValue(positions));
 
@@ -197,9 +196,9 @@ static void _Voxelize(float radius, short axis)
 
 }
 
-static void _Smooth(int smoothIterations)
+static void _Smooth(Model* model, int smoothIterations)
 {
-  UsdGeomMesh usdMesh = _GetSelectedMesh();
+  UsdGeomMesh usdMesh = _GetSelectedMesh(model);
   if (usdMesh.GetPrim().IsValid()) {
     TfStopwatch sw;
     sw.Start();
@@ -239,9 +238,9 @@ static void _Smooth(int smoothIterations)
 
 }
 
-void _CreateVertexColor()
+void _CreateVertexColor(Model* model)
 {
-  UsdGeomMesh usdMesh = _GetSelectedMesh();
+  UsdGeomMesh usdMesh = _GetSelectedMesh(model);
   if (usdMesh.GetPrim().IsValid()) {
     UndoBlock block;
     Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(UsdTimeCode::Default()));
@@ -267,7 +266,7 @@ bool ToolUI::Draw()
   const GfVec2f pos(GetX(), GetY());
   const GfVec2f size(GetWidth(), GetHeight());
 
-  UsdStageRefPtr stage = Application::Get()->GetModel()->GetStage();
+  UsdStageRefPtr stage = _model->GetStage();
   Time* time = Time::Get();
   ImGui::SetNextWindowSize(size);
   ImGui::SetNextWindowPos(pos);
@@ -302,7 +301,7 @@ bool ToolUI::Draw()
   static float randFactor = 0.1f;
   UsdTimeCode timeCode(time->GetActiveTime());
   if (ImGui::Button("Randomize")) {
-    UsdGeomMesh usdMesh = _GetSelectedMesh();
+    UsdGeomMesh usdMesh = _GetSelectedMesh(_model);
     if (usdMesh.GetPrim().IsValid()) {
       UndoBlock block;
       Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(timeCode));
@@ -313,7 +312,7 @@ bool ToolUI::Draw()
   ImGui::InputFloat("Random", &randFactor);
 
   if (ImGui::Button("Smooth Mesh")) {
-    UsdGeomMesh usdMesh = _GetSelectedMesh();
+    UsdGeomMesh usdMesh = _GetSelectedMesh(_model);
     if(usdMesh.GetPrim().IsValid()) {
       UndoBlock block;
       Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(timeCode));
@@ -325,16 +324,16 @@ bool ToolUI::Draw()
   }
   ImGui::SameLine();
   if (ImGui::Button("Create Vertex Color")) {
-    _CreateVertexColor();
+    _CreateVertexColor(_model);
   }
 
   ImGui::SameLine();
   if (ImGui::Button("Random Display Color")) {
-    _SetRandomColor();
+    _SetRandomColor(_model);
   }
 
   if (ImGui::Button("Triangulate Mesh")) {
-    UsdGeomMesh usdMesh = _GetSelectedMesh();
+    UsdGeomMesh usdMesh = _GetSelectedMesh(_model);
     if (usdMesh.GetPrim().IsValid()) {
       UndoBlock block;
       Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(timeCode));
@@ -344,7 +343,7 @@ bool ToolUI::Draw()
   }
 
   if (ImGui::Button("Flip Edge")) {
-    UsdGeomMesh usdMesh = _GetSelectedMesh();
+    UsdGeomMesh usdMesh = _GetSelectedMesh(_model);
     if (usdMesh.GetPrim().IsValid()) {
       UndoBlock block;
       Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(timeCode));
@@ -361,7 +360,7 @@ bool ToolUI::Draw()
   static float factor = 0.95f;
 
   if (ImGui::Button("Collapse Edge")) {
-    _CollapseEdges(factor);
+    _CollapseEdges(_model, factor);
   }
   ImGui::SameLine();
   ImGui::InputFloat("Radius", &factor);
@@ -371,7 +370,7 @@ bool ToolUI::Draw()
 
 
   if (ImGui::Button("Triangulate Face")) {
-    UsdGeomMesh usdMesh = _GetSelectedMesh();
+    UsdGeomMesh usdMesh = _GetSelectedMesh(_model);
     if (usdMesh.GetPrim().IsValid()) {
       UndoBlock block;
       Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(timeCode));
@@ -380,7 +379,7 @@ bool ToolUI::Draw()
   }
 
   if (ImGui::Button("Split Edge")) {
-    UsdGeomMesh usdMesh = _GetSelectedMesh();
+    UsdGeomMesh usdMesh = _GetSelectedMesh(_model);
     if (usdMesh.GetPrim().IsValid()) {
       UndoBlock block;
       Mesh mesh(usdMesh, usdMesh.ComputeLocalToWorldTransform(timeCode));
@@ -391,34 +390,34 @@ bool ToolUI::Draw()
 
   static float voxelizeRadius = 0.5f;
   if (ImGui::Button("Voxelize X only")) {
-    _Voxelize(voxelizeRadius, 1);
+    _Voxelize(_model, voxelizeRadius, 1);
   }ImGui::SameLine();
   if (ImGui::Button("Voxelize Y only")) {
-    _Voxelize(voxelizeRadius, 2);
+    _Voxelize(_model, voxelizeRadius, 2);
   }ImGui::SameLine();
   if (ImGui::Button("Voxelize Z only")) {
-    _Voxelize(voxelizeRadius, 4);
+    _Voxelize(_model, voxelizeRadius, 4);
   };
   if (ImGui::Button("Voxelize XY only")) {
-    _Voxelize(voxelizeRadius, 3);
+    _Voxelize(_model, voxelizeRadius, 3);
   }ImGui::SameLine();
   if (ImGui::Button("Voxelize XZ only")) {
-    _Voxelize(voxelizeRadius, 5);
+    _Voxelize(_model, voxelizeRadius, 5);
   }ImGui::SameLine();
   if (ImGui::Button("Voxelize YZ only")) {
-    _Voxelize(voxelizeRadius, 6);
+    _Voxelize(_model, voxelizeRadius, 6);
   };
   if (ImGui::Button("Voxelize XYZ")) {
-    _Voxelize(voxelizeRadius, 7);
+    _Voxelize(_model, voxelizeRadius, 7);
   }ImGui::SameLine();
   if (ImGui::Button("Voxelize Surface")) {
-    _Voxelize(voxelizeRadius, 8);
+    _Voxelize(_model, voxelizeRadius, 8);
   }ImGui::SameLine();
   ImGui::InputFloat("Radius", &voxelizeRadius);
 
   static int smoothIteration = 32;
   if (ImGui::Button("Smooth")) {
-    _Smooth(smoothIteration);
+    _Smooth(_model, smoothIteration);
   }ImGui::SameLine();
   ImGui::InputInt("##Iterations", &smoothIteration);
 

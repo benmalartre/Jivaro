@@ -18,9 +18,12 @@ class PopupUI;
 
 class WindowRegistry {
 public:
+  // preferences
+  static bool         PlaybackAllViews;
+
   
   // constructor
-  WindowRegistry() : _activeWindow(nullptr), _popup(nullptr){};
+  WindowRegistry() : _activeWindow(nullptr), _popup(nullptr), _playbackView(nullptr){};
   
   // singleton
   static WindowRegistry* Get();
@@ -33,6 +36,10 @@ public:
   static void RemoveWindow(Window* window);
   static void SetWindowDirty(Window* window);
   static void SetAllWindowsDirty();
+
+  // playback viewport
+  static bool IsPlaybackView(View* view);
+  static void SetPlaybackView(View* view);
 
   static bool Update();
 
@@ -56,6 +63,7 @@ public:
 private:
   std::vector<Window*>              _windows;
   Window*                           _activeWindow;
+  View*                             _playbackView;
 
   // uis
   PopupUI*                          _popup;

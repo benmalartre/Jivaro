@@ -227,7 +227,7 @@ Window::DirtyAllViews(bool force)
   if(Time::Get()->IsPlaying())
     for (auto& view : _views) {
       BaseUI* ui = view->GetCurrentUI();
-      bool isPlaybackView = app->IsPlaybackView(view);
+      bool isPlaybackView = WindowRegistry::IsPlaybackView(view);
       bool isTimeVaryingView = view->GetFlag(View::TIMEVARYING);
       if (force || isPlaybackView || isTimeVaryingView)
         view->SetDirty();
@@ -349,7 +349,7 @@ Window::SetActiveView(View* view)
 
     BaseUI* ui = _activeView->GetCurrentUI();
     if(ui && ui->GetType() == UIType::VIEWPORT)
-      Application::Get()->SetPlaybackView(_activeView);
+      WindowRegistry::SetPlaybackView(_activeView);
   }
   else _activeView = NULL;
 }

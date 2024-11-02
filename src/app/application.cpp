@@ -41,7 +41,7 @@ const char* Application::name = "Jivaro";
 // singleton
 //----------------------------------------------------------------------------
 Application* Application::_singleton=nullptr;
-bool Application::PlaybackAllViews = false;
+
 
 Application* Application::Get() { 
   if(_singleton==nullptr){
@@ -53,7 +53,6 @@ Application* Application::Get() {
 // constructor
 //----------------------------------------------------------------------------
 Application::Application()
-  : _playbackView(nullptr)
 {  
 
 };
@@ -197,24 +196,6 @@ Application::Update()
   CommandManager::Get()->ExecuteCommands();
   return true;
 }
-
-
-// playback viewport
-bool 
-Application::IsPlaybackView(View* view) 
-{ 
-  return view == _playbackView || PlaybackAllViews; 
-};
-
-void 
-Application::SetPlaybackView(View* view)
-{
-  if(view == _playbackView)return;
-  if(_playbackView)_playbackView->ClearFlag(View::TIMEVARYING);
-
-  _playbackView = view;
-  if(_playbackView)_playbackView->SetFlag(View::TIMEVARYING);
-};
 
 
 // COMMANDS

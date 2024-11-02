@@ -656,7 +656,7 @@ void
 View::SetClean()
 {
   if(!GetFlag(View::LEAF))return;
-  if(!_current || Application::Get()->IsPlaybackView(this))return;
+  if(!_current || WindowRegistry::IsPlaybackView(this))return;
   _buffered--;
   if (_buffered <= 0)
     ClearFlag(DIRTY);

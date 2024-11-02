@@ -53,10 +53,6 @@ public:
   void Duplicate();
   void Delete();
 
-  // playback viewport
-  bool IsPlaybackView(View* view);
-  void SetPlaybackView(View* view);
-
   //void AddDeferredCommand(CALLBACK_FN fn);
   //void ExecuteDeferredCommands();
 
@@ -77,9 +73,6 @@ public:
   // singleton 
   static Application *Get();
 
-  // preferences
-  static bool         PlaybackAllViews;
-
 protected:
   static Application*               _singleton;
 
@@ -87,8 +80,6 @@ private:
   WindowRegistry*                   _windows;
   Model*                            _model;
   float                             _lastTime;
-
-  View*                             _playbackView;
 
    // command
   std::vector<CALLBACK_FN>          _deferred;

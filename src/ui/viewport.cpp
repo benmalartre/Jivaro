@@ -81,12 +81,11 @@ ViewportUI::ViewportUI(View* parent)
 // destructor
 ViewportUI::~ViewportUI()
 {
-  Application* app = Application::Get();
   if(_rendererNames)delete[] _rendererNames;
   if(_texture) glDeleteTextures(1, &_texture);
   if(_camera) delete _camera;
   if (_engine) {
-    app->GetModel()->RemoveEngine(_engine);
+    _model->RemoveEngine(_engine);
     delete _engine;
   }
 }
@@ -142,9 +141,8 @@ void ViewportUI::UpdateLighting()
 
 void ViewportUI::Init()
 {
-  Application* app = Application::Get();
   if (_engine) {
-    app->GetModel()->RemoveEngine(_engine);
+    _model->RemoveEngine(_engine);
     delete _engine;
     _engine = nullptr;
   }
@@ -157,13 +155,13 @@ void ViewportUI::Init()
     _rendererNames[rendererIndex] = rendererTokens[rendererIndex].GetText();
   }
 
-  auto editableSceneIndex = app->GetModel()->GetEditableSceneIndex();
+  auto editableSceneIndex = _model->GetEditableSceneIndex();
 
   //TfToken plugin = Engine::GetDefaultRendererPlugin();
   TfToken plugin = TfToken(_rendererNames[_rendererIndex]);
-  _engine = new Engine(app->GetModel()->GetFinalSceneIndex(), plugin);
+  _engine = new Engine(_model->GetFinalSceneIndex(), plugin);
 
-  app->GetModel()->AddEngine(_engine);
+  _model->AddEngine(_engine);
 
   //_engine->SetRendererPlugin(TfToken(_rendererNames[_rendererIndex]));
 
@@ -229,7 +227,7 @@ void ViewportUI::MouseButton(int button, int action, int mods)
   {
     _lastX = (int)x;
     _lastY = (int)y;
-    Application::Get()->GetModel()->SetActiveEngine(_engine);
+    _model->SetActiveEngine(_engine);
     SetInteracting(true);
     if (mods & GLFW_MOD_ALT) {
       if (button == GLFW_MOUSE_BUTTON_LEFT) {
@@ -264,10 +262,8 @@ void ViewportUI::MouseButton(int button, int action, int mods)
   }
   _parent->SetDirty();
 
-  Application* app = Application::Get();
-  Model* model = app->GetModel();
-  if(model->GetExec()) 
-    model->SendExecViewEvent(_MouseButtonEventData(button, action, mods, x, y));
+  if(_model->GetExec()) 
+    _model->SendExecViewEvent(_MouseButtonEventData(button, action, mods, x, y));
   
 }
 
@@ -323,7 +319,6 @@ void ViewportUI::MouseMove(int x, int y)
 
 void ViewportUI::MouseWheel(int x, int y)
 {
-  Application* app = Application::Get();
   _camera->Dolly(
     static_cast<double>(x) / static_cast<double>(GetWidth()), 
     static_cast<double>(x) / static_cast<double>(GetHeight())
@@ -339,7 +334,7 @@ void ViewportUI::Keyboard(int key, int scancode, int action, int mods)
     switch (mappedKey) {
       case GLFW_KEY_A:
       {
-        _camera->FrameSelection(Application::Get()->GetModel()->GetStageBoundingBox());
+        _camera->FrameSelection(_model->GetStageBoundingBox());
         break;
       }
       case GLFW_KEY_F:
@@ -438,7 +433,6 @@ ViewportUI::_DrawAov()
 
 bool ViewportUI::Draw()
 {    
-  Application* app = Application::Get();
   Window* window = GetWindow();
   if (!_initialized)Init();
   if(!_valid)return false;  
@@ -446,7 +440,7 @@ bool ViewportUI::Draw()
 
   
   if (_model->GetStage() != nullptr) {
-    if(!(Time::Get()->IsPlaying() && !app->IsPlaybackView(_parent)))
+    if(!(Time::Get()->IsPlaying() /*&& !app->IsPlaybackView(_parent)*/))
       Render();
     
     Tool* tool = window->GetTool();

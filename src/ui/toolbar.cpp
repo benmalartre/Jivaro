@@ -1,7 +1,8 @@
 #include "../ui/toolbar.h"
 #include "../app/view.h"
 #include "../app/window.h"
-#include "../app/application.h"
+#include "../app/registry.h"
+#include "../app/model.h"
 #include "../app/modal.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -46,10 +47,10 @@ static void OnBrushCallback()
   _SetActiveTool(Tool::BRUSH);
 }
 
-static void OnPlayCallback()
+static void OnPlayCallback(Model* model)
 {
   _SetActiveTool(Tool::NONE);
-  Application::Get()->GetModel()->ToggleExec();
+  model->ToggleExec();
 }
 
 
@@ -151,7 +152,7 @@ ToolbarUI::ToolbarUI(View* parent, bool vertical)
   ToolbarItem* playItem = new ToolbarButton(
     this, Tool::NONE, "Play", "play", "launch engine",
     ICON_FA_SHUFFLE, true, false,
-    OnPlayCallback
+    std::bind(OnPlayCallback, _model)
   );
   _items.push_back(playItem);
 

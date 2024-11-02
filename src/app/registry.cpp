@@ -11,6 +11,10 @@ JVR_NAMESPACE_OPEN_SCOPE
 //----------------------------------------------------------------------------
 static WindowRegistry* WindowRegistrySingleton=nullptr;
 
+
+
+bool WindowRegistry::PlaybackAllViews = false;
+
 WindowRegistry* WindowRegistry::Get() { 
   if(WindowRegistrySingleton == nullptr) 
     WindowRegistrySingleton = new WindowRegistry();
@@ -161,6 +165,26 @@ WindowRegistry::UpdatePopup()
   WindowRegistrySingleton->_popup = nullptr;
   SetAllWindowsDirty();
 }
+
+// playback viewport
+bool 
+WindowRegistry::IsPlaybackView(View* view) 
+{ 
+  return view == WindowRegistrySingleton->_playbackView || 
+    PlaybackAllViews; 
+};
+
+void 
+WindowRegistry::SetPlaybackView(View* view)
+{
+  if(view == WindowRegistrySingleton->_playbackView)return;
+  if(WindowRegistrySingleton->_playbackView)
+    WindowRegistrySingleton->_playbackView->ClearFlag(View::TIMEVARYING);
+
+  WindowRegistrySingleton->_playbackView = view;
+  if(WindowRegistrySingleton->_playbackView)
+    WindowRegistrySingleton->_playbackView->SetFlag(View::TIMEVARYING);
+};
 
 
 // create full screen window
