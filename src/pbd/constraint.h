@@ -91,14 +91,14 @@ public:
 
 protected:
   void _ResetCorrection();
-  bool                          _active;
-  VtArray<int>             _elements;
+  bool                _active;
+  VtArray<int>        _elements;
   VtArray<GfVec3f>    _gradient;
   VtArray<GfVec3f>    _correction;
-  double                        _compliance;
-  float                         _damp;
-  TfToken                  _key;
-  GfVec3f                  _color;
+  double              _compliance;
+  float               _damp;
+  TfToken             _key;
+  GfVec3f             _color;
 };
 
 

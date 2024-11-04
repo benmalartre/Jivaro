@@ -83,12 +83,7 @@ private:
   std::string               _folder;
 };
 
-class ModalDemo : public ModalBase
-{
-public:
-  ModalDemo(Window* parent, int x, int y, const std::string& title);
-  void _LoopImpl() override;
-};
+
 
 
 JVR_NAMESPACE_CLOSE_SCOPE

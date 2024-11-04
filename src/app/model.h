@@ -58,8 +58,6 @@ public:
 
   // commands
   void AddCommand(std::shared_ptr<Command> command);
-  void AddDeferredCommand(CALLBACK_FN fn);
-  void ExecuteDeferredCommands();
 
   // engines
   void AddEngine(Engine* engine);

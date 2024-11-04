@@ -113,7 +113,7 @@ Window::Init()
   glfwSetKeyCallback(_window, KeyboardCallback);
   glfwSetCharCallback(_window, CharCallback);
   glfwSetCursorPosCallback(_window, MouseMoveCallback);
-  //glfwSetWindowFocusCallback(_window, FocusCallback);
+  glfwSetWindowFocusCallback(_window, FocusCallback);
   glfwSetInputMode(_window, GLFW_STICKY_KEYS, GLFW_TRUE);
 
   // create main splittable view
@@ -147,8 +147,8 @@ Window::~Window()
 
   if(_shared) 
     DeleteFontAtlas();
-
 }
+
 
 void
 Window::ClearViews()
@@ -253,7 +253,7 @@ Window::Resize(unsigned width, unsigned height)
   if(_width <= 0 || _height <= 0)_valid = false;
   else _valid = true;
 
-  if (resolutionChanged) {
+  if (resolutionChanged || !_fbo) {
     if (_fbo) glDeleteFramebuffers(1, &_fbo);
     if (_tex) glDeleteTextures(1, &_tex);
 
@@ -285,6 +285,12 @@ Window::GetMenuBarHeight()
   ImGuiContext* context = GetContext(); 
   
   return FONT_SIZE_LARGE + style.FramePadding.y * 2.0f;
+}
+
+GfVec2f
+Window::GetMousePosition()
+{
+  return GfVec2f(_mouseX, _mouseY);
 }
 
 // Layout
@@ -478,6 +484,8 @@ Window::CollectLeaves()
 View*
 Window::GetViewUnderMouse(int x, int y)
 {
+  _mouseX = x;
+  _mouseY = y;
   for(auto leaf: _leaves) {
     if (leaf->Contains(x, y)) {
       leaf->SetDirty();
@@ -602,7 +610,6 @@ void
 Window::DrawPopup(PopupUI* popup)
 {
   if (!_valid || _idle)return;
-  SetGLContext();
   glBindVertexArray(_vao);
   glViewport(0,0,_width, _height);
 
@@ -611,15 +618,10 @@ Window::DrawPopup(PopupUI* popup)
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
 
-
   if (!popup->IsSync()) {
-    ImGui::SetNextWindowPos(ImVec2(0, 0));
-    ImGui::SetNextWindowSize(ImVec2(GetWidth(), GetHeight()));
-    ImGui::Begin("##background", NULL, JVR_BACKGROUND_FLAGS);
     ImDrawList* drawList = ImGui::GetBackgroundDrawList();
     drawList->AddImage((ImTextureID)(uintptr_t)_tex, ImVec2(0, 0), ImVec2(_width, _height),
       ImVec2(0, 0), ImVec2(1, 1), ImColor(100, 100, 100, 255));
-    ImGui::End();
   } else {
     WindowRegistry::Get()->SetWindowDirty(this);
     GetMainView()->Draw(false);
@@ -1062,6 +1064,7 @@ MouseMoveCallback(GLFWwindow* window, double x, double y)
   } else if(parent->IsDraggingSplitter()) {
     parent->DragSplitter(x, y);
   } else {
+   
     if (active && active->GetFlag(View::INTERACTING)) {
       active->MouseMove(x, y);
     } else {
@@ -1075,16 +1078,17 @@ MouseMoveCallback(GLFWwindow* window, double x, double y)
   }
 }
 
-/*
+
 void 
 FocusCallback(GLFWwindow* window, int focused)
 {
   if (focused) {
     Window* parent = Window::GetUserData(window);
-    WindowRegistry::Get()->SetFocusWindow(parent);
+    parent->SetActiveView(nullptr);
+    //WindowRegistry::Get()->SetFocusWindow(parent);
   }
 }
-*/
+
 
 void 
 DisplayCallback(GLFWwindow* window)

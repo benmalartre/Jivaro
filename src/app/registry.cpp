@@ -21,6 +21,7 @@ WindowRegistry* WindowRegistry::Get() {
   return WindowRegistrySingleton;
 };
 
+
 bool
 WindowRegistry::Update()
 {
@@ -35,12 +36,13 @@ WindowRegistry::Update()
       delete popup;
       WindowRegistrySingleton->_popup = nullptr;
     }
+    return true;
   }
   else 
     for (auto& window : WindowRegistrySingleton->_windows)
       updated += window->Update();
 
-  return updated == WindowRegistrySingleton->_windows.size();
+    return updated == WindowRegistrySingleton->_windows.size();
 
 }
 
@@ -143,20 +145,10 @@ WindowRegistry::SetPopup(PopupUI* popup)
     window->CaptureFramebuffer();
 }
 
-/*
-void
-WindowRegistry::SetPopupDeferred(PopupUI* popup)
-{
-  popup->SetParent(GetActiveWindow()->GetMainView());
-  _popup = popup;
-  _needCaptureFramebuffers = true;
-}
-*/
 
 void
 WindowRegistry::UpdatePopup()
 {
-  WindowRegistry* registry = Get();
   if (WindowRegistrySingleton->_popup) {
     if (!WindowRegistrySingleton->_popup->IsDone())return;
     WindowRegistrySingleton->_popup->Terminate();

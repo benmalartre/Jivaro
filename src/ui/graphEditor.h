@@ -73,7 +73,6 @@ class GraphEditorUI : public BaseUI
 public:
   static const TfToken NodeExpendState[3];
 
-
   enum GraphDirection {
     VERTICAL,
     HORIZONTAL,
@@ -232,7 +231,7 @@ protected:
       // ui
       std::vector<Port>           _ports;
       Node*                       _parent;
-      TfToken                _expended;
+      TfToken                     _expended;
       short                       _dirty;
 
       // data
@@ -340,8 +339,6 @@ private:
   GfVec2f                               _dragOffset;
   float                                 _scale;
   float                                 _invScale;
-  float                                 _currentX;
-  float                                 _currentY;
   int                                   _lastX;
   int                                   _lastY;
   bool                                  _drag;

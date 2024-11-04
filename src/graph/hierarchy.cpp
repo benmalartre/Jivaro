@@ -9,9 +9,9 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 // Graph constructor
 //------------------------------------------------------------------------------
-HierarchyGraph::HierarchyGraph(const SdfLayerRefPtr& layer, const UsdPrim& prim) 
+HierarchyGraph::HierarchyGraph(UsdStageRefPtr& stage, const UsdPrim& prim) 
   : Graph(prim)
-  , _layer(layer)
+  , _stage(stage)
 {
   Populate(prim);
 }
@@ -51,12 +51,11 @@ void HierarchyGraph::HierarchyNode::_PopulatePorts()
 void
 HierarchyGraph::_RecurseNodes(HierarchyGraph::HierarchyNode* parent)
 {
-  SdfPrimSpecHandle primSpec = _layer->GetPrimAtPath(parent->GetPrim().GetPath());
-  for (const auto& child : primSpec.GetSpec().GetNameChildren()) {
-    UsdPrim childPrim = 
-      parent->GetPrim().GetChild(TfToken(child->GetName()));
+  UsdPrim prim = _stage->GetPrimAtPath(parent->GetPrim().GetPath());
+  for (auto& child : prim.GetChildren()) {
     HierarchyGraph::HierarchyNode* node =
-      new HierarchyGraph::HierarchyNode(childPrim, parent);
+      new HierarchyGraph::HierarchyNode(child, parent);
+
     AddNode(node);
     parent->AddChild(node);
 

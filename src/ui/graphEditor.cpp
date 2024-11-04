@@ -13,16 +13,21 @@
 #include <pxr/usd/usdUI/nodeGraphNodeAPI.h>
 #include <pxr/usd/usdUI/sceneGraphPrimAPI.h>
 #include <pxr/usd/usdUI/backdrop.h>
+#include <pxr/usd/usdUI/tokens.h>
 
-
+#include "../common.h"
 #include "../utils/color.h"
 #include "../utils/keys.h"
+#include "../utils/usd.h"
 #include "../command/manager.h"
+#include "../ui/utils.h"
 #include "../ui/popup.h"
 #include "../ui/graphEditor.h"
 #include "../app/commands.h"
 #include "../app/view.h"
 #include "../app/window.h"
+#include "../app/registry.h"
+#include "../app/commands.h"
 #include "../app/model.h"
 #include "../app/commands.h"
 #include "../graph/execution.h"
@@ -131,6 +136,18 @@ _GetHoveredColor(int color)
     (origin[3] + 1.f) * 0.5f
   );
 }
+
+static TfToken
+_GetNextExpendedStateToken(const TfToken& token)
+{
+  if (token ==  UsdUITokens->closed)
+    return UsdUITokens->minimized;
+  else if (token == UsdUITokens->minimized)
+    return UsdUITokens->open;
+  else if (token == UsdUITokens->open)
+    return UsdUITokens->closed;
+}
+
 
 // Item base class
 //------------------------------------------------------------------------------
@@ -430,68 +447,37 @@ GraphEditorUI::Node::SetColor(const GfVec3f& color)
   _color = PackColor3<GfVec3f>(color);
 }
 
+
 void 
 GraphEditorUI::Node::ComputeSize(GraphEditorUI* editor)
 {
   if (GetDirty() & GraphEditorUI::Node::DIRTY_SIZE) {
+
     float width =
       ImGui::CalcTextSize(_node->GetName().GetText()).x + 2 * NODE_PORT_HORIZONTAL_SPACING +
       (NODE_EXPENDED_SIZE + 2 * NODE_HEADER_PADDING);
-    float height = NODE_HEADER_HEIGHT + NODE_HEADER_PADDING;
+    float height = NODE_HEADER_HEIGHT + NODE_HEADER_PADDING + RANDOM_0_X(10);
+    float mid = NODE_HEADER_HEIGHT * 0.5;
     float inputWidth = 0, outputWidth = 0;
-    GraphEditorUI::Connexion* connexion = NULL;
-    const short expended = _ConvertExpendedStateToEnum(UsdUITokens->open);
+    Graph::Connexion* connexion = NULL;
+    
     for (auto& port : _ports) {
       float w = ImGui::CalcTextSize(port.Get()->GetName().GetText()).x +
         NODE_PORT_HORIZONTAL_SPACING;
       if (w > inputWidth)inputWidth = w;
-      switch (expended) {
-      case COLLAPSED:
-        break;
-      case CONNECTED:
-        if (port.IsConnected(editor, connexion->Get())) {
+      if(_expended == UsdUITokens->closed) {
+        port.SetPosition(GfVec2f(0.f, mid));
+      } else if(_expended == UsdUITokens->minimized) {
+        if (port.IsConnected(editor, connexion)) {
+          port.SetPosition(GfVec2f(0.f, height));
           height += NODE_PORT_VERTICAL_SPACING;
         }
-        break;
-      case EXPENDED:
+        else 
+          port.SetPosition(GfVec2f(0.f, mid));
+      } else if(_expended == UsdUITokens->open) {
+        port.SetPosition(GfVec2f(0.f, height));
         height += NODE_PORT_VERTICAL_SPACING;
-        break;
       }
-    }
-
-    float headerMid = NODE_HEADER_HEIGHT * 0.5;
-    switch (expended) {
-    case COLLAPSED:
-    {
-      float currentY = headerMid;
-      for (auto& port : _ports) {
-        port.SetPosition(GfVec2f(0.f, currentY));
-      }
-      break;
-    }
-    case CONNECTED:
-    {
-      float currentY = NODE_HEADER_HEIGHT + NODE_HEADER_PADDING;
-      for (auto& port : _ports) {
-        if (port.IsConnected(editor, connexion->Get())) {
-          port.SetPosition(GfVec2f(0.f, currentY));
-          currentY += NODE_PORT_VERTICAL_SPACING;
-        }
-        else {
-          port.SetPosition(GfVec2f(0.f, headerMid));
-        }
-      }
-      break;
-    }
-    case EXPENDED:
-    {
-      float currentY = NODE_HEADER_HEIGHT + NODE_HEADER_PADDING;
-      for (auto& port : _ports) {
-        port.SetPosition(GfVec2f(0.f, currentY));
-        currentY += NODE_PORT_VERTICAL_SPACING;
-      }
-      break;
-    }
     }
 
     SetSize(GfVec2f(width, height));
@@ -534,9 +520,12 @@ GraphEditorUI::Node::Read()
   } else {
     UsdUINodeGraphNodeAPI api = 
       UsdUINodeGraphNodeAPI::Apply(_node->GetPrim());
-    api.CreatePosAttr().Set(GfVec2f(0.f));
-    api.CreateSizeAttr().Set(GfVec2f(100,100));
-    api.CreateExpansionStateAttr().Set(0);
+    _pos = GfVec2f(0.f);
+    api.CreatePosAttr().Set(_pos);
+    _size = GfVec2f(100,32);
+    api.CreateSizeAttr().Set(_size);
+    _expended = UsdUITokens->closed;
+    api.CreateExpansionStateAttr().Set(_expended);
     //api.CreateDisplayColorAttr().Set(UnpackColor3<GfVec3f>(RANDOM_LO_HI(0,65565)));
     api.CreateDisplayColorAttr().Set(GfVec3f(0.5f,0.5f,0.5f));
   }
@@ -604,67 +593,49 @@ GraphEditorUI::Node::Draw(GraphEditorUI* editor)
     const GfVec2f expendPos = p + expendOffset * scale;
     const GfVec2f expendSize(NODE_EXPENDED_SIZE * scale);
     const GfVec2f elementOffset(0.f, NODE_EXPENDED_SIZE * scale * 0.4);
-    const GfVec2f elementSize(NODE_EXPENDED_SIZE * scale, NODE_EXPENDED_SIZE * scale * 0.3);
+    const GfVec2f elementSize(NODE_EXPENDED_SIZE * scale, NODE_EXPENDED_SIZE * scale * 0.2);
     const ImColor expendColor(0, 0, 0, 255);
 
     ImGui::SetCursorPos((GetPosition() + expendOffset + offset) * scale);
 
-    static char expendedName[128];
-    strcpy(expendedName, "##");
-    strcat(expendedName, (const char*)this);
-
-    short expended = _ConvertExpendedStateToEnum(_expended);
-    if (ImGui::Selectable(&expendedName[0], true, ImGuiSelectableFlags_SelectOnClick, expendSize)) {
-      short nextExpendedState = (expended + 1) % 3;
-      _expended = _ConvertExpendedStateToToken(nextExpendedState);
-      expended = nextExpendedState;
+    if (ImGui::Selectable(UI::HiddenLabel(_expended.GetString().c_str()).c_str(), 
+      true, ImGuiSelectableFlags_SelectOnClick, expendSize)) {
+      _expended = _GetNextExpendedStateToken(_expended);
+      ADD_COMMAND(ExpendNodeCommand, {_node->GetPrim().GetPath()}, _expended);
+      SetDirty(GraphEditorUI::Node::DIRTY_SIZE);
     }
-    
+
     drawList->AddRectFilled(
-      expendPos + 2 * elementOffset,
-      expendPos + 2 * elementOffset + elementSize,
-      expendColor,
-      0);
+      expendPos + 2 * elementOffset, 
+      expendPos + 2 * elementOffset + elementSize, 
+      expendColor, 0);
 
-    if (expended > COLLAPSED) {
+    if (_expended == UsdUITokens->minimized || _expended == UsdUITokens->open)
       drawList->AddRectFilled(
-        expendPos + elementOffset,
-        expendPos + elementOffset + elementSize,
-        expendColor,
-        0);
-    }
-
-    if (expended > CONNECTED) {
+        expendPos + elementOffset, 
+        expendPos + elementOffset + elementSize, 
+        expendColor, 0);
+  
+    if (_expended == UsdUITokens->open)
       drawList->AddRectFilled(
-        expendPos,
-        expendPos + elementSize,
-        expendColor,
-        0);
-    }
-    
+        expendPos, 
+        expendPos + elementSize, 
+        expendColor, 0);
     
     // ports
-    switch (expended) {
-    case COLLAPSED:
-      break;
-    case CONNECTED:
-      break;
-    case EXPENDED:
-      break;
-    }
-
-    GraphEditorUI::Connexion* connexion = NULL;
-    if (expended != COLLAPSED) {
+    Graph::Connexion* connexion = NULL;
+    if (_expended != UsdUITokens->closed) {
       ImGui::PushFont(window->GetFont(FONT_MEDIUM , editor->GetFontIndex()));
       int numPorts = _ports.size();
       for (int i = 0; i < numPorts; ++i) {
-        if (expended == EXPENDED) _ports[i].Draw(editor);
+        if (_expended == UsdUITokens->open) _ports[i].Draw(editor);
         else {
-          if (_ports[i].IsConnected(editor, connexion->Get())) _ports[i].Draw(editor);
+          if (_ports[i].IsConnected(editor, connexion)) _ports[i].Draw(editor);
         }
       }
       ImGui::PopFont();
     }
+  
   }
 } 
 
@@ -758,8 +729,7 @@ RefreshGraphCallback(GraphEditorUI* editor)
       UsdPrim selected = stage->GetPrimAtPath(item.path);
       
       if (selected.IsValid()) {
-        editor->Populate(new HierarchyGraph(SdfLayerRefPtr(
-          stage->GetRootLayer()), selected));
+        editor->Populate(new HierarchyGraph(stage, selected));
         return;
       }
     }
@@ -798,6 +768,16 @@ GraphEditorUI::Populate(Graph* graph)
   UpdateFont();
   return true;
 }
+
+// rearrange
+//------------------------------------------------------------------------------
+/*
+void
+GraphEditorUI::Rearrange(Graph* graph, Node* node)
+{
+  
+}
+*/
 
 // update
 //------------------------------------------------------------------------------
@@ -1032,7 +1012,7 @@ GraphEditorUI::Draw()
   ImGui::SameLine();
 
   if (ImGui::Button("LOAD")) {
-    const std::string filename = "C:\\Users\\graph\\Documents\\bmal\\src\\Jivaro\\build\\src\\Release\\usd\\graph.usda";
+    const std::string filename = "./usd/graph.usda";
     std::cout << filename << std::endl;
     ADD_COMMAND(OpenSceneCommand, filename);
   }
@@ -1061,7 +1041,6 @@ GraphEditorUI::Init()
   _graph = NULL;
   _drag = _marque = false;
   _parent->SetDirty();
-  _currentX = _currentY = 0.f;
 }
 
 // init
@@ -1201,10 +1180,11 @@ GraphEditorUI::_GetConnexionUnderMouse(const GfVec2f& mousePos)
 void 
 GraphEditorUI::MouseButton(int button, int action, int mods)
 {
-  if (!_graph)return;
-  const GfVec2f& mousePos = ImGui::GetMousePos();
+  pxr::GfVec2f mousePos = _parent->GetWindow()->GetMousePosition();
   _lastX = mousePos[0];
   _lastY = mousePos[1];
+
+  if (!_graph)return;
 
   _GetNodeUnderMouse(mousePos, false);
 
@@ -1300,6 +1280,20 @@ GraphEditorUI::MouseButton(int button, int action, int mods)
   _parent->SetDirty();
 }
 
+static void _CreatePrimCallback(GraphEditorUI* ui, const TfToken& token)
+{
+  UsdStageRefPtr stage = ui->GetModel()->GetStage();
+  Selection* selection = ui->GetModel()->GetSelection();
+  TfToken name(token.GetString() + "_" + RandomString(6));
+
+  if (selection->GetNumSelectedItems()) {
+    ADD_COMMAND(CreatePrimCommand, stage->GetRootLayer(), selection->GetItem(0).path.AppendChild(name), token);
+  }
+  else {
+    ADD_COMMAND(CreatePrimCommand, stage->GetRootLayer(), stage->GetPseudoRoot().GetPath().AppendChild(name), token);
+  }
+}
+
 void 
 GraphEditorUI::Keyboard(int key, int scancode, int action, int mods)
 {
@@ -1325,11 +1319,11 @@ GraphEditorUI::Keyboard(int key, int scancode, int action, int mods)
       FrameAll();
     }
     else if (mappedKey == GLFW_KEY_TAB) {
-      /*
-      GraphPopupUI* popup = new GraphPopupUI(
-        (int)GetX() + GetWidth() * 0.5f - 100, (int)GetY() + GetHeight() * 0.5 - 50, 200, 100);
-      ADD_DEFERRED_COMMAND(std::bind(&Application::SetPopup, app, popup));
-      */
+      GfVec2f mousePos = _parent->GetWindow()->GetMousePosition();
+      ListPopupUI* popup = new ListPopupUI("Create Prim", mousePos[0], mousePos[1], 200, 100,
+        std::bind(&_CreatePrimCallback, this, std::placeholders::_1));
+
+      ADD_DEFERRED_COMMAND(UIGenericCommand, std::bind(&WindowRegistry::SetPopup, popup));
     }
   }
 }

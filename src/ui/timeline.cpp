@@ -147,7 +147,7 @@ void TimelineUI::DrawButtons()
 {
   Time* time = Time::Get();
   _playing = time->IsPlaying();
-  UI::AddIconButton(0, ICON_FA_BACKWARD_FAST , ICON_DEFAULT,
+  UI::AddIconButton(0, ICON_FA_BACKWARD_FAST , UI::STATE_DEFAULT,
     [&](){
       _currentTime = _startTime;
       time->SetActiveTime(_currentTime);
@@ -155,7 +155,7 @@ void TimelineUI::DrawButtons()
     });
   ImGui::SameLine();
 
-  UI::AddIconButton(1, ICON_FA_BACKWARD_STEP, ICON_DEFAULT,
+  UI::AddIconButton(1, ICON_FA_BACKWARD_STEP, UI::STATE_DEFAULT,
     [&](){
       time->PreviousFrame();
       WindowRegistry::Get()->SetAllWindowsDirty();
@@ -163,13 +163,13 @@ void TimelineUI::DrawButtons()
   ImGui::SameLine();
 
   if (!_playing) {
-    UI::AddCheckableIconButton(2, ICON_FA_PLAY , ICON_DEFAULT,
+    UI::AddCheckableIconButton(2, ICON_FA_PLAY , UI::STATE_DEFAULT,
     [&](){
       _playing = 1 - _playing;
       time->StartPlayback();
     });
   } else {
-    UI::AddCheckableIconButton(2, ICON_FA_STOP , ICON_SELECTED,
+    UI::AddCheckableIconButton(2, ICON_FA_STOP , UI::STATE_SELECTED,
     [&](){
       _playing = 1 - _playing;
       time->StopPlayback();
@@ -177,14 +177,14 @@ void TimelineUI::DrawButtons()
   }
   ImGui::SameLine();
 
-  UI::AddIconButton(3, ICON_FA_FORWARD_STEP, ICON_DEFAULT,
+  UI::AddIconButton(3, ICON_FA_FORWARD_STEP, UI::STATE_DEFAULT,
     [&](){
       time->NextFrame();
       WindowRegistry::Get()->SetAllWindowsDirty();
     });
   ImGui::SameLine();
 
-  UI::AddIconButton(4, ICON_FA_FORWARD_FAST, ICON_DEFAULT,
+  UI::AddIconButton(4, ICON_FA_FORWARD_FAST, UI::STATE_DEFAULT,
     [&](){
       _currentTime = _endTime;
       time->SetActiveTime(_currentTime);
@@ -193,7 +193,7 @@ void TimelineUI::DrawButtons()
   ImGui::SameLine();
 
   UI::AddCheckableIconButton(5, ICON_FA_ROTATE,
-    _loop ? ICON_SELECTED : ICON_DEFAULT,
+    _loop ? UI::STATE_SELECTED : UI::STATE_DEFAULT,
     [&](){
       _loop = 1 - _loop;
       time->SetLoop(_loop);

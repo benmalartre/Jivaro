@@ -13,10 +13,12 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
+
 class PopupUI : public BaseUI
 {
 public:
-  PopupUI(int x, int y, int width, int height);
+  inline static const float Sensitivity = 4.f;
+  PopupUI(const std::string &name, int x, int y, int width, int height);
   ~PopupUI() override;
 
   void MouseButton(int button, int action, int mods) override;
@@ -59,10 +61,15 @@ public:
   bool IsCancel() { return _cancel; };
 
 protected:
+
+  void _DrawTitle();
+
+  std::string                 _name;
   bool                        _done;
   bool                        _cancel;
   bool                        _sync;
   bool                        _dimmer;
+  bool                        _drag;
   int                         _x;
   int                         _y;
   int                         _width;
@@ -85,56 +92,53 @@ private:
   UsdTimeCode  _time;
   GfVec3f      _color;
   GfVec3f      _original;
-  bool              _isArray;
+  bool         _isArray;
 };
 
-#define NODE_FILTER_SIZE 64
-class GraphPopupUI : public PopupUI
+
+class ListPopupUI : public PopupUI
 {
 public:
-
-  GraphPopupUI(int x, int y, int width, int height);
-  ~GraphPopupUI() override;
+  using Callback = std::function<void(const TfToken &token)>;
+ 
+  ListPopupUI(const char* name, int x, int y, int width, int height, Callback callback);
+  ~ListPopupUI() override;
 
   bool Draw() override;
   void MouseButton(int button, int action, int mods) override;
   void Keyboard(int key, int scancode, int action, int mods) override;
   void Input(int key) override;
+
 private:
-  void _BuildNodeList();
-  void _FilterNodes();
-  std::vector<std::string> _nodes;
-  std::vector<std::string> _filteredNodes;
-  char                     _filter[NODE_FILTER_SIZE];
+  void _BuildList();
+  void _FilterItems();
+  std::vector<std::string> _items;
+  std::vector<std::string> _filteredItems;
+  char                     _filter[256];
   short                    _p; // cursor position
-  short                    _i; // index in filterded nodes
+  short                    _i; // index in filterded items
+
+  Callback                 _callback;
 };
 
-class NamePopupUI : public PopupUI
+class InputPopupUI : public PopupUI
 {
 public:
-  NamePopupUI(int x, int y, int width, int height);
-  NamePopupUI(int x, int y, int width, int height, const std::string& name);
-  ~NamePopupUI() override;
+  using Callback = std::function<void(const TfToken& token)>;
+
+  InputPopupUI(const std::string &name, int x, int y, int width, int height);
+  InputPopupUI(const std::string &name, int x, int y, int width, int height, 
+    const std::string& value);
+  ~InputPopupUI() override;
 
   void SetName(const std::string& name);
   bool Draw() override;
+
 private:
-  char _value[255];
+  char        _value[255];
+  Callback    _callback;
 };
 
-class SdfPathPopupUI : public PopupUI
-{
-public:
-  SdfPathPopupUI(int x, int y, int width, int height,
-    const SdfPrimSpecHandle& primSpec);
-  ~SdfPathPopupUI() override;
-  bool Draw() override;
-private:
-  SdfPrimSpecHandle  _primSpec;
-  std::string             _primPath;
-  int                     _operation = 0;
-};
 
 JVR_NAMESPACE_CLOSE_SCOPE
 

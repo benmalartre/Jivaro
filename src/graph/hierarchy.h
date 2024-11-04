@@ -29,7 +29,7 @@ class HierarchyNode : public Graph::Node {
   };
 
 public:
-  explicit HierarchyGraph(const SdfLayerRefPtr &layer, const UsdPrim& prim);
+  explicit HierarchyGraph(UsdStageRefPtr &stage, const UsdPrim& prim);
   ~HierarchyGraph()         override;
 
 
@@ -44,7 +44,7 @@ protected:
   void _RecurseNodes(HierarchyNode* node);
 
 private:
-  SdfLayerRefPtr          _layer;
+  UsdStageRefPtr          _stage;
   UsdPrim                 _prim;
 
 };

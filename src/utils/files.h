@@ -65,10 +65,6 @@ int GetFileSize(const std::string& filePath);
 //-----------------------------------------------------
 std::string GetFileName(const std::string& filePath);
 
-// num files in directory
-//-----------------------------------------------------
-size_t NumFilesInDirectory(const char* path);
-
 // get entries in directory
 //-----------------------------------------------------
 size_t GetVolumes(std::vector<EntryInfo>& entries);

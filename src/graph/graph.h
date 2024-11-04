@@ -42,7 +42,8 @@ public:
       enum Flag {
         INPUT = 1,
         OUTPUT = 2,
-        HIDDEN = 4
+        INTERNAL = 4,
+        HIDDEN = 8
       };
 
       Port() {};
@@ -67,10 +68,10 @@ public:
 
     protected:
       Node*                 _node;
-      TfToken          _label;
+      TfToken               _label;
       size_t                _flags;
       Alignement            _align;
-      UsdAttribute     _attr;
+      UsdAttribute          _attr;
   };
 
   // Graph connexion class

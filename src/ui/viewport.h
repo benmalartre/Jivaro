@@ -79,14 +79,16 @@ class ViewportUI : public BaseUI
 
   protected:
     void _BuildDrawTargets(const pxr::GfVec2i &resolution);
+    void _DrawAov();
+    void _DrawPickMode();
+    void _DrawRenderer();
 
     /*
     HdSelectionSharedPtr _Pick(GfVec2i const& startPos,
       GfVec2i const& endPos, TfToken const& pickTarget);*/
 
   private:
-    void                                _DrawAov();
-    void                                _DrawPickMode();
+
     GLuint                              _texture;
     int                                 _width;
     int                                 _height;

@@ -18,7 +18,6 @@ Curve::Curve(const UsdGeomBasisCurves& curve, const GfMatrix4d& world)
 {
   UsdAttribute pointsAttr = curve.GetPointsAttr();
   pointsAttr.Get(&_positions, UsdTimeCode::Default());
-
   UsdAttribute vertexCountsAttr = curve.GetCurveVertexCountsAttr();
   vertexCountsAttr.Get(&_cvCounts, UsdTimeCode::Default());
 

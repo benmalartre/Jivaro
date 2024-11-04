@@ -53,8 +53,6 @@ public:
   void Duplicate();
   void Delete();
 
-  //void AddDeferredCommand(CALLBACK_FN fn);
-  //void ExecuteDeferredCommands();
 
   // model
   Model* GetModel() {return _model;};

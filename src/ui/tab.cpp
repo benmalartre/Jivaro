@@ -3,9 +3,10 @@
 #include "../common.h"
 #include "../ui/style.h"
 #include "../ui/tab.h"
+#include "../command/manager.h"
 #include "../app/view.h"
 #include "../app/window.h"
-#include "../app/application.h"
+#include "../app/commands.h"
 
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -136,11 +137,11 @@ ViewTabUI::Draw()
     ImGui::SetCursorPos(
       ImVec2(
         _parent->GetWidth() - 
-        (BUTTON_MINI_SIZE[0] + 2 * style.ItemSpacing[0] + style.FramePadding[0]),
+        (UI::BUTTON_MINI_SIZE[0] + 2 * style.ItemSpacing[0] + style.FramePadding[0]),
         0
       ));
 
-    if (ImGui::Button(ICON_FA_BARS, BUTTON_MINI_SIZE)) {
+    if (ImGui::Button(ICON_FA_BARS, UI::BUTTON_MINI_SIZE)) {
       ImGui::SetNextWindowPos(min + GfVec2i(12, 12));
       ImGui::OpenPopup(_ComputeName(_id, "View").c_str());
       _invade = true;
@@ -150,24 +151,23 @@ ViewTabUI::Draw()
       if (_invade)_parent->SetFlag(View::DISCARDMOUSEBUTTON);
       ImGui::Selectable("Split Horizontaly");
       if (ImGui::IsItemClicked()) {
-        /*
-        Application::Get()->AddDeferredCommand(
-          std::bind(&View::Split, _parent, 0.5, true, false, 0));*/
+        ADD_DEFERRED_COMMAND(UIGenericCommand,
+          std::bind(&View::Split, _parent, 0.5, true, false, 0));
         _invade = false;
       }
 
       ImGui::Selectable("Split Verticaly");
       if (ImGui::IsItemClicked()) {
-        /*Application::Get()->AddDeferredCommand(
-          std::bind(&View::Split, _parent, 0.5, false, false, 0));*/
+        ADD_DEFERRED_COMMAND(UIGenericCommand, 
+          std::bind(&View::Split, _parent, 0.5, false, false, 0));
         _invade = false;
       }
 
       ImGui::Selectable("Delete View");
       if (ImGui::IsItemClicked()) {
         Window* window = _parent->GetWindow();
-        /*Application::Get()->AddDeferredCommand(
-          std::bind(&Window::RemoveView, window, _parent));*/
+        ADD_DEFERRED_COMMAND(UIGenericCommand,
+          std::bind(&Window::RemoveView, window, _parent));
         _invade = false;
       }
       

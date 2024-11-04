@@ -88,7 +88,6 @@ bool
 SplitterUI::Draw()
 {
   const std::vector<View*>& views = GetWindow()->GetViews();
-
   ImGui::SetNextWindowPos(ImVec2(0, 0));
   ImGui::SetNextWindowSize(ImVec2(_width, _height));
 
@@ -101,7 +100,7 @@ SplitterUI::Draw()
   } else {
     ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
   }
-
+/*
   ImU32 color = ImColor(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
   // ImU32 color = ImColor(style.Colors[ImGuiCol_FrameBg]);
   ImDrawList* drawList = ImGui::GetForegroundDrawList();
@@ -109,7 +108,7 @@ SplitterUI::Draw()
   for(auto view : views)
     if(view->GetFlag(View::LEAF) && view->GetFlag(View::DIRTY))
       drawList->AddRect(view->GetMin(), view->GetMax(), color, 0.f, 0, 2.f);
-
+*/
   ImGui::End();
   return true;
 }

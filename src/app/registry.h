@@ -41,6 +41,7 @@ public:
   static bool IsPlaybackView(View* view);
   static void SetPlaybackView(View* view);
 
+  static void ApplyPendingModifications();
   static bool Update();
 
   static void SetActiveTool(size_t t);

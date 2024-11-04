@@ -126,6 +126,9 @@ ExecSceneIndex::UpdateExec()
     if(prim.second.geom->GetType() == Geometry::MESH) {
       HdDataSourceLocator locator(HdPrimvarsSchemaTokens->primvars);
         entries.push_back({prim.first, locator});
+    }else if(prim.second.geom->GetType() == Geometry::POINT) {
+      HdDataSourceLocator locator(HdPrimvarsSchemaTokens->primvars);
+        entries.push_back({prim.first, locator});
     }
   }
   _SendPrimsDirtied(entries);
@@ -138,6 +141,7 @@ HdSceneIndexPrim ExecSceneIndex::GetPrim(const SdfPath &primPath) const
     Scene::_Prim* prim = _exec->GetScene()->GetPrim(primPath);
     if(prim) {
       switch (prim->geom->GetType()) {
+        case Geometry::POINT:
         case Geometry::MESH:
         {
           HdSceneIndexPrim siPrim = _GetInputSceneIndex()->GetPrim(primPath);

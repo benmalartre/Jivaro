@@ -11,6 +11,8 @@
 #include "../command/inverse.h"
 #include "../command/block.h"
 
+#include "../app/selection.h"
+
 JVR_NAMESPACE_OPEN_SCOPE
 
 struct ManipTargetDesc;
@@ -90,9 +92,7 @@ private:
 class Geometry;
 class CreatePrimCommand : public Command {
 public:
-  CreatePrimCommand(SdfLayerRefPtr layer, const SdfPath& name, short type, 
-    bool asDefault=false, Geometry* geometry=NULL);
-  CreatePrimCommand(SdfPrimSpecHandle spec, const SdfPath& name, short type, 
+  CreatePrimCommand(SdfLayerRefPtr layer, const SdfPath& path, const TfToken& type, 
     bool asDefault=false, Geometry* geometry=NULL);
   ~CreatePrimCommand() {};
   void Do() override;
@@ -104,7 +104,7 @@ public:
 //==================================================================================
 class DuplicatePrimCommand : public Command {
 public:
-  DuplicatePrimCommand(UsdStageRefPtr stage, const SdfPath& path);
+  DuplicatePrimCommand(SdfLayerRefPtr stage, const SdfPath& path);
   ~DuplicatePrimCommand() {};
   void Do() override;
   
@@ -276,6 +276,19 @@ private:
 };
 
 //==================================================================================
+// Size Node Command
+//==================================================================================
+class SizeNodeCommand : public Command {
+public:
+  SizeNodeCommand(const SdfPathVector& paths, const GfVec2f& offset);
+  ~SizeNodeCommand() {};
+  void Do() override;
+private:
+  SdfPathVector                _nodes;
+  GfVec2f                      _offset;
+};
+
+//==================================================================================
 // Expend Node Command
 //==================================================================================
 class ExpendNodeCommand : public Command {
@@ -298,6 +311,19 @@ public:
 private:
   SdfPath   _source;
   SdfPath   _destination;
+};
+
+//==================================================================================
+// UI Generic Command
+//==================================================================================
+class UIGenericCommand : public Command {
+public:
+  UIGenericCommand(CALLBACK_FN fn);
+  ~UIGenericCommand() {};
+  void Do() override;
+
+private:
+  CALLBACK_FN _fn;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

@@ -106,8 +106,10 @@ public:
   void SetWidth(int width){_width = width;};
   void SetHeight(int height){_height = height;};
   void Resize(unsigned width, unsigned height);
-
   int GetMenuBarHeight();
+
+  // mouse
+  GfVec2f GetMousePosition();
 
   // views
   SplitterUI* GetSplitter(){return _splitter;};
@@ -145,7 +147,7 @@ public:
   void EndRepeatKey();
   bool ShouldRepeatKey();
   void SetViewportMessage(const std::string &message);
-
+  
   // fonts
   inline ImFont* GetFont(size_t size, size_t index);
 
@@ -193,6 +195,8 @@ private:
   int                   _lastActiveTool;
   int                   _width;
   int                   _height;
+  int                   _mouseX;
+  int                   _mouseY;
   unsigned*             _pixels;
   bool                  _valid;
   int                   _layout;
@@ -210,6 +214,7 @@ private:
   ImGuiIO*              _io;
   bool                  _debounce;
   uint64_t              _lastRepeatT;
+  
 
   // fonts
   float                 _fontSize;
@@ -218,6 +223,9 @@ private:
   GLuint                _fbo;
   GLuint                _tex;
   UITypeCounter         _uic;
+
+  // deferred
+  std::vector<CALLBACK_FN> _deferred;
 
 };
 

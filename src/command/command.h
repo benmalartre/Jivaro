@@ -14,6 +14,8 @@ class Command {
     Command() : _undoable(false) {};
     Command(bool undoable) : _undoable(undoable) {};
     virtual void Do() = 0;
+    bool IsUndoable(){return _undoable;};
+    
 protected:
   bool        _undoable;
   UndoInverse _inverse;

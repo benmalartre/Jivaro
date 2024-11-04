@@ -88,12 +88,12 @@ bool ToolbarButton::Draw()
   bool clicked = false;
   if(toggable) {
     if (UI::AddCheckableIconButton(
-      0, icon, enabled ? ICON_SELECTED : ICON_DEFAULT, func)) {
+      0, icon, enabled ? UI::STATE_SELECTED : UI::STATE_DEFAULT, func)) {
       enabled = 1 - enabled;
     }
   } else {
     clicked = UI::AddCheckableIconButton(
-      0, icon, (window->GetActiveTool() == tool) ? ICON_SELECTED : ICON_DEFAULT, func);
+      0, icon, (window->GetActiveTool() == tool) ? UI::STATE_SELECTED : UI::STATE_DEFAULT, func);
   }
   ImGui::PopFont();
 
@@ -186,8 +186,8 @@ int
 ToolbarUI::GetFixedSize()
 {
   const ImGuiStyle &style = ImGui::GetStyle(); 
-  if(_vertical)return BUTTON_NORMAL_SIZE[0] + 2 * (style.WindowPadding.x + style.ItemSpacing.x);
-  else return BUTTON_NORMAL_SIZE[1] + 2 * (style.WindowPadding.y + style.ItemSpacing.y);
+  if(_vertical)return UI::BUTTON_NORMAL_SIZE[0] + 2 * (style.WindowPadding.x + style.ItemSpacing.x);
+  else return UI::BUTTON_NORMAL_SIZE[1] + 2 * (style.WindowPadding.y + style.ItemSpacing.y);
 }
 
 bool ToolbarUI::Draw()

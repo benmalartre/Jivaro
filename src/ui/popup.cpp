@@ -6,6 +6,7 @@
 #include "../ui/splitter.h"
 #include "../utils/timer.h"
 #include "../utils/keys.h"
+#include "../utils/usd.h"
 #include "../utils/strings.h"
 #include "../command/block.h"
 #include "../command/manager.h"
@@ -18,12 +19,15 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 ImGuiWindowFlags PopupUI::_flags = 
   ImGuiWindowFlags_NoTitleBar |
-  ImGuiWindowFlags_NoBackground;
+  ImGuiWindowFlags_NoScrollbar |
+  ImGuiWindowFlags_NoMove |
+  ImGuiWindowFlags_NoResize;
 
 // Popup constructor
 //----------------------------------------------------------------------------
-PopupUI::PopupUI(int x, int y, int w, int h)
+PopupUI::PopupUI(const std::string &name, int x, int y, int w, int h)
   : BaseUI(NULL, UIType::POPUP, true)
+  , _name(name)
   , _x(x)
   , _y(y)
   , _width(w)
@@ -49,7 +53,7 @@ void PopupUI::GetRelativeMousePosition(const float inX, const float inY,
 
 
 static double _TouchEdge(const GfVec2f& p, const GfVec2f& min, 
-  const GfVec2f& max, double eps=2.0)
+  const GfVec2f& max, double eps=PopupUI::Sensitivity)
 {
   const double l = p[0] - min[0];
   const double r = max[0] - p[0];
@@ -66,16 +70,29 @@ PopupUI::MouseButton(int button, int action, int mods)
   double x, y;
   glfwGetCursorPos(GetWindow()->GetGlfwWindow(), &x, &y);
   if (action == GLFW_PRESS) {
-    if (x < _x && y < _y && x >(_x + _width) && y >(_y + _height)) {
+    if (x < (_x - Sensitivity) && y < (_y - Sensitivity) && 
+      x >(_x + _width + Sensitivity) && y >(_y + _height + Sensitivity)) {
       _cancel = true;
     }
+    std::cout << "------------------------------" << std::endl;
+    if(_TouchEdge(GfVec2f(x, y), GfVec2f(_x, _y), GfVec2f(_x+_width, _y+_height)))
+        std::cout << "Touch Fuckin Edge" << std::endl;
+
+    if (button == GLFW_MOUSE_BUTTON_LEFT)_drag = true;
+  }
+  else if (action == GLFW_RELEASE) {
+    _drag = false;
   } 
 }
 
 void
 PopupUI::MouseMove(int x, int y)
 {
+  if(_TouchEdge(GfVec2f(x, y), GfVec2f(_x, _y), GfVec2f(_x+_width, _y+_height)))
+        std::cout << "Touch Fuckin Edge" << std::endl;
+  if (_drag) {
 
+}
 }
 
 void 
@@ -102,8 +119,6 @@ PopupUI::Draw()
 
   ImGui::Begin(_name.c_str(), NULL, _flags);
 
-  
-
   GfVec4f color(
     RANDOM_0_1,
     RANDOM_0_1,
@@ -129,7 +144,7 @@ PopupUI::Draw()
 //===========================================================================================
 ColorPopupUI::ColorPopupUI(int x, int y, int width, int height, 
   const UsdAttribute& attribute, const UsdTimeCode& timeCode)
-  : PopupUI(x, y, width, height)
+  : PopupUI("Color Chooser", x, y, width, height)
   , _attribute(attribute)
   , _time(timeCode)
   , _isArray(false)
@@ -232,34 +247,34 @@ ColorPopupUI::Draw()
 
 
 //===========================================================================================
-// NamePopupUI
+// InputPopupUI
 //===========================================================================================
-NamePopupUI::NamePopupUI(int x, int y, int width, int height)
-  : PopupUI(x, y, width, height)
+InputPopupUI::InputPopupUI(const std::string &name, int x, int y, int width, int height)
+  : PopupUI(name, x, y, width, height)
 {
   _sync = false;
   memset(&_value[0], 0, 255 * sizeof(char));
 }
 
-NamePopupUI::NamePopupUI(int x, int y, int width, int height, const std::string& name)
-  : PopupUI(x, y, width, height)
+InputPopupUI::InputPopupUI(const std::string& name, int x, int y, int width, int height, const std::string& value)
+  : PopupUI(name, x, y, width, height)
 {
   _sync = false;
-  strcpy(&_value[0], name.c_str());
+  strcpy(&_value[0], value.c_str());
 }
 
-NamePopupUI::~NamePopupUI()
+InputPopupUI::~InputPopupUI()
 {
 }
 
 void 
-NamePopupUI::SetName(const std::string& name)
+InputPopupUI::SetName(const std::string& name)
 {
   strcpy(&_value[0], name.c_str());
 }
 
 bool
-NamePopupUI::Draw()
+InputPopupUI::Draw()
 {
   static bool initialized = false;
 
@@ -306,49 +321,57 @@ NamePopupUI::Draw()
 
 
 //===========================================================================================
-// GraphPopupUI
+// ListPopupUI
 //===========================================================================================
-GraphPopupUI::GraphPopupUI(int x, int y, int width, int height)
-  : PopupUI(x, y, width, height)
+ListPopupUI::ListPopupUI(const char* name, int x, int y, int width, int height, Callback callback)
+  : PopupUI(name, x, y, width, height)
   , _p(0)
   , _i(0)
+  , _callback(callback)
 {
-  _sync = true;
-  memset(&_filter[0], (char)0, NODE_FILTER_SIZE * sizeof(char));
-  _BuildNodeList();
+  _sync = false;
+  memset(&_filter[0], (char)0, 256 * sizeof(char));
+  _BuildList();
 }
 
-GraphPopupUI::~GraphPopupUI()
+ListPopupUI::~ListPopupUI()
 {
-}
-
-void
-GraphPopupUI::_BuildNodeList()
-{
-  _nodes.push_back("wrap");
-  _nodes.push_back("collide");
-  _nodes.push_back("skin");
-  _nodes.push_back("bend");
-  _nodes.push_back("twist");
-  _nodes.push_back("perlin");
-  _nodes.push_back("wire");
-  _nodes.push_back("curve");
-  _nodes.push_back("warp");
 }
 
 void
-GraphPopupUI::MouseButton(int button, int action, int mods)
+ListPopupUI::_BuildList()
+{
+
+  for(auto& specTypeName: GetAllSpecTypeNames() )
+    _items.push_back(specTypeName);
+  /*
+  _items.push_back("wrap");
+  _items.push_back("collide");
+  _items.push_back("skin");
+  _items.push_back("bend");
+  _items.push_back("twist");
+  _items.push_back("perlin");
+  _items.push_back("wire");
+  _items.push_back("curve");
+  _items.push_back("warp");
+  */
+}
+
+void
+ListPopupUI::MouseButton(int button, int action, int mods)
 {
   double x, y;
   glfwGetCursorPos(GetWindow()->GetGlfwWindow(), &x, &y);
 
-  if(button == GLFW_MOUSE_BUTTON_RIGHT)
+  if(x < _x || x > (_x + _width) || y < _y || y > (_y + _height))
+    _cancel = true;
+  else if(button == GLFW_MOUSE_BUTTON_RIGHT)
     _done = true;
 }
 
 
 void 
-GraphPopupUI::Keyboard(int key, int scancode, int action, int mods)
+ListPopupUI::Keyboard(int key, int scancode, int action, int mods)
 {
   if (action == GLFW_PRESS || action == GLFW_REPEAT) {
     switch (GetMappedKey(key)) {
@@ -357,16 +380,17 @@ GraphPopupUI::Keyboard(int key, int scancode, int action, int mods)
       break;
     case GLFW_KEY_DOWN:
       _i++;
-      if (_i >= _filteredNodes.size()) _i = 0;
+      if (_i >= _filteredItems.size()) _i = 0;
       break;
     case GLFW_KEY_UP:
       _i--;
-      if (_i < 0) _i = _filteredNodes.size() - 1;
+      if (_i < 0) _i = _filteredItems.size() - 1;
       break;
     case GLFW_KEY_ENTER:
-      if(_filteredNodes.size()){
-        const std::string name = _filteredNodes[_i];
+      if(_filteredItems.size()){
+        const std::string name = _filteredItems[_i];
         std::cout << "NodePopupUI result : " << name << std::endl;
+        if(_callback)_callback(TfToken(name));
       }
       _done = true;
       break;
@@ -375,147 +399,84 @@ GraphPopupUI::Keyboard(int key, int scancode, int action, int mods)
 }
 
 void
-GraphPopupUI::Input(int key)
+ListPopupUI::Input(int key)
 {
   _filter[_p++] = ConvertCodePointToUtf8(key).c_str()[0];
 }
 
-static bool _FilterNodeName(const std::string& name, const char* filter)
+static bool _FilterItemName(const std::string& name, const char* filter)
 {
   return CountString(name, (std::string)filter) > 0;
 }
 
 void
-GraphPopupUI::_FilterNodes()
+ListPopupUI::_FilterItems()
 {
-  _filteredNodes.clear();
-  for (auto& node : _nodes) {
-    if (_FilterNodeName(node, _filter)) {
-      _filteredNodes.push_back(node);
+  _filteredItems.clear();
+  for (auto& node : _items) {
+    if (_FilterItemName(node, _filter)) {
+      _filteredItems.push_back(node);
     }
   }
 }
 
 bool
-GraphPopupUI::Draw()
+ListPopupUI::Draw()
 {
+  const ImGuiStyle& style = ImGui::GetStyle();
+
+  if (!strcmp(_filter, "")) {
+    _filteredItems = _items;
+  } else {
+    _FilterItems();
+  }
+
   ImGui::SetNextWindowPos(GfVec2f(_x, _y));
   ImGui::SetNextWindowSize(GfVec2f(_width, _height));
 
   ImGui::Begin(_name.c_str(), NULL, _flags);
 
-  ImDrawList* drawList = ImGui::GetBackgroundDrawList();
-  const ImGuiStyle& style = ImGui::GetStyle();
+  ImDrawList* drawList = ImGui::GetForegroundDrawList();
+
   
-  drawList->AddRectFilled(
-    _parent->GetMin(), _parent->GetMax(), ImColor(style.Colors[ImGuiCol_ChildBg]));
+  ImGui::PushFont(GetWindow()->GetFont(FONT_MEDIUM, 0));
+  ImGui::TextColored(ImVec4(1, 0.5, 0.25, 1.0),_name.c_str());
+  ImGui::PopFont();
 
-  drawList = ImGui::GetForegroundDrawList();
-  
-  if (!strcmp(_filter, "")) {
-    _filteredNodes = _nodes;
-  } else {
-    _FilterNodes();
-  }
-
-  size_t idx = 0;
-  for(auto& node : _filteredNodes) {
-    std::cout << node.c_str() << std::endl;
-    if (idx == _i) {
-      ImGui::PushFont(GetWindow()->GetFont(FONT_MEDIUM, 1));
-      ImGui::TextColored(ImVec4(1.0,1.0,1.0,1.0), "%s", node.c_str());
-    } else {
-      ImGui::PushFont(GetWindow()->GetFont(FONT_MEDIUM, 1));
-      ImGui::TextColored(ImVec4(0.75,0.75,0.75,1.0), "%s", node.c_str());
-    }
-    ImGui::PopFont();
-    idx++;
-  }
-
-  ImGui::TextColored(ImVec4(0, 0, 1, 1), "%s", _filter);
   ImGui::SameLine();
+  ImGui::InputText("##filter", _filter, IM_ARRAYSIZE(_filter));
 
-  if (ImGui::Button("OK", ImVec2(GetWidth() / 3, 32))) {
-    _done = true;
-  }
-  ImGui::SameLine();
-  if (ImGui::Button("Cancel", ImVec2(GetWidth() / 3, 32))) {
-    _cancel = true;
-  }
-
-  ImGui::End();
-  return true;
-
-};
-
-//===========================================================================================
-// SdfPathPopupUI
-//===========================================================================================
-SdfPathPopupUI::SdfPathPopupUI(int x, int y, int width, int height,
-  const SdfPrimSpecHandle& primSpec)
-  : PopupUI(x, y, width, height)
-  , _primSpec(primSpec)
-{
-  
-}
-
-SdfPathPopupUI::~SdfPathPopupUI()
-{
-}
-
-bool
-SdfPathPopupUI::Draw()
-{
-  bool opened;
-
-  ImGui::SetNextWindowSize(GfVec2f(_width, _height));
-  ImGui::SetNextWindowPos(GfVec2f(_x, _y));
-
-  ImGui::Begin(_name.c_str(), &opened, _flags);
-
- 
-  ImGui::InputText("Target prim path", &_primPath);
-
-  ImGui::End();
-  return true;
-};
-
-/*
-/// Create a standard UI for entering a SdfPath.
-/// This is used for inherit and specialize
-struct SdfPathPopupUI : public ModalDialog {
-
-  CreateSdfPathModalDialog(const SdfPrimSpecHandle& primSpec) : _primSpec(primSpec) {};
-  ~CreateSdfPathModalDialog() override {}
-
-  void Draw() override {
-    if (!_primSpec) {
-      CloseModal();
-      return;
-    }
-    // TODO: We will probably want to browse in the scene hierarchy to select the path
-    //   create a selection tree, one day
-    ImGui::Text("%s", _primSpec->GetPath().GetString().c_str());
-    if (ImGui::BeginCombo("Operation", GetListEditorOperationName(_operation))) {
-      for (int n = 0; n < GetListEditorOperationSize(); n++) {
-        if (ImGui::Selectable(GetListEditorOperationName(n))) {
-          _operation = n;
+  ImGui::PushFont(GetWindow()->GetFont(FONT_MEDIUM, 0));
+  if (ImGui::BeginListBox("##listbox", ImVec2(_width, _height - ImGui::GetFontSize())))
+  {
+    for (int n = 0; n < _filteredItems.size(); ++n)
+    {
+      const bool isSelected = (_i == n);
+      if (ImGui::Selectable(_filteredItems[n].c_str(), isSelected, ImGuiSelectableFlags_AllowDoubleClick)) {
+        _i = n;
+        if (ImGui::IsMouseDoubleClicked(0)) {
+          _done = true;
+          std::cout << "NodePopupUI result : " << _filteredItems[n] << std::endl;
+           if(_callback)_callback(TfToken(_filteredItems[n]));
         }
       }
-      ImGui::EndCombo();
+
+      // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+      if (isSelected)
+        ImGui::SetItemDefaultFocus();
     }
-    ImGui::InputText("Target prim path", &_primPath);
-    DrawOkCancelModal([=]() { OnOkCallBack(); });
+    ImGui::EndListBox();
   }
+  
+  
+  ImGui::PopFont();
 
-  virtual void OnOkCallBack() = 0;
 
-  const char* DialogId() const override { return "Sdf path"; }
+  ImGui::End();
+  return true;
 
-  SdfPrimSpecHandle _primSpec;
-  std::string _primPath;
-  int _operation = 0;
 };
-*/
+
+
 
 JVR_NAMESPACE_CLOSE_SCOPE

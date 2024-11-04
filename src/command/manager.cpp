@@ -16,7 +16,8 @@ CommandManager* CommandManager::Get() {
 void
 CommandManager::AddCommand(std::shared_ptr<Command> command)
 {
-  _todoStack.push_front(command);
+  if(command->IsUndoable())
+    _todoStack.push_front(command);
 }
 
 void

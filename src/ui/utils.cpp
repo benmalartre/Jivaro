@@ -4,10 +4,12 @@
 
 #include "../ui/utils.h"
 #include "../ui/popup.h"
+#include "../command/block.h"
+#include "../command/manager.h"
 #include "../app/view.h"
 #include "../app/window.h"
-#include "../app/application.h"
-#include "../command/block.h"
+#include "../app/registry.h"
+#include "../app/commands.h"
 
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -63,7 +65,7 @@ AddCheckableIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN fu
 {
   ImGuiStyle* style = &ImGui::GetStyle();
   ImVec4* colors = style->Colors;
-  const bool active = (state == ICON_SELECTED);
+  const bool active = (state == UI::STATE_SELECTED);
   if (active) {
     ImGui::PushStyleColor(ImGuiCol_Button, style->Colors[ImGuiCol_ButtonActive]);
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, style->Colors[ImGuiCol_ButtonActive]);
@@ -302,13 +304,14 @@ AddColorWidget(const UsdAttribute& attribute, const UsdTimeCode& timeCode)
       windowPos.x + ImGui::GetCursorPosX() - scrollOffsetH,
       windowPos.y + ImGui::GetCursorPosY() - scrollOffsetV
     );
-
+  
     ColorPopupUI* popup = new ColorPopupUI((int)position[0], (int)position[1], 
       200, 300, attribute, timeCode);
-    /*
-    Application::Get()->AddDeferredCommand(
-      std::bind(&WindowRegistry::SetPopup, WindowRegistry::Get(), popup)
-    );*/
+    
+    ADD_DEFERRED_COMMAND(UIGenericCommand, 
+      std::bind(&WindowRegistry::SetPopup, popup));
+    
+
     ImGui::PopStyleColor(3);
     return VtValue();
   }

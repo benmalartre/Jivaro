@@ -98,7 +98,7 @@ void _XXX_CALLBACK__(int index)
 static void DrawPropertyMiniButton(ImGuiID id=0)
 {
   UI::AddIconButton(
-    id, ICON_FA_GEAR, ICON_DEFAULT,
+    id, ICON_FA_GEAR, UI::STATE_DEFAULT,
     std::bind(_XXX_CALLBACK__, id));
   ImGui::SameLine();
 }

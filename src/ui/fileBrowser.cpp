@@ -14,6 +14,7 @@ FileBrowserUI::FileBrowserUI(View* parent, Mode mode)
   , _changed(true)
   , _showHiddenFiles(false)
 {
+  memset(&_filename[0], (char)0, 256 * sizeof(char));
 }
 
 FileBrowserUI::~FileBrowserUI()
@@ -32,6 +33,26 @@ void FileBrowserUI::SetPath(const std::string& path)
   if (_ResetSelected()) {
     _current = 0;
     _selected[_current] = true;
+  }
+}
+
+void FileBrowserUI::UndoPath()
+{
+  if(_undoPaths.size()) {
+    _redoPaths.push(_path);
+    _path = _undoPaths.top();
+    _undoPaths.pop();
+    std::cout << "Undo Path" << std::endl;
+  }
+}
+
+void FileBrowserUI::RedoPath()
+{
+  if(_redoPaths.size()) {
+    _undoPaths.push(_path);
+    _path = _redoPaths.top();
+    _redoPaths.pop();
+    std::cout << "Redo Path" << std::endl;
   }
 }
 
@@ -154,10 +175,18 @@ void FileBrowserUI::_SelectNext(int mods)
 
 void FileBrowserUI::_DrawPath()
 {
-  UI::AddIconButton(0, ICON_FA_TRASH, ICON_DEFAULT,
+  UI::AddIconButton(0, ICON_FA_TRASH, UI::STATE_DEFAULT,
     std::bind(&FileBrowserUI::SetPath, this, ""));
-
   ImGui::SameLine();
+
+  UI::AddIconButton(0, ICON_FA_ARROW_LEFT, UI::STATE_DEFAULT,
+    std::bind(&FileBrowserUI::UndoPath, this));
+  ImGui::SameLine();
+
+  UI::AddIconButton(0, ICON_FA_ARROW_RIGHT, UI::STATE_DEFAULT,
+    std::bind(&FileBrowserUI::RedoPath, this));
+  ImGui::SameLine();
+
   size_t numTokens = _pathTokens.size();
   if(numTokens) {
     size_t lastTokenIndex = numTokens - 1;
@@ -250,7 +279,7 @@ bool FileBrowserUI::_DrawEntries()
 {
   static bool selected = false;
   ImGuiWindowFlags windowFlags = ImGuiWindowFlags_HorizontalScrollbar;
-  float height = GetHeight() - 64;
+  float height = GetHeight() - 100;
 
   ImGui::SetCursorPosX(8);
   ImGui::BeginChild(
@@ -279,13 +308,32 @@ bool FileBrowserUI::_DrawEntries()
 
 void FileBrowserUI::_DrawButtons()
 {
-  ImGui::SetCursorPos(ImVec2(GetWidth()-300, GetHeight()-40));
-  if(ImGui::Button("OK", ImVec2(128, 32)))_browsing=false;
+  if(ImGui::Button("OK", ImVec2(128, 32)))
+    _browsing=false;
   ImGui::SameLine();
+
   if(ImGui::Button("Cancel", ImVec2(128, 32))){
     _browsing = false;
     _canceled = true;
   }
+}
+
+void FileBrowserUI::_DrawFilename()
+{
+  const ImGuiStyle& style = ImGui::GetStyle();
+  ImGui::TextColored(style.Colors[ImGuiCol_Text], "filename :");
+  ImGui::SameLine();
+  if (_result.size())
+    ImGui::TextColored(style.Colors[ImGuiCol_PlotLines], _result[0].c_str());
+
+  else
+    ImGui::TextColored(style.Colors[ImGuiCol_TextDisabled], "not set");
+  
+    
+  if(ImGui::InputText("##filename", &_filename[0], 256))
+    SetResult(_filename);
+
+  
 }
 
 bool FileBrowserUI::Draw()
@@ -307,6 +355,9 @@ bool FileBrowserUI::Draw()
   _entries = _nextEntries;
   _DrawPath();
   _DrawEntries();
+
+  if(_mode == Mode::SAVE)
+    _DrawFilename();
 
   _DrawButtons();
 
@@ -339,6 +390,8 @@ void FileBrowserUI::Keyboard(int key, int scancode, int action, int mods)
         const EntryInfo& info = _entries[_current];
         if (info.type == EntryInfo::Type::FOLDER) {
           AppendPath(info.path);
+          if(_mode == Mode::SAVE)
+            SetResult(_name);
         }
         else if (info.type == EntryInfo::Type::FILE) {
           SetResult(info.path);

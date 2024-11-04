@@ -64,25 +64,6 @@ Application::~Application()
 
 };
 
-
-/*
-void
-Application::AddDeferredCommand(CALLBACK_FN fn)
-{
-  _deferred.push_back(fn);
-}
-
-void
-Application::ExecuteDeferredCommands()
-{
-  // execute any registered command that could not been run during draw
-  if (_deferred.size()) {
-    for(int i = _deferred.size() - 1; i >= 0; --i) _deferred[i]();
-    _deferred.clear();
-  }
-}
-*/
-
 // browse for file
 //----------------------------------------------------------------------------
 std::string
@@ -113,14 +94,12 @@ Application::BrowseFile(int x, int y, const char* folder, const char* filters[],
 void 
 Application::Init(unsigned width, unsigned height, bool fullscreen)
 {
-  std::cout << "create window" << std::endl;
   Window* window;
   if(fullscreen) {
     window = WindowRegistry::CreateFullScreenWindow(name);
   } else {
     window = WindowRegistry::CreateStandardWindow(name, GfVec4i(0,0,width, height));
   }
-  std::cout << "created window" << std::endl;
 
   Time::Get()->Init(1, 101, 24);
 
@@ -162,14 +141,8 @@ Application::Term()
 bool
 Application::Update()
 {
-  //ExecuteDeferredCommands();
-  /*
-  if (_needCaptureFramebuffers) {
-    _mainWindow->CaptureFramebuffer();
-    for (auto& childWindow : _childWindows)childWindow->CaptureFramebuffer();
-    _needCaptureFramebuffers = false;
-  }
-  */
+  CommandManager::Get()->ExecuteDeferredCommands();
+  
   Time* time = Time::Get();
   float currentTime(time->GetActiveTime());
   int playback = time->Playback();
@@ -228,7 +201,7 @@ Application::Duplicate()
   Selection* selection = _model->GetSelection();
   if (!selection->IsEmpty()) {
     const Selection::Item& item = selection->GetItem(0);
-    ADD_COMMAND(DuplicatePrimCommand, _model->GetStage(), item.path);
+    ADD_COMMAND(DuplicatePrimCommand, _model->GetStage()->GetRootLayer(), item.path);
   }
 }
 
@@ -246,12 +219,12 @@ Application::NewScene(const std::string& filename)
 
 void Application::SaveScene()
 {
-  _model->GetStage()->GetRootLayer()->Save(true);
+  ADD_COMMAND(SaveLayerCommand, _model->GetStage()->GetRootLayer());
 }
 
 void Application::SaveSceneAs(const std::string& filename)
 {
-  _model->GetStage()->GetRootLayer()->Save(true);
+  ADD_COMMAND(SaveLayerAsCommand, _model->GetStage()->GetRootLayer(), filename);
 }
 
 // ---------------------------------------------------------------------------------------------

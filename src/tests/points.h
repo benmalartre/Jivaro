@@ -19,8 +19,10 @@ public:
   void TerminateExec(UsdStageRefPtr& stage) override;
   
 private:
-  Points*                                                    _points;
-  SdfPath                                               _pointsId;
+  Points* _points;
+  SdfPath _pointsId;
+  Mesh*   _mesh;
+  SdfPath _meshId;
   
 };
 

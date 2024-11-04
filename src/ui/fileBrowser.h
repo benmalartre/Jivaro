@@ -3,6 +3,7 @@
 
 #include <bitset>
 #include <limits>
+#include <stack>
 #include "../common.h"
 #include "../utils/icons.h"
 #include "../ui/ui.h"
@@ -16,6 +17,7 @@ static size_t FILEBROWSER_INVALID_INDEX = std::numeric_limits<size_t>::max();
 class FileBrowserUI : public BaseUI
 {
 public:
+  using PathStack = std::stack<std::string>;
   enum Mode {
     OPEN,
     SAVE,
@@ -32,6 +34,8 @@ public:
   bool Draw() override;
 
   void SetPath(const std::string& path);
+  void UndoPath();
+  void RedoPath();
   void AppendPath(const std::string& name);
   void PopPath();
   void SetPathFromTokenIndex(size_t index);
@@ -47,6 +51,7 @@ public:
   bool _DrawEntries();
   void _DrawButtons();
   bool _DrawEntry(ImDrawList* drawList, size_t idx, bool flip);
+  void _DrawFilename();
 
   // state
   bool IsBrowsing(){return _browsing;};
@@ -67,12 +72,17 @@ public:
 
 private:
   std::string              _path;
+  char                     _filename[256];
   std::vector<std::string> _pathTokens;
   std::vector<EntryInfo>   _nextEntries;
   std::vector<EntryInfo>   _entries;
   std::vector<std::string> _directories;
   std::vector<std::string> _files;
   std::vector<std::string> _filters;
+
+  PathStack                _undoPaths;
+  PathStack                _redoPaths;
+  
   size_t                   _current;
   bool                     _canceled;
   bool                     _browsing;

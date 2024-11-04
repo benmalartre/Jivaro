@@ -135,106 +135,32 @@ void LayerTextEditCommand::Do() {
 }
 
 
-static void _SetTypeNameFromType(SdfPrimSpecHandle& primSpec, short type)
-{
-  switch (type) {
-  case Geometry::XFORM:
-    primSpec->SetTypeName(TfToken("Xform"));
-    break;
-
-  case Geometry::PLANE:
-    primSpec->SetTypeName(TfToken("Plane"));
-    break;
-
-  case Geometry::CUBE:
-    primSpec->SetTypeName(TfToken("Cube"));
-    break;
-
-  case Geometry::SPHERE:
-    primSpec->SetTypeName(TfToken("Sphere"));
-    break;
-
-  case Geometry::CAPSULE:
-    primSpec->SetTypeName(TfToken("Capsule"));
-    break;
-
-  case Geometry::CYLINDER:
-    primSpec->SetTypeName(TfToken("Cylinder"));
-    break;
-
-  case Geometry::CONE:
-    primSpec->SetTypeName(TfToken("Cone"));
-    break;
-
-  case Geometry::POINT:
-    primSpec->SetTypeName(TfToken("Points"));
-    break;
-
-  case Geometry::MESH:
-    primSpec->SetTypeName(TfToken("Mesh"));
-    break;
-
-  case Geometry::SOLVER:
-    primSpec->SetTypeName(TfToken("PbdSolver"));
-    break;
-
-  }
-}
-
-static void _SetSpecsFromGeometry(SdfPrimSpecHandle& primSpec, Geometry* geometry )
-{
-  switch(geometry->GetType()) {
-    case Geometry::CUBE:
-      {
-        //Cube* cube = Cube*(geometry);
-        //primSpec->
-      }
-  }
-}
-
 
 //==================================================================================
 // Create Prim
 //==================================================================================
-CreatePrimCommand::CreatePrimCommand(SdfLayerRefPtr layer, const SdfPath& name, short type, 
+CreatePrimCommand::CreatePrimCommand(SdfLayerRefPtr layer, const SdfPath& path, const TfToken& type, 
   bool asDefault, Geometry* geometry) 
   : Command(true)
 {
-  if (!layer) 
+   if (!layer) 
     return;
 
+  SdfPath parentPath = path.GetParentPath();
+  SdfPrimSpecHandle parentSpec = layer->GetPrimAtPath(parentPath);
+
+  if(!parentSpec)
+    parentSpec = layer->GetPseudoRoot();
+
   SdfPrimSpecHandle primSpec =
-    SdfPrimSpec::New(layer, name.GetString(), SdfSpecifier::SdfSpecifierDef);
-  _SetTypeNameFromType(primSpec,  type);
+    SdfPrimSpec::New(parentSpec, path.GetName(), SdfSpecifier::SdfSpecifierDef);
+  primSpec->SetTypeName(type);
 
   if(asDefault)
     layer->SetDefaultPrim(primSpec->GetNameToken());
 
-  if(geometry)
-    _SetSpecsFromGeometry(primSpec, geometry);
-
-  UndoRouter::Get().TransferEdits(&_inverse);
-  SceneChangedNotice().Send();
-}
-
-CreatePrimCommand::CreatePrimCommand(SdfPrimSpecHandle spec, const SdfPath& name, short type, 
-  bool asDefault, Geometry* geometry)
-  : Command(true)
-{
-  if (!spec) 
-    return;
-
-  UndoRouter::Get().TransferEdits(&_inverse);
-
-  SdfPrimSpecHandle primSpec =
-    SdfPrimSpec::New(spec, name.GetString(), SdfSpecifier::SdfSpecifierDef);
-  _SetTypeNameFromType(primSpec,  type);
-
-  if(asDefault)
-    primSpec->GetLayer()->SetDefaultPrim(primSpec->GetNameToken());
-
-  if(geometry)
-    _SetSpecsFromGeometry(primSpec, geometry);
+  /*if(geometry)
+    _SetSpecsFromGeometry(primSpec, geometry);*/
 
   UndoRouter::Get().TransferEdits(&_inverse);
   SceneChangedNotice().Send();
@@ -248,9 +174,10 @@ void CreatePrimCommand::Do() {
 //==================================================================================
 // Duplicate
 //==================================================================================
-DuplicatePrimCommand::DuplicatePrimCommand(UsdStageRefPtr stage, const SdfPath& path)
+DuplicatePrimCommand::DuplicatePrimCommand(SdfLayerRefPtr layer, const SdfPath& path)
   : Command(true)
 {
+  /*
   Selection* selection = Application::Get()->GetModel()->GetSelection();
   _selection = selection->GetItems();
 
@@ -260,11 +187,11 @@ DuplicatePrimCommand::DuplicatePrimCommand(UsdStageRefPtr stage, const SdfPath& 
 
   UsdStagePopulationMask populationMask({ path });
   UsdStageRefPtr tmpStage =
-    UsdStage::OpenMasked(stage->GetRootLayer(),
+    UsdStage::OpenMasked(layer,
       populationMask, UsdStage::InitialLoadSet::LoadAll);
 
   SdfLayerRefPtr sourceLayer = tmpStage->Flatten();
-  SdfLayerHandle destinationLayer = stage->GetEditTarget().GetLayer();
+  SdfLayerHandle destinationLayer = layer;
   SdfPrimSpecHandle destinationPrimSpec =
     SdfCreatePrimInLayer(destinationLayer, destinationPath);
   SdfCopySpec(SdfLayerHandle(sourceLayer),
@@ -275,6 +202,7 @@ DuplicatePrimCommand::DuplicatePrimCommand(UsdStageRefPtr stage, const SdfPath& 
   selection->AddItem(destinationPath);
   
   SceneChangedNotice().Send();
+  */
 }
 
 void DuplicatePrimCommand::Do() {
@@ -627,7 +555,7 @@ void CreateNodeCommand::Do()
 //==================================================================================
 MoveNodeCommand::MoveNodeCommand(
   const SdfPathVector& nodes, const GfVec2f& offset)
-  : Command(true)
+  : Command(false)
   , _nodes(nodes)
   , _offset(offset)
 {
@@ -662,6 +590,47 @@ void MoveNodeCommand::Do()
   AttributeChangedNotice().Send();
 }
 
+
+//==================================================================================
+// Size Node
+//==================================================================================
+SizeNodeCommand::SizeNodeCommand(
+  const SdfPathVector& nodes, const GfVec2f& offset)
+  : Command(false)
+  , _nodes(nodes)
+  , _offset(offset)
+{
+  Application* app = Application::Get();
+  UsdStageRefPtr stage = app->GetModel()->GetStage();
+  for (auto& node : nodes) {
+    UsdPrim prim = stage->GetPrimAtPath(node);
+    if (!prim.IsValid()) {
+      continue;
+    }
+
+    UsdUINodeGraphNodeAPI api(prim);
+    GfVec2f size;
+   
+    UsdAttribute sizeAttr = api.GetSizeAttr();
+    if (sizeAttr.IsValid()) {
+      sizeAttr.Get(&size);
+      size += offset;
+      sizeAttr.Set(size);
+    } else {
+      sizeAttr = api.CreateSizeAttr(VtValue(offset));
+    }
+  }
+  UndoRouter::Get().TransferEdits(&_inverse);
+  AttributeChangedNotice().Send();
+}
+
+void SizeNodeCommand::Do()
+{
+  _inverse.Invert();
+  _offset *= -1;
+  AttributeChangedNotice().Send();
+}
+
 //==================================================================================
 // Expend Node
 // The current expansionState of the node in the ui. 
@@ -671,7 +640,7 @@ void MoveNodeCommand::Do()
 //==================================================================================
 ExpendNodeCommand::ExpendNodeCommand(
   const SdfPathVector& nodes, const TfToken& state)
-  : Command(true)
+  : Command(false)
   , _nodes(nodes)
 {
   Application* app = Application::Get();
@@ -734,6 +703,20 @@ void ConnectNodeCommand::Do()
 {
   _inverse.Invert();
   SceneChangedNotice().Send();
+}
+
+//==================================================================================
+// UI Generic Command
+//==================================================================================
+UIGenericCommand::UIGenericCommand(CALLBACK_FN fn)
+  : Command(false)
+  , _fn(fn)
+{
+}
+
+void UIGenericCommand::Do()
+{
+  _fn();
 }
 
 

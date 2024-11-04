@@ -23,6 +23,7 @@ add_executable(${TARGET}
   utils/icons.cpp
   utils/prefs.cpp
   utils/timer.cpp
+  utils/usd.cpp
 
   ui/ui.cpp
   ui/fonts.cpp

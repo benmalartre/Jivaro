@@ -1,6 +1,7 @@
 #include <pxr/usd/usdGeom/xform.h>
 
 #include "../geometry/points.h"
+#include "../geometry/mesh.h"
 #include "../tests/points.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -39,6 +40,14 @@ void TestPoints::InitExec(UsdStageRefPtr& stage)
   _points->SetColors(colors);
 
   _scene.AddGeometry(_pointsId, _points);
+
+  _mesh = new Mesh();
+  _meshId = rootId.AppendChild(TfToken("Mesh"));
+
+  _mesh->Cube();
+  _scene.AddGeometry(_meshId, _mesh);
+
+  _scene.MarkPrimDirty(_meshId, HdChangeTracker::AllDirty);
 }
 
 

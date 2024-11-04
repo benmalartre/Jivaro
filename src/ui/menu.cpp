@@ -24,6 +24,111 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
+
+// --------------------------------------------------------------
+// Callbacks
+// --------------------------------------------------------------
+// browse for file
+//----------------------------------------------------------------------------
+std::string
+_BrowseFile(int x, int y, const char* folder, const char* filters[],
+  const int numFilters, const char* name, bool forWriting)
+{
+  std::string result =
+    "/Users/malartrebenjamin/Documents/RnD/Jivaro/assets/Kitchen_set 3/Kitchen_set.usd";
+
+  ModalFileBrowser::Mode mode = forWriting ?
+    ModalFileBrowser::Mode::SAVE : ModalFileBrowser::Mode::OPEN;
+
+  const std::string label = forWriting ? "New" : "Open";
+  Window* window = WindowRegistry::GetActiveWindow();
+  ModalFileBrowser browser(window, x, y, label, mode);
+  browser.Loop();
+  if (browser.GetStatus() == ModalBase::Status::OK) {
+    result = browser.GetResult();
+  }
+  browser.Term();
+
+  return result;
+}
+
+
+static void OpenFileCallback(MenuUI* menu) {
+  std::string folder = GetInstallationFolder();
+  const char* filters[] = {
+    ".usd",
+    ".usda",
+    ".usdc",
+    ".usdz"
+  };
+  int numFilters = 4;
+
+  std::string filename =
+    _BrowseFile(200, 200, folder.c_str(), filters, numFilters, "open usd file", false);
+  ADD_COMMAND(OpenSceneCommand, filename);
+}
+
+static void SaveFileCallback(MenuUI* menu)
+{
+  SdfLayerHandle layer = menu->GetModel()->GetStage()->GetRootLayer();
+  ADD_COMMAND(SaveLayerCommand, layer);
+}
+
+static void NewFileCallback(MenuUI* menu)
+{
+
+  std::string folder = GetInstallationFolder();
+  const char* filters[] = {
+    ".usd",
+    ".usda",
+    ".usdc",
+    ".usdz"
+  };
+  int numFilters = 4;
+
+  std::string filename =
+    _BrowseFile(200, 200, folder.c_str(), filters, numFilters, "new usd file", true);
+  ADD_COMMAND(NewSceneCommand, filename);
+}
+
+
+static void OpenChildWindowCallback(MenuUI* menu)
+{
+  WindowRegistry* registry = WindowRegistry::Get();
+  Window* mainWindow = registry->GetWindow(0);
+  Window* childWindow = registry->CreateChildWindow("Child Window", GfVec4i(200, 200, 400, 400), mainWindow);
+  registry->AddWindow(childWindow);
+
+  childWindow->SetDesiredLayout(1);
+
+  mainWindow->SetGLContext();
+}
+
+static void SetLayoutCallback(Window* window, short layout)
+{
+
+  window->SetDesiredLayout(layout);
+}
+
+static void CreatePrimCallback(MenuUI* menu, const TfToken& type)
+{
+  UsdStageRefPtr stage = menu->GetModel()->GetStage();
+  const UsdPrim root = stage->GetPseudoRoot();
+  SdfLayerHandle layer = stage->GetSessionLayer();
+
+  Selection* selection = menu->GetModel()->GetSelection();
+  SdfPath path;
+  if(selection->GetNumSelectedItems())
+    path = selection->GetItem(0).path.AppendChild(TfToken(RandomString(6)));
+  else
+    path = root.GetPath().AppendChild(TfToken(RandomString(6)));
+
+  
+  ADD_COMMAND(CreatePrimCommand, stage->GetRootLayer(), path, type);
+
+}
+
+
 ImGuiWindowFlags MenuUI::_flags =
 ImGuiWindowFlags_None |
 ImGuiWindowFlags_MenuBar |
@@ -104,17 +209,16 @@ MenuUI::MenuUI(View* parent)
   fileMenu->Add("New", false, true, std::bind(NewFileCallback, this));
 
   MenuUI::Item* testItem = Add("Create", false, true, NULL);
-  testItem->Add("Create Plane", false, true, std::bind(CreatePrimCallback, this, Geometry::PLANE));
-  testItem->Add("Create Cube", false, true, std::bind(CreatePrimCallback, this, Geometry::CUBE));
-  testItem->Add("Create Sphere", false, true, std::bind(CreatePrimCallback, this, Geometry::SPHERE));
-  testItem->Add("Create Cylinder", false, true, std::bind(CreatePrimCallback, this, Geometry::CYLINDER));
-  testItem->Add("Create Capsule", false, true, std::bind(CreatePrimCallback, this, Geometry::CAPSULE));
-  testItem->Add("Create Cone", false, true, std::bind(CreatePrimCallback, this, Geometry::CONE));
+  testItem->Add("Create Plane", false, true, std::bind(CreatePrimCallback, this, TfToken("Plane")));
+  testItem->Add("Create Cube", false, true, std::bind(CreatePrimCallback, this, TfToken("Cube")));
+  testItem->Add("Create Sphere", false, true, std::bind(CreatePrimCallback, this, TfToken("Sphere")));
+  testItem->Add("Create Cylinder", false, true, std::bind(CreatePrimCallback, this, TfToken("Cylinder")));
+  testItem->Add("Create Capsule", false, true, std::bind(CreatePrimCallback, this, TfToken("Capsule")));
+  testItem->Add("Create Cone", false, true, std::bind(CreatePrimCallback, this, TfToken("Cone")));
 
   AddPbdMenu(this);
 
   MenuUI::Item* demoItem = Add("Demo", false, true);
-  demoItem->Add("Open Demo", false, true, std::bind(OpenDemoCallback, this));
   demoItem->Add("Child Window", false, true, std::bind(OpenChildWindowCallback, this));
 
   static int layoutIdx = 0;
@@ -125,7 +229,6 @@ MenuUI::MenuUI(View* parent)
   layoutItem->Add("Random", false, true, std::bind(SetLayoutCallback, GetWindow(), 3));
 
   _parent->SetFixedSizeFunc(&MenuUIFixedSizeFunc);
-  _parent->SetFlag(View::DISCARDMOUSEBUTTON);
 }
 
 // destructor
@@ -249,111 +352,7 @@ MenuUI::Draw()
 
 }
 
-// browse for file
-//----------------------------------------------------------------------------
-std::string
-_BrowseFile(int x, int y, const char* folder, const char* filters[],
-  const int numFilters, const char* name, bool forWriting)
-{
-  std::string result =
-    "/Users/malartrebenjamin/Documents/RnD/Jivaro/assets/Kitchen_set 3/Kitchen_set.usd";
 
-  ModalFileBrowser::Mode mode = forWriting ?
-    ModalFileBrowser::Mode::SAVE : ModalFileBrowser::Mode::OPEN;
 
-  const std::string label = forWriting ? "New" : "Open";
-  Window* window = WindowRegistry::GetActiveWindow();
-  ModalFileBrowser browser(window, x, y, label, mode);
-  browser.Loop();
-  if (browser.GetStatus() == ModalBase::Status::OK) {
-    result = browser.GetResult();
-  }
-  browser.Term();
-
-  return result;
-}
-
-// --------------------------------------------------------------
-// Callbacks (maybe should live in another file)
-// --------------------------------------------------------------
-static void OpenFileCallback(MenuUI* menu) {
-  std::string folder = GetInstallationFolder();
-  const char* filters[] = {
-    ".usd",
-    ".usda",
-    ".usdc",
-    ".usdz"
-  };
-  int numFilters = 4;
-
-  std::string filename =
-    _BrowseFile(200, 200, folder.c_str(), filters, numFilters, "open usd file", false);
-  ADD_COMMAND(OpenSceneCommand, filename);
-}
-
-static void SaveFileCallback(MenuUI* menu)
-{
-  menu->GetModel()->GetStage()->GetRootLayer()->Save(true);
-}
-
-static void NewFileCallback(MenuUI* menu)
-{
-  std::string folder = GetInstallationFolder();
-  std::cout << "new file callback" << std::endl;
-  const char* filters[] = {
-    ".usd",
-    ".usda",
-    ".usdc",
-    ".usdz"
-  };
-  int numFilters = 4;
-
-  std::string filename = "hello_world.usda";
-  ADD_COMMAND(NewSceneCommand, filename);
-}
-
-static void OpenDemoCallback(MenuUI* menu)
-{
-  Window* window = WindowRegistry::GetActiveWindow();
-  ModalDemo demo(window, 0, 0, "Demo");
-  demo.Loop();
-  demo.Term();
-}
-
-static void OpenChildWindowCallback(MenuUI* menu)
-{
-  WindowRegistry* registry = WindowRegistry::Get();
-  Window* mainWindow = registry->GetWindow(0);
-  Window* childWindow = registry->CreateChildWindow("Child Window", GfVec4i(200, 200, 400, 400), mainWindow);
-  registry->AddWindow(childWindow);
-
-  childWindow->SetDesiredLayout(1);
-
-  mainWindow->SetGLContext();
-}
-
-static void SetLayoutCallback(Window* window, short layout)
-{
-
-  window->SetDesiredLayout(layout);
-}
-
-static void CreatePrimCallback(MenuUI* menu, short type)
-{
-  UsdStageRefPtr stage = menu->GetModel()->GetStage();
-  const UsdPrim root = stage->GetPseudoRoot();
-  SdfLayerHandle layer = stage->GetSessionLayer();
-
-  SdfPath name(RandomString(6));
-
-  Selection* selection = menu->GetModel()->GetSelection();
-
-  if(selection->GetNumSelectedItems()) {
-    SdfPrimSpecHandle spec = menu->GetModel()->GetStage()->GetEditTarget().GetLayer()->GetPrimAtPath((*selection)[0].path);
-    ADD_COMMAND(CreatePrimCommand, spec, name, type);
-  } else {
-    ADD_COMMAND(CreatePrimCommand, layer, name, type);
-  }
-}
 
 JVR_NAMESPACE_CLOSE_SCOPE

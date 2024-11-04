@@ -57,7 +57,7 @@ static void _BlitFramebufferFromTarget(GlfDrawTargetRefPtr target,
 ViewportUI::ViewportUI(View* parent)
   : BaseUI(parent, UIType::VIEWPORT)
   , _texture(0)
-  , _drawMode(0)
+  , _drawMode()
   , _pickMode(Selection::OBJECT)
   , _camera(new Camera("Camera"))
   , _valid(true)
@@ -203,7 +203,6 @@ void ViewportUI::MouseButton(int button, int action, int mods)
   Window* window = _parent->GetWindow();
   Tool* tool = window->GetTool();
 
-
   glfwGetCursorPos(window->GetGlfwWindow(), &x, &y);
 
   const float width = GetWidth();
@@ -211,9 +210,7 @@ void ViewportUI::MouseButton(int button, int action, int mods)
 
   if (action == GLFW_RELEASE)
   {
-    _interactionMode = INTERACTION_NONE;
-    SetInteracting(false);
-
+    std::cout << "viewport release click " << tool->IsInteracting() << std::endl;
     if (!(mods & GLFW_MOD_ALT) && !(mods & GLFW_MOD_SUPER)) {
       if (tool->IsInteracting()) {
         tool->EndUpdate(x - GetX(), y - GetY(), width, height);
@@ -222,6 +219,8 @@ void ViewportUI::MouseButton(int button, int action, int mods)
         Select(x, y, mods);
       }
     }
+    _interactionMode = INTERACTION_NONE;
+    SetInteracting(false);
   }
   else if (action == GLFW_PRESS)
   {
@@ -391,6 +390,19 @@ void ViewportUI::Render()
 }
 
 void 
+ViewportUI::_DrawRenderer()
+{ 
+  // renderer
+  ImGui::SetCursorPosX(0);
+  //DiscardEventsIfMouseInsideBox(GfVec2f(0, 0), GfVec2f(GetWidth(), 24));
+  if (UI::AddComboWidget("Renderer", _rendererNames, _numRenderers, _rendererIndex, 250)) {
+    Init();
+    GetView()->SetFlag(View::DISCARDMOUSEBUTTON);
+  }
+  ImGui::SameLine();
+}
+
+void 
 ViewportUI::_DrawPickMode()
 { 
   static const size_t numPickModes = 3;
@@ -437,10 +449,8 @@ bool ViewportUI::Draw()
   if (!_initialized)Init();
   if(!_valid)return false;  
 
-
-  
   if (_model->GetStage() != nullptr) {
-    if(!(Time::Get()->IsPlaying() /*&& !app->IsPlaybackView(_parent)*/))
+    if(!(Time::Get()->IsPlaying() && !WindowRegistry::IsPlaybackView(_parent)))
       Render();
     
     Tool* tool = window->GetTool();
@@ -502,10 +512,12 @@ bool ViewportUI::Draw()
       ImVec2((min[0] + size[0]) - 128.f, (min[1] + size[1]) - 20),
       0xFFFFFFFF,
       msg.c_str());
+
+    _DrawRenderer();
     
     // renderer
     ImGui::SetCursorPosX(0);
-    DiscardEventsIfMouseInsideBox(GfVec2f(0, 0), GfVec2f(GetWidth(), 24));
+    //DiscardEventsIfMouseInsideBox(GfVec2f(0, 0), GfVec2f(GetWidth(), 24));
     if (UI::AddComboWidget("Renderer", _rendererNames, _numRenderers, _rendererIndex, 250)) {
       Init();
       GetView()->SetFlag(View::DISCARDMOUSEBUTTON);

@@ -38,16 +38,23 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-const GfVec2f BUTTON_LARGE_SIZE(64.f, 64.f);
-const GfVec2f BUTTON_NORMAL_SIZE(24.f, 24.f);
-const GfVec2f BUTTON_MINI_SIZE(16.f, 20.f);
-
-/// Height of a row in the property editor
-constexpr float TABLE_ROW_DEFAULT_HEIGHT = 22.f;
 
 class View;
 namespace UI 
 {
+  const GfVec2f BUTTON_LARGE_SIZE(64.f, 64.f);
+  const GfVec2f BUTTON_NORMAL_SIZE(24.f, 24.f);
+  const GfVec2f BUTTON_MINI_SIZE(16.f, 20.f);
+
+  /// Height of a row in the property editor
+  constexpr float TABLE_ROW_DEFAULT_HEIGHT = 22.f;
+
+  enum ItemState {
+    STATE_DEFAULT,
+    STATE_SELECTED,
+    STATE_DISABLED
+  };
+
   inline std::string HiddenLabel(const char* label) {
     return std::string("##").append(label);}
 

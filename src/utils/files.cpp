@@ -57,37 +57,6 @@ std::string GetFileName(const std::string& filePath)
   return SplitString(filePath, SEPARATOR).back();
 }
 
-size_t NumFilesInDirectory(const char* path)
-{
-  /*
-  DIR *dir;
-  struct dirent *ent;
-  int num_files = 0;
-  if ((dir = opendir (path)) != NULL) 
-  {
-    // print all the files and directories within directory
-    while ((ent = readdir (dir)) != NULL) 
-    {
-      if(
-        ! strncmp(ent->d_name, ".", 1) ||
-        ! strncmp(ent->d_name, "..", 2) ||
-        ! strncmp(ent->d_name, ".DS_Store", 9)
-      ) continue;
-      num_files++;
-    }
-    closedir (dir);
-    return num_files;
-  } 
-  else 
-  {
-    // could not open directory
-    std::cerr << "Could Not Open Directory : " << path << std::endl;
-    return EXIT_FAILURE;
-  }
-  */
-
-  return 0;
-}
 
 static bool _IsHiddenFile(const char* filename)
 {
