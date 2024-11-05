@@ -128,10 +128,10 @@ protected:
       virtual void Draw(GraphEditorUI* editor) = 0;
 
     protected:
-      GfVec2f _pos;
-      GfVec2f _size;
-      int          _color;
-      short        _state;
+      GfVec2f     _pos;
+      GfVec2f     _size;
+      int         _color;
+      short       _state;
     };
 
   // Graph port class
@@ -228,8 +228,13 @@ protected:
       void Write();
       void Read();
 
+      float GetWidth() const override {return _width;};
+      float GetHeight() const override {return _height;};
+
     private:
       // ui
+      float                       _width;
+      float                       _height;
       std::vector<Port>           _ports;
       Node*                       _parent;
       TfToken                     _expended;

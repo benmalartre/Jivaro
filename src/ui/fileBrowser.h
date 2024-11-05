@@ -25,7 +25,7 @@ public:
     MULTI
   };
 
-  FileBrowserUI(View* parent, Mode mode);
+  FileBrowserUI(View* parent, Mode mode, size_t numFilter=0, const char* filters[]={});
   ~FileBrowserUI()         override;
 
   void MouseButton(int action, int button, int mods) override{};
@@ -40,17 +40,13 @@ public:
   void PopPath();
   void SetPathFromTokenIndex(size_t index);
   void SetFilters(const std::vector<std::string>& filters);
-  void _GetPathEntries();
-  void _GetRootEntries();
+
+  // filename
+  bool IsExtensionValid(const std::string& name);
+  bool IsFilenameValid(const std::string& path);
 
   // setters
   void SetResult(const std::string& name);
-
-  // drawing methods
-  void _DrawPath();
-  bool _DrawEntries();
-  void _DrawButtons();
-  void _DrawFilename();
 
   // state
   bool IsBrowsing(){return _browsing;};
@@ -61,6 +57,7 @@ public:
   size_t GetNumResults();
   bool GetResult(size_t index, std::string&);
 
+protected:
   // selection
   void _SelectNext(int mods);
   void _SelectPrevious(int mods);
@@ -68,6 +65,16 @@ public:
   inline bool _IsSelected(int idx) {
     return _selected[idx];
   }
+
+  // drawing methods
+  void _DrawPath();
+  bool _DrawEntries();
+  void _DrawButtons();
+  void _DrawFilename();
+
+  // filesystem
+  void _GetPathEntries();
+  void _GetRootEntries();
 
 private:
   std::string              _path;
@@ -88,6 +95,7 @@ private:
   bool                     _browsing;
   bool                     _changed;
   bool                     _showHiddenFiles;
+  bool                     _valid;
   std::vector<std::string> _result;
   std::vector<bool>        _selected;
   Mode                     _mode;

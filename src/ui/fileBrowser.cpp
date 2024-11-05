@@ -5,7 +5,7 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-FileBrowserUI::FileBrowserUI(View* parent, Mode mode)
+FileBrowserUI::FileBrowserUI(View* parent, Mode mode, size_t numFilters, const char* filters[])
   : BaseUI(parent, UIType::FILEBROWSER)
   , _mode(mode)
   , _current(0)
@@ -15,6 +15,9 @@ FileBrowserUI::FileBrowserUI(View* parent, Mode mode)
   , _showHiddenFiles(false)
 {
   memset(&_filename[0], (char)0, 256 * sizeof(char));
+  _filters.resize(numFilters);
+  for(size_t n = 0; n < numFilters; ++n)
+    _filters[n] = filters[n];
 }
 
 FileBrowserUI::~FileBrowserUI()
@@ -100,6 +103,27 @@ void FileBrowserUI::SetFilters(const std::vector<std::string>& filters)
   _filters = filters;
 }
 
+// filename
+bool 
+FileBrowserUI::IsExtensionValid(const std::string& name)
+{
+  if(!_filters.size())
+    return true;
+    
+  const std::string extension = "." + name.substr(name.find_last_of(".") + 1);
+  for(const auto& filter: _filters)
+    if(extension == filter)
+      return true;
+  
+  return false;
+}
+
+bool 
+FileBrowserUI::IsFilenameValid(const std::string& path)
+{
+  return true;
+}
+
 void FileBrowserUI::_GetPathEntries()
 {
   size_t numEntries = GetEntriesInDirectory(_path.c_str(), _nextEntries);
@@ -118,8 +142,16 @@ void FileBrowserUI::_GetRootEntries()
 
 void FileBrowserUI::SetResult(const std::string& name)
 {
-  _result.resize(1);
-  _result[0] = _path+ SEPARATOR + name;
+  if(_filters.size() && !IsExtensionValid(name)) {
+    std::cout << name << " is not a valid file name, accepts only:\n" << std::endl;
+    for(auto& filter: _filters)
+      std::cout << "\t - " << filter.c_str() << "\n";
+    std::cout << std::endl;
+  } else {
+    _result.resize(1);
+    _result[0] = _path+ SEPARATOR + name;
+    strcpy(_filename, name.c_str());
+  }
 }
 
 bool FileBrowserUI::GetResult(std::string& result)
@@ -236,9 +268,13 @@ bool FileBrowserUI::_DrawEntries()
         ImGui::TableNextRow();
         ImGui::TableSetColumnIndex(0);
         ImGui::PushID(i);
-        // makes the line selectable, and when selected copy the path
-        // to the line edit buffer
-        if (ImGui::Selectable("", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap | ImGuiSelectableFlags_AllowDoubleClick)) {
+
+        int flags = 
+          ImGuiSelectableFlags_SpanAllColumns | 
+          ImGuiSelectableFlags_AllowItemOverlap | 
+          ImGuiSelectableFlags_AllowDoubleClick;
+
+        if (ImGui::Selectable("", false, flags)) {
           _selected[i] = 1 - _selected[i];
           
           if(entry.type == EntryInfo::Type::FILE)
@@ -249,7 +285,8 @@ bool FileBrowserUI::_DrawEntries()
               AppendPath(entry.path);
             
             else if (entry.type == EntryInfo::Type::FILE)
-              _browsing = false;
+              if(IsExtensionValid(entry.path))
+                _browsing = false;
           }
         }
         ImGui::PopID();

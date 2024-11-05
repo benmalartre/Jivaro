@@ -58,7 +58,8 @@ public:
     MULTI
   };
 
-  ModalFileBrowser(Window* parent, int x, int y, const std::string& title, Mode mode);
+  ModalFileBrowser(Window* parent, int x, int y, const std::string& title, Mode mode,
+    size_t numFilter=0, const char* filters[]={});
   std::string& GetResult(){return _result;};
 
   void _LoopImpl() override;

@@ -471,34 +471,31 @@ GraphEditorUI::Node::ComputeSize(GraphEditorUI* editor)
 {
   if (GetDirty() & GraphEditorUI::Node::DIRTY_SIZE) {
 
-    float width =
-      ImGui::CalcTextSize(_node->GetName().GetText()).x + 2 * NODE_PORT_HORIZONTAL_SPACING +
-      (NODE_EXPENDED_SIZE + 2 * NODE_HEADER_PADDING);
-    float height = NODE_HEADER_HEIGHT + NODE_HEADER_PADDING + RANDOM_0_X(10);
-    float mid = NODE_HEADER_HEIGHT * 0.5;
-    float inputWidth = 0, outputWidth = 0;
+    _width = _size[0];
+    _height = _size[1];
+
+    float mid = _height * 0.5;
+
     Graph::Connexion* connexion = NULL;
     
     for (auto& port : _ports) {
-      float w = ImGui::CalcTextSize(port.Get()->GetName().GetText()).x +
-        NODE_PORT_HORIZONTAL_SPACING;
-      if (w > inputWidth)inputWidth = w;
+
       if(_expended == UsdUITokens->closed) {
         port.SetPosition(GfVec2f(0.f, mid));
       } else if(_expended == UsdUITokens->minimized) {
         if (port.IsConnected(editor, connexion)) {
-          port.SetPosition(GfVec2f(0.f, height));
-          height += NODE_PORT_VERTICAL_SPACING;
+          port.SetPosition(GfVec2f(0.f, _height));
+          _height += NODE_PORT_VERTICAL_SPACING;
         }
         else 
           port.SetPosition(GfVec2f(0.f, mid));
       } else if(_expended == UsdUITokens->open) {
-        port.SetPosition(GfVec2f(0.f, height));
-        height += NODE_PORT_VERTICAL_SPACING;
+        port.SetPosition(GfVec2f(0.f, _height));
+        _height += NODE_PORT_VERTICAL_SPACING;
       }
     }
 
-    SetSize(GfVec2f(width, height));
+    //SetSize(GfVec2f(width, height));
     SetDirty(GraphEditorUI::Node::DIRTY_CLEAN);
   }
 }
@@ -571,7 +568,7 @@ GraphEditorUI::Node::Draw(GraphEditorUI* editor)
     const GfVec2f p = editor->GetPosition() + (GetPosition() + offset) * scale;
     const float x = p[0];
     const float y = p[1];
-    const GfVec2f s = GetSize() * scale;
+    const GfVec2f s = GfVec2f(_width, _height) * scale;
     const ImColor selectedColor = GetState(ITEM_STATE_SELECTED) ?
       ImColor(255, 255, 255, 255) :
       ImColor(0, 0, 0, 255);
@@ -1142,7 +1139,7 @@ GraphEditorUI::_GetPortUnderMouse(const GfVec2f& mousePos, Node* node)
   const GfVec2f relativePosition =
     ViewPositionToGridPosition(mousePos) - node->GetPosition();
 
-  if (relativePosition[1] < NODE_HEADER_HEIGHT - NODE_PORT_RADIUS ||
+  if (relativePosition[1] < node->GetHeight() - NODE_PORT_RADIUS ||
     (relativePosition[0] > NODE_PORT_RADIUS &&
       relativePosition[0] < node->GetWidth() - NODE_PORT_RADIUS)) return;
 
@@ -1211,9 +1208,7 @@ GraphEditorUI::MouseButton(int button, int action, int mods)
         if (_hoveredNode) {
           int element = _hoveredNode->GetElementUnderMouse(this, mousePos);
           if(element == 1) {
-            std::cout << "POPUP FUCK!!!" << std::endl;
-            std::cout << "node : " << _hoveredNode->Get() << std::endl;
-            std::cout << "path : " << _hoveredNode->Get()->GetPrim().GetPath() << std::endl;
+            
             InputPopupUI* popup = new InputPopupUI(GetX() , GetY(), GetWidth(), 24,
               std::bind(&Callbacks::RenamePrim, _model, _hoveredNode->Get()->GetPrim().GetPath(), std::placeholders::_1));
 

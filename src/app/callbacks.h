@@ -3,19 +3,13 @@
 
 #include <pxr/usd/sdf/path.h>
 
-
-#include "../command/command.h"
-#include "../command/inverse.h"
-#include "../command/block.h"
-
-#include "../app/selection.h"
-
 JVR_NAMESPACE_OPEN_SCOPE
 
+class Model;
 namespace Callbacks {
-  void RenamePrim(Model* model, const SdfPath& path, const TfToken& token);
   void CreatePrim(Model* model, const TfToken& type);
   void DeletePrim(Model* model, const SdfPath& path);
+  void RenamePrim(Model* model, const SdfPath& path, const TfToken& token);
 }
 JVR_NAMESPACE_CLOSE_SCOPE
 

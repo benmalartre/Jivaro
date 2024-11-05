@@ -42,7 +42,7 @@ _BrowseFile(int x, int y, const char* folder, const char* filters[],
 
   const std::string label = forWriting ? "New" : "Open";
   Window* window = WindowRegistry::GetActiveWindow();
-  ModalFileBrowser browser(window, x, y, label, mode);
+  ModalFileBrowser browser(window, x, y, label, mode, numFilters, filters);
   browser.Loop();
   if (browser.GetStatus() == ModalBase::Status::OK) {
     result = browser.GetResult();

@@ -59,7 +59,7 @@ void ModalBase::Loop()
 // File Browser Modal Window
 //==============================================================================
 ModalFileBrowser::ModalFileBrowser(Window* parent, int x, int y, const std::string& title, 
-  ModalFileBrowser::Mode mode)
+  ModalFileBrowser::Mode mode, size_t numFilters, const char* filters[])
   : ModalBase(parent, x, y, 600, 400, title)
   , _mode( mode )
 {
@@ -69,10 +69,10 @@ ModalFileBrowser::ModalFileBrowser(Window* parent, int x, int y, const std::stri
 
   switch(_mode) {
     case Mode::OPEN:
-      browser = new FileBrowserUI(view, FileBrowserUI::Mode::OPEN);
+      browser = new FileBrowserUI(view, FileBrowserUI::Mode::OPEN, numFilters, filters);
       break;
     case Mode::SAVE:
-      browser = new FileBrowserUI(view, FileBrowserUI::Mode::SAVE);
+      browser = new FileBrowserUI(view, FileBrowserUI::Mode::SAVE, numFilters, filters);
       break;
     case Mode::SELECT:
     case Mode::MULTI: 

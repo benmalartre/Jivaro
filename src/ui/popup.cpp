@@ -150,6 +150,7 @@ ColorPopupUI::ColorPopupUI(int x, int y, int width, int height,
   , _isArray(false)
 {
   _sync = true;
+  _dimmer = false;
   VtValue value;
   attribute.Get(&value, timeCode);
   if (value.IsHolding<GfVec3f>()) {
