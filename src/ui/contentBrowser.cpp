@@ -289,10 +289,6 @@ bool ContentBrowserUI::Draw()
   auto layers = SdfLayer::GetLoadedLayers();
   //DrawLayerSet(app->GetStageCache(), layers, &selectedLayer, &selectedStage, options);
   
-  /*
-  if (selected != editor.GetSessionLayer()) {
-    editor.SetSessionLayer(selected);
-  }*/
   
   ImGui::End();
   return true;

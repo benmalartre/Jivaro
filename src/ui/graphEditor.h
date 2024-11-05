@@ -223,6 +223,7 @@ protected:
       void SetDirty(short dirty) { _dirty = dirty; };
 
       int GetColor() const override;
+      int GetElementUnderMouse(GraphEditorUI* editor, const GfVec2f& mousePos);
 
       void Write();
       void Read();

@@ -252,15 +252,21 @@ void DuplicatePrimCommand::Do() {
 //==================================================================================
 // Delete
 //==================================================================================
-DeletePrimCommand::DeletePrimCommand(UsdStageRefPtr stage, const SdfPathVector& paths)
+DeletePrimCommand::DeletePrimCommand(SdfLayerRefPtr layer, const SdfPathVector& paths)
   : Command(true)
 {
   Selection* selection = Application::Get()->GetModel()->GetSelection();
   _selection = selection->GetItems();
 
   for (auto& path : paths) {
-    stage->RemovePrim(path);
+    SdfPrimSpecHandle spec = layer->GetPrimAtPath(path);
+    if (!spec) continue;
+
+    SdfPrimSpecHandle parent = spec->GetRealNameParent();
+    if (!parent) continue;
+    parent->RemoveNameChild(spec);
   }
+  
   UndoRouter::Get().TransferEdits(&_inverse);
   SceneChangedNotice().Send();
 }

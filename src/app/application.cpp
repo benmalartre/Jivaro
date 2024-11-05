@@ -192,7 +192,7 @@ Application::Delete()
   Selection* selection = _model->GetSelection();
   const SdfPathVector& paths = selection->GetSelectedPaths();
   selection->Clear();
-  ADD_COMMAND(DeletePrimCommand, _model->GetStage(), paths);
+  ADD_COMMAND(DeletePrimCommand, _model->GetRootLayer(), paths);
 }
 
 void
@@ -201,7 +201,7 @@ Application::Duplicate()
   Selection* selection = _model->GetSelection();
   if (!selection->IsEmpty()) {
     const Selection::Item& item = selection->GetItem(0);
-    ADD_COMMAND(DuplicatePrimCommand, _model->GetSessionLayer(), item.path);
+    ADD_COMMAND(DuplicatePrimCommand, _model->GetRootLayer(), item.path);
   }
 }
 
@@ -254,12 +254,6 @@ Application::NewSceneCallback(const NewSceneNotice& n)
 void 
 Application::SceneChangedCallback(const SceneChangedNotice& n)
 {
-  /*
-  WindowRegistry::GetMainWindow()->GetTool()->ResetSelection();
-  for (auto& window : WindowRegistry::GetChildWindows()) {
-    window->GetTool()->ResetSelection();
-  }
-  */
   _model->Update(Time::Get()->GetActiveTime());
   WindowRegistry::SetAllWindowsDirty();
 }
@@ -270,12 +264,6 @@ Application::AttributeChangedCallback(const AttributeChangedNotice& n)
   if (_model->GetExec()) 
     _model->UpdateExec(Time::Get()->GetActiveTime());
   
-  /*
-  WindowRegistry::GetMainWindow()->GetTool()->ResetSelection();
-  for (auto& child : WindowRegistry::GetChildWindows()) {
-    child->GetTool()->ResetSelection();
-  }
-  */
   _model->Update(Time::Get()->GetActiveTime());
   WindowRegistry::SetAllWindowsDirty();
 

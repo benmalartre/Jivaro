@@ -125,6 +125,7 @@ add_executable(${TARGET}
   app/time.cpp
   app/utils.cpp
   app/commands.cpp
+  app/callbacks.cpp
   app/notice.cpp
   app/handle.cpp
   app/camera.cpp

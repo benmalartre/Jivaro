@@ -12,6 +12,7 @@
 #include "../pbd/menu.h"
 #include "../app/application.h"
 #include "../app/commands.h"
+#include "../app/callbacks.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -19,12 +20,6 @@ void AddPbdMenu(MenuUI* menu)
 {
 
   MenuUI::Item* testItem = menu->Add("Pbd", false, true, NULL);
-  /*
-  testItem->Add("Create Cube", false, true, std::bind(CreatePrimCallback, Geometry::CUBE));
-  testItem->Add("Create Sphere", false, true, std::bind(CreatePrimCallback, Geometry::SPHERE));
-  testItem->Add("Create Capsule", false, true, std::bind(CreatePrimCallback, Geometry::CAPSULE));
-  testItem->Add("Create Cone", false, true, std::bind(CreatePrimCallback, Geometry::CONE));
-  */
 
   MenuUI::Item* subItem = testItem->Add("Create Solver", false, true, std::bind(CreateSolverCallback));
   subItem = testItem->Add("Add Cloth", false, true, std::bind(AddClothCallback));

@@ -11,6 +11,7 @@
 #include "../ui/popup.h"
 #include "../app/model.h"
 #include "../app/commands.h"
+#include "../app/callbacks.h"
 #include "../app/notice.h"
 #include "../app/window.h"
 #include "../app/registry.h"
@@ -323,18 +324,6 @@ static ImVec4 GetPrimColor(const UsdPrim& prim) {
   
   */
 
-static void _RenamePrimCallback(BaseUI* ui, const SdfPath& path, const TfToken& token)
-{
-  UsdPrim prim = ui->GetModel()->GetStage()->GetPrimAtPath(path);
-  if(!prim.IsValid() || token.IsEmpty())
-    return;
-
-  SdfPrimSpecHandleVector specs = prim.GetPrimStack();
-
-  ADD_COMMAND(RenamePrimCommand, ui->GetModel()->GetRootLayer(), path, token);
-}
-
-
 /// Recursive function to draw a prim and its descendants
 void 
 ExplorerUI::DrawPrim(const UsdPrim& prim, Selection* selection) 
@@ -357,7 +346,7 @@ ExplorerUI::DrawPrim(const UsdPrim& prim, Selection* selection)
   if(ImGui::IsItemClicked() && ImGui::IsMouseDoubleClicked(0)) {
     InputPopupUI* popup = new InputPopupUI(GetX() + ImGui::GetCursorPosX(), 
       GetY() + ImGui::GetCursorPosY(), GetWidth(), 24,
-      std::bind(&_RenamePrimCallback, this, _current, std::placeholders::_1));
+      std::bind(&Callbacks::RenamePrim, _model, _current, std::placeholders::_1));
 
     ADD_DEFERRED_COMMAND(UIGenericCommand, std::bind(&WindowRegistry::SetPopup, popup));
   }

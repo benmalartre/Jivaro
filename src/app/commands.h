@@ -6,6 +6,7 @@
 
 #include <pxr/usd/sdf/path.h>
 #include <pxr/usd/usd/stage.h>
+#include <pxr/usd/usd/attribute.h>
 
 #include "../command/command.h"
 #include "../command/inverse.h"
@@ -129,7 +130,7 @@ private:
 class DeletePrimCommand : public Command {
 public:
   DeletePrimCommand(){};
-  DeletePrimCommand(UsdStageRefPtr stage, const SdfPathVector& path);
+  DeletePrimCommand(SdfLayerRefPtr layer, const SdfPathVector& path);
   ~DeletePrimCommand() {};
   void Do() override;
 

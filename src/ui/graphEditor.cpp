@@ -29,6 +29,7 @@
 #include "../app/window.h"
 #include "../app/registry.h"
 #include "../app/commands.h"
+#include "../app/callbacks.h"
 #include "../app/model.h"
 #include "../app/commands.h"
 #include "../graph/execution.h"
@@ -440,6 +441,22 @@ GraphEditorUI::Node::GetPort(const TfToken& name)
   }
   return NULL;
 }
+
+int
+GraphEditorUI::Node::GetElementUnderMouse(GraphEditorUI* editor, const GfVec2f& mousePos)
+{
+  GfVec2f viewPos;
+  editor->GetRelativeMousePosition(mousePos[0], mousePos[1], viewPos[0], viewPos[1]);
+
+  std::cout << viewPos << " vs " << _pos << std::endl;
+  if(viewPos[1] - _pos[1] < _size[1]) {
+    
+    return 1;
+  }
+    
+  return 1;
+}
+
 
 
 void 
@@ -1187,15 +1204,24 @@ GraphEditorUI::MouseButton(int button, int action, int mods)
 
   _GetNodeUnderMouse(mousePos, false);
 
-  uint64_t now = CurrentTime();
-  double diffMs = (now - _lastClick) * 1e-6;
 
   if (button == GLFW_MOUSE_BUTTON_LEFT) {
     if (action == GLFW_PRESS) {
-      if((now - _lastClick)<50) {
-        std::cout << "Graph Editor Double click" << std::endl;
-      }
-      _lastClick = now;
+      if((CurrentTime() - _lastClick) * 1e-3 < 250) {
+        if (_hoveredNode) {
+          int element = _hoveredNode->GetElementUnderMouse(this, mousePos);
+          if(element == 1) {
+            std::cout << "POPUP FUCK!!!" << std::endl;
+            std::cout << "node : " << _hoveredNode->Get() << std::endl;
+            std::cout << "path : " << _hoveredNode->Get()->GetPrim().GetPath() << std::endl;
+            InputPopupUI* popup = new InputPopupUI(GetX() , GetY(), GetWidth(), 24,
+              std::bind(&Callbacks::RenamePrim, _model, _hoveredNode->Get()->GetPrim().GetPath(), std::placeholders::_1));
+
+            ADD_DEFERRED_COMMAND(UIGenericCommand, std::bind(&WindowRegistry::SetPopup, popup));
+          }
+        }
+      } else _lastClick = CurrentTime();
+
       if (mods & GLFW_MOD_ALT) _navigate = NavigateMode::PAN;
       else if (_hoveredPort) {
         _connect = true;
@@ -1243,6 +1269,8 @@ GraphEditorUI::MouseButton(int button, int action, int mods)
     else if (action == GLFW_RELEASE) {
       _navigate = NavigateMode::IDLE;
 
+      double diffMs = (CurrentTime() - _lastClick) * 1e-3;
+
       if (_drag == true && _dragOffset.GetLength() > 0.000001f) {
         ADD_COMMAND(MoveNodeCommand, GetSelectedNodesPath(), _dragOffset);
       } else if(diffMs > 10 && diffMs < 250){
@@ -1264,7 +1292,7 @@ GraphEditorUI::MouseButton(int button, int action, int mods)
 
   else if (button == GLFW_MOUSE_BUTTON_MIDDLE) {
     if (action == GLFW_PRESS) {
-      _lastClick = now;
+      _lastClick = CurrentTime();
       if (mods & GLFW_MOD_ALT) _navigate = NavigateMode::PAN;
     } else if (action == GLFW_RELEASE) {
       if (mods & GLFW_MOD_ALT) _navigate = NavigateMode::IDLE;
@@ -1273,7 +1301,7 @@ GraphEditorUI::MouseButton(int button, int action, int mods)
 
   else if (button == GLFW_MOUSE_BUTTON_RIGHT) {
     if (action == GLFW_PRESS) {
-      _lastClick = now;
+      _lastClick = CurrentTime();
       if (mods & GLFW_MOD_ALT) _navigate = NavigateMode::ZOOM;
     }
     else if (action == GLFW_RELEASE) {
@@ -1282,19 +1310,6 @@ GraphEditorUI::MouseButton(int button, int action, int mods)
   }
 
   _parent->SetDirty();
-}
-
-static void _CreatePrimCallback(Model* model, const TfToken& token)
-{
-  Selection* selection = model->GetSelection();
-  TfToken name(token.GetString() + "_" + RandomString(6));
-
-  if (selection->GetNumSelectedItems()) {
-    ADD_COMMAND(CreatePrimCommand, model->GetRootLayer(), selection->GetItem(0).path.AppendChild(name), token);
-  }
-  else {
-    ADD_COMMAND(CreatePrimCommand, model->GetRootLayer(), SdfPath("/" + name.GetString()), token);
-  }
 }
 
 void 
@@ -1324,7 +1339,7 @@ GraphEditorUI::Keyboard(int key, int scancode, int action, int mods)
     else if (mappedKey == GLFW_KEY_TAB) {
       GfVec2f mousePos = _parent->GetWindow()->GetMousePosition();
       ListPopupUI* popup = new ListPopupUI("Create Prim", mousePos[0], mousePos[1], 200, 100,
-        std::bind(&_CreatePrimCallback, _model, std::placeholders::_1));
+        std::bind(&Callbacks::CreatePrim, _model, std::placeholders::_1));
 
       ADD_DEFERRED_COMMAND(UIGenericCommand, std::bind(&WindowRegistry::SetPopup, popup));
     }
