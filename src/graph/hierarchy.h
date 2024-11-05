@@ -14,7 +14,7 @@ class HierarchyGraph : public Graph
 {
 class HierarchyNode : public Graph::Node {
   public:
-    HierarchyNode(UsdPrim& prim, HierarchyNode* parent=NULL);
+    HierarchyNode(const SdfPath& path);
     ~HierarchyNode() {};
 
     Graph::Port* GetParentPort() { return &_ports[0]; };
@@ -29,23 +29,20 @@ class HierarchyNode : public Graph::Node {
   };
 
 public:
-  explicit HierarchyGraph(UsdStageRefPtr &stage, const UsdPrim& prim);
+  explicit HierarchyGraph(SdfLayerRefPtr &layer);
   ~HierarchyGraph()         override;
-
 
   virtual short GetType() override { return Graph::Type::HIERARCHY; };
 
-  virtual void Populate(const UsdPrim& prim) override;
+  virtual void Populate(SdfLayerRefPtr layer) override;
 
 protected:
-  virtual void _DiscoverNodes() override;
-  virtual void _DiscoverConnexions() override;
+  virtual void _DiscoverNodes() override {};
+  virtual void _DiscoverConnexions() override {};
 
-  void _RecurseNodes(HierarchyNode* node);
+  //void _RecurseNodes(HierarchyNode* node);
 
-private:
-  UsdStageRefPtr          _stage;
-  UsdPrim                 _prim;
+
 
 };
 JVR_NAMESPACE_CLOSE_SCOPE

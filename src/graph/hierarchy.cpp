@@ -9,11 +9,10 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 // Graph constructor
 //------------------------------------------------------------------------------
-HierarchyGraph::HierarchyGraph(UsdStageRefPtr& stage, const UsdPrim& prim) 
-  : Graph(prim)
-  , _stage(stage)
+HierarchyGraph::HierarchyGraph(SdfLayerRefPtr& layer) 
+  : Graph(layer)
 {
-  Populate(prim);
+  Populate(_layer);
 }
 
 // Graph destructor
@@ -24,19 +23,45 @@ HierarchyGraph::~HierarchyGraph()
 
 // Graph populate
 //------------------------------------------------------------------------------
-void HierarchyGraph::Populate(const UsdPrim& prim)
+void HierarchyGraph::Populate(SdfLayerRefPtr layer)
 {
-  _prim = prim;
+  _layer = layer;
+  _stage = UsdStage::Open(_layer);
   Clear();
+
+  std::vector<SdfPath> paths;
+
+  _layer->Traverse(SdfPath::AbsoluteRootPath(),
+    [&paths, layer](SdfPath const& path) {
+      if(path.IsPrimPath()) paths.push_back(path);
+    });
+  
+  for(auto path: paths) {
+    std::cout << path << std::endl;
+
+    HierarchyGraph::HierarchyNode* node =
+      new HierarchyGraph::HierarchyNode(path);
+
+    AddNode(node);
+    /*
+    parent->AddChild(node);
+
+    Graph::Connexion* connexion = 
+      new Graph::Connexion(parent->GetChildrenPort(), node->GetParentPort());
+    AddConnexion(connexion);
+    _RecurseNodes(node);
+    */
+  
+  }
+  /*
   _DiscoverNodes();
   _DiscoverConnexions();
+  */
 }
 
 
-HierarchyGraph::HierarchyNode::HierarchyNode(UsdPrim& prim, 
-  HierarchyGraph::HierarchyNode* parent)
-  : Graph::Node(prim)
-  , _parent(parent)
+HierarchyGraph::HierarchyNode::HierarchyNode(const SdfPath& path)
+  : Graph::Node(path)
 {
   _PopulatePorts();
 }
@@ -48,6 +73,7 @@ void HierarchyGraph::HierarchyNode::_PopulatePorts()
   _ports.push_back(Graph::Port(this, Graph::Port::INPUT | Graph::Port::HIDDEN, ChildrenPortToken));
 }
 
+/*
 void
 HierarchyGraph::_RecurseNodes(HierarchyGraph::HierarchyNode* parent)
 {
@@ -79,7 +105,7 @@ HierarchyGraph::_DiscoverNodes()
 void
 HierarchyGraph::_DiscoverConnexions()
 {
-  /*
+  
   std::cout << "execution discover connexions ..." << std::endl;
   for (UsdPrim child : _prim.GetChildren()) {
     if (child.IsA<UsdExecNode>()) {
@@ -102,7 +128,7 @@ HierarchyGraph::_DiscoverConnexions()
       }
     }
   }
-  */
+  
 }
-
+*/
 JVR_NAMESPACE_CLOSE_SCOPE

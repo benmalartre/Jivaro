@@ -10,6 +10,7 @@ namespace Callbacks {
   void CreatePrim(Model* model, const TfToken& type);
   void DeletePrim(Model* model, const SdfPath& path);
   void RenamePrim(Model* model, const SdfPath& path, const TfToken& token);
+
 }
 JVR_NAMESPACE_CLOSE_SCOPE
 

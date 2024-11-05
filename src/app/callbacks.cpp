@@ -38,5 +38,7 @@ namespace Callbacks {
     ADD_COMMAND(DeletePrimCommand, model->GetRootLayer(), {path});
   }
 
+  
 }
+
 JVR_NAMESPACE_CLOSE_SCOPE

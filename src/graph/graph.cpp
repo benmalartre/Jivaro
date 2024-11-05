@@ -31,13 +31,10 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 // Node constructor
 //------------------------------------------------------------------------------
-Graph::Node::Node(UsdPrim& prim)
-  : _prim(prim)
+Graph::Node::Node(const SdfPath& path)
+  : _path(path)
 {
-  if (_prim.IsValid())
-  {
-    _name = _prim.GetName();
-  }
+  _name = _path.GetNameToken();
 }
 
 // Node destructor
@@ -50,19 +47,19 @@ Graph::Node::~Node()
 // Get node
 //------------------------------------------------------------------------------
 const Graph::Node*
-Graph::GetNode(const UsdPrim& prim) const
+Graph::GetNode(const SdfPath& path) const
 {
   for (const Graph::Node* node : _nodes) {
-    if(node->GetPrim().GetPath() == prim.GetPath())return node;
+    if(node->GetPath() == path)return node;
   }
   return NULL;
 }
 
 Graph::Node* 
-Graph::Graph::GetNode(const UsdPrim& prim)
+Graph::Graph::GetNode(const SdfPath& path)
 {
   for (Graph::Node* node : _nodes) {
-    if (node->GetPrim().GetPath() == prim.GetPath())return node;
+    if (node->GetPath() == path)return node;
   }
   return NULL;
 }
@@ -136,7 +133,7 @@ Graph::Port::Port(Graph::Node* node, size_t flags,
 SdfPath
 Graph::Port::GetPath()
 {
-  return _node->GetPrim().GetPath().AppendProperty(GetName());
+  return _node->GetPath().AppendProperty(GetName());
 }
 
 
@@ -154,9 +151,10 @@ Graph::Port::IsConnected(Graph* graph, Graph::Connexion* foundConnexion)
 
 // Graph constructor
 //------------------------------------------------------------------------------
-Graph::Graph(const UsdPrim& prim)
-  : _prim(prim)
+Graph::Graph(SdfLayerRefPtr layer)
+ : _layer(layer)
 {
+  _stage = UsdStage::Open(layer);
 }
 
 
@@ -170,10 +168,10 @@ Graph::~Graph()
 
 // Graph populate
 //------------------------------------------------------------------------------
-void Graph::Populate(const UsdPrim& prim)
+void Graph::Populate(SdfLayerRefPtr layer)
 {
   Clear();
-  _prim = prim;
+  _stage = UsdStage::Open(layer);
   _DiscoverNodes();
   _DiscoverConnexions();
 }
@@ -296,9 +294,9 @@ bool
 Graph::ConnexionPossible(const Graph::Port* lhs, const Graph::Port* rhs)
 {
   const Graph::Node* lhsNode = lhs->GetNode();
-  const UsdPrim& lhsPrim = lhsNode->GetPrim();
+  const UsdPrim& lhsPrim = _stage->GetPrimAtPath(lhsNode->GetPath());
   const Graph::Node* rhsNode = rhs->GetNode();
-  const UsdPrim& rhsPrim = rhsNode->GetPrim();
+  const UsdPrim& rhsPrim = _stage->GetPrimAtPath(rhsNode->GetPath());
 
   if (lhsPrim.IsA<UsdShadeShader>()) {
     UsdShadeShader lhsShader(lhsPrim);
@@ -323,5 +321,6 @@ Graph::ConnexionPossible(const Graph::Port* lhs, const Graph::Port* rhs)
 
   return false;
 }
+
 
 JVR_NAMESPACE_CLOSE_SCOPE

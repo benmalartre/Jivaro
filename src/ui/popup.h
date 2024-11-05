@@ -61,8 +61,7 @@ public:
   bool IsCancel() { return _cancel; };
 
 protected:
-
-  void _DrawTitle();
+  virtual bool _Draw(){return false;};
 
   std::string                 _name;
   bool                        _done;
@@ -84,9 +83,12 @@ public:
     const UsdAttribute& attribute, const UsdTimeCode& timeCode);
   ~ColorPopupUI() override;
 
-  bool Draw() override;
   void MouseButton(int button, int action, int mods) override;
   bool Terminate() override;
+
+protected:
+  bool _Draw() override;
+
 private:
   UsdAttribute _attribute;
   UsdTimeCode  _time;
@@ -104,10 +106,12 @@ public:
   ListPopupUI(const char* name, int x, int y, int width, int height, Callback callback);
   ~ListPopupUI() override;
 
-  bool Draw() override;
   void MouseButton(int button, int action, int mods) override;
   void Keyboard(int key, int scancode, int action, int mods) override;
   void Input(int key) override;
+
+protected:
+  bool _Draw() override;
 
 private:
   void _BuildList();
@@ -131,10 +135,11 @@ public:
   ~InputPopupUI() override;
 
   void SetName(const std::string& name);
-  bool Draw() override;
-
   bool Terminate() override;
 
+protected:
+  bool _Draw() override;
+  
 private:
   char        _value[255];
   Callback    _callback;

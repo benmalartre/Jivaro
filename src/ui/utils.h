@@ -55,6 +55,9 @@ namespace UI
     STATE_DISABLED
   };
 
+  std::string BrowseFile(int x, int y, const char* folder, const char* filters[],
+    const int numFilters, const char* name, bool forWriting);
+
   inline std::string HiddenLabel(const char* label) {
     return std::string("##").append(label);}
 

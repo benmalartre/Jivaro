@@ -64,30 +64,6 @@ Application::~Application()
 
 };
 
-// browse for file
-//----------------------------------------------------------------------------
-std::string
-Application::BrowseFile(int x, int y, const char* folder, const char* filters[], 
-  const int numFilters, const char* name, bool readOrWrite)
-{
-  std::string result = 
-    "/Users/malartrebenjamin/Documents/RnD/Jivaro/assets/Kitchen_set 3/Kitchen_set.usd";
-  
-  ModalFileBrowser::Mode mode = readOrWrite ? 
-    ModalFileBrowser::Mode::SAVE : ModalFileBrowser::Mode::OPEN;
-
-  const std::string label = readOrWrite ? "New" : "Open";
-  Window* parent = WindowRegistry::GetActiveWindow();
-  ModalFileBrowser browser(parent, x, y, label, mode);
-  browser.Loop();
-  if(browser.GetStatus() == ModalBase::Status::OK) {
-    result = browser.GetResult();
-  }
-  browser.Term();  
-
-  return result;
-}
-
 
 // init application
 //----------------------------------------------------------------------------
@@ -245,6 +221,7 @@ Application::SelectionChangedCallback(const SelectionChangedNotice& n)
 void 
 Application::NewSceneCallback(const NewSceneNotice& n)
 {
+  CommandManager::Get()->Clear();
   if(_model->GetExec()) _model->TerminateExec();
 
   _model->ClearSelection();

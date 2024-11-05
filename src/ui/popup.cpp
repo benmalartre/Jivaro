@@ -126,12 +126,14 @@ PopupUI::Draw()
     1.f
   );
 
-  ImDrawList* drawList = ImGui::GetForegroundDrawList();
+  ImDrawList* drawList = ImGui::GetWindowDrawList();
   drawList->AddRectFilled(
     ImVec2(_x, _y),
     ImVec2(_x + _width, _y + _height),
     ImColor(color[0], color[1], color[2], color[3])
   );
+
+  _Draw();
 
   
   ImGui::End();
@@ -211,25 +213,8 @@ ColorPopupUI::MouseButton(int button, int action, int mods)
 }
 
 bool
-ColorPopupUI::Draw()
+ColorPopupUI::_Draw()
 {
-  bool opened;
-  const ImGuiStyle& style = ImGui::GetStyle();
-
-  ImGui::SetNextWindowSize(GfVec2f(_width, _height));
-  ImGui::SetNextWindowPos(GfVec2f(_x, _y));
-
-  ImGui::Begin(_name.c_str(), &opened, _flags);
-
-  
-
-  ImDrawList* drawList = ImGui::GetBackgroundDrawList();
-  drawList->AddRectFilled(
-    ImVec2(_x, _y),
-    ImVec2(_x + _width, _y + _height),
-    ImColor(style.Colors[ImGuiCol_WindowBg])
-  );
-
   static ImGuiColorEditFlags picker_flags = 
     ImGuiColorEditFlags_HDR | 
     ImGuiColorEditFlags_NoDragDrop |
@@ -242,7 +227,6 @@ ColorPopupUI::Draw()
     Terminate();
   }
  
-  ImGui::End();
   return true;
 };
 
@@ -279,21 +263,14 @@ InputPopupUI::SetName(const std::string& name)
 }
 
 bool
-InputPopupUI::Draw()
+InputPopupUI::_Draw()
 {
-  ImGui::SetNextWindowSize(GfVec2f(_width, _height));
-  ImGui::SetNextWindowPos(GfVec2f(_x, _y));
-
-  ImGui::Begin(_name.c_str(), NULL, _flags);
-
   ImGui::SetNextItemWidth(_width);
   ImGui::InputText("##input", &_value[0], 255);
   if (!_initialized) {
     ImGui::SetKeyboardFocusHere(-1);
     _initialized = true;
   }
-
-  ImGui::End();
   return true;
 };
 
@@ -408,24 +385,17 @@ ListPopupUI::_FilterItems()
 }
 
 bool
-ListPopupUI::Draw()
+ListPopupUI::_Draw()
 {
-  const ImGuiStyle& style = ImGui::GetStyle();
-
   if (!strcmp(_filter, "")) {
     _filteredItems = _items;
   } else {
     _FilterItems();
   }
 
-  ImGui::SetNextWindowPos(GfVec2f(_x, _y));
-  ImGui::SetNextWindowSize(GfVec2f(_width, _height));
-
-  ImGui::Begin(_name.c_str(), NULL, _flags);
-
+  const ImGuiStyle& style = ImGui::GetStyle();
   ImDrawList* drawList = ImGui::GetForegroundDrawList();
 
-  
   ImGui::PushFont(GetWindow()->GetFont(FONT_MEDIUM, 0));
   ImGui::TextColored(ImVec4(1, 0.5, 0.25, 1.0),_name.c_str());
   ImGui::PopFont();
@@ -458,8 +428,6 @@ ListPopupUI::Draw()
   
   ImGui::PopFont();
 
-
-  ImGui::End();
   return true;
 
 };

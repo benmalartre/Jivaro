@@ -95,7 +95,7 @@ public:
   //-------------------------------------------------------------------
   class Node {
     public: 
-      Node(UsdPrim& prim);
+      Node(const SdfPath& path);
       ~Node();
 
       void AddInput(UsdAttribute& attribute, const TfToken& name, 
@@ -107,8 +107,9 @@ public:
 
       size_t GetNumPorts() { return _ports.size(); };
       std::vector<Port>& GetPorts() { return _ports; };
-      UsdPrim& GetPrim() { return _prim; };
-      const UsdPrim& GetPrim() const { return _prim; };
+      const SdfPath& GetPath() const {return _path;};
+      UsdPrim& GetPrim(UsdStageRefPtr& stage) { return stage->GetPrimAtPath(_path); };
+      const UsdPrim& GetPrim(UsdStageRefPtr& stage) const { return stage->GetPrimAtPath(_path); };
       bool IsCompound();
 
       TfToken GetName() { return _name; };
@@ -121,15 +122,15 @@ public:
       
       Node*                       _parent;
       TfToken                     _name;
-      UsdPrim                     _prim;
+      SdfPath                     _path;
       std::vector<Port>           _ports;
   };
 
 public:
-  Graph(const UsdPrim& prim);
+  Graph(SdfLayerRefPtr layer);
   virtual ~Graph();
 
-  virtual void Populate(const UsdPrim& prim);
+  virtual void Populate(SdfLayerRefPtr layer);
   virtual void Clear();
 
   virtual void AddNode(Node* node);
@@ -143,16 +144,17 @@ public:
   const std::vector<Node*>& GetNodes() const { return _nodes; };
   std::vector<Node*>& GetNodes() { return _nodes; };
 
-  const Node* GetNode(const UsdPrim& prim) const;
-  Node* GetNode(const UsdPrim& prim);
-  
-  const UsdPrim& GetPrim() const { return _prim; };
-  UsdPrim& GetPrim() { return _prim; };
+  const Node* GetNode(const SdfPath& path) const;
+  Node* GetNode(const SdfPath& path);
+
+  UsdStageRefPtr GetStage(){return _stage;};
+  SdfLayerRefPtr GetLayer(){return _layer;};
 
   const std::vector<Connexion*>& GetConnexions() const { return _connexions; };
   std::vector<Connexion*>& GetConnexions() { return _connexions; };
 
   bool ConnexionPossible(const Port* lhs, const Port* rhs);
+
 
 protected:
   virtual void _DiscoverNodes() = 0;
@@ -160,7 +162,8 @@ protected:
   
   std::vector<Node*>              _nodes;
   std::vector<Connexion*>         _connexions;
-  UsdPrim                         _prim;
+  UsdStageRefPtr                  _stage;
+  SdfLayerRefPtr                  _layer;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

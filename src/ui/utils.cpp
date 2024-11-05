@@ -7,6 +7,7 @@
 #include "../command/block.h"
 #include "../command/manager.h"
 #include "../app/view.h"
+#include "../app/modal.h"
 #include "../app/window.h"
 #include "../app/registry.h"
 #include "../app/commands.h"
@@ -16,6 +17,36 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 namespace UI
 {
+
+// browse for file
+//----------------------------------------------------------------------------
+std::string BrowseFile(int x, int y, const char* folder, const char* filters[],
+  const int numFilters, const char* name, bool forWriting)
+{
+  std::string result =
+    "/Users/malartrebenjamin/Documents/RnD/Jivaro/assets/Kitchen_set 3/Kitchen_set.usd";
+
+  ModalFileBrowser::Mode mode = forWriting ?
+    ModalFileBrowser::Mode::SAVE : ModalFileBrowser::Mode::OPEN;
+
+  const std::string label = forWriting ? "New" : "Open";
+  Window* window = WindowRegistry::GetActiveWindow();
+  ModalFileBrowser browser(window, x, y, label, mode, numFilters, filters);
+  browser.Loop();
+  if (browser.GetStatus() == ModalBase::Status::OK) {
+    result = browser.GetResult();
+  }
+  browser.Term();
+
+  return result;
+}
+
+const ImVec4& _ButtonTextColor(short state)
+{
+  ImGuiStyle* style = &ImGui::GetStyle();
+  return state == UI::STATE_SELECTED ? style->Colors[ImGuiCol_TextDisabled] : style->Colors[ImGuiCol_Text];
+}
+
 bool
 AddIconButton(const char* icon, short state, CALLBACK_FN func)
 {
@@ -35,6 +66,7 @@ AddIconButton(const char* icon, short state, CALLBACK_FN func)
 bool
 AddIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN func)
 {
+  
   if(state == UI::STATE_DISABLED)ImGui::BeginDisabled();
   ImGui::PushID(id);
   if (ImGui::Button(icon, UI::BUTTON_NORMAL_SIZE)) {
@@ -53,6 +85,7 @@ AddTransparentIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN 
 {
   if(state == UI::STATE_DISABLED)ImGui::BeginDisabled();
   ImGui::PushStyleColor(ImGuiCol_Button, TRANSPARENT_COLOR);
+  ImGui::PushStyleColor(ImGuiCol_Text, _ButtonTextColor(state));
   ImGui::PushID(id);
   bool clicked = false;
   if (ImGui::Button(icon, UI::BUTTON_NORMAL_SIZE))
@@ -61,7 +94,7 @@ AddTransparentIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN 
     clicked = true;
   }
   ImGui::PopID();
-  ImGui::PopStyleColor();
+  ImGui::PopStyleColor(2);
   if(state == UI::STATE_DISABLED)ImGui::EndDisabled();
   return clicked;
 }
@@ -73,6 +106,7 @@ AddCheckableIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN fu
   ImGuiStyle* style = &ImGui::GetStyle();
   ImVec4* colors = style->Colors;
   const bool active = (state == UI::STATE_SELECTED);
+  ImGui::PushStyleColor(ImGuiCol_Text, _ButtonTextColor(state));
   if (active) {
     ImGui::PushStyleColor(ImGuiCol_Button, style->Colors[ImGuiCol_ButtonActive]);
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, style->Colors[ImGuiCol_ButtonActive]);
@@ -86,6 +120,7 @@ AddCheckableIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN fu
     clicked = true;
   }
   if (active) ImGui::PopStyleColor(2);
+  ImGui::PopStyleColor();
   ImGui::PopID();
   if(state == UI::STATE_DISABLED)ImGui::EndDisabled();
   return clicked;

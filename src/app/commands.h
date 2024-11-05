@@ -82,7 +82,7 @@ public:
   ~LayerTextEditCommand() {};
   void Do() override;
 private:
-  SdfLayerRefPtr _layer;
+  SdfLayerRefPtr      _layer;
   std::string         _oldText;
   std::string         _newText;
 };
@@ -333,9 +333,24 @@ public:
   UIGenericCommand(CALLBACK_FN fn);
   ~UIGenericCommand() {};
   void Do() override;
-
 private:
   CALLBACK_FN _fn;
+};
+
+//==================================================================================
+// Create Reference Command
+//==================================================================================
+class CreateReferenceCommand : public Command {
+public:
+  CreateReferenceCommand(UsdStageRefPtr stage, const SdfPath &path, const std::string &identifier);
+  ~CreateReferenceCommand() {};
+  void Do() override;
+
+private:
+  UsdStageWeakPtr _stage;
+  SdfPath         _path;
+  std::string     _identifier;
+  bool            _remove;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

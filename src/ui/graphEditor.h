@@ -222,11 +222,10 @@ protected:
       short GetDirty() { return _dirty; };
       void SetDirty(short dirty) { _dirty = dirty; };
 
-      int GetColor() const override;
       int GetElementUnderMouse(GraphEditorUI* editor, const GfVec2f& mousePos);
 
-      void Write();
-      void Read();
+      void Write(GraphEditorUI* editor);
+      void Read(GraphEditorUI* editor);
 
       float GetWidth() const override {return _width;};
       float GetHeight() const override {return _height;};
@@ -323,11 +322,9 @@ public:
 
   // io
   bool Populate(Graph* graph);
-  void Write();
-  void Read();
   void Clear();
-  bool Read(const std::string& filename);
-  bool Write(const std::string& filename);
+  bool Read(UsdStageRefPtr& stage);
+  bool Write(UsdStageRefPtr& stage);
 
   // notices
   void OnAttributeChangedNotice(const AttributeChangedNotice& n) override;
@@ -356,7 +353,7 @@ private:
   uint64_t                              _lastClick;
 
   int                                   _nodeId;
-  UsdStageRefPtr                        _stage;
+  SdfLayerRefPtr                        _layer;
   Graph*                                _graph;
   std::set<Node*>                       _selectedNodes;
   std::set<Connexion*>                  _selectedConnexions;

@@ -39,7 +39,6 @@ OpenSceneCommand::OpenSceneCommand(const std::string& filename)
 {
   Application* app = Application::Get();
   if (strlen(filename.c_str()) > 0) {
-    UndoBlock editBlock;
     Model* model = app->GetModel();
     model->LoadUsdStage(filename);
     UndoRouter::Get().TrackLayer(model->GetRootLayer());
@@ -760,6 +759,36 @@ void UIGenericCommand::Do()
   _fn();
 }
 
+//==================================================================================
+// Create Reference Command
+//==================================================================================
+CreateReferenceCommand::CreateReferenceCommand(UsdStageRefPtr stage, const SdfPath &path, 
+  const std::string &identifier)
+  : Command(true)
+  , _stage(stage)
+  , _path(path)
+  , _identifier(identifier)
+  , _remove(false)
+{
+  Do();
+}
+
+void CreateReferenceCommand::Do()
+{
+  SdfLayerRefPtr reference = SdfLayer::FindOrOpen(_identifier);
+  UsdPrim prim = _stage->GetPrimAtPath(_path);
+  if(!prim.IsValid())return;
+  if(_remove)
+    prim.GetReferences().RemoveReference(reference->GetIdentifier());
+
+  else
+    prim.GetReferences().AddReference(reference->GetIdentifier());
+  
+  UndoRouter::Get().TransferEdits(&_inverse);
+  _remove = !_remove;
+  
+  SceneChangedNotice().Send();
+}
 
 
 JVR_NAMESPACE_CLOSE_SCOPE

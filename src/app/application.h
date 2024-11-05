@@ -29,11 +29,6 @@ public:
 
   // destructor
   ~Application();
-
-
-  // browse file
-  std::string BrowseFile(int x, int y, const char* folder, const char* filters[], 
-    const int numFilters, const char* name="Browse", bool readOrWrite=false);
   
   // init application
   void Init(unsigned width, unsigned height, bool fullscreen=false);

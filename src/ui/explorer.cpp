@@ -374,7 +374,7 @@ ExplorerUI::_DrawPrim(const UsdPrim& prim, Selection* selection)
   ImGui::PopStyleColor();
 
   if (unfolded) {
-    if (prim.IsActive()) {
+    if (prim.IsValid() && prim.IsActive()) {
       for (const auto& child : children) {
         _DrawPrim(child, selection);
       }

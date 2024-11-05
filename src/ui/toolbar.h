@@ -54,7 +54,7 @@ struct ToolbarButton : public ToolbarItem {
   bool                        toggable;
   bool                        enabled;
 
-  VtArray<VtValue>  args;
+  VtArray<VtValue>            args;
   CALLBACK_FN                 func;
   const char*                 icon;
 
@@ -65,7 +65,6 @@ struct ToolbarButton : public ToolbarItem {
   ~ToolbarButton(){};
   bool Draw() override;
 };
-
 
 int ToolbarUIFixedSizeFunc(BaseUI* ui);
 
@@ -78,14 +77,15 @@ public:
   void MouseButton(int action, int button, int mods) override {};
   void MouseMove(int x, int y) override {};
   bool Draw() override;
-  void Update();
 
   int GetFixedSize();
+  void UpdateTools(short tool);
 
 private:
   bool                        _vertical;
   GfVec3f                     _color;
   std::vector<ToolbarItem*>   _items;
+  std::vector<ToolbarButton*> _tools;  // mutually exclusive
   ToolbarItem*                _current;
   static ImGuiWindowFlags     _flags;
 };

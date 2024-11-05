@@ -408,7 +408,6 @@ GraphEditorUI::Node::Node(Graph::Node* node)
   , _node(node)
   , _dirty(DIRTY_POSITION|DIRTY_SIZE)
 {
-  Read();
   for(auto& port: node->GetPorts()) {
     _ports.push_back(GraphEditorUI::Port(this, &port));
   }
@@ -419,19 +418,8 @@ GraphEditorUI::Node::Node(Graph::Node* node)
 //------------------------------------------------------------------------------
 GraphEditorUI::Node::~Node()
 {
-  Write();
 }
 
-
-int 
-GraphEditorUI::Node::GetColor() const
-{
-  UsdUINodeGraphNodeAPI api(_node->GetPrim());
-  GfVec3f color;
-  api.GetDisplayColorAttr().Get(&color);
-  return PackColor3<GfVec3f>(color);
-   
-}
 
 GraphEditorUI::Port* 
 GraphEditorUI::Node::GetPort(const TfToken& name)
@@ -501,19 +489,22 @@ GraphEditorUI::Node::ComputeSize(GraphEditorUI* editor)
 }
 
 void
-GraphEditorUI::Node::Write()
+GraphEditorUI::Node::Write(GraphEditorUI* editor)
 {
-  if(!_node->GetPrim().IsValid())return;
+  UsdStageRefPtr stage = editor->GetGraph()->GetStage();
+  UsdPrim prim = stage->GetPrimAtPath(_node->GetPath());
 
-  if(!_node->GetPrim().HasAPI<UsdUINodeGraphNodeAPI>()) {
+  if(!prim.IsValid())return;
+
+  if(!prim.HasAPI<UsdUINodeGraphNodeAPI>()) {
     UsdUINodeGraphNodeAPI api = 
-      UsdUINodeGraphNodeAPI::Apply(_node->GetPrim());
+      UsdUINodeGraphNodeAPI::Apply(prim);
     api.CreatePosAttr().Set(_pos);
     api.CreateSizeAttr().Set(_size);
     api.CreateExpansionStateAttr().Set(_expended);
     api.CreateDisplayColorAttr().Set(UnpackColor3<GfVec3f>(_color));
   } else {
-    UsdUINodeGraphNodeAPI api(_node->GetPrim());
+    UsdUINodeGraphNodeAPI api(prim);
     api.GetPosAttr().Set(_pos);
     api.GetSizeAttr().Set(_size);
     api.GetExpansionStateAttr().Set(_expended);
@@ -522,10 +513,15 @@ GraphEditorUI::Node::Write()
 }
 
 void
-GraphEditorUI::Node::Read()
+GraphEditorUI::Node::Read(GraphEditorUI* editor)
 {
-  if (_node->GetPrim().HasAPI<UsdUINodeGraphNodeAPI>()) {
-    UsdUINodeGraphNodeAPI api(_node->GetPrim());
+  UsdStageRefPtr stage = editor->GetGraph()->GetStage();
+  UsdPrim prim = stage->GetPrimAtPath(_node->GetPath());
+
+  if (!prim.IsValid())return;
+
+  if (prim.HasAPI<UsdUINodeGraphNodeAPI>()) {
+    UsdUINodeGraphNodeAPI api(prim);
     api.GetPosAttr().Get(&_pos);
     api.GetSizeAttr().Get(&_size);
     api.GetExpansionStateAttr().Get(&_expended);
@@ -534,7 +530,7 @@ GraphEditorUI::Node::Read()
     _color = PackColor3<GfVec3f>(color);
   } else {
     UsdUINodeGraphNodeAPI api = 
-      UsdUINodeGraphNodeAPI::Apply(_node->GetPrim());
+      UsdUINodeGraphNodeAPI::Apply(prim);
     _pos = GfVec2f(0.f);
     api.CreatePosAttr().Set(_pos);
     _size = GfVec2f(100,32);
@@ -616,7 +612,7 @@ GraphEditorUI::Node::Draw(GraphEditorUI* editor)
     if (ImGui::Selectable(UI::HiddenLabel(_expended.GetString().c_str()).c_str(), 
       true, ImGuiSelectableFlags_SelectOnClick, expendSize)) {
       _expended = _GetNextExpendedStateToken(_expended);
-      ADD_COMMAND(ExpendNodeCommand, {_node->GetPrim().GetPath()}, _expended);
+      ADD_COMMAND(ExpendNodeCommand, {_node->GetPath()}, _expended);
       SetDirty(GraphEditorUI::Node::DIRTY_SIZE);
     }
 
@@ -735,21 +731,8 @@ GraphEditorUI::~GraphEditorUI()
 static void
 RefreshGraphCallback(GraphEditorUI* editor)
 {
-  Selection* selection = editor->GetModel()->GetSelection();
-
-  if (selection->GetNumSelectedItems()) {
-    Selection::Item& item = selection->GetItem(0);
-    if (item.type == Selection::PRIM) {
-      UsdStageRefPtr stage = editor->GetModel()->GetStage();
-      UsdPrim selected = stage->GetPrimAtPath(item.path);
-      
-      if (selected.IsValid()) {
-        editor->Populate(new HierarchyGraph(stage, selected));
-        return;
-      }
-    }
-  }
-  editor->Clear();
+  SdfLayerRefPtr layer = editor->GetModel()->GetRootLayer();
+  editor->Populate(new HierarchyGraph(layer));
 }
 
 GraphEditorUI::Port*
@@ -768,6 +751,8 @@ bool
 GraphEditorUI::Populate(Graph* graph)
 {
   Clear();
+  if(_graph) delete _graph;
+
   _graph = graph;
 
   for (auto& node : _graph->GetNodes()) {
@@ -794,25 +779,6 @@ GraphEditorUI::Rearrange(Graph* graph, Node* node)
 }
 */
 
-// update
-//------------------------------------------------------------------------------
-void
-GraphEditorUI::Write()
-{
-  for (auto& node : _nodes) {
-    node->Write();
-  }
-}
-
-void
-GraphEditorUI::Read()
-{
-  for (auto& node : _nodes) {
-    node->Read();
-  }
-}
-
-
 void
 GraphEditorUI::Clear()
 {
@@ -833,15 +799,16 @@ GraphEditorUI::Clear()
 // read
 //------------------------------------------------------------------------------
 bool 
-GraphEditorUI::Read(const std::string& filename)
+GraphEditorUI::Read(UsdStageRefPtr& stage)
 {
+
   return true;
 }
 
 // save
 //------------------------------------------------------------------------------
 bool 
-GraphEditorUI::Write(const std::string& filename)
+GraphEditorUI::Write(UsdStageRefPtr& stage)
 {
   return true;
 }
@@ -984,14 +951,17 @@ GraphEditorUI::Draw()
   ImGui::SetWindowFontScale(1.0);
   ImGui::SetCursorPos(ImVec2(0, 0));
 
+
+  
   UI::AddIconButton(0, ICON_FA_RECYCLE, UI::STATE_DEFAULT,
     std::bind(RefreshGraphCallback, this));
   ImGui::SameLine();
-
+  /*
   const GfVec2f mousePos = ImGui::GetMousePos() - _parent->GetMin();
   if (mousePos[0] > 0 && mousePos[0] < 100 && mousePos[1] > 0 && mousePos[1] < 32) {
     _parent->SetFlag(View::DISCARDMOUSEBUTTON);
   }
+
   DiscardEventsIfMouseInsideBox(GfVec2f(0, 0), GfVec2f(100, 64));
   if (ImGui::Button("TEST")) {
     Selection* selection = _model->GetSelection();
@@ -1031,6 +1001,31 @@ GraphEditorUI::Draw()
     ADD_COMMAND(OpenSceneCommand, filename);
   }
   ImGui::SameLine();
+
+  if (ImGui::Button("REF")) {
+
+    Selection* selection =  _model->GetSelection();
+    if(selection->GetNumSelectedItems()) {
+      std::string folder = GetInstallationFolder();
+      const char* filters[] = {
+        ".usd",
+        ".usda",
+        ".usdc",
+        ".usdz"
+      };
+      int numFilters = 4;
+
+      ImVec2 pos = _parent->GetWindow()->GetMousePosition();
+      std::string filename =
+        UI::BrowseFile(pos[0], pos[1], folder.c_str(), filters, numFilters, "reference file", false);
+
+      ADD_COMMAND(CreateReferenceCommand, _model->GetStage(), selection->GetItem(0).path, filename);
+    } else {
+      std::cout << "Create reference need a node selected!" << std::endl;
+    }
+  }
+  ImGui::SameLine();
+  */
 
   //ImGui::PopFont();
   ImGui::End();
@@ -1076,13 +1071,11 @@ void
 GraphEditorUI::OnSceneChangedNotice(const SceneChangedNotice& n)
 {
   if (!_graph) return;
-  if (!_graph->GetPrim().IsValid()) {
-    Clear();
-  } else {
-    _graph->Clear();
-    _graph->Populate(_graph->GetPrim());
-    Populate(_graph);
-  }
+
+  _graph->Clear();
+  _graph->Populate(_layer);
+  Populate(_graph);
+  
   _parent->SetDirty();
 }
 
@@ -1090,7 +1083,7 @@ void
 GraphEditorUI::OnAttributeChangedNotice(const AttributeChangedNotice& n)
 {
   if (!_graph)return;
-  Read();
+  Read(_graph->GetStage());
 }
 
 
@@ -1210,7 +1203,7 @@ GraphEditorUI::MouseButton(int button, int action, int mods)
           if(element == 1) {
             
             InputPopupUI* popup = new InputPopupUI(GetX() , GetY(), GetWidth(), 24,
-              std::bind(&Callbacks::RenamePrim, _model, _hoveredNode->Get()->GetPrim().GetPath(), std::placeholders::_1));
+              std::bind(&Callbacks::RenamePrim, _model, _hoveredNode->Get()->GetPath(), std::placeholders::_1));
 
             ADD_DEFERRED_COMMAND(UIGenericCommand, std::bind(&WindowRegistry::SetPopup, popup));
           }
@@ -1314,21 +1307,17 @@ GraphEditorUI::Keyboard(int key, int scancode, int action, int mods)
 
   if (action == GLFW_PRESS) {
     if (mappedKey == GLFW_KEY_DELETE) {
-      std::cout << "GRAPH UI : DELETE SELECTED NODES !!! " << std::endl;
       for (auto& node : _selectedNodes) {
         _graph->RemoveNode(node->Get());
       }
     }
     else if (mappedKey == GLFW_KEY_R) {
-      std::cout << "GRAPH UI : RESET SCALE OFFSET !!! " << std::endl;
       ResetScaleOffset();
     }
     else if (mappedKey == GLFW_KEY_F) {
-      std::cout << "GRAPH UI : FRAME SELECTED NODES !!! " << std::endl;
       FrameSelection();
     }
     else if (mappedKey == GLFW_KEY_A) {
-      std::cout << "GRAPH UI : FRAME ALL NODES !!! " << std::endl;
       FrameAll();
     }
     else if (mappedKey == GLFW_KEY_TAB) {
@@ -1462,7 +1451,7 @@ GraphEditorUI::GetSelectedNodesPath()
 {
   SdfPathVector paths;
   for (auto& node: _selectedNodes) {
-    paths.push_back(node->Get()->GetPrim().GetPath());
+    paths.push_back(node->Get()->GetPath());
   }
   return paths;
 }

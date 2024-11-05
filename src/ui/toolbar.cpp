@@ -15,41 +15,16 @@ ImGuiWindowFlags ToolbarUI::_flags =
   ImGuiWindowFlags_NoScrollbar |
   ImGuiWindowFlags_NoDecoration;
 
-static void _SetActiveTool(short tool) 
+static void SetActiveToolCallback(ToolbarUI* ui, short tool) 
 {
   WindowRegistry* registry = WindowRegistry::Get();
   registry->SetActiveTool(tool);
   SelectionChangedNotice().Send();
-}
-
-static void OnTranslateCallback()
-{
-  _SetActiveTool(Tool::TRANSLATE);
-}
-
-static void OnRotateCallback()
-{
-  _SetActiveTool(Tool::ROTATE);
-}
-
-static void OnScaleCallback()
-{
-  _SetActiveTool(Tool::SCALE);
-}
-
-static void OnSelectCallback()
-{
-  _SetActiveTool(Tool::SELECT);
-}
-
-static void OnBrushCallback()
-{
-  _SetActiveTool(Tool::BRUSH);
+  ui->UpdateTools(tool);
 }
 
 static void OnPlayCallback(Model* model)
 {
-  _SetActiveTool(Tool::NONE);
   model->ToggleExec();
 }
 
@@ -114,42 +89,50 @@ ToolbarUI::ToolbarUI(View* parent, bool vertical)
   : BaseUI(parent, UIType::TOOLBAR) 
   , _vertical(vertical)
 {
-  ToolbarItem* selectItem = new ToolbarButton(
+  ToolbarButton* selectItem = new ToolbarButton(
     this, Tool::SELECT, "Select", "Space","selection tool",
-    ICON_FA_ARROW_POINTER, false, true,
-    OnSelectCallback
+    ICON_FA_ARROW_POINTER, true, true,
+    std::bind(SetActiveToolCallback, this, Tool::SELECT)
   );
   _items.push_back(selectItem);
 
-  ToolbarItem* translateItem = new ToolbarButton(
+  ToolbarButton* translateItem = new ToolbarButton(
     this, Tool::TRANSLATE, "Translate", "T", "translation tool",
-    ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT, false, true,
-    OnTranslateCallback
+    ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT, true, false,
+    std::bind(SetActiveToolCallback, this, Tool::TRANSLATE)
   );
   _items.push_back(translateItem);
 
-  ToolbarItem* rotateItem = new ToolbarButton(
+  ToolbarButton* rotateItem = new ToolbarButton(
     this, Tool::ROTATE, "Rotate", "R", "rotation tool",
-    ICON_FA_ROTATE, false, true,
-    OnRotateCallback
+    ICON_FA_ROTATE, true, false,
+    std::bind(SetActiveToolCallback, this, Tool::ROTATE)
   );
   _items.push_back(rotateItem);
 
-  ToolbarItem* scaleItem = new ToolbarButton(
+  ToolbarButton* scaleItem = new ToolbarButton(
     this, Tool::SCALE, "Scale", "S", "scale tool",
-    ICON_FA_UP_RIGHT_AND_DOWN_LEFT_FROM_CENTER , false, true,
-    OnScaleCallback
+    ICON_FA_UP_RIGHT_AND_DOWN_LEFT_FROM_CENTER , true, false,
+    std::bind(SetActiveToolCallback, this, Tool::SCALE)
   );
   _items.push_back(scaleItem);
 
-  ToolbarItem* brushItem = new ToolbarButton(
+  ToolbarButton* brushItem = new ToolbarButton(
     this, Tool::BRUSH, "Brush", "B", "brush tool",
-    ICON_FA_PAINTBRUSH, false, true,
-    OnBrushCallback
+    ICON_FA_PAINTBRUSH, true, false,
+    std::bind(SetActiveToolCallback, this, Tool::BRUSH)
   );
   _items.push_back(brushItem);
 
-  ToolbarItem* playItem = new ToolbarButton(
+  _tools = {
+    selectItem,
+    translateItem,
+    rotateItem,
+    scaleItem,
+    brushItem
+  };
+
+  ToolbarButton* playItem = new ToolbarButton(
     this, Tool::NONE, "Play", "play", "launch engine",
     ICON_FA_SHUFFLE, true, false,
     std::bind(OnPlayCallback, _model)
@@ -166,28 +149,20 @@ ToolbarUI::~ToolbarUI()
   _items.clear();
 }
 
-
-
-void ToolbarUI::Update()
-{
-  Window* window = GetView()->GetWindow();
-  for (auto& item : this->_items) {
-    if (item->type == TOOLBAR_BUTTON) {
-      ToolbarButton* button = (ToolbarButton*)item;
-      if (button->tool == Tool::NONE) continue;
-      if (button->enabled && button->tool != window->GetActiveTool()) {
-        button->enabled = false;
-      }
-    }
-  }
-}
-
 int
 ToolbarUI::GetFixedSize()
 {
   const ImGuiStyle &style = ImGui::GetStyle(); 
   if(_vertical)return UI::BUTTON_NORMAL_SIZE[0] + 2 * (style.WindowPadding.x + style.ItemSpacing.x);
   else return UI::BUTTON_NORMAL_SIZE[1] + 2 * (style.WindowPadding.y + style.ItemSpacing.y);
+}
+
+void
+ToolbarUI::UpdateTools(short tool)
+{
+  for(auto& button: _tools) 
+    if(button->tool != tool)button->enabled = false;
+
 }
 
 bool ToolbarUI::Draw()

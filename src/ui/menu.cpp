@@ -28,30 +28,6 @@ JVR_NAMESPACE_OPEN_SCOPE
 // --------------------------------------------------------------
 // Callbacks
 // --------------------------------------------------------------
-// browse for file
-//----------------------------------------------------------------------------
-std::string
-_BrowseFile(int x, int y, const char* folder, const char* filters[],
-  const int numFilters, const char* name, bool forWriting)
-{
-  std::string result =
-    "/Users/malartrebenjamin/Documents/RnD/Jivaro/assets/Kitchen_set 3/Kitchen_set.usd";
-
-  ModalFileBrowser::Mode mode = forWriting ?
-    ModalFileBrowser::Mode::SAVE : ModalFileBrowser::Mode::OPEN;
-
-  const std::string label = forWriting ? "New" : "Open";
-  Window* window = WindowRegistry::GetActiveWindow();
-  ModalFileBrowser browser(window, x, y, label, mode, numFilters, filters);
-  browser.Loop();
-  if (browser.GetStatus() == ModalBase::Status::OK) {
-    result = browser.GetResult();
-  }
-  browser.Term();
-
-  return result;
-}
-
 
 static void OpenFileCallback(MenuUI* menu) {
   std::string folder = GetInstallationFolder();
@@ -64,7 +40,7 @@ static void OpenFileCallback(MenuUI* menu) {
   int numFilters = 4;
 
   std::string filename =
-    _BrowseFile(200, 200, folder.c_str(), filters, numFilters, "open usd file", false);
+    UI::BrowseFile(200, 200, folder.c_str(), filters, numFilters, "open usd file", false);
   ADD_COMMAND(OpenSceneCommand, filename);
 }
 
@@ -87,7 +63,7 @@ static void NewFileCallback(MenuUI* menu)
   int numFilters = 4;
 
   std::string filename =
-    _BrowseFile(200, 200, folder.c_str(), filters, numFilters, "new usd file", true);
+    UI::BrowseFile(200, 200, folder.c_str(), filters, numFilters, "new usd file", true);
   ADD_COMMAND(NewSceneCommand, filename);
 }
 

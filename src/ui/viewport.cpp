@@ -210,7 +210,6 @@ void ViewportUI::MouseButton(int button, int action, int mods)
 
   if (action == GLFW_RELEASE)
   {
-    std::cout << "viewport release click " << tool->IsInteracting() << std::endl;
     if (!(mods & GLFW_MOD_ALT) && !(mods & GLFW_MOD_SUPER)) {
       if (tool->IsInteracting()) {
         tool->EndUpdate(x - GetX(), y - GetY(), width, height);

@@ -114,10 +114,10 @@ _GetRuntimeTypeName(SdfValueTypeName vtn)
 
 // Graph constructor
 //------------------------------------------------------------------------------
-ExecutionGraph::ExecutionGraph(const UsdPrim& prim) 
-  : Graph(prim)
+ExecutionGraph::ExecutionGraph(SdfLayerRefPtr layer) 
+  : Graph(layer)
 {
-  Populate(prim);
+  Populate(layer);
 }
 
 // Graph destructor
@@ -126,8 +126,8 @@ ExecutionGraph::~ExecutionGraph()
 {
 }
 
-ExecutionGraph::ExecutionNode::ExecutionNode(UsdPrim& prim)
-  : Graph::Node(prim)
+ExecutionGraph::ExecutionNode::ExecutionNode(const SdfPath& path)
+  : Graph::Node(path)
 {
   _PopulatePorts();
 }
@@ -163,19 +163,21 @@ void ExecutionGraph::ExecutionNode::_PopulatePorts()
 void
 ExecutionGraph::_DiscoverNodes() 
 {
+  /*
   if (!_prim.IsValid())return;
 
   for (UsdPrim child : _prim.GetChildren()) {
     ExecutionGraph::ExecutionNode* node = new ExecutionGraph::ExecutionNode(child);
     AddNode(node);
   }
+  */
 }
 
 void
 ExecutionGraph::_DiscoverConnexions()
 {
+  /*
   for (UsdPrim child : _prim.GetChildren()) {
-    /*
     if (child.IsA<UsdExecNode>()) {
       UsdExecNode node(child);
       for (UsdExecInput& input : node.GetInputs()) {
@@ -195,8 +197,8 @@ ExecutionGraph::_DiscoverConnexions()
         }
       }
     }
-    */
   }
+  */
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE
