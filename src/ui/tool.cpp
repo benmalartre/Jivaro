@@ -15,6 +15,7 @@
 #include "../geometry/voxels.h"
 #include "../geometry/smooth.h"
 #include "../app/selection.h"
+#include "../app/commands.h"
 #include "../app/notice.h"
 #include "../app/application.h"
 #include "../command/block.h"
@@ -274,9 +275,7 @@ bool ToolUI::Draw()
   ImGui::Begin(_name.c_str(), &opened, _flags);
 
   if (ImGui::Button("Create Root Prim")) {
-    UndoBlock block;
-    UsdGeomXform root = UsdGeomXform::Define(stage, SdfPath("/Root"));
-    stage->SetDefaultPrim(root.GetPrim());
+    ADD_COMMAND(CreatePrimCommand, _model->GetRootLayer(), SdfPath("/Root"), TfToken("Xform"), true);
   } ImGui::SameLine();
   if (ImGui::Button("Create Random Mesh")) {
     Mesh mesh;

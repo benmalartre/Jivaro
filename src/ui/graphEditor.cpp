@@ -16,6 +16,7 @@
 #include <pxr/usd/usdUI/tokens.h>
 
 #include "../common.h"
+#include "../utils/timer.h"
 #include "../utils/color.h"
 #include "../utils/keys.h"
 #include "../utils/usd.h"
@@ -969,7 +970,7 @@ GraphEditorUI::Draw()
   ImGui::SetWindowFontScale(1.0);
   ImGui::SetCursorPos(ImVec2(0, 0));
 
-  UI::AddIconButton(0, ICON_FA_RECYCLE, ICON_DEFAULT,
+  UI::AddIconButton(0, ICON_FA_RECYCLE, UI::STATE_DEFAULT,
     std::bind(RefreshGraphCallback, this));
   ImGui::SameLine();
 
@@ -1005,7 +1006,6 @@ GraphEditorUI::Draw()
   if (ImGui::Button("SAVE")) {
     const std::string identifier = "./usd/graph.usda";
     //UsdStageRefPtr stage = UsdStage::CreateInMemory();
-    //stage->GetRootLayer()->TransferContent(_model->GetStage()->GetRootLayer());
     std::cout << "ON SAVE DEFAULT PRIM : " << _model->GetStage()->GetDefaultPrim().GetPath() << std::endl;
     _model->GetDisplayStage()->Export(identifier);
   }
@@ -1061,7 +1061,6 @@ GraphEditorUI::OnNewSceneNotice(const NewSceneNotice& n)
 void
 GraphEditorUI::OnSceneChangedNotice(const SceneChangedNotice& n)
 {
-  std::cout << "Graph Editor SCene Change Callback..." << std::endl;
   if (!_graph) return;
   if (!_graph->GetPrim().IsValid()) {
     Clear();
@@ -1188,8 +1187,15 @@ GraphEditorUI::MouseButton(int button, int action, int mods)
 
   _GetNodeUnderMouse(mousePos, false);
 
+  uint64_t now = CurrentTime();
+  double diffMs = (now - _lastClick) * 1e-6;
+
   if (button == GLFW_MOUSE_BUTTON_LEFT) {
     if (action == GLFW_PRESS) {
+      if((now - _lastClick)<50) {
+        std::cout << "Graph Editor Double click" << std::endl;
+      }
+      _lastClick = now;
       if (mods & GLFW_MOD_ALT) _navigate = NavigateMode::PAN;
       else if (_hoveredPort) {
         _connect = true;
@@ -1237,13 +1243,9 @@ GraphEditorUI::MouseButton(int button, int action, int mods)
     else if (action == GLFW_RELEASE) {
       _navigate = NavigateMode::IDLE;
 
-      static auto before = std::chrono::system_clock::now();
-      auto now = std::chrono::system_clock::now();
-      double diff_ms = std::chrono::duration <double, std::milli> (now - before).count();
-      before = now;
       if (_drag == true && _dragOffset.GetLength() > 0.000001f) {
         ADD_COMMAND(MoveNodeCommand, GetSelectedNodesPath(), _dragOffset);
-      } else if(diff_ms > 10 && diff_ms < 250){
+      } else if(diffMs > 10 && diffMs < 250){
         switch(mods) {
         case GLFW_MOD_SHIFT :
           _model->AddToSelection(GetSelectedNodesPath());
@@ -1262,6 +1264,7 @@ GraphEditorUI::MouseButton(int button, int action, int mods)
 
   else if (button == GLFW_MOUSE_BUTTON_MIDDLE) {
     if (action == GLFW_PRESS) {
+      _lastClick = now;
       if (mods & GLFW_MOD_ALT) _navigate = NavigateMode::PAN;
     } else if (action == GLFW_RELEASE) {
       if (mods & GLFW_MOD_ALT) _navigate = NavigateMode::IDLE;
@@ -1270,6 +1273,7 @@ GraphEditorUI::MouseButton(int button, int action, int mods)
 
   else if (button == GLFW_MOUSE_BUTTON_RIGHT) {
     if (action == GLFW_PRESS) {
+      _lastClick = now;
       if (mods & GLFW_MOD_ALT) _navigate = NavigateMode::ZOOM;
     }
     else if (action == GLFW_RELEASE) {
@@ -1280,17 +1284,16 @@ GraphEditorUI::MouseButton(int button, int action, int mods)
   _parent->SetDirty();
 }
 
-static void _CreatePrimCallback(GraphEditorUI* ui, const TfToken& token)
+static void _CreatePrimCallback(Model* model, const TfToken& token)
 {
-  UsdStageRefPtr stage = ui->GetModel()->GetStage();
-  Selection* selection = ui->GetModel()->GetSelection();
+  Selection* selection = model->GetSelection();
   TfToken name(token.GetString() + "_" + RandomString(6));
 
   if (selection->GetNumSelectedItems()) {
-    ADD_COMMAND(CreatePrimCommand, stage->GetRootLayer(), selection->GetItem(0).path.AppendChild(name), token);
+    ADD_COMMAND(CreatePrimCommand, model->GetRootLayer(), selection->GetItem(0).path.AppendChild(name), token);
   }
   else {
-    ADD_COMMAND(CreatePrimCommand, stage->GetRootLayer(), stage->GetPseudoRoot().GetPath().AppendChild(name), token);
+    ADD_COMMAND(CreatePrimCommand, model->GetRootLayer(), SdfPath("/" + name.GetString()), token);
   }
 }
 
@@ -1321,7 +1324,7 @@ GraphEditorUI::Keyboard(int key, int scancode, int action, int mods)
     else if (mappedKey == GLFW_KEY_TAB) {
       GfVec2f mousePos = _parent->GetWindow()->GetMousePosition();
       ListPopupUI* popup = new ListPopupUI("Create Prim", mousePos[0], mousePos[1], 200, 100,
-        std::bind(&_CreatePrimCallback, this, std::placeholders::_1));
+        std::bind(&_CreatePrimCallback, _model, std::placeholders::_1));
 
       ADD_DEFERRED_COMMAND(UIGenericCommand, std::bind(&WindowRegistry::SetPopup, popup));
     }

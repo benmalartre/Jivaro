@@ -201,7 +201,7 @@ Application::Duplicate()
   Selection* selection = _model->GetSelection();
   if (!selection->IsEmpty()) {
     const Selection::Item& item = selection->GetItem(0);
-    ADD_COMMAND(DuplicatePrimCommand, _model->GetStage()->GetRootLayer(), item.path);
+    ADD_COMMAND(DuplicatePrimCommand, _model->GetSessionLayer(), item.path);
   }
 }
 
@@ -219,12 +219,12 @@ Application::NewScene(const std::string& filename)
 
 void Application::SaveScene()
 {
-  ADD_COMMAND(SaveLayerCommand, _model->GetStage()->GetRootLayer());
+  ADD_COMMAND(SaveLayerCommand, _model->GetRootLayer());
 }
 
 void Application::SaveSceneAs(const std::string& filename)
 {
-  ADD_COMMAND(SaveLayerAsCommand, _model->GetStage()->GetRootLayer(), filename);
+  ADD_COMMAND(SaveLayerAsCommand, _model->GetRootLayer(), filename);
 }
 
 // ---------------------------------------------------------------------------------------------

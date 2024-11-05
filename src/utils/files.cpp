@@ -80,7 +80,9 @@ size_t GetVolumes(std::vector<EntryInfo>& entries)
         entries.push_back({
           (std::string)(const char*)szDrive,
           EntryInfo::Type::FOLDER,
-          false
+          false,
+          0,
+          time_t()
           });
       }
       // increment, check next drive
@@ -106,12 +108,16 @@ size_t GetEntriesInDirectory(const char* path, std::vector<EntryInfo>& entries,
     // print all the files and directories within directory
     while ((ent = readdir (dir)) != NULL) 
     {
-      std::cout << ent->d_name << " : " << ent->d_type << std::endl;
+      struct stat result;
+      stat(ent->d_name, &result);
+
       if(ent->d_type == DT_REG) {
         entries.push_back({
           (std::string)ent->d_name,
           EntryInfo::Type::FILE,
-          _IsHiddenFile(ent->d_name)
+          _IsHiddenFile(ent->d_name),
+          (size_t)result.st_size,
+          result.st_mtime
         });
       } else if (ent->d_type == DT_DIR) {
         if (ignoreCurrent && strcmp(ent->d_name, ".") == 0) continue;
@@ -119,7 +125,9 @@ size_t GetEntriesInDirectory(const char* path, std::vector<EntryInfo>& entries,
         entries.push_back({
          (std::string)ent->d_name,
          EntryInfo::Type::FOLDER,
-         _IsHiddenFile(ent->d_name)
+         _IsHiddenFile(ent->d_name),
+         (size_t)result.st_size,
+         result.st_mtime
          });
       }
     }
@@ -127,51 +135,6 @@ size_t GetEntriesInDirectory(const char* path, std::vector<EntryInfo>& entries,
     return entries.size();
   } 
   return 0;
-}
-
-size_t GetFilesInDirectory(const char* path, std::vector<std::string>& filenames)
-{
-  filenames.clear();
-#ifdef _WIN32
-  std::string search_path = std::string(path) + "/*.*";
-  WIN32_FIND_DATA fd;
-  HANDLE hFind = ::FindFirstFile(search_path.c_str(), &fd);
-  if (hFind != INVALID_HANDLE_VALUE) {
-    do {
-      if ((fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ||
-        !strncmp(fd.cFileName, ".DS_Store", 9)) continue;
-      filenames.push_back(fd.cFileName);
-    } while (::FindNextFile(hFind, &fd));
-    ::FindClose(hFind);
-  }
-  return 0;
-#else
-  DIR *dir;
-  struct dirent *ent;
-  if ((dir = opendir (path)) != NULL) 
-  {
-    // print all the files and directories within directory
-    while ((ent = readdir (dir)) != NULL) 
-    {
-      if(
-        ! strncmp(ent->d_name, ".", 1) ||
-        ! strncmp(ent->d_name, "..", 2) ||
-        ! strncmp(ent->d_name, ".DS_Store", 9)
-      ) continue;
-      filenames.push_back((std::string)ent->d_name);
-    }
-    closedir (dir);
-    return filenames.size();
-  } 
-  else 
-  {
-    // could not open directory
-    std::cerr << "Could Not Open Directory : " << path << std::endl;
-    return EXIT_FAILURE;
-  }
-  
-  return 0;
-#endif
 }
 
 std::string GetInstallationFolder()

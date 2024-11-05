@@ -347,6 +347,7 @@ private:
   short                                 _navigate;
   float                                 _fontScale;
   size_t                                _fontIndex;
+  uint64_t                              _lastClick;
 
   int                                   _nodeId;
   UsdStageRefPtr                        _stage;

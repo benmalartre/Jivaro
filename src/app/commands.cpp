@@ -42,6 +42,7 @@ OpenSceneCommand::OpenSceneCommand(const std::string& filename)
     UndoBlock editBlock;
     Model* model = app->GetModel();
     model->LoadUsdStage(filename);
+    UndoRouter::Get().TrackLayer(model->GetRootLayer());
     UndoRouter::Get().TrackLayer(model->GetSessionLayer());
   }
 
@@ -57,14 +58,15 @@ OpenSceneCommand::OpenSceneCommand(const std::string& filename)
 NewSceneCommand::NewSceneCommand(const std::string& filename)
   : Command(false)
 {
-  Application* app = Application::Get();
+  Model* model = Application::Get()->GetModel();
   SdfFileFormatConstPtr usdaFormat = SdfFileFormat::FindByExtension("usda");
   SdfLayerRefPtr layer = SdfLayer::New(usdaFormat, filename);
   if (layer) {
     UsdStageRefPtr stage = UsdStage::Open(layer);
     if (stage) {
-      app->GetModel()->SetStage(stage);
-      UndoRouter::Get().TrackLayer(stage->GetRootLayer());
+      model->SetStage(stage);
+      UndoRouter::Get().TrackLayer(model->GetRootLayer());
+      UndoRouter::Get().TrackLayer(model->GetSessionLayer());
     }
   }
   UndoInverse inverse;
@@ -171,19 +173,51 @@ void CreatePrimCommand::Do() {
   SceneChangedNotice().Send();
 }
 
+
+//==================================================================================
+// Rename Prim
+//==================================================================================
+RenamePrimCommand::RenamePrimCommand(SdfLayerRefPtr layer, const SdfPath& path, const TfToken& name) 
+  : Command(true)
+{
+  if (!layer) 
+    return;
+
+  Selection* selection = Application::Get()->GetModel()->GetSelection();
+  selection->RemoveItem(path);
+  SdfPrimSpecHandle primSpec = layer->GetPrimAtPath(path);
+  
+  SdfBatchNamespaceEdit batchEdit;
+  SdfNamespaceEdit renameEdit = SdfNamespaceEdit::Rename(path, name);
+  batchEdit.Add(renameEdit);
+  SdfNamespaceEditDetailVector details;
+  if (layer->CanApply(batchEdit, &details)) {
+    layer->Apply(batchEdit);
+    selection->AddItem(path.ReplaceName(name));
+  } else {
+    for (const auto &detail : details) {
+      std::cout << detail.edit.currentPath.GetString() << " " << detail.reason << std::endl;
+    }
+  }
+
+  UndoRouter::Get().TransferEdits(&_inverse);
+  SceneChangedNotice().Send();
+}
+
+void RenamePrimCommand::Do() {
+  _inverse.Invert();
+  SceneChangedNotice().Send();
+}
+
 //==================================================================================
 // Duplicate
 //==================================================================================
 DuplicatePrimCommand::DuplicatePrimCommand(SdfLayerRefPtr layer, const SdfPath& path)
   : Command(true)
 {
-  /*
-  Selection* selection = Application::Get()->GetModel()->GetSelection();
-  _selection = selection->GetItems();
 
   SdfPath destinationPath = SdfPath(path.GetString() + "_duplicate");
-  UsdPrim sourcePrim = stage->GetPrimAtPath(path);
-  SdfPrimSpecHandleVector stack = sourcePrim.GetPrimStack();
+  SdfPrimSpecHandle sourcePrim = layer->GetPrimAtPath(path);
 
   UsdStagePopulationMask populationMask({ path });
   UsdStageRefPtr tmpStage =
@@ -198,11 +232,12 @@ DuplicatePrimCommand::DuplicatePrimCommand(SdfLayerRefPtr layer, const SdfPath& 
     path, destinationLayer, destinationPath);
   UndoRouter::Get().TransferEdits(&_inverse);
 
+  Selection* selection = Application::Get()->GetModel()->GetSelection();
   selection->Clear();
   selection->AddItem(destinationPath);
   
   SceneChangedNotice().Send();
-  */
+  
 }
 
 void DuplicatePrimCommand::Do() {

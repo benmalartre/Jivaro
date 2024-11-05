@@ -126,13 +126,14 @@ class InputPopupUI : public PopupUI
 public:
   using Callback = std::function<void(const TfToken& token)>;
 
-  InputPopupUI(const std::string &name, int x, int y, int width, int height);
-  InputPopupUI(const std::string &name, int x, int y, int width, int height, 
-    const std::string& value);
+  InputPopupUI(int x, int y, int width, int height, Callback callback);
+  InputPopupUI(int x, int y, int width, int height, Callback callback, const std::string& value);
   ~InputPopupUI() override;
 
   void SetName(const std::string& name);
   bool Draw() override;
+
+  bool Terminate() override;
 
 private:
   char        _value[255];

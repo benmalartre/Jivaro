@@ -249,17 +249,21 @@ ColorPopupUI::Draw()
 //===========================================================================================
 // InputPopupUI
 //===========================================================================================
-InputPopupUI::InputPopupUI(const std::string &name, int x, int y, int width, int height)
-  : PopupUI(name, x, y, width, height)
+InputPopupUI::InputPopupUI(int x, int y, int width, int height, Callback callback)
+  : PopupUI("inputpopup", x, y, width, height)
+  , _callback(callback)
 {
   _sync = false;
+  _dimmer = false;
   memset(&_value[0], 0, 255 * sizeof(char));
 }
 
-InputPopupUI::InputPopupUI(const std::string& name, int x, int y, int width, int height, const std::string& value)
-  : PopupUI(name, x, y, width, height)
+InputPopupUI::InputPopupUI(int x, int y, int width, int height, Callback callback, const std::string& value)
+  : PopupUI("inputpopup", x, y, width, height)
+  , _callback(callback)
 {
   _sync = false;
+  _dimmer = false;
   strcpy(&_value[0], value.c_str());
 }
 
@@ -276,47 +280,29 @@ InputPopupUI::SetName(const std::string& name)
 bool
 InputPopupUI::Draw()
 {
-  static bool initialized = false;
-
   ImGui::SetNextWindowSize(GfVec2f(_width, _height));
   ImGui::SetNextWindowPos(GfVec2f(_x, _y));
 
   ImGui::Begin(_name.c_str(), NULL, _flags);
 
-  if (!initialized) {
-    
-    initialized = true;
-  }
-
-  ImDrawList* drawList = ImGui::GetWindowDrawList();
-  const ImGuiStyle& style = ImGui::GetStyle();
-  drawList->AddRectFilled(
-    _parent->GetMin(), _parent->GetMax(), ImColor(style.Colors[ImGuiCol_WindowBg]));
-
-  drawList = ImGui::GetForegroundDrawList();
-
-  ImGui::SetCursorPos(ImVec2(20, 20));
-  ImGui::Text("Name : ");
-  ImGui::SameLine();
-
-  ImGui::InputText("##name", &_value[0], 255);
+  ImGui::SetNextItemWidth(_width);
+  ImGui::InputText("##input", &_value[0], 255);
   if (!_initialized) {
     ImGui::SetKeyboardFocusHere(-1);
     _initialized = true;
   }
 
-  if (ImGui::Button("OK", ImVec2(GetWidth() / 3, 32))) {
-    _done = true;
-  }
-  ImGui::SameLine();
-  if (ImGui::Button("Cancel", ImVec2(GetWidth() / 3, 32))) {
-    _cancel = true;
-  }
-
-
   ImGui::End();
   return true;
 };
+
+bool 
+InputPopupUI::Terminate()
+{
+  if(_callback)
+    _callback(TfToken(_value));
+  return true;
+}
 
 
 

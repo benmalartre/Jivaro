@@ -72,7 +72,7 @@ ViewTabUI::Draw()
     drawList->AddRectFilled(
       min + GfVec2f(0, size[1] - 4),
       min + size,
-      ImColor(style.Colors[ImGuiCol_TabUnfocusedActive])
+      ImColor(style.Colors[ImGuiCol_Tab])
     );
   } else {
 

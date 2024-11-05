@@ -87,6 +87,7 @@ public:
   UsdStageRefPtr GetWorkStage();
 
   SdfLayerRefPtr GetSessionLayer();
+  SdfLayerRefPtr GetRootLayer();
 
   void AddSceneIndexBase(HdSceneIndexBaseRefPtr sceneIndex);
   HdSceneIndexBaseRefPtr GetEditableSceneIndex();

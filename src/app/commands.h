@@ -61,7 +61,7 @@ public:
 };
 
 //==================================================================================
-// Save Layer
+// Reload Layer
 //==================================================================================
 class ReloadLayerCommand : public Command {
 public:
@@ -100,11 +100,22 @@ public:
 };
 
 //==================================================================================
+// Rename prim
+//==================================================================================
+class RenamePrimCommand : public Command {
+public:
+  RenamePrimCommand(SdfLayerRefPtr layer, const SdfPath& path, const TfToken& name);
+  ~RenamePrimCommand() {};
+  void Do() override;
+
+};
+
+//==================================================================================
 // Duplicate prim
 //==================================================================================
 class DuplicatePrimCommand : public Command {
 public:
-  DuplicatePrimCommand(SdfLayerRefPtr stage, const SdfPath& path);
+  DuplicatePrimCommand(SdfLayerRefPtr layer, const SdfPath& path);
   ~DuplicatePrimCommand() {};
   void Do() override;
   

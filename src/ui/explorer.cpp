@@ -8,10 +8,12 @@
 
 #include "../ui/style.h"
 #include "../ui/explorer.h"
+#include "../ui/popup.h"
 #include "../app/model.h"
 #include "../app/commands.h"
 #include "../app/notice.h"
 #include "../app/window.h"
+#include "../app/registry.h"
 #include "../app/view.h"
 
 
@@ -28,7 +30,6 @@ ImGuiWindowFlags ExplorerUI::_flags =
 
 ImGuiTreeNodeFlags ExplorerUI::_treeFlags =
   ImGuiTreeNodeFlags_OpenOnArrow |
-  ImGuiTreeNodeFlags_OpenOnDoubleClick |
   ImGuiTreeNodeFlags_SpanAvailWidth;
 
 static void ExploreLayerTree(SdfLayerTreeHandle tree, PcpNodeRef node) {
@@ -266,13 +267,15 @@ ExplorerUI::DrawActive(const UsdPrim& prim, bool selected)
   ImGui::PopStyleColor(3);
 }
 
-static ImVec4 PrimDefaultColor(227.f/255.f, 227.f/255.f, 227.f/255.f, 1.0);
+static ImVec4 PrimDefaultColor(0.85,0.85,0.85, 1.0);
+static ImVec4 PrimSelectedColor(0.15, 0.15, 0.15, 1.0);
 static ImVec4 PrimInactiveColor(0.4, 0.4, 0.4, 1.0);
 static ImVec4 PrimInstanceColor(135.f/255.f, 206.f/255.f, 250.f/255.f, 1.0);
 static ImVec4 PrimPrototypeColor(118.f/255.f, 136.f/255.f, 217.f/255.f, 1.0);
 static ImVec4 PrimHasCompositionColor(222.f/255.f, 158.f/255.f, 46.f/255.f, 1.0);
 
 static ImVec4 GetPrimColor(const UsdPrim& prim) {
+
   if (!prim.IsActive() || !prim.IsLoaded()) {
     return PrimInactiveColor;
   }
@@ -320,6 +323,18 @@ static ImVec4 GetPrimColor(const UsdPrim& prim) {
   
   */
 
+static void _RenamePrimCallback(BaseUI* ui, const SdfPath& path, const TfToken& token)
+{
+  UsdPrim prim = ui->GetModel()->GetStage()->GetPrimAtPath(path);
+  if(!prim.IsValid() || token.IsEmpty())
+    return;
+
+  SdfPrimSpecHandleVector specs = prim.GetPrimStack();
+
+  ADD_COMMAND(RenamePrimCommand, ui->GetModel()->GetRootLayer(), path, token);
+}
+
+
 /// Recursive function to draw a prim and its descendants
 void 
 ExplorerUI::DrawPrim(const UsdPrim& prim, Selection* selection) 
@@ -337,9 +352,16 @@ ExplorerUI::DrawPrim(const UsdPrim& prim, Selection* selection)
     flags |= ImGuiTreeNodeFlags_Selected;
   }
 
-  ImGui::PushStyleColor(ImGuiCol_Text, GetPrimColor(prim));
+  ImGui::PushStyleColor(ImGuiCol_Text, selected ? PrimSelectedColor : GetPrimColor(prim));
   const bool unfolded = ImGui::TreeNodeEx(prim.GetName().GetText(), flags);
-  if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
+  if(ImGui::IsItemClicked() && ImGui::IsMouseDoubleClicked(0)) {
+    InputPopupUI* popup = new InputPopupUI(GetX() + ImGui::GetCursorPosX(), 
+      GetY() + ImGui::GetCursorPosY(), GetWidth(), 24,
+      std::bind(&_RenamePrimCallback, this, _current, std::placeholders::_1));
+
+    ADD_DEFERRED_COMMAND(UIGenericCommand, std::bind(&WindowRegistry::SetPopup, popup));
+  }
+  else if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
     _current = prim.GetPath();
 
     ImGuiIO& io = ImGui::GetIO();
@@ -409,7 +431,6 @@ ExplorerUI::Draw()
   backgroundList->AddRectFilled(min, min + size, ImColor(style.Colors[ImGuiCol_WindowBg]));
 
   const UsdPrim root = stage->GetPseudoRoot();
-  SdfLayerHandle layer = stage->GetSessionLayer();
 
   // setup transparent background
   ImGui::PushStyleColor(ImGuiCol_Header, TRANSPARENT_COLOR);

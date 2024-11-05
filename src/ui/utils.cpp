@@ -19,50 +19,57 @@ namespace UI
 bool
 AddIconButton(const char* icon, short state, CALLBACK_FN func)
 {
+  if(state == UI::STATE_DISABLED)ImGui::BeginDisabled();
   ImGui::BeginGroup();
-  if (ImGui::Button(icon, BUTTON_NORMAL_SIZE))
+  if (ImGui::Button(icon, UI::BUTTON_NORMAL_SIZE))
   {
     func();
     ImGui::EndGroup();
     return true;
   }
   ImGui::EndGroup();
+  if(state == UI::STATE_DISABLED)ImGui::EndDisabled();
   return false;
 }
 
 bool
 AddIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN func)
 {
+  if(state == UI::STATE_DISABLED)ImGui::BeginDisabled();
   ImGui::PushID(id);
-  if (ImGui::Button(icon, BUTTON_NORMAL_SIZE)) {
+  if (ImGui::Button(icon, UI::BUTTON_NORMAL_SIZE)) {
     func();
     ImGui::PopID();
     return true;
   }
 
   ImGui::PopID();
+  if(state == UI::STATE_DISABLED)ImGui::EndDisabled();
   return false;
 }
 
 bool
 AddTransparentIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN func)
 {
+  if(state == UI::STATE_DISABLED)ImGui::BeginDisabled();
   ImGui::PushStyleColor(ImGuiCol_Button, TRANSPARENT_COLOR);
   ImGui::PushID(id);
   bool clicked = false;
-  if (ImGui::Button(icon, BUTTON_NORMAL_SIZE))
+  if (ImGui::Button(icon, UI::BUTTON_NORMAL_SIZE))
   {
     func();
     clicked = true;
   }
   ImGui::PopID();
   ImGui::PopStyleColor();
+  if(state == UI::STATE_DISABLED)ImGui::EndDisabled();
   return clicked;
 }
 
 bool
 AddCheckableIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN func)
 {
+  if(state == UI::STATE_DISABLED)ImGui::BeginDisabled();
   ImGuiStyle* style = &ImGui::GetStyle();
   ImVec4* colors = style->Colors;
   const bool active = (state == UI::STATE_SELECTED);
@@ -73,13 +80,14 @@ AddCheckableIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN fu
   bool clicked = false;
   ImGui::PushID(id);
 
-  if (ImGui::Button(icon, BUTTON_NORMAL_SIZE))
+  if (ImGui::Button(icon, UI::BUTTON_NORMAL_SIZE))
   {
     func();
     clicked = true;
   }
   if (active) ImGui::PopStyleColor(2);
   ImGui::PopID();
+  if(state == UI::STATE_DISABLED)ImGui::EndDisabled();
   return clicked;
 }
 

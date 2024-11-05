@@ -40,9 +40,8 @@ void FileBrowserUI::UndoPath()
 {
   if(_undoPaths.size()) {
     _redoPaths.push(_path);
-    _path = _undoPaths.top();
+    SetPath(_undoPaths.top());
     _undoPaths.pop();
-    std::cout << "Undo Path" << std::endl;
   }
 }
 
@@ -50,9 +49,8 @@ void FileBrowserUI::RedoPath()
 {
   if(_redoPaths.size()) {
     _undoPaths.push(_path);
-    _path = _redoPaths.top();
+    SetPath(_redoPaths.top());
     _redoPaths.pop();
-    std::cout << "Redo Path" << std::endl;
   }
 }
 
@@ -62,6 +60,7 @@ void FileBrowserUI::AppendPath(const std::string& name)
     PopPath();
   } else {
     std::string newPath = _path + SEPARATOR + name;
+    _undoPaths.push(_path);
     SetPath(newPath);
   }
   _current = 0;
@@ -69,6 +68,7 @@ void FileBrowserUI::AppendPath(const std::string& name)
 
 void FileBrowserUI::PopPath()
 {
+  _undoPaths.push(_path);
   if(_pathTokens.size() > 2)
     SetPathFromTokenIndex(_pathTokens.size() - 2);
   else 
@@ -175,144 +175,127 @@ void FileBrowserUI::_SelectNext(int mods)
 
 void FileBrowserUI::_DrawPath()
 {
-  UI::AddIconButton(0, ICON_FA_TRASH, UI::STATE_DEFAULT,
+  UI::AddIconButton(0, ICON_FA_HARD_DRIVE, UI::STATE_DEFAULT,
     std::bind(&FileBrowserUI::SetPath, this, ""));
   ImGui::SameLine();
 
-  UI::AddIconButton(0, ICON_FA_ARROW_LEFT, UI::STATE_DEFAULT,
+  UI::AddIconButton(0, ICON_FA_ARROW_LEFT, 
+    _undoPaths.size() ? UI::STATE_DEFAULT : UI::STATE_DISABLED,
     std::bind(&FileBrowserUI::UndoPath, this));
   ImGui::SameLine();
 
-  UI::AddIconButton(0, ICON_FA_ARROW_RIGHT, UI::STATE_DEFAULT,
+  UI::AddIconButton(0, ICON_FA_ARROW_RIGHT, 
+    _redoPaths.size() ? UI::STATE_DEFAULT : UI::STATE_DISABLED,
     std::bind(&FileBrowserUI::RedoPath, this));
   ImGui::SameLine();
+  
+  ImGui::PushStyleColor(ImGuiCol_Button, TRANSPARENT_COLOR);
 
   size_t numTokens = _pathTokens.size();
   if(numTokens) {
     size_t lastTokenIndex = numTokens - 1;
     for(size_t i=0; i < numTokens; ++i) {
       if(_pathTokens[i] != "") {
-        if(ImGui::Button(_pathTokens[i].c_str())) {
+        ImGui::PushID(i);
+        if(ImGui::Button(_pathTokens[i].c_str()))
           lastTokenIndex = i;
-        }
+        ImGui::PopID();
         ImGui::SameLine();
       }
       ImGui::Text("/");
       if(i < (numTokens - 1))ImGui::SameLine();
     }
-    if(lastTokenIndex != numTokens - 1)
+    if(lastTokenIndex != numTokens - 1) {
+      _undoPaths.push(_path);
       SetPathFromTokenIndex(lastTokenIndex);
+    }
   } else {
     ImGui::Text("/");
   }
-}
 
-bool FileBrowserUI::_DrawEntry(ImDrawList* drawList, size_t idx, bool flip)
-{
-  const ImGuiStyle& style = ImGui::GetStyle();
-  bool selected = false;
-  const EntryInfo& info = _entries[idx];
-  if(info.path == "" || info.path == "." || (!_showHiddenFiles && info.isHidden)) return false;
+  ImGui::PopStyleColor();
 
-  std::string itemid = "##" + info.path;
-  ImGui::Selectable(itemid.c_str(), &selected, 
-    ImGuiSelectableFlags_AllowDoubleClick);
-  if(selected) {
-      _selected[idx] = 1 - _selected[idx];
-  }
-  if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {    
-    if(info.type == EntryInfo::Type::FOLDER) {
-      AppendPath(info.path);
-    } else if(info.type == EntryInfo::Type::FILE) {
-      SetResult(info.path);
-      _browsing = false;
-    }
-  }
-  ImVec2 pos = ImVec2(
-    ImGui::GetCursorPosX(), 
-    ImGui::GetCursorPosY() - ImGui::GetScrollY() + ImGui::GetTextLineHeight());
-
-  const float width = (float)GetWidth();
-  const bool isSelected = ((idx < _selected.size()) && _selected[idx]);
-  if (isSelected) {
-    drawList->AddRectFilled(
-      { 0, pos.y },
-      { width, pos.y + FILEBROWSER_LINE_HEIGHT },
-      ImColor(style.Colors[ImGuiCol_ButtonActive]));
-  }
-  else {
-    if (flip)
-      drawList->AddRectFilled(
-        { 0, pos.y },
-        { width, pos.y + FILEBROWSER_LINE_HEIGHT },
-        ImColor(style.Colors[ImGuiCol_WindowBg]));
-    else
-      drawList->AddRectFilled(
-        { 0, pos.y },
-        { width, pos.y + FILEBROWSER_LINE_HEIGHT },
-        ImColor(style.Colors[ImGuiCol_ChildBg]));
-  }
-  
-  ImGui::SameLine();
-
-  if(info.type == EntryInfo::Type::FOLDER) {
-    const static Icon* folderIcon = &ICONS[ICON_SIZE_SMALL][ICON_FOLDER];
-    ImGui::Image(
-      (ImTextureID)(intptr_t)folderIcon->tex[0],
-      ImVec2(folderIcon->size, folderIcon->size));
-  } else if(info.type == EntryInfo::Type::FILE) {
-    const static Icon* fileIcon = &ICONS[ICON_SIZE_SMALL][ICON_FILE];
-    ImGui::Image(
-      (ImTextureID)(intptr_t)fileIcon->tex[0],
-      ImVec2(fileIcon->size, fileIcon->size));
-  }
-  ImGui::SameLine();
-  if(isSelected)
-    ImGui::TextColored(style.Colors[ImGuiCol_TabActive], info.path.c_str());
-  else
-    ImGui::TextColored(style.Colors[ImGuiCol_Text], info.path.c_str());
-
-  return true;
 }
 
 bool FileBrowserUI::_DrawEntries()
 {
-  static bool selected = false;
-  ImGuiWindowFlags windowFlags = ImGuiWindowFlags_HorizontalScrollbar;
-  float height = GetHeight() - 100;
+  ImVec2 size(0, GetSize()[1] - 64);
+  ImGui::PushItemWidth(-1); // List takes the full size
+  if (ImGui::BeginListBox("##FileList", size)) {
+    constexpr ImGuiTableFlags tableFlags = ImGuiTableFlags_RowBg;
+    if (ImGui::BeginTable("Files", 4, tableFlags)) {
+      ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed);
+      ImGui::TableSetupColumn("Filename", ImGuiTableColumnFlags_WidthStretch);
+      ImGui::TableSetupColumn("Date Modified", ImGuiTableColumnFlags_WidthStretch);
+      ImGui::TableSetupColumn("Size", ImGuiTableColumnFlags_WidthStretch);
+      ImGui::TableHeadersRow();
+      int i = 0;
+      ImGui::PushID("direntries");
+      for (auto entry : _entries) {
+        const bool isDirectory = entry.type == EntryInfo::Type::FOLDER;
+        ImGui::TableNextRow();
+        ImGui::TableSetColumnIndex(0);
+        ImGui::PushID(i);
+        // makes the line selectable, and when selected copy the path
+        // to the line edit buffer
+        if (ImGui::Selectable("", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap | ImGuiSelectableFlags_AllowDoubleClick)) {
+          _selected[i] = 1 - _selected[i];
+          
+          if(entry.type == EntryInfo::Type::FILE)
+            SetResult(entry.path);
 
-  ImGui::SetCursorPosX(8);
-  ImGui::BeginChild(
-    "##Entries", 
-    ImVec2(ImGui::GetWindowContentRegionWidth() - 8, height), 
-    false, 
-    windowFlags
-  );
+          if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
+            if (entry.type == EntryInfo::Type::FOLDER) 
+              AppendPath(entry.path);
+            
+            else if (entry.type == EntryInfo::Type::FILE)
+              _browsing = false;
+          }
+        }
+        ImGui::PopID();
+        ImGui::SameLine();
+        if (entry.type == EntryInfo::Type::FOLDER) {
+          ImGui::TextColored(ImVec4(1.0, 1.0, 0.0, 1.0), "%s ", ICON_FA_FOLDER);
+          ImGui::TableSetColumnIndex(1); // the following line is allocating string for each directory/files, this is BAD
+          ImGui::TextColored(ImVec4(1.0, 1.0, 1.0, 1.0), "%s", entry.path.c_str());
+        }
+        else {
+          ImGui::TextColored(ImVec4(0.9, 0.9, 0.9, 1.0), "%s ", ICON_FA_FILE);
+          ImGui::TableSetColumnIndex(1);
+          ImGui::TextColored(ImVec4(0.5, 1.0, 0.5, 1.0), "%s", entry.path.c_str());
+        }
+        ImGui::TableSetColumnIndex(2);
 
-  if(_changed) {
-    _changed = false;
-    ImGui::SetScrollY(0.f);
-  }
+        ImGui::TableSetColumnIndex(3);
+        if (!isDirectory) {
+          //DrawFileSize(entry.size);
+        }
 
-  ImDrawList* drawList = ImGui::GetWindowDrawList();
-  static bool flip = false;
-  for (size_t i=0; i < _entries.size(); ++i) {
-    if(_DrawEntry(drawList, i, flip)) {
-      flip = 1 - flip;
+        i++;
+      }
+      ImGui::PopID(); // direntries
+      ImGui::EndTable();
     }
+    ImGui::EndListBox();
+    
   }
-  
-  ImGui::EndChild();
+
+  ImGui::PopItemWidth();
   return false;
 }
 
 void FileBrowserUI::_DrawButtons()
 {
-  if(ImGui::Button("OK", ImVec2(128, 32)))
+  const ImGuiStyle& style = ImGui::GetStyle();
+  ImVec2 buttonSize(100.f, 0.f);
+  float widthNeeded = buttonSize.x + 2 * style.ItemSpacing.x + buttonSize.x;
+  ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - widthNeeded);
+
+  if(ImGui::Button("OK", buttonSize))
     _browsing=false;
   ImGui::SameLine();
 
-  if(ImGui::Button("Cancel", ImVec2(128, 32))){
+  if(ImGui::Button("Cancel", buttonSize)){
     _browsing = false;
     _canceled = true;
   }
@@ -321,18 +304,28 @@ void FileBrowserUI::_DrawButtons()
 void FileBrowserUI::_DrawFilename()
 {
   const ImGuiStyle& style = ImGui::GetStyle();
-  ImGui::TextColored(style.Colors[ImGuiCol_Text], "filename :");
+  ImGui::BeginGroup();
+  ImGui::TextColored(style.Colors[ImGuiCol_TextDisabled], "name");
+  ImGui::SameLine();
+    
+  if(_mode == Mode::SAVE) {
+    if(ImGui::InputText("##filename", &_filename[0], 256))
+      SetResult(_filename);
+  } else {
+    ImGui::TextColored(ImVec4(0.5,0.7,0.9,1.0), _filename);
+  }
+
+  ImGui::TextColored(style.Colors[ImGuiCol_TextDisabled], "result");
   ImGui::SameLine();
   if (_result.size())
     ImGui::TextColored(style.Colors[ImGuiCol_PlotLines], _result[0].c_str());
 
   else
     ImGui::TextColored(style.Colors[ImGuiCol_TextDisabled], "not set");
-  
-    
-  if(ImGui::InputText("##filename", &_filename[0], 256))
-    SetResult(_filename);
 
+    
+  ImGui::EndGroup();
+  ImGui::SameLine();
   
 }
 
@@ -355,10 +348,7 @@ bool FileBrowserUI::Draw()
   _entries = _nextEntries;
   _DrawPath();
   _DrawEntries();
-
-  if(_mode == Mode::SAVE)
-    _DrawFilename();
-
+  _DrawFilename();
   _DrawButtons();
 
   ImGui::PopFont();
@@ -389,9 +379,10 @@ void FileBrowserUI::Keyboard(int key, int scancode, int action, int mods)
       if (_current != FILEBROWSER_INVALID_INDEX) {
         const EntryInfo& info = _entries[_current];
         if (info.type == EntryInfo::Type::FOLDER) {
-          AppendPath(info.path);
-          if(_mode == Mode::SAVE)
-            SetResult(_name);
+          if(_mode == Mode::SAVE) {
+            SetResult(_filename);
+             _browsing = false;
+          } else AppendPath(info.path);
         }
         else if (info.type == EntryInfo::Type::FILE) {
           SetResult(info.path);

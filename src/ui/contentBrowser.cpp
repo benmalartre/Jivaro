@@ -283,9 +283,9 @@ bool ContentBrowserUI::Draw()
 
   // TODO: we might want to remove completely the editor here, just pass as selected layer and a selected stage
   
-  SdfLayerHandle selectedLayer(_model->GetSessionLayer());
+  SdfLayerHandle selectedLayer(_model->GetRootLayer());
   SdfLayerHandle selectedStage(_model->GetStage() 
-    ? _model->GetStage()->GetRootLayer() : SdfLayerHandle());
+    ? _model->GetRootLayer() : SdfLayerHandle());
   auto layers = SdfLayer::GetLoadedLayers();
   //DrawLayerSet(app->GetStageCache(), layers, &selectedLayer, &selectedStage, options);
   

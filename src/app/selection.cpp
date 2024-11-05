@@ -132,7 +132,7 @@ void
 Selection::RemoveItem(const SdfPath& path)
 {
   for (auto it = _items.begin(); it < _items.end(); ++it) {
-    if (path == it->path) _items.erase(it);
+    if (path == it->path){ _items.erase(it); break;}
   }
   ComputeHash();
 }

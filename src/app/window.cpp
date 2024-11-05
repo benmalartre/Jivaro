@@ -618,11 +618,11 @@ Window::DrawPopup(PopupUI* popup)
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
 
-  if (!popup->IsSync()) {
+  if (popup->IsDimmer()) {
     ImDrawList* drawList = ImGui::GetBackgroundDrawList();
     drawList->AddImage((ImTextureID)(uintptr_t)_tex, ImVec2(0, 0), ImVec2(_width, _height),
       ImVec2(0, 0), ImVec2(1, 1), ImColor(100, 100, 100, 255));
-  } else {
+  } else if(popup->IsSync()){
     WindowRegistry::Get()->SetWindowDirty(this);
     GetMainView()->Draw(false);
   }

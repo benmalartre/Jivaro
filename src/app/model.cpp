@@ -73,6 +73,7 @@ Model::SetStage(UsdStageRefPtr& stage)
   _stage = stage;
   _rootLayer = stage->GetRootLayer();
   _sessionLayer = _stage->GetSessionLayer();
+  _stage->SetEditTarget(_rootLayer);
   _stageSceneIndex->SetStage(_stage);
   _stageSceneIndex->SetTime(UsdTimeCode::Default());
 
@@ -88,7 +89,7 @@ Model::SetEmptyStage()
   _rootLayer = _stage->GetRootLayer();
   _sessionLayer = _stage->GetSessionLayer();
 
-  _stage->SetEditTarget(_sessionLayer);
+  _stage->SetEditTarget(_rootLayer);
   _stageSceneIndex->SetStage(_stage);
   _stageSceneIndex->SetTime(UsdTimeCode::Default());
 }
@@ -99,7 +100,7 @@ Model::LoadUsdStage(const std::string usdFilePath)
   _rootLayer = SdfLayer::FindOrOpen(usdFilePath);
   _sessionLayer = SdfLayer::CreateAnonymous();
   _stage = UsdStage::Open(_rootLayer, _sessionLayer);
-  _stage->SetEditTarget(_sessionLayer);
+  _stage->SetEditTarget(_rootLayer);
   _stageSceneIndex->SetStage(_stage);
   _stageSceneIndex->SetTime(UsdTimeCode::Default());
 }
@@ -302,6 +303,13 @@ SdfLayerRefPtr
 Model::GetSessionLayer()
 {
   return _sessionLayer;
+}
+
+// get root layer
+SdfLayerRefPtr
+Model::GetRootLayer()
+{
+  return _rootLayer;
 }
 
 void

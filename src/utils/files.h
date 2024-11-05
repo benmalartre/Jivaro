@@ -18,6 +18,7 @@ JVR_NAMESPACE_OPEN_SCOPE
   #define SEPARATOR "\\"
   #include <windows.h>
   typedef int mode_t;
+  #define stat _stat
   #include "dirent.h"
   #include <tchar.h>
 #else
@@ -34,15 +35,20 @@ struct EntryInfo
     FILE
   };
 
-  EntryInfo(const std::string& path, Type type, bool isHidden) 
+  EntryInfo(const std::string& path, Type type, bool isHidden, size_t size, time_t time) 
     : path(path)
     , isHidden(isHidden)
     , type(type)
+    , size(size)
+    , time(time)
   {
   }
   std::string path;
   bool isHidden;
   Type type;
+  size_t size;
+  time_t time;
+  
 };
 
 // file exists
@@ -73,10 +79,6 @@ size_t GetVolumes(std::vector<EntryInfo>& entries);
 //-----------------------------------------------------
 size_t GetEntriesInDirectory(const char* path, std::vector<EntryInfo>& entries,
   bool ignoreCurrent=true, bool ignoreParent=false);
-
-// get files in directory
-//-----------------------------------------------------
-size_t GetFilesInDirectory(const char* path, std::vector<std::string>& filenames);
 
 // get installation folder
 //-----------------------------------------------------

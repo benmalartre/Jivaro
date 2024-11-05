@@ -50,7 +50,6 @@ public:
   void _DrawPath();
   bool _DrawEntries();
   void _DrawButtons();
-  bool _DrawEntry(ImDrawList* drawList, size_t idx, bool flip);
   void _DrawFilename();
 
   // state
@@ -76,13 +75,14 @@ private:
   std::vector<std::string> _pathTokens;
   std::vector<EntryInfo>   _nextEntries;
   std::vector<EntryInfo>   _entries;
+  std::vector<EntryInfo>   _volumes;
   std::vector<std::string> _directories;
   std::vector<std::string> _files;
   std::vector<std::string> _filters;
 
   PathStack                _undoPaths;
   PathStack                _redoPaths;
-  
+
   size_t                   _current;
   bool                     _canceled;
   bool                     _browsing;

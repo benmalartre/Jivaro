@@ -407,9 +407,9 @@ ViewportUI::_DrawPickMode()
 { 
   static const size_t numPickModes = 3;
   static const char *pickModeStr[numPickModes] = {
-    ICON_FA_HAND_POINTER " Prim",
-    ICON_FA_HAND_POINTER " Model",
-    ICON_FA_HAND_POINTER " Assembly"
+    ICON_FA_ARROW_POINTER " Prim",
+    ICON_FA_ARROW_POINTER " Model",
+    ICON_FA_ARROW_POINTER " Assembly"
   };
 
   Selection* selection = _model->GetSelection();
@@ -514,15 +514,7 @@ bool ViewportUI::Draw()
       msg.c_str());
 
     _DrawRenderer();
-    
-    // renderer
-    ImGui::SetCursorPosX(0);
-    //DiscardEventsIfMouseInsideBox(GfVec2f(0, 0), GfVec2f(GetWidth(), 24));
-    if (UI::AddComboWidget("Renderer", _rendererNames, _numRenderers, _rendererIndex, 250)) {
-      Init();
-      GetView()->SetFlag(View::DISCARDMOUSEBUTTON);
-    }
-    ImGui::SameLine();
+  
 
     Engine::RenderParams* params = _engine->GetRenderParams();
     // shaded mode

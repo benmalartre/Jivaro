@@ -100,15 +100,16 @@ SplitterUI::Draw()
   } else {
     ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
   }
-/*
-  ImU32 color = ImColor(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
-  // ImU32 color = ImColor(style.Colors[ImGuiCol_FrameBg]);
-  ImDrawList* drawList = ImGui::GetForegroundDrawList();
+
   const ImGuiStyle& style = ImGui::GetStyle();
+  //ImU32 color = ImColor(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+  ImU32 color = ImColor(style.Colors[ImGuiCol_Tab]);
+  ImDrawList* drawList = ImGui::GetForegroundDrawList();
+  
   for(auto view : views)
-    if(view->GetFlag(View::LEAF) && view->GetFlag(View::DIRTY))
+    if(view->GetFlag(View::LEAF) /*&& view->GetFlag(View::DIRTY)*/)
       drawList->AddRect(view->GetMin(), view->GetMax(), color, 0.f, 0, 2.f);
-*/
+
   ImGui::End();
   return true;
 }

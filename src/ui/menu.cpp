@@ -110,37 +110,32 @@ static void SetLayoutCallback(Window* window, short layout)
   window->SetDesiredLayout(layout);
 }
 
-static void CreatePrimCallback(MenuUI* menu, const TfToken& type)
+static void CreatePrimCallback(Model* model, const TfToken& type)
 {
-  UsdStageRefPtr stage = menu->GetModel()->GetStage();
-  const UsdPrim root = stage->GetPseudoRoot();
-  SdfLayerHandle layer = stage->GetSessionLayer();
+  Selection* selection = model->GetSelection();
+  TfToken name(type.GetString() + "_" + RandomString(6));
 
-  Selection* selection = menu->GetModel()->GetSelection();
-  SdfPath path;
-  if(selection->GetNumSelectedItems())
-    path = selection->GetItem(0).path.AppendChild(TfToken(RandomString(6)));
-  else
-    path = root.GetPath().AppendChild(TfToken(RandomString(6)));
-
-  
-  ADD_COMMAND(CreatePrimCommand, stage->GetRootLayer(), path, type);
-
+  if (selection->GetNumSelectedItems()) {
+    ADD_COMMAND(CreatePrimCommand, model->GetRootLayer(), selection->GetItem(0).path.AppendChild(name), type);
+  }
+  else {
+    ADD_COMMAND(CreatePrimCommand, model->GetRootLayer(), SdfPath("/" + name.GetString()), type);
+  }
 }
 
 
 ImGuiWindowFlags MenuUI::_flags =
-ImGuiWindowFlags_None |
-ImGuiWindowFlags_MenuBar |
-ImGuiWindowFlags_NoMove |
-ImGuiWindowFlags_NoResize |
-ImGuiWindowFlags_NoCollapse |
-ImGuiWindowFlags_NoNav |
-ImGuiWindowFlags_NoScrollWithMouse |
-ImGuiWindowFlags_NoBringToFrontOnFocus |
-ImGuiWindowFlags_NoDecoration |
-ImGuiWindowFlags_NoBackground |
-ImGuiWindowFlags_NoScrollbar;
+  ImGuiWindowFlags_None |
+  ImGuiWindowFlags_MenuBar |
+  ImGuiWindowFlags_NoMove |
+  ImGuiWindowFlags_NoResize |
+  ImGuiWindowFlags_NoCollapse |
+  ImGuiWindowFlags_NoNav |
+  ImGuiWindowFlags_NoScrollWithMouse |
+  ImGuiWindowFlags_NoBringToFrontOnFocus |
+  ImGuiWindowFlags_NoDecoration |
+  ImGuiWindowFlags_NoBackground |
+  ImGuiWindowFlags_NoScrollbar;
 
 
 MenuUI::Item::Item(MenuUI* ui, Item* parent, const std::string& label, bool selected, bool enabled, CALLBACK_FN cb)
@@ -209,12 +204,12 @@ MenuUI::MenuUI(View* parent)
   fileMenu->Add("New", false, true, std::bind(NewFileCallback, this));
 
   MenuUI::Item* testItem = Add("Create", false, true, NULL);
-  testItem->Add("Create Plane", false, true, std::bind(CreatePrimCallback, this, TfToken("Plane")));
-  testItem->Add("Create Cube", false, true, std::bind(CreatePrimCallback, this, TfToken("Cube")));
-  testItem->Add("Create Sphere", false, true, std::bind(CreatePrimCallback, this, TfToken("Sphere")));
-  testItem->Add("Create Cylinder", false, true, std::bind(CreatePrimCallback, this, TfToken("Cylinder")));
-  testItem->Add("Create Capsule", false, true, std::bind(CreatePrimCallback, this, TfToken("Capsule")));
-  testItem->Add("Create Cone", false, true, std::bind(CreatePrimCallback, this, TfToken("Cone")));
+  testItem->Add("Create Plane", false, true, std::bind(CreatePrimCallback, _model, TfToken("Plane")));
+  testItem->Add("Create Cube", false, true, std::bind(CreatePrimCallback, _model, TfToken("Cube")));
+  testItem->Add("Create Sphere", false, true, std::bind(CreatePrimCallback, _model, TfToken("Sphere")));
+  testItem->Add("Create Cylinder", false, true, std::bind(CreatePrimCallback, _model, TfToken("Cylinder")));
+  testItem->Add("Create Capsule", false, true, std::bind(CreatePrimCallback, _model, TfToken("Capsule")));
+  testItem->Add("Create Cone", false, true, std::bind(CreatePrimCallback, _model, TfToken("Cone")));
 
   AddPbdMenu(this);
 
