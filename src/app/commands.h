@@ -162,6 +162,39 @@ private:
 };
 
 //==================================================================================
+// Show/Hide
+//==================================================================================
+class ShowHideCommand : public Command {
+public:
+  enum Mode {
+    SHOW,
+    HIDE,
+    TOGGLE
+  };
+
+  ShowHideCommand(SdfPathVector& paths, Mode mode);
+  ~ShowHideCommand() {};
+  void Do() override;
+
+};
+
+//==================================================================================
+// Activate/Deactivate
+//==================================================================================
+class ActivatePrimCommand : public Command {
+public:
+  enum Mode {
+    ACTIVATE,
+    DEACTIVATE,
+    TOGGLE
+  };
+
+  ActivatePrimCommand(SdfPathVector& paths, Mode mode);
+  ~ActivatePrimCommand() {};
+  void Do() override;
+};
+
+//==================================================================================
 // Translate 
 //==================================================================================
 class TranslateCommand : public Command {
@@ -204,39 +237,6 @@ public:
   ~PivotCommand() {};
   void Do() override;
 
-};
-
-//==================================================================================
-// Show/Hide
-//==================================================================================
-class ShowHideCommand : public Command {
-public:
-  enum Mode {
-    SHOW,
-    HIDE,
-    TOGGLE
-  };
-
-  ShowHideCommand(SdfPathVector& paths, Mode mode);
-  ~ShowHideCommand() {};
-  void Do() override;
-
-};
-
-//==================================================================================
-// Activate/Deactivate
-//==================================================================================
-class ActivateCommand : public Command {
-public:
-  enum Mode {
-    ACTIVATE,
-    DEACTIVATE,
-    TOGGLE
-  };
-
-  ActivateCommand(SdfPathVector& paths, Mode mode);
-  ~ActivateCommand() {};
-  void Do() override;
 };
 
 //==================================================================================

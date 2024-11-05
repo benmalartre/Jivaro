@@ -164,16 +164,6 @@ View::GetCurrentUI()
 }
 
 void
-View::RemoveUI(int index)
-{
-  if (index >= 0 && index < _uis.size()) {
-    BaseUI* ui = _uis[index];
-
-    _uis.erase(_uis.begin() + index);
-  }
-}
-
-void
 View::RemoveUI(BaseUI* ui)
 {
   for (size_t i = 0; i < _uis.size(); ++i) {

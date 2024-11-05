@@ -170,6 +170,14 @@ ViewTabUI::Draw()
           std::bind(&Window::RemoveView, window, _parent));
         _invade = false;
       }
+
+      ImGui::Selectable("Delete Current UI");
+      if (ImGui::IsItemClicked()) {
+        BaseUI* current = _parent->GetCurrentUI();
+        ADD_DEFERRED_COMMAND(UIGenericCommand,
+          std::bind(&View::RemoveUI, _parent, current));
+        _invade = false;
+      }
       
       ImGui::EndPopup();
     }

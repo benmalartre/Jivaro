@@ -374,9 +374,9 @@ void ShowHideCommand::Do() {
 }
 
 //==================================================================================
-// Activate Deactivate
+// Prim Activate/Deactivate
 //==================================================================================
-ActivateCommand::ActivateCommand(SdfPathVector& paths, Mode mode)
+ActivatePrimCommand::ActivatePrimCommand(SdfPathVector& paths, Mode mode)
   : Command(true)
 {
   Application* app = Application::Get();
@@ -386,21 +386,21 @@ ActivateCommand::ActivateCommand(SdfPathVector& paths, Mode mode)
   case ACTIVATE:
     for (auto& path : paths) {
       UsdPrim prim = stage->GetPrimAtPath(path);
-      prim.SetActive(true);
+      if(prim.IsValid()) prim.SetActive(true);
     }
     break;
 
   case DEACTIVATE:
     for (auto& path : paths) {
       UsdPrim prim = stage->GetPrimAtPath(path);
-      prim.SetActive(false);
+      if(prim.IsValid()) prim.SetActive(false);
     }
     break;
 
   case TOGGLE:
     for (auto& path : paths) {
       UsdPrim prim = stage->GetPrimAtPath(path);
-      prim.SetActive(!prim.IsActive());
+      if (prim.IsValid()) prim.SetActive(!prim.IsActive());
     }
     break;
   }
@@ -408,7 +408,7 @@ ActivateCommand::ActivateCommand(SdfPathVector& paths, Mode mode)
   SceneChangedNotice().Send();
 }
 
-void ActivateCommand::Do() {
+void ActivatePrimCommand::Do() {
   _inverse.Invert();
   SceneChangedNotice().Send();
 }

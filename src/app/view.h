@@ -5,8 +5,7 @@
 #include <vector>
 #include "../common.h"
 #include "../ui/utils.h"
-#include "../ui/tab.h"
-
+#include "../ui/ui.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -91,7 +90,6 @@ public:
   // content
   void CreateUI(UIType type);
   void AddUI(BaseUI* ui);
-  void RemoveUI(int index);
   void RemoveUI(BaseUI* ui);
   void SetCurrentUI(int index);
   BaseUI* GetCurrentUI();

@@ -7,13 +7,10 @@
 
 #include "../common.h"
 #include "../ui/ui.h"
-#include "../ui/tab.h"
 #include "../ui/utils.h"
 
 
 JVR_NAMESPACE_OPEN_SCOPE
-
-
 
 class Selection;
 class ExplorerUI : public BaseUI
@@ -35,14 +32,13 @@ public:
   bool Draw() override;
   void OnSelectionChangedNotice(const SelectionChangedNotice& n) override;
 
-  void DrawItemBackground(ImDrawList* drawList, bool selected, bool& flip);
-  void DrawBackground();
-  void DrawPrim(const UsdPrim& prim, Selection* selection);
-  void DrawVisibility(const UsdPrim& prim, bool visible, bool selected);
-  void DrawType(const UsdPrim& prim, bool selected);
-  void DrawActive(const UsdPrim& prim, bool selected);
-
 protected:
+  void _DrawItemBackground(ImDrawList* drawList, bool selected, bool& flip);
+  void _DrawBackground();
+  void _DrawPrim(const UsdPrim& prim, Selection* selection);
+  void _DrawVisibility(const UsdPrim& prim, bool visible, bool selected);
+  void _DrawActive(const UsdPrim& prim, bool active, bool selected);
+  void _DrawType(const UsdPrim& prim, bool selected);
   Item* _GetItemUnderMouse(const GfVec2f& relative);
 
 private:

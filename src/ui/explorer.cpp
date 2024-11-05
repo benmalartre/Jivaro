@@ -138,7 +138,7 @@ ExplorerUI::Keyboard(int key, int scancode, int action, int mods)
 
 
 void
-ExplorerUI::DrawItemBackground(ImDrawList* drawList,
+ExplorerUI::_DrawItemBackground(ImDrawList* drawList,
   bool selected, bool& flip)
 {
   const ImGuiStyle& style = ImGui::GetStyle();
@@ -167,7 +167,7 @@ ExplorerUI::DrawItemBackground(ImDrawList* drawList,
 }
 
 void
-ExplorerUI::DrawBackground()
+ExplorerUI::_DrawBackground()
 {
   ImDrawList* drawList = ImGui::GetBackgroundDrawList();
   const auto& style = ImGui::GetStyle();
@@ -193,7 +193,7 @@ ExplorerUI::DrawBackground()
   //ImGui::PopFont();
   //ImGui::PushFont(GetWindow()->GetRegularFont(1));
   for (auto& item : _items) {
-    DrawItemBackground(drawList, item.selected, flip);
+    _DrawItemBackground(drawList, item.selected, flip);
     flip = !flip;
   }
   //ImGui::PopFont();
@@ -201,7 +201,7 @@ ExplorerUI::DrawBackground()
 }
 
 void 
-ExplorerUI::DrawType(const UsdPrim& prim, bool selected)
+ExplorerUI::_DrawType(const UsdPrim& prim, bool selected)
 {
   ImGui::Text("%s", prim.GetTypeName().GetText());
   if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
@@ -220,14 +220,8 @@ static void _PushCurrentPath(const SdfPath& path, SdfPathVector& paths)
 }
 
 void
-ExplorerUI::DrawVisibility(const UsdPrim& prim, bool visible, bool selected)
-{
-  const ImGuiStyle& style = ImGui::GetStyle();
-  
-  ImGui::PushStyleColor(ImGuiCol_Button, TRANSPARENT_COLOR);
-  ImGui::PushStyleColor(ImGuiCol_ButtonHovered, TRANSPARENT_COLOR);
-  ImGui::PushStyleColor(ImGuiCol_ButtonActive, TRANSPARENT_COLOR);
-  
+ExplorerUI::_DrawVisibility(const UsdPrim& prim, bool visible, bool selected)
+{  
   const char* visibleIcon = ICON_FA_EYE;
   const char* invisibleIcon = ICON_FA_EYE_SLASH;
 
@@ -239,33 +233,24 @@ ExplorerUI::DrawVisibility(const UsdPrim& prim, bool visible, bool selected)
   }
 
   ImGui::NextColumn();
-  ImGui::PopStyleColor(3);
 }
 
 void
-ExplorerUI::DrawActive(const UsdPrim& prim, bool selected)
+ExplorerUI::_DrawActive(const UsdPrim& prim, bool active, bool selected)
 {
-  const ImGuiStyle& style = ImGui::GetStyle();
-
-  ImGui::PushStyleColor(ImGuiCol_Button, TRANSPARENT_COLOR);
-  ImGui::PushStyleColor(ImGuiCol_ButtonHovered, TRANSPARENT_COLOR);
-  ImGui::PushStyleColor(ImGuiCol_ButtonActive, TRANSPARENT_COLOR);
-
-  const char* activeIcon = ICON_FA_RIGHT_TO_BRACKET;
-  const char* inactiveIcon = ICON_FA_PAUSE;
+  const char* activeIcon = ICON_FA_TOGGLE_ON;
+  const char* inactiveIcon = ICON_FA_TOGGLE_OFF;
 
   Selection* selection = _model->GetSelection();
   
- 
-  if (ImGui::Button(selected ? activeIcon : inactiveIcon)) {
+  if (ImGui::Button(active ? activeIcon : inactiveIcon)) {
     _current = prim.GetPath();
     SdfPathVector paths = selection->GetSelectedPaths();
     _PushCurrentPath(_current, paths);
-    ADD_COMMAND(ActivateCommand, paths, ActivateCommand::TOGGLE);
+    ADD_COMMAND(ActivatePrimCommand, paths, ActivatePrimCommand::TOGGLE);
   }
 
   ImGui::NextColumn();
-  ImGui::PopStyleColor(3);
 }
 
 static ImVec4 PrimDefaultColor(0.85,0.85,0.85, 1.0);
@@ -326,7 +311,7 @@ static ImVec4 GetPrimColor(const UsdPrim& prim) {
 
 /// Recursive function to draw a prim and its descendants
 void 
-ExplorerUI::DrawPrim(const UsdPrim& prim, Selection* selection) 
+ExplorerUI::_DrawPrim(const UsdPrim& prim, Selection* selection) 
 {
   ImGuiTreeNodeFlags flags = _treeFlags;
   
@@ -365,34 +350,38 @@ ExplorerUI::DrawPrim(const UsdPrim& prim, Selection* selection)
     }
   }
 
-  if (ImGui::IsItemToggledOpen())_parent->SetFlag(View::DISCARDMOUSEBUTTON);
-  ImGui::PopStyleColor();
+  if (ImGui::IsItemToggledOpen())
+    _parent->SetFlag(View::DISCARDMOUSEBUTTON);
+
   ImGui::NextColumn();
 
-  DrawType(prim, selected);
+  _DrawType(prim, selected);
   
   UsdGeomImageable imageable(prim);
   if (imageable) {
     TfToken visibility;
     imageable.GetVisibilityAttr().Get<TfToken>(&visibility);
     const bool visible = (visibility != UsdGeomTokens->invisible);
-    DrawVisibility(prim, visible, selected);
+    _DrawVisibility(prim, visible, selected);
   } else {
     ImGui::NextColumn();
   }
 
-  DrawActive(prim, selected);
+  _DrawActive(prim, prim.IsActive(), selected);
 
   _items.push_back({ prim.GetPath(), _mapping++, selected });
+
+  ImGui::PopStyleColor();
 
   if (unfolded) {
     if (prim.IsActive()) {
       for (const auto& child : children) {
-        DrawPrim(child, selection);
+        _DrawPrim(child, selection);
       }
     }
     ImGui::TreePop();
   }
+
   
 }
 
@@ -412,6 +401,15 @@ ExplorerUI::Draw()
   ImGui::SetNextWindowSize(size);
 
   ImGui::Begin(_name.c_str(), NULL, _flags);
+
+  // setup transparent background
+  ImGui::PushStyleColor(ImGuiCol_Header, TRANSPARENT_COLOR);
+  ImGui::PushStyleColor(ImGuiCol_HeaderHovered, TRANSPARENT_COLOR);
+  ImGui::PushStyleColor(ImGuiCol_HeaderActive, TRANSPARENT_COLOR);
+  ImGui::PushStyleColor(ImGuiCol_Button, TRANSPARENT_COLOR);
+  ImGui::PushStyleColor(ImGuiCol_ButtonHovered, TRANSPARENT_COLOR);
+  ImGui::PushStyleColor(ImGuiCol_ButtonActive, TRANSPARENT_COLOR);
+  ImGui::PushStyleColor(ImGuiCol_BorderShadow, TRANSPARENT_COLOR);
   
   _items.clear();
   _mapping = 0;
@@ -420,11 +418,6 @@ ExplorerUI::Draw()
   backgroundList->AddRectFilled(min, min + size, ImColor(style.Colors[ImGuiCol_WindowBg]));
 
   const UsdPrim root = stage->GetPseudoRoot();
-
-  // setup transparent background
-  ImGui::PushStyleColor(ImGuiCol_Header, TRANSPARENT_COLOR);
-  ImGui::PushStyleColor(ImGuiCol_HeaderHovered, TRANSPARENT_COLOR);
-  ImGui::PushStyleColor(ImGuiCol_HeaderActive, TRANSPARENT_COLOR);
 
   // setup columns
   ImGui::Columns(4);
@@ -464,12 +457,14 @@ ExplorerUI::Draw()
     UsdTraverseInstanceProxies(UsdPrimAllPrimsPredicate));
   
   for (const auto& child : children) {
-    DrawPrim(child, selection);
+    _DrawPrim(child, selection);
   }
+  ImGui::PopStyleColor(7);
+
   //ImGui::PopFont();
-  DrawBackground();
+  _DrawBackground();
   //ImGui::TreePop();
-  ImGui::PopStyleColor(3);
+
   ImGui::End();
 
   return

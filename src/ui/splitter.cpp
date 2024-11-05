@@ -103,7 +103,7 @@ SplitterUI::Draw()
 
   const ImGuiStyle& style = ImGui::GetStyle();
   //ImU32 color = ImColor(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
-  ImU32 color = ImColor(style.Colors[ImGuiCol_Tab]);
+  ImU32 color = ImColor(style.Colors[ImGuiCol_MenuBarBg]);
   ImDrawList* drawList = ImGui::GetForegroundDrawList();
   
   for(auto view : views)
