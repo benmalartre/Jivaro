@@ -1,16 +1,16 @@
 #ifndef JVR_UI_TOOLBAR_H
 #define JVR_UI_TOOLBAR_H
 
+#include <vector>
+#include <pxr/base/vt/value.h>
+#include <pxr/base/vt/array.h>
+#include <pxr/base/gf/vec3f.h>
+
 #include "../common.h"
 #include "../ui/ui.h"
 #include "../ui/utils.h"
 #include "../ui/style.h"
 #include "../ui/fonts.h"
-
-#include <vector>
-#include <pxr/base/vt/value.h>
-#include <pxr/base/vt/array.h>
-#include <pxr/base/gf/vec3f.h>
 
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -77,9 +77,9 @@ public:
   void MouseButton(int action, int button, int mods) override {};
   void MouseMove(int x, int y) override {};
   bool Draw() override;
+  void OnToolChangedNotice(const ToolChangedNotice& n) override;
 
   int GetFixedSize();
-  void UpdateTools(short tool);
 
 private:
   bool                        _vertical;

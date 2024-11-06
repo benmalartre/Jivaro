@@ -147,11 +147,10 @@ ToolbarUI::GetFixedSize()
 }
 
 void
-ToolbarUI::UpdateTools(short tool)
+ToolbarUI::OnToolChangedNotice(const ToolChangedNotice& n)
 {
   for(auto& button: _tools) 
-    if(button->tool != tool)button->enabled = false;
-
+    if(button->tool != n.GetTool())button->enabled = false;
 }
 
 bool ToolbarUI::Draw()
