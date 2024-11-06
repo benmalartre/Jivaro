@@ -28,6 +28,7 @@
 #include "../app/commands.h"
 #include "../app/handle.h"
 #include "../app/selection.h"
+#include "../app/index.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -41,8 +42,8 @@ OpenSceneCommand::OpenSceneCommand(const std::string& filename)
   if (strlen(filename.c_str()) > 0) {
     Model* model = app->GetModel();
     model->LoadUsdStage(filename);
-    UndoRouter::Get().TrackLayer(model->GetRootLayer());
-    UndoRouter::Get().TrackLayer(model->GetSessionLayer());
+
+    app->GetIndex()->SetStage(model->GetStage());
   }
 
   UndoInverse inverse;
@@ -57,17 +58,15 @@ OpenSceneCommand::OpenSceneCommand(const std::string& filename)
 NewSceneCommand::NewSceneCommand(const std::string& filename)
   : Command(false)
 {
-  Model* model = Application::Get()->GetModel();
+  Application* app = Application::Get();
+  Model* model = app->GetModel();
   SdfFileFormatConstPtr usdaFormat = SdfFileFormat::FindByExtension("usda");
   SdfLayerRefPtr layer = SdfLayer::New(usdaFormat, filename);
   if (layer) {
-    UsdStageRefPtr stage = UsdStage::Open(layer);
-    if (stage) {
-      model->SetStage(stage);
-      UndoRouter::Get().TrackLayer(model->GetRootLayer());
-      UndoRouter::Get().TrackLayer(model->GetSessionLayer());
-    }
+    model->SetStage(UsdStage::Open(layer));
+    app->GetIndex()->SetStage(model->GetStage());
   }
+
   UndoInverse inverse;
   UndoRouter::Get().TransferEdits(&inverse);
   NewSceneNotice().Send();
@@ -183,7 +182,7 @@ RenamePrimCommand::RenamePrimCommand(SdfLayerRefPtr layer, const SdfPath& path, 
     return;
 
   Selection* selection = Application::Get()->GetModel()->GetSelection();
-  selection->RemoveItem(path);
+  
   SdfPrimSpecHandle primSpec = layer->GetPrimAtPath(path);
   
   SdfBatchNamespaceEdit batchEdit;
@@ -192,6 +191,7 @@ RenamePrimCommand::RenamePrimCommand(SdfLayerRefPtr layer, const SdfPath& path, 
   SdfNamespaceEditDetailVector details;
   if (layer->CanApply(batchEdit, &details)) {
     layer->Apply(batchEdit);
+    selection->Clear();
     selection->AddItem(path.ReplaceName(name));
   } else {
     for (const auto &detail : details) {
@@ -286,7 +286,9 @@ SelectCommand::SelectCommand(short type,
   const SdfPathVector& paths, int mode)
   : Command(true)
 {
-  Selection* selection = Application::Get()->GetModel()->GetSelection();
+  Model* model = Application::Get()->GetModel();
+
+  Selection* selection = model->GetSelection();
   _previous = selection->GetItems();
   switch (mode) {
   case SET:
@@ -303,17 +305,23 @@ SelectCommand::SelectCommand(short type,
     for (auto& path : paths) selection->ToggleItem(path);
     break;
   }
-  Application::Get()->GetModel()->UpdateAllEnginesSelection();
+  const SdfPathVector affected =
+    selection->ComputeAffectedPaths(model->GetStage());
+  EngineRegistry::UpdateAllEnginesSelection(affected);
   SelectionChangedNotice().Send();
 }
 
 void SelectCommand::Do()
 {
-  Selection* selection = Application::Get()->GetModel()->GetSelection();
+  Model* model = Application::Get()->GetModel();
+
+  Selection* selection = model->GetSelection();
   std::vector<Selection::Item> current = selection->GetItems();
   selection->SetItems(_previous);
   _previous = current;
-  Application::Get()->GetModel()->UpdateAllEnginesSelection();
+  const SdfPathVector affected =
+    selection->ComputeAffectedPaths(model->GetStage());
+  EngineRegistry::UpdateAllEnginesSelection(affected);
   SelectionChangedNotice().Send();
 }
 
@@ -324,7 +332,7 @@ ShowHideCommand::ShowHideCommand(SdfPathVector& paths, Mode mode)
   : Command(true)
 {
   Application* app = Application::Get();
-  UsdStageRefPtr stage = app->GetModel()->GetWorkStage();
+  UsdStageRefPtr stage = app->GetModel()->GetStage();
   switch (mode) {
   case SHOW:
     for (auto& path : paths) {

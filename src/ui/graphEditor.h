@@ -278,7 +278,6 @@ public:
   inline const GfVec2f& GetOffset() const { return _offset; };
 
   void Init();
-  void Init(const std::vector<UsdStageRefPtr>& stages);
   void Term();
 
   // font
@@ -321,7 +320,7 @@ public:
   void FrameAll();
 
   // io
-  bool Populate(Graph* graph);
+  bool Populate();
   void Clear();
   bool Read(UsdStageRefPtr& stage);
   bool Write(UsdStageRefPtr& stage);
@@ -353,7 +352,6 @@ private:
   uint64_t                              _lastClick;
 
   int                                   _nodeId;
-  SdfLayerRefPtr                        _layer;
   Graph*                                _graph;
   std::set<Node*>                       _selectedNodes;
   std::set<Connexion*>                  _selectedConnexions;

@@ -154,7 +154,6 @@ Graph::Port::IsConnected(Graph* graph, Graph::Connexion* foundConnexion)
 Graph::Graph(SdfLayerRefPtr layer)
  : _layer(layer)
 {
-  _stage = UsdStage::Open(layer);
 }
 
 
@@ -170,8 +169,8 @@ Graph::~Graph()
 //------------------------------------------------------------------------------
 void Graph::Populate(SdfLayerRefPtr layer)
 {
+  _layer = layer;
   Clear();
-  _stage = UsdStage::Open(layer);
   _DiscoverNodes();
   _DiscoverConnexions();
 }
@@ -293,6 +292,7 @@ _ConnexionPossible(const SdfValueTypeName& lhs, const SdfValueTypeName& rhs)
 bool
 Graph::ConnexionPossible(const Graph::Port* lhs, const Graph::Port* rhs)
 {
+  /*
   const Graph::Node* lhsNode = lhs->GetNode();
   const UsdPrim& lhsPrim = _stage->GetPrimAtPath(lhsNode->GetPath());
   const Graph::Node* rhsNode = rhs->GetNode();
@@ -309,7 +309,7 @@ Graph::ConnexionPossible(const Graph::Port* lhs, const Graph::Port* rhs)
       return false;
     }
     return UsdShadeConnectableAPI::CanConnect(output, input);
-  } /*else if (lhsPrim.IsA<UsdExecNode>()) {
+  } else if (lhsPrim.IsA<UsdExecNode>()) {
     UsdExecNode lhsExec(lhsPrim);
     UsdExecOutput output = lhsExec.GetOutput(lhs->GetName());
 

@@ -6,6 +6,7 @@
 #include <functional>
 
 #include <pxr/base/gf/vec4i.h>
+#include <pxr/usd/usd/stage.h>
 
 #include "../common.h"
 
@@ -15,13 +16,32 @@ class Window;
 class View;
 class BaseUI;
 class PopupUI;
+class Engine;
+
+class EngineRegistry {
+public:
+  // engines
+  static void AddEngine(Engine* engine);
+  static void RemoveEngine(Engine* engine);
+  static void SetActiveEngine(Engine* engine);
+  static Engine* GetActiveEngine();
+  static std::vector<Engine*> GetEngines();
+
+  // singleton
+  static EngineRegistry* Get();
+  static void UpdateAllEnginesSelection(const SdfPathVector& selected);
+
+private:
+  // engines
+  std::vector<Engine*>              _engines;
+  Engine*                           _activeEngine;
+};
 
 class WindowRegistry {
 public:
   // preferences
   static bool         PlaybackAllViews;
 
-  
   // constructor
   WindowRegistry() : _activeWindow(nullptr), _popup(nullptr), _playbackView(nullptr){};
   

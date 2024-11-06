@@ -16,11 +16,13 @@
 #include "../geometry/shape.h"
 #include "../command/command.h"
 #include "../app/view.h"
+#include "../app/model.h"
 #include "../app/window.h"
 #include "../app/camera.h"
 #include "../app/tools.h"
 #include "../app/handle.h"
-#include "../app/application.h"
+#include "../app/index.h"
+#include "../app/registry.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -85,7 +87,7 @@ ViewportUI::~ViewportUI()
   if(_texture) glDeleteTextures(1, &_texture);
   if(_camera) delete _camera;
   if (_engine) {
-    _model->RemoveEngine(_engine);
+    EngineRegistry::RemoveEngine(_engine);
     delete _engine;
   }
 }
@@ -142,7 +144,7 @@ void ViewportUI::UpdateLighting()
 void ViewportUI::Init()
 {
   if (_engine) {
-    _model->RemoveEngine(_engine);
+    EngineRegistry::RemoveEngine(_engine);
     delete _engine;
     _engine = nullptr;
   }
@@ -155,13 +157,15 @@ void ViewportUI::Init()
     _rendererNames[rendererIndex] = rendererTokens[rendererIndex].GetText();
   }
 
-  auto editableSceneIndex = _model->GetEditableSceneIndex();
+  //auto editableSceneIndex = _model->GetEditableSceneIndex();
+
+  Index* index = _parent->GetWindow()->GetIndex();
 
   //TfToken plugin = Engine::GetDefaultRendererPlugin();
   TfToken plugin = TfToken(_rendererNames[_rendererIndex]);
-  _engine = new Engine(_model->GetFinalSceneIndex(), plugin);
+  _engine = new Engine(index->GetFinalSceneIndex(), plugin);
 
-  _model->AddEngine(_engine);
+  EngineRegistry::AddEngine(_engine);
 
   //_engine->SetRendererPlugin(TfToken(_rendererNames[_rendererIndex]));
 
@@ -225,7 +229,7 @@ void ViewportUI::MouseButton(int button, int action, int mods)
   {
     _lastX = (int)x;
     _lastY = (int)y;
-    _model->SetActiveEngine(_engine);
+    EngineRegistry::SetActiveEngine(_engine);
     SetInteracting(true);
     if (mods & GLFW_MOD_ALT) {
       if (button == GLFW_MOUSE_BUTTON_LEFT) {
@@ -260,8 +264,9 @@ void ViewportUI::MouseButton(int button, int action, int mods)
   }
   _parent->SetDirty();
 
+  /*
   if(_model->GetExec()) 
-    _model->SendExecViewEvent(_MouseButtonEventData(button, action, mods, x, y));
+    _model->SendExecViewEvent(_MouseButtonEventData(button, action, mods, x, y));*/
   
 }
 
@@ -680,7 +685,7 @@ bool ViewportUI::Select(int x, int y, int mods)
   if (y - GetY() < 32) return false;
 
   Selection* selection = _model->GetSelection();
-  UsdStageRefPtr stage = _model->GetWorkStage();
+  UsdStageRefPtr stage = _model->GetStage();
   if (!stage)return false;
 
   GfFrustum pickFrustum = _ComputePickFrustum(x, y);

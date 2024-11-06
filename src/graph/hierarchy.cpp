@@ -26,7 +26,6 @@ HierarchyGraph::~HierarchyGraph()
 void HierarchyGraph::Populate(SdfLayerRefPtr layer)
 {
   _layer = layer;
-  _stage = UsdStage::Open(_layer);
   Clear();
 
   std::vector<SdfPath> paths;

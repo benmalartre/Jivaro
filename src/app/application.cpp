@@ -13,6 +13,7 @@
 #include "../app/notice.h"
 #include "../app/handle.h"
 #include "../app/engine.h"
+#include "../app/index.h"
 #include "../app/selection.h"
 #include "../app/window.h"
 #include "../app/view.h"
@@ -53,6 +54,7 @@ Application* Application::Get() {
 // constructor
 //----------------------------------------------------------------------------
 Application::Application()
+  : _index(new Index())
 {  
 
 };
@@ -61,7 +63,7 @@ Application::Application()
 //----------------------------------------------------------------------------
 Application::~Application()
 {
-
+  delete _index;
 };
 
 
@@ -76,7 +78,7 @@ Application::Init(unsigned width, unsigned height, bool fullscreen)
   } else {
     window = WindowRegistry::CreateStandardWindow(name, GfVec4i(0,0,width, height));
   }
-
+  window->SetIndex(_index);
   Time::Get()->Init(1, 101, 24);
 
   // setup notifications
@@ -129,13 +131,13 @@ Application::Update()
     glfwPollEvents();
   else
     glfwWaitEvents();
-  
+
   // update model
   if (!WindowRegistry::GetPopup() && (playback > Time::PLAYBACK_IDLE || WindowRegistry::IsToolInteracting())) {
-    if(_model->GetExec() ) 
-      _model->UpdateExec(currentTime);
+    if(_index->GetExec() ) 
+      _index->UpdateExec(currentTime);
 
-    _model->Update(currentTime);
+    _index->Update(currentTime);
     WindowRegistry::SetAllWindowsDirty();
   }
 
@@ -152,14 +154,14 @@ void
 Application::Undo()
 {
   CommandManager::Get()->Undo();
-  _model->Update(Time::Get()->GetActiveTime());
+  _index->Update(Time::Get()->GetActiveTime());
 }
 
 void 
 Application::Redo()
 {
   CommandManager::Get()->Redo();
-  _model->Update(Time::Get()->GetActiveTime());
+  _index->Update(Time::Get()->GetActiveTime());
 }
 
 void 
@@ -214,7 +216,7 @@ Application::SelectionChangedCallback(const SelectionChangedNotice& n)
       window->GetTool()->ResetSelection();
   
  
-  _model->Update(Time::Get()->GetActiveTime());
+  _index->Update(Time::Get()->GetActiveTime());
   WindowRegistry::SetAllWindowsDirty();
 }
 
@@ -222,7 +224,7 @@ void
 Application::NewSceneCallback(const NewSceneNotice& n)
 {
   CommandManager::Get()->Clear();
-  if(_model->GetExec()) _model->TerminateExec();
+  if(_index->GetExec()) _index->TerminateExec();
 
   _model->ClearSelection();
   WindowRegistry::SetAllWindowsDirty();
@@ -231,17 +233,17 @@ Application::NewSceneCallback(const NewSceneNotice& n)
 void 
 Application::SceneChangedCallback(const SceneChangedNotice& n)
 {
-  _model->Update(Time::Get()->GetActiveTime());
+  _index->Update(Time::Get()->GetActiveTime());
   WindowRegistry::SetAllWindowsDirty();
 }
 
 void
 Application::AttributeChangedCallback(const AttributeChangedNotice& n)
 {
-  if (_model->GetExec()) 
-    _model->UpdateExec(Time::Get()->GetActiveTime());
+  if (_index->GetExec()) 
+    _index->UpdateExec(Time::Get()->GetActiveTime());
   
-  _model->Update(Time::Get()->GetActiveTime());
+  _index->Update(Time::Get()->GetActiveTime());
   WindowRegistry::SetAllWindowsDirty();
 
 }
@@ -249,8 +251,8 @@ Application::AttributeChangedCallback(const AttributeChangedNotice& n)
 void
 Application::TimeChangedCallback(const TimeChangedNotice& n)
 {
-  if (_model->GetExec()) 
-    _model->UpdateExec(Time::Get()->GetActiveTime());
+  if (_index->GetExec()) 
+    _index->UpdateExec(Time::Get()->GetActiveTime());
 
   WindowRegistry::SetAllWindowsDirty();
 }

@@ -2,10 +2,77 @@
 #include "../app/window.h"
 #include "../app/view.h"
 #include "../app/tools.h"
+#include "../app/engine.h"
 #include "../ui/ui.h"
 #include "../ui/popup.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
+
+
+// Registry Engines Singleton
+//---------------------------------------------------------------------------
+static EngineRegistry* EngineRegistrySingleton=nullptr;
+
+
+EngineRegistry* EngineRegistry::Get() { 
+  if(EngineRegistrySingleton == nullptr) 
+    EngineRegistrySingleton = new EngineRegistry();
+  return EngineRegistrySingleton;
+};
+
+void 
+EngineRegistry::AddEngine(Engine* engine)
+{
+  EngineRegistry* singleton = EngineRegistry::Get();
+  singleton->_engines.push_back(engine);
+  singleton->_activeEngine = engine;
+}
+
+void 
+EngineRegistry::RemoveEngine(Engine* engine)
+{
+  EngineRegistry* singleton = EngineRegistry::Get();
+  if (engine == singleton->_activeEngine)  singleton->_activeEngine = NULL;
+  for (size_t i = 0; i < singleton->_engines.size(); ++i) {
+    if (engine == singleton->_engines[i]) {
+      singleton->_engines.erase(singleton->_engines.begin() + i);
+      break;
+    }
+  }
+}
+
+Engine* 
+EngineRegistry::GetActiveEngine()
+{
+  EngineRegistry* singleton = EngineRegistry::Get();
+  return singleton->_activeEngine;
+}
+
+void 
+EngineRegistry::SetActiveEngine(Engine* engine) 
+{
+  EngineRegistry* singleton = EngineRegistry::Get();
+  singleton->_activeEngine = engine;
+}
+
+void
+EngineRegistry::UpdateAllEnginesSelection(const SdfPathVector& affected)
+{
+  EngineRegistry* singleton = EngineRegistry::Get();
+  for(auto& engine: singleton->_engines)
+    engine->SetSelection(affected);
+}
+
+std::vector<Engine*> 
+EngineRegistry::GetEngines()
+{
+  EngineRegistry* singleton = EngineRegistry::Get();
+  return singleton->_engines;
+}
+
+
+
+
 
 // Registry Window singleton
 //----------------------------------------------------------------------------
@@ -209,6 +276,7 @@ WindowRegistry::CreateChildWindow(const std::string& name, const GfVec4i& dimens
 {
   WindowRegistry* registry = Get();
   Window* child = new Window(name, dimension, false, parent);
+  child->SetIndex(parent->GetIndex());
   WindowRegistrySingleton->AddWindow(child);
   return child;
     

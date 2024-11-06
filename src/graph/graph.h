@@ -147,7 +147,6 @@ public:
   const Node* GetNode(const SdfPath& path) const;
   Node* GetNode(const SdfPath& path);
 
-  UsdStageRefPtr GetStage(){return _stage;};
   SdfLayerRefPtr GetLayer(){return _layer;};
 
   const std::vector<Connexion*>& GetConnexions() const { return _connexions; };
@@ -162,7 +161,6 @@ protected:
   
   std::vector<Node*>              _nodes;
   std::vector<Connexion*>         _connexions;
-  UsdStageRefPtr                  _stage;
   SdfLayerRefPtr                  _layer;
 };
 

@@ -8,6 +8,7 @@
 #include "../exec/execution.h"
 #include "../app/model.h"
 #include "../app/registry.h"
+
 #include "../command/manager.h"
 
 
@@ -16,6 +17,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 class PopupUI;
 class ViewportUI;
 class Engine;
+class Index;
 class Window;
 class Scene;
 class View;
@@ -51,6 +53,7 @@ public:
 
   // model
   Model* GetModel() {return _model;};
+  Index* GetIndex(){return _index;};
 
   // stages
   UsdStageCache& GetStageCache() { return _stageCache; }
@@ -71,11 +74,10 @@ protected:
 
 private:
   WindowRegistry*                   _windows;
+  UIRegistry*                       _uis;
+  Index*                            _index;
   Model*                            _model;
   float                             _lastTime;
-
-   // command
-  std::vector<CALLBACK_FN>          _deferred;
 
   // stages
   UsdStageCache                     _stageCache;

@@ -59,6 +59,7 @@ void Layout::StandardLayout(Window* window)
   window->SetGLContext();
   window->ClearViews();
   View* mainView = window->GetMainView();
+  Index* index = window->GetIndex();
 
   int width, height;
   glfwGetWindowSize(window->GetGlfwWindow(), &width, &height);
@@ -112,7 +113,7 @@ void Layout::StandardLayout(Window* window)
   new ToolUI(graphView);
   //AttributeEditorUIditorUI(graphView);
   Ts[7] = CurrentTime();
-  Application::Get()->GetModel()->SetActiveEngine(viewport->GetEngine());
+  EngineRegistry::SetActiveEngine(viewport->GetEngine());
 
   std::string names[7] = { "viewport", "timeline", "menu", "toolbar", "explorer", "property", "graph" };
 

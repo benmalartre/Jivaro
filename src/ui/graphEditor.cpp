@@ -491,7 +491,7 @@ GraphEditorUI::Node::ComputeSize(GraphEditorUI* editor)
 void
 GraphEditorUI::Node::Write(GraphEditorUI* editor)
 {
-  UsdStageRefPtr stage = editor->GetGraph()->GetStage();
+  UsdStageRefPtr stage = editor->GetModel()->GetStage();
   UsdPrim prim = stage->GetPrimAtPath(_node->GetPath());
 
   if(!prim.IsValid())return;
@@ -515,7 +515,7 @@ GraphEditorUI::Node::Write(GraphEditorUI* editor)
 void
 GraphEditorUI::Node::Read(GraphEditorUI* editor)
 {
-  UsdStageRefPtr stage = editor->GetGraph()->GetStage();
+  UsdStageRefPtr stage = editor->GetModel()->GetStage();
   UsdPrim prim = stage->GetPrimAtPath(_node->GetPath());
 
   if (!prim.IsValid())return;
@@ -732,7 +732,7 @@ static void
 RefreshGraphCallback(GraphEditorUI* editor)
 {
   SdfLayerRefPtr layer = editor->GetModel()->GetRootLayer();
-  editor->Populate(new HierarchyGraph(layer));
+  editor->Populate();
 }
 
 GraphEditorUI::Port*
@@ -748,15 +748,20 @@ GraphEditorUI::GetPort(Graph::Port* port)
 // populate
 //------------------------------------------------------------------------------
 bool
-GraphEditorUI::Populate(Graph* graph)
+GraphEditorUI::Populate()
 {
   Clear();
-  if(_graph) delete _graph;
+  if(!_graph)
+    _graph = new HierarchyGraph(_model->GetRootLayer());
+  else {
+    _graph->Clear();
+    _graph->Populate(_model->GetRootLayer());
+  }
 
-  _graph = graph;
 
   for (auto& node : _graph->GetNodes()) {
     _nodes.push_back(new GraphEditorUI::Node(node));
+    _nodes.back()->Read(this);
   }
   for (auto& connexion : _graph->GetConnexions()) {
     GraphEditorUI::Port* start = GetPort(connexion->GetStart());
@@ -794,6 +799,9 @@ GraphEditorUI::Clear()
   _hoveredPort = nullptr;
   _currentPort = nullptr;
   _hoveredConnexion = nullptr;
+
+  if(_graph)delete _graph;
+  _graph = nullptr;
 }
 
 // read
@@ -1047,18 +1055,11 @@ GraphEditorUI::Init()
   _selectedConnexions.clear();
   _currentNode = _hoveredNode = NULL;
   _currentPort = _hoveredPort = NULL;
-  _graph = NULL;
+  _graph = nullptr;
   _drag = _marque = false;
   _parent->SetDirty();
 }
 
-// init
-//------------------------------------------------------------------------------
-void 
-GraphEditorUI::Init(const std::vector<UsdStageRefPtr>& stages)
-{
-  _parent->SetDirty();
-};
 
 void
 GraphEditorUI::OnNewSceneNotice(const NewSceneNotice& n)
@@ -1070,11 +1071,12 @@ GraphEditorUI::OnNewSceneNotice(const NewSceneNotice& n)
 void
 GraphEditorUI::OnSceneChangedNotice(const SceneChangedNotice& n)
 {
+  std::cout << "Scene Change Notice " << _graph << std::endl;
   if (!_graph) return;
 
   _graph->Clear();
-  _graph->Populate(_layer);
-  Populate(_graph);
+  _graph->Populate(_model->GetRootLayer());
+  Populate();
   
   _parent->SetDirty();
 }
@@ -1083,7 +1085,7 @@ void
 GraphEditorUI::OnAttributeChangedNotice(const AttributeChangedNotice& n)
 {
   if (!_graph)return;
-  Read(_graph->GetStage());
+  Read(_model->GetStage());
 }
 
 
@@ -1193,7 +1195,6 @@ GraphEditorUI::MouseButton(int button, int action, int mods)
   if (!_graph)return;
 
   _GetNodeUnderMouse(mousePos, false);
-
 
   if (button == GLFW_MOUSE_BUTTON_LEFT) {
     if (action == GLFW_PRESS) {

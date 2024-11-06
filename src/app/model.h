@@ -28,23 +28,11 @@ class Scene;
 class Model : public TfWeakBase
 {
 public:
-  static const char* name;
   // constructor
   Model();
 
   // destructor
   ~Model();
-
-  void Update(const float time);
-
-  // browse file
-  std::string BrowseFile(int x, int y, const char* folder, const char* filters[], 
-    const int numFilters, const char* name="Browse", bool readOrWrite=false);
-
-  void New(const std::string& filename);
-  void Open(const std::string& filename);
-  void Save();
-  void SaveAs(const std::string& filename);
 
   // selection
   Selection* GetSelection(){return &_selection;};
@@ -56,53 +44,19 @@ public:
   GfBBox3d GetSelectionBoundingBox();
   GfBBox3d GetStageBoundingBox();
 
-  // commands
-  void AddCommand(std::shared_ptr<Command> command);
-
-  // engines
-  void AddEngine(Engine* engine);
-  void RemoveEngine(Engine* engine);
-  void SetActiveEngine(Engine* engine);
-  Engine* GetActiveEngine();
-  std::vector<Engine*> GetEngines() { return _engines; };
-
-  // stage cache
+  // stage 
   UsdStageRefPtr& GetStage(){return _stage;};
   void SetStage(UsdStageRefPtr& stage);
 
-
-  // execution
-  void ToggleExec();
-  void SetExec(bool state);
-  bool GetExec();
-
-  virtual void InitExec();
-  virtual void UpdateExec(float time);
-  virtual void TerminateExec();
-  virtual void SendExecViewEvent(const ViewEventData &data);
-
-    // usd stages
-  //std::vector<UsdStageRefPtr>& GetStages(){return _stages;};
-  UsdStageRefPtr GetDisplayStage();
-  UsdStageRefPtr GetWorkStage();
-
+  // layer
   SdfLayerRefPtr GetSessionLayer();
   SdfLayerRefPtr GetRootLayer();
-
-  void AddSceneIndexBase(HdSceneIndexBaseRefPtr sceneIndex);
-  HdSceneIndexBaseRefPtr GetEditableSceneIndex();
-
-  void SetCurrentSceneIndex(HdSceneIndexBaseRefPtr sceneIndex);
-  HdSceneIndexBaseRefPtr GetFinalSceneIndex();
-  HdSceneIndexPrim GetPrim(SdfPath primPath);
 
   UsdPrim GetUsdPrim(SdfPath primPath);
   UsdPrimRange GetAllPrims();
 
   void SetEmptyStage();
   void LoadUsdStage(const std::string usdFilePath);
-
-  void UpdateAllEnginesSelection();
 
 
 private:
@@ -116,23 +70,9 @@ private:
   // stage
   UsdStageRefPtr                    _stage;
 
-  // engines
-  std::vector<Engine*>              _engines;
-  Engine*                           _activeEngine;
-
-  // model
-  SdfLayerRefPtr                    _rootLayer, _sessionLayer;
-  UsdImagingStageSceneIndexRefPtr   _stageSceneIndex;
-  HdSceneIndexBaseRefPtr            _editableSceneIndex;
-  HdMergingSceneIndexRefPtr         _sceneIndexBases;
-  HdMergingSceneIndexRefPtr         _finalSceneIndex;
-
-  // execution
-  bool                              _execute;
-  Execution*                        _exec;
-  ExecSceneIndexRefPtr              _execSceneIndex;
-  float                             _lastTime;
-
+  // layer
+  SdfLayerRefPtr                    _rootLayer;
+  SdfLayerRefPtr                    _sessionLayer;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE // namespace JVR

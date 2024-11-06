@@ -16,7 +16,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 extern bool LEGACY_OPENGL;
 
-class UsdEmbreeContext;
+class Index;
 class Application;
 class Selection;
 class View;
@@ -76,6 +76,10 @@ public:
 
   // initialize
   void Init();
+
+  // index
+  void SetIndex(Index* index) {_index=index;};
+  Index* GetIndex() {return _index;};
 
   // ui
   ImGuiContext* GetContext() { return _context; };
@@ -201,6 +205,7 @@ private:
   bool                  _valid;
   int                   _layout;
   bool                  _needUpdateLayout;
+  Index*                _index;
 
   // version number
   int                   _iOpenGLMajor;
@@ -215,7 +220,6 @@ private:
   bool                  _debounce;
   uint64_t              _lastRepeatT;
   
-
   // fonts
   float                 _fontSize;
 

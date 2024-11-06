@@ -11,6 +11,9 @@ namespace Callbacks {
   void DeletePrim(Model* model, const SdfPath& path);
   void RenamePrim(Model* model, const SdfPath& path, const TfToken& token);
 
+  void SetActiveTool(short tool) ;
+  void ToggleExec();
+
 }
 JVR_NAMESPACE_CLOSE_SCOPE
 

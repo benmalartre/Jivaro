@@ -189,7 +189,7 @@ BaseHandle::ResetSelection()
   Application* app = Application::Get();
   Model* model = app->GetModel();
   Selection* selection = model->GetSelection();
-  UsdStageRefPtr stage = model->GetWorkStage();
+  UsdStageRefPtr stage = model->GetStage();
   if (!stage)return;
   UsdTimeCode activeTime = Time::Get()->GetActiveTime();
   UsdGeomXformCache xformCache(activeTime);
@@ -198,6 +198,7 @@ BaseHandle::ResetSelection()
   for(size_t i=0; i<selection->GetNumSelectedItems(); ++i ) {
     const Selection::Item& item = selection->GetItem(i);
     UsdPrim prim = stage->GetPrimAtPath(item.path);
+    if (!prim.IsValid())continue;
 
     if(prim.IsA<UsdGeomXformable>()) {
       GfMatrix4f parentMatrix(
@@ -1351,7 +1352,7 @@ ScaleHandle::_UpdateTargets(bool interacting)
 {
   Application* app = Application::Get();
   Model* model = app->GetModel();
-  UsdStageRefPtr stage = model->GetWorkStage();
+  UsdStageRefPtr stage = model->GetStage();
   UsdTimeCode activeTime = UsdTimeCode::Default();
   Selection* selection = app->GetModel()->GetSelection();
   if (interacting) {

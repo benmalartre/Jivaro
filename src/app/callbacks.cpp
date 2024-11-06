@@ -4,7 +4,11 @@
 #include "../utils/strings.h"
 #include "../app/commands.h"
 #include "../app/callbacks.h"
+#include "../app/notice.h"
 #include "../app/model.h"
+#include "../app/index.h"
+#include "../app/registry.h"
+#include "../app/application.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -38,6 +42,20 @@ namespace Callbacks {
     ADD_COMMAND(DeletePrimCommand, model->GetRootLayer(), {path});
   }
 
+
+  void SetActiveTool(short tool)
+  {
+    WindowRegistry* registry = WindowRegistry::Get();
+    registry->SetActiveTool(tool);
+    SelectionChangedNotice().Send();
+    //ui->UpdateTools(tool);
+  }
+
+  void ToggleExec()
+  {
+    std::cout << "TOGGLE EXEC NOT IMPLEMENTED!!" << std::endl;
+    //Application::Get()->GetIndex()->ToggleExec();
+  }
   
 }
 

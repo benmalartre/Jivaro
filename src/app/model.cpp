@@ -6,6 +6,7 @@
 #include "../utils/prefs.h"
 #include "../ui/popup.h"
 #include "../command/manager.h"
+#include "../command/router.h"
 #include "../geometry/scene.h"
 #include "../app/model.h"
 #include "../app/notice.h"
@@ -40,23 +41,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 // constructor
 //----------------------------------------------------------------------------
 Model::Model()
-  : _execute(false)
-  , _activeEngine(nullptr)
-  , _execSceneIndex(nullptr)
 {  
-  // scene indices
-  _sceneIndexBases = HdMergingSceneIndex::New();
-  _finalSceneIndex = HdMergingSceneIndex::New();
-  _editableSceneIndex = _sceneIndexBases;
-  SetCurrentSceneIndex(_editableSceneIndex);
-
-  UsdImagingCreateSceneIndicesInfo info;
-  info.displayUnloadedPrimsWithBounds = true;
-  const UsdImagingSceneIndices sceneIndices = UsdImagingCreateSceneIndices(info);
-
-  _stageSceneIndex = sceneIndices.stageSceneIndex;
-
-  AddSceneIndexBase(sceneIndices.finalSceneIndex);
   SetEmptyStage();
   
 };
@@ -74,24 +59,24 @@ Model::SetStage(UsdStageRefPtr& stage)
   _rootLayer = stage->GetRootLayer();
   _sessionLayer = _stage->GetSessionLayer();
   _stage->SetEditTarget(_rootLayer);
-  _stageSceneIndex->SetStage(_stage);
-  _stageSceneIndex->SetTime(UsdTimeCode::Default());
 
+  UndoRouter::Get().TrackLayer(_rootLayer);
+  UndoRouter::Get().TrackLayer(_sessionLayer);
 }
 
 
 void 
 Model::SetEmptyStage()
 {
-  _stage = UsdStage::CreateInMemory();
+  _rootLayer = SdfLayer::CreateAnonymous();
+  _sessionLayer = SdfLayer::CreateAnonymous();
+  _stage = UsdStage::Open(_rootLayer, _sessionLayer);
+  _stage->SetEditTarget(_rootLayer);
+
   UsdGeomSetStageUpAxis(_stage, UsdGeomTokens->y);
 
-  _rootLayer = _stage->GetRootLayer();
-  _sessionLayer = _stage->GetSessionLayer();
-
-  _stage->SetEditTarget(_rootLayer);
-  _stageSceneIndex->SetStage(_stage);
-  _stageSceneIndex->SetTime(UsdTimeCode::Default());
+  UndoRouter::Get().TrackLayer(_rootLayer);
+  UndoRouter::Get().TrackLayer(_sessionLayer);
 }
 
 void 
@@ -101,112 +86,8 @@ Model::LoadUsdStage(const std::string usdFilePath)
   _sessionLayer = SdfLayer::CreateAnonymous();
   _stage = UsdStage::Open(_rootLayer, _sessionLayer);
   _stage->SetEditTarget(_rootLayer);
-  _stageSceneIndex->SetStage(_stage);
-  _stageSceneIndex->SetTime(UsdTimeCode::Default());
-}
-
-
-void
-Model::Update(const float time)
-{
-  if(_stageSceneIndex) {
-    _stageSceneIndex->ApplyPendingUpdates();
-    _stageSceneIndex->SetTime(time);
-  }
-}
-
-
-
-void 
-Model::InitExec()
-{
-  Time* time = Time::Get();
-  time->SetActiveTime(time->GetStartTime());
-  //_exec = new TestPendulum();
-  //_exec = new TestVelocity();
-  _exec = new TestPoints();
-  //_exec = new TestGrid();
-  //_exec = new TestParticles();
-  //_exec = new TestInstancer();
-  //_exec = new TestRaycast();
-  //_exec = new TestPBD();
-  //_exec = new TestPush();
-  //_exec = new TestHair();
-  //_exec = new TestGeodesic();
-  //_exec = new TestBVH();
-
-  _exec->InitExec(_stage);
-
-  _execSceneIndex = ExecSceneIndex::New(_sceneIndexBases);
-  _execSceneIndex->SetExec(_exec);
-  SetCurrentSceneIndex(_execSceneIndex);
-  _execSceneIndex->UpdateExec();
-}
-
-void
-Model::UpdateExec(float time)
-{
-  _exec->UpdateExec(_stage, time);
-  _execSceneIndex->UpdateExec();
-}
-
-void
-Model::TerminateExec()
-{
-  _finalSceneIndex->RemoveInputScene(_execSceneIndex);
-  SetCurrentSceneIndex(_sceneIndexBases);
-  _exec->TerminateExec(_stage);
-  _execute = false;
-  _exec = nullptr;
-  _execSceneIndex = nullptr;
-  NewSceneNotice().Send();
-}
-
-void 
-Model::SendExecViewEvent(const ViewEventData &data)
-{
-  _exec->ViewEvent(&data);
-}
-
-
-
-
-// ---------------------------------------------------------------------------------------------
-// Scene Indices
-//----------------------------------------------------------------------------------------------
-void 
-Model::AddSceneIndexBase(HdSceneIndexBaseRefPtr sceneIndex)
-{
-  _sceneIndexBases->AddInputScene(sceneIndex, SdfPath::AbsoluteRootPath());
-}
-
-HdSceneIndexBaseRefPtr 
-Model::GetEditableSceneIndex()
-{
-  return _editableSceneIndex;
-}
-
-void 
-Model::SetCurrentSceneIndex(HdSceneIndexBaseRefPtr sceneIndex)
-{
-  if(_editableSceneIndex)
-    _finalSceneIndex->RemoveInputScene(_editableSceneIndex);
-  _editableSceneIndex = sceneIndex;
-  _finalSceneIndex->AddInputScene(sceneIndex,
-                                  SdfPath::AbsoluteRootPath());
-}
-
-
-HdSceneIndexBaseRefPtr 
-Model::GetFinalSceneIndex()
-{
-    return _finalSceneIndex;
-}
-
-HdSceneIndexPrim 
-Model::GetPrim(SdfPath primPath)
-{
-  return _finalSceneIndex->GetPrim(primPath);
+  UndoRouter::Get().TrackLayer(_rootLayer);
+  UndoRouter::Get().TrackLayer(_sessionLayer);
 }
 
 UsdPrim 
@@ -222,82 +103,6 @@ Model::GetAllPrims()
 }
 
 
-// ---------------------------------------------------------------------------------------------
-// Engines
-//----------------------------------------------------------------------------------------------
-void 
-Model::AddEngine(Engine* engine)
-{
-  _engines.push_back(engine);
-  _activeEngine = engine;
-}
-
-void 
-Model::RemoveEngine(Engine* engine)
-{
-  if (engine == _activeEngine)  _activeEngine = NULL;
-  for (size_t i = 0; i < _engines.size(); ++i) {
-    if (engine == _engines[i]) {
-      _engines.erase(_engines.begin() + i);
-      break;
-    }
-  }
-}
-
-Engine* Model::GetActiveEngine()
-{
-  return _activeEngine;
-}
-
-void 
-Model::SetActiveEngine(Engine* engine) 
-{
-  _activeEngine = engine;
-}
-
-
-void 
-Model::AddCommand(std::shared_ptr<Command> command)
-{
-  CommandManager::Get()->AddCommand(command);
-  CommandManager::Get()->ExecuteCommands();
-}
-
-// execution
-void 
-Model::ToggleExec() 
-{
-  _execute = 1 - _execute; 
-  if (_execute)InitExec();
-  else TerminateExec();
-};
-
-void 
-Model::SetExec(bool state) 
-{ 
-  _execute = state; 
-};
-
-bool 
-Model::GetExec() 
-{ 
-  return _execute; 
-};
-
-// get stage for display
-UsdStageRefPtr
-Model::GetDisplayStage()
-{
-  return _stage;
-}
-
-// get stage for work
-UsdStageRefPtr
-Model::GetWorkStage()
-{
-  return _stage;
-}
-
 // get current layer
 SdfLayerRefPtr
 Model::GetSessionLayer()
@@ -310,16 +115,6 @@ SdfLayerRefPtr
 Model::GetRootLayer()
 {
   return _rootLayer;
-}
-
-void
-Model::UpdateAllEnginesSelection()
-{
-  const SdfPathVector affected = 
-    _selection.ComputeAffectedPaths(_stage);
-    
-  for(auto& engine: _engines)
-    engine->SetSelection(affected);
 }
 
 // selection

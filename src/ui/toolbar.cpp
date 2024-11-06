@@ -2,6 +2,7 @@
 #include "../app/view.h"
 #include "../app/window.h"
 #include "../app/registry.h"
+#include "../app/callbacks.h"
 #include "../app/model.h"
 #include "../app/modal.h"
 
@@ -15,18 +16,6 @@ ImGuiWindowFlags ToolbarUI::_flags =
   ImGuiWindowFlags_NoScrollbar |
   ImGuiWindowFlags_NoDecoration;
 
-static void SetActiveToolCallback(ToolbarUI* ui, short tool) 
-{
-  WindowRegistry* registry = WindowRegistry::Get();
-  registry->SetActiveTool(tool);
-  SelectionChangedNotice().Send();
-  ui->UpdateTools(tool);
-}
-
-static void OnPlayCallback(Model* model)
-{
-  model->ToggleExec();
-}
 
 
 ToolbarSeparator::ToolbarSeparator(BaseUI* ui, short orientation)
@@ -92,35 +81,35 @@ ToolbarUI::ToolbarUI(View* parent, bool vertical)
   ToolbarButton* selectItem = new ToolbarButton(
     this, Tool::SELECT, "Select", "Space","selection tool",
     ICON_FA_ARROW_POINTER, true, true,
-    std::bind(SetActiveToolCallback, this, Tool::SELECT)
+    std::bind(Callbacks::SetActiveTool, Tool::SELECT)
   );
   _items.push_back(selectItem);
 
   ToolbarButton* translateItem = new ToolbarButton(
     this, Tool::TRANSLATE, "Translate", "T", "translation tool",
     ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT, true, false,
-    std::bind(SetActiveToolCallback, this, Tool::TRANSLATE)
+    std::bind(Callbacks::SetActiveTool, Tool::TRANSLATE)
   );
   _items.push_back(translateItem);
 
   ToolbarButton* rotateItem = new ToolbarButton(
     this, Tool::ROTATE, "Rotate", "R", "rotation tool",
     ICON_FA_ROTATE, true, false,
-    std::bind(SetActiveToolCallback, this, Tool::ROTATE)
+    std::bind(Callbacks::SetActiveTool, Tool::ROTATE)
   );
   _items.push_back(rotateItem);
 
   ToolbarButton* scaleItem = new ToolbarButton(
     this, Tool::SCALE, "Scale", "S", "scale tool",
     ICON_FA_UP_RIGHT_AND_DOWN_LEFT_FROM_CENTER , true, false,
-    std::bind(SetActiveToolCallback, this, Tool::SCALE)
+    std::bind(Callbacks::SetActiveTool, Tool::SCALE)
   );
   _items.push_back(scaleItem);
 
   ToolbarButton* brushItem = new ToolbarButton(
     this, Tool::BRUSH, "Brush", "B", "brush tool",
     ICON_FA_PAINTBRUSH, true, false,
-    std::bind(SetActiveToolCallback, this, Tool::BRUSH)
+    std::bind(Callbacks::SetActiveTool, Tool::BRUSH)
   );
   _items.push_back(brushItem);
 
@@ -135,7 +124,7 @@ ToolbarUI::ToolbarUI(View* parent, bool vertical)
   ToolbarButton* playItem = new ToolbarButton(
     this, Tool::NONE, "Play", "play", "launch engine",
     ICON_FA_SHUFFLE, true, false,
-    std::bind(OnPlayCallback, _model)
+    std::bind(Callbacks::ToggleExec)
   );
   _items.push_back(playItem);
 

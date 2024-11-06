@@ -51,7 +51,9 @@ class ViewportUI : public BaseUI
   public:
     ViewportUI(View* parent);
     ~ViewportUI();
+
     void Init();
+    void Update();
 
     Engine* GetEngine(){return _engine;};
     Camera* GetCamera(){return _camera;};
@@ -69,7 +71,7 @@ class ViewportUI : public BaseUI
     void Keyboard(int key, int scancode, int action, int mods) override;
     bool Draw() override;
     void Resize() override;
-    void Update();
+
     
     GfFrustum _ComputePickFrustum(int x, int y);
     bool Pick(int x, int y, int mods);
@@ -88,7 +90,6 @@ class ViewportUI : public BaseUI
       GfVec2i const& endPos, TfToken const& pickTarget);*/
 
   private:
-
     GLuint                              _texture;
     int                                 _width;
     int                                 _height;
@@ -117,8 +118,6 @@ class ViewportUI : public BaseUI
     const char**                        _rendererNames;
     int                                 _numRenderers;
     CameraUtilConformWindowPolicy       _conformWindowPolicy;
-
-
 
     std::string                         _message;
 
