@@ -16,6 +16,7 @@ TF_REGISTRY_FUNCTION(TfType)
   TfType::Define<SceneChangedNotice, TfType::Bases<BaseNotice> >();
   TfType::Define<AttributeChangedNotice, TfType::Bases<BaseNotice> >();
   TfType::Define<TimeChangedNotice, TfType::Bases<BaseNotice> >();
+  TfType::Define<ToolChangedNotice, TfType::Bases<BaseNotice> >();
   TfType::Define<UndoStackNotice, TfType::Bases<BaseNotice> >();
 }
 
@@ -83,13 +84,14 @@ TimeChangedNotice::~TimeChangedNotice()
 ////////////////////////////////////////////////////////////
 
 ToolChangedNotice::ToolChangedNotice(short tool)
-  : _tool(tool)
+ : _tool(tool)
 {
 }
 
 ToolChangedNotice::~ToolChangedNotice()
 {
 }
+
 
 ////////////////////////////////////////////////////////////
 

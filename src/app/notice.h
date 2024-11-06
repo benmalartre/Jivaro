@@ -66,6 +66,7 @@ public:
   virtual ~TimeChangedNotice();
 };
 
+
 /// Notice sent after time changed
 class ToolChangedNotice : public BaseNotice
 {
@@ -76,6 +77,7 @@ public:
 private:
   short _tool;
 };
+
 
 JVR_NAMESPACE_CLOSE_SCOPE
 #endif //JVR_APPLICATION_NOTICE_H

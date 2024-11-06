@@ -47,8 +47,7 @@ namespace Callbacks {
   {
     WindowRegistry* registry = WindowRegistry::Get();
     registry->SetActiveTool(tool);
-    SelectionChangedNotice().Send();
-    //ui->UpdateTools(tool);
+    ToolChangedNotice(tool).Send();
   }
 
   void ToggleExec()

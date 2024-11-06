@@ -1,39 +1,12 @@
 #include <iostream>
 #include <string>
 
-#include "../utils/files.h"
-#include "../utils/timer.h"
-#include "../utils/prefs.h"
-#include "../ui/popup.h"
-#include "../command/manager.h"
-#include "../geometry/scene.h"
+
 #include "../app/application.h"
-#include "../app/commands.h"
-#include "../app/modal.h"
-#include "../app/notice.h"
-#include "../app/handle.h"
-#include "../app/engine.h"
 #include "../app/index.h"
-#include "../app/selection.h"
 #include "../app/window.h"
-#include "../app/view.h"
-#include "../app/camera.h"
-#include "../app/tools.h"
+#include "../app/commands.h"
 #include "../app/layout.h"
-
-#include "../tests/grid.h"
-#include "../tests/raycast.h"
-#include "../tests/particles.h"
-#include "../tests/pbd.h"
-#include "../tests/hair.h"
-#include "../tests/bvh.h"
-#include "../tests/points.h"
-#include "../tests/instancer.h"
-#include "../tests/velocity.h"
-#include "../tests/pendulum.h"
-#include "../tests/geodesic.h"
-#include "../tests/push.h"
-
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -80,7 +53,7 @@ Application::Init(unsigned width, unsigned height, bool fullscreen)
   }
   window->SetIndex(_index);
   Time::Get()->Init(1, 101, 24);
-
+  short tool;
   // setup notifications
   TfNotice::Register(TfCreateWeakPtr(this), &Application::SelectionChangedCallback);
   TfNotice::Register(TfCreateWeakPtr(this), &Application::NewSceneCallback);
@@ -258,10 +231,12 @@ Application::TimeChangedCallback(const TimeChangedNotice& n)
   WindowRegistry::SetAllWindowsDirty();
 }
 
+
 void
 Application::ToolChangedCallback(const ToolChangedNotice& n)
 {
-  WindowRegistry::SetActiveTool(n.GetTool());
+  std::cout << "Tool Change Notice Callback!!!" << std::endl;
+  //WindowRegistry::SetActiveTool(n.GetTool());
 }
 
 void

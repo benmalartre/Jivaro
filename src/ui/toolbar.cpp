@@ -146,12 +146,14 @@ ToolbarUI::GetFixedSize()
   else return UI::BUTTON_NORMAL_SIZE[1] + 2 * (style.WindowPadding.y + style.ItemSpacing.y);
 }
 
+
 void
 ToolbarUI::OnToolChangedNotice(const ToolChangedNotice& n)
 {
   for(auto& button: _tools) 
     if(button->tool != n.GetTool())button->enabled = false;
 }
+
 
 bool ToolbarUI::Draw()
 {
