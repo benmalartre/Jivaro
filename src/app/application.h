@@ -64,6 +64,7 @@ public:
   void SceneChangedCallback(const SceneChangedNotice& n);
   void AttributeChangedCallback(const AttributeChangedNotice& n);
   void TimeChangedCallback(const TimeChangedNotice& n);
+  void ToolChangedCallback(const ToolChangedNotice& n);
   void UndoStackNoticeCallback(const UndoStackNotice& n);
 
   // singleton 

@@ -82,6 +82,17 @@ TimeChangedNotice::~TimeChangedNotice()
 
 ////////////////////////////////////////////////////////////
 
+ToolChangedNotice::ToolChangedNotice(short tool)
+  : _tool(tool)
+{
+}
+
+ToolChangedNotice::~ToolChangedNotice()
+{
+}
+
+////////////////////////////////////////////////////////////
+
 UndoStackNotice::UndoStackNotice()
 {
 }
@@ -89,6 +100,7 @@ UndoStackNotice::UndoStackNotice()
 UndoStackNotice::~UndoStackNotice()
 {
 }
+
 
 
 JVR_NAMESPACE_CLOSE_SCOPE

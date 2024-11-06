@@ -195,6 +195,31 @@ BaseHandle::ResetSelection()
   UsdGeomXformCache xformCache(activeTime);
   _targets.clear();
   bool resetXformCache;
+
+  std::vector<SdfPath> paths;
+  for(size_t i=0; i<selection->GetNumSelectedItems(); ++i ) {
+    const Selection::Item& item = selection->GetItem(i);
+    UsdPrim prim = stage->GetPrimAtPath(item.path);
+    if (!prim.IsValid() || !prim.IsA<UsdGeomXformable>())continue;
+
+    UsdGeomXformCommonAPI api(prim);
+    GfVec3d translation; 
+    GfVec3f rotation;
+    GfVec3f scale;
+    GfVec3f pivot;
+    UsdGeomXformCommonAPI::RotationOrder rotOrder;
+    if(!api.GetXformVectors(&translation, &rotation, &scale, &pivot, &rotOrder, UsdTimeCode::Default()))
+      paths.push_back(prim.GetPath());
+  }
+
+  if(paths.size()) {
+    std::cout << "INITIALIZE XFORM COMMON API ON:" << std::endl;
+    for(auto& path: paths) std::cout << "\t" << path << std::endl;
+    UndoBlock block;
+    for(auto& path: paths)
+      _EnsureXformCommonAPI(stage->GetPrimAtPath(path), UsdTimeCode::Default());
+  }
+
   for(size_t i=0; i<selection->GetNumSelectedItems(); ++i ) {
     const Selection::Item& item = selection->GetItem(i);
     UsdPrim prim = stage->GetPrimAtPath(item.path);
@@ -206,7 +231,6 @@ BaseHandle::ResetSelection()
       GfMatrix4f invParentMatrix(
         parentMatrix.GetInverse());
       ManipXformVectors vectors;
-      _EnsureXformCommonAPI(prim, UsdTimeCode::Default());
       UsdGeomXformCommonAPI xformApi(prim);
       xformApi.GetXformVectors(&vectors.translation, &vectors.rotation, &vectors.scale,
         &vectors.pivot, &vectors.rotOrder, activeTime); 

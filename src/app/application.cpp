@@ -87,6 +87,7 @@ Application::Init(unsigned width, unsigned height, bool fullscreen)
   TfNotice::Register(TfCreateWeakPtr(this), &Application::SceneChangedCallback);
   TfNotice::Register(TfCreateWeakPtr(this), &Application::AttributeChangedCallback);
   TfNotice::Register(TfCreateWeakPtr(this), &Application::TimeChangedCallback);
+  TfNotice::Register(TfCreateWeakPtr(this), &Application::ToolChangedCallback);
   TfNotice::Register(TfCreateWeakPtr(this), &Application::UndoStackNoticeCallback);
 
   
@@ -255,6 +256,12 @@ Application::TimeChangedCallback(const TimeChangedNotice& n)
     _index->UpdateExec(Time::Get()->GetActiveTime());
 
   WindowRegistry::SetAllWindowsDirty();
+}
+
+void
+Application::ToolChangedCallback(const ToolChangedNotice& n)
+{
+  WindowRegistry::SetActiveTool(n.GetTool());
 }
 
 void
