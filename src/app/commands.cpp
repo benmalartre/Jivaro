@@ -447,6 +447,7 @@ void TranslateCommand::Do()
 {
   _inverse.Invert();
   AttributeChangedNotice().Send();
+  SelectionChangedNotice().Send();
 }
 
 //==================================================================================

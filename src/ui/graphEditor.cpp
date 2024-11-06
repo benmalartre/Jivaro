@@ -960,7 +960,6 @@ GraphEditorUI::Draw()
   ImGui::SetCursorPos(ImVec2(0, 0));
 
 
-  
   UI::AddIconButton(0, ICON_FA_RECYCLE, UI::STATE_DEFAULT,
     std::bind(RefreshGraphCallback, this));
   ImGui::SameLine();

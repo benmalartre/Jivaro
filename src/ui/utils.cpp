@@ -47,27 +47,13 @@ const ImVec4& _ButtonTextColor(short state)
   return state == UI::STATE_SELECTED ? style->Colors[ImGuiCol_TextDisabled] : style->Colors[ImGuiCol_Text];
 }
 
-bool
-AddIconButton(const char* icon, short state, CALLBACK_FN func)
-{
-  if(state == UI::STATE_DISABLED)ImGui::BeginDisabled();
-  ImGui::BeginGroup();
-  if (ImGui::Button(icon, UI::BUTTON_NORMAL_SIZE))
-  {
-    func();
-    ImGui::EndGroup();
-    return true;
-  }
-  ImGui::EndGroup();
-  if(state == UI::STATE_DISABLED)ImGui::EndDisabled();
-  return false;
-}
 
 bool
-AddIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN func)
+AddIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN func, ImVec4* color)
 {
   
   if(state == UI::STATE_DISABLED)ImGui::BeginDisabled();
+  if(color)ImGui::PushStyleColor(ImGuiCol_Button, *color);
   ImGui::PushID(id);
   if (ImGui::Button(icon, UI::BUTTON_NORMAL_SIZE)) {
     func();
@@ -76,6 +62,7 @@ AddIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN func)
   }
 
   ImGui::PopID();
+  if(color)ImGui::PopStyleColor();
   if(state == UI::STATE_DISABLED)ImGui::EndDisabled();
   return false;
 }
@@ -100,17 +87,20 @@ AddTransparentIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN 
 }
 
 bool
-AddCheckableIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN func)
+AddCheckableIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN func, ImVec4* color)
 {
   if(state == UI::STATE_DISABLED)ImGui::BeginDisabled();
   ImGuiStyle* style = &ImGui::GetStyle();
   ImVec4* colors = style->Colors;
   const bool active = (state == UI::STATE_SELECTED);
   ImGui::PushStyleColor(ImGuiCol_Text, _ButtonTextColor(state));
+  
   if (active) {
     ImGui::PushStyleColor(ImGuiCol_Button, style->Colors[ImGuiCol_ButtonActive]);
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, style->Colors[ImGuiCol_ButtonActive]);
   }
+  
+  if(color)ImGui::PushStyleColor(ImGuiCol_Button, *color);
   bool clicked = false;
   ImGui::PushID(id);
 
@@ -119,6 +109,8 @@ AddCheckableIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN fu
     func();
     clicked = true;
   }
+
+  if(color)ImGui::PopStyleColor();
   if (active) ImGui::PopStyleColor(2);
   ImGui::PopStyleColor();
   ImGui::PopID();

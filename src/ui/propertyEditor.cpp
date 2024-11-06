@@ -98,7 +98,7 @@ void _XXX_CALLBACK__(int index)
 static void DrawPropertyMiniButton(ImGuiID id=0)
 {
   UI::AddIconButton(
-    id, ICON_FA_GEAR, UI::STATE_DEFAULT,
+    id, ICON_FA_PEN, UI::STATE_DEFAULT,
     std::bind(_XXX_CALLBACK__, id));
   ImGui::SameLine();
 }
@@ -141,7 +141,8 @@ PropertyEditorUI::_DrawXformsCommon(UsdTimeCode time)
       // Translate
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
-      DrawPropertyMiniButton(1);
+      UI::AddIconButton(1, ICON_FA_KEY, UI::STATE_DEFAULT, std::bind(_XXX_CALLBACK__, 1));
+      ImGui::SameLine();
 
       ImGui::TableSetColumnIndex(1);
       ImGui::Text("translation");
@@ -158,7 +159,7 @@ PropertyEditorUI::_DrawXformsCommon(UsdTimeCode time)
       // Rotation
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
-      DrawPropertyMiniButton(2);
+      UI::AddIconButton(2, ICON_FA_KEY, UI::STATE_DEFAULT, std::bind(_XXX_CALLBACK__, 2));
 
       ImGui::TableSetColumnIndex(1);
       ImGui::Text("rotation");
@@ -172,7 +173,7 @@ PropertyEditorUI::_DrawXformsCommon(UsdTimeCode time)
       // Scale
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
-      DrawPropertyMiniButton(3);
+      UI::AddIconButton(3, ICON_FA_KEY, UI::STATE_DEFAULT, std::bind(_XXX_CALLBACK__, 3));
 
       ImGui::TableSetColumnIndex(1);
       ImGui::Text("scale");
@@ -186,7 +187,7 @@ PropertyEditorUI::_DrawXformsCommon(UsdTimeCode time)
 
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
-      DrawPropertyMiniButton(4);
+      UI::AddIconButton(4, ICON_FA_KEY, UI::STATE_DEFAULT, std::bind(_XXX_CALLBACK__, 4));
 
       ImGui::TableSetColumnIndex(1);
       ImGui::Text("pivot");

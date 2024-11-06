@@ -77,7 +77,7 @@ Application::Init(unsigned width, unsigned height, bool fullscreen)
   window->SetDesiredLayout(WINDOW_LAYOUT_STANDARD);
 
   _model = new Model();
-
+  _index->SetStage(_model->GetStage());
 
 }
 

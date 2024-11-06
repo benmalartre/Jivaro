@@ -79,10 +79,9 @@ namespace UI
   template <typename MatrixType, int DataType, int Rows, int Cols>
   VtValue AddMatrixWidget(const UsdAttribute& attribute, const UsdTimeCode& timeCode);
 
-  bool AddIconButton(const char* icon, short state, CALLBACK_FN func);
-  bool AddIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN func);
+  bool AddIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN func, ImVec4* color=NULL);
   bool AddTransparentIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN func);
-  bool AddCheckableIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN func);
+  bool AddCheckableIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN func, ImVec4* color=NULL);
 
   void AddPropertyMiniButton(const char* btnStr, int rowId, 
     const ImVec4& btnColor = ImVec4(0.0, 0.7, 0.0, 1.0));
