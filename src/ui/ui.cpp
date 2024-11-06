@@ -32,7 +32,7 @@ BaseUI::BaseUI(View* parent, short type, bool popup)
   TfNotice::Register(me, &BaseUI::OnSceneChangedNotice);
   TfNotice::Register(me, &BaseUI::OnSelectionChangedNotice);
   TfNotice::Register(me, &BaseUI::OnAttributeChangedNotice);
-  //TfNotice::Register(me, &BaseUI::OnToolChangedNotice);
+  TfNotice::Register(me, &BaseUI::OnToolChangedNotice);
 };
 
 void

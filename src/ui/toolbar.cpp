@@ -150,6 +150,7 @@ ToolbarUI::GetFixedSize()
 void
 ToolbarUI::OnToolChangedNotice(const ToolChangedNotice& n)
 {
+  std::cout << "TOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOLLLLL" << std::endl;
   for(auto& button: _tools) 
     if(button->tool != n.GetTool())button->enabled = false;
 }
