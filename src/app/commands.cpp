@@ -546,7 +546,6 @@ SetAttributeCommand::SetAttributeCommand(UsdAttributeVector& attributes,
   const VtValue& value, const VtValue& previous, const UsdTimeCode& timeCode)
   : Command(true)
 {
-  std::cout << "Set Attribute Command Called" << value << std::endl;
   for (auto& attribute : attributes) {
     attribute.Set(previous, timeCode);
   }
@@ -584,7 +583,8 @@ void UsdGenericCommand::Do()
 //==================================================================================
 // Create Node
 //==================================================================================
-CreateNodeCommand::CreateNodeCommand(const std::string& name, const SdfPath& path)
+CreateNodeCommand::CreateNodeCommand(
+  UsdStageRefPtr stage, const std::string& name, const SdfPath& path)
   : Command(true)
   , _name(name)
   , _path(path)
@@ -603,13 +603,11 @@ void CreateNodeCommand::Do()
 // Move Node
 //==================================================================================
 MoveNodeCommand::MoveNodeCommand(
-  const SdfPathVector& nodes, const GfVec2f& offset)
+  UsdStageRefPtr stage, const SdfPathVector& nodes, const GfVec2f& offset)
   : Command(false)
   , _nodes(nodes)
   , _offset(offset)
 {
-  Application* app = Application::Get();
-  UsdStageRefPtr stage = app->GetModel()->GetStage();
   for (auto& node : nodes) {
     UsdPrim prim = stage->GetPrimAtPath(node);
     if (!prim.IsValid()) {
@@ -644,13 +642,11 @@ void MoveNodeCommand::Do()
 // Size Node
 //==================================================================================
 SizeNodeCommand::SizeNodeCommand(
-  const SdfPathVector& nodes, const GfVec2f& offset)
+  UsdStageRefPtr stage, const SdfPathVector& nodes, const GfVec2f& offset)
   : Command(false)
   , _nodes(nodes)
   , _offset(offset)
 {
-  Application* app = Application::Get();
-  UsdStageRefPtr stage = app->GetModel()->GetStage();
   for (auto& node : nodes) {
     UsdPrim prim = stage->GetPrimAtPath(node);
     if (!prim.IsValid()) {
@@ -688,12 +684,10 @@ void SizeNodeCommand::Do()
 // 'minimized' = should take the least space possible
 //==================================================================================
 ExpendNodeCommand::ExpendNodeCommand(
-  const SdfPathVector& nodes, const TfToken& state)
+  UsdStageRefPtr stage, const SdfPathVector& nodes, const TfToken& state)
   : Command(false)
   , _nodes(nodes)
 {
-  Application* app = Application::Get();
-  UsdStageRefPtr stage = app->GetModel()->GetStage();
   for (auto& node : nodes) {
     UsdUINodeGraphNodeAPI api(stage->GetPrimAtPath(node));
     UsdAttribute expandAttr = api.CreateExpansionStateAttr();
@@ -715,12 +709,12 @@ void ExpendNodeCommand::Do()
 //==================================================================================
 // Connect Node
 //==================================================================================
-ConnectNodeCommand::ConnectNodeCommand(const SdfPath& source, const SdfPath& destination)
+ConnectNodeCommand::ConnectNodeCommand(
+  UsdStageRefPtr stage, const SdfPath& source, const SdfPath& destination)
   : Command(true)
   , _source(source)
   , _destination(destination)
 {
-  UsdStageRefPtr stage = Application::Get()->GetModel()->GetStage();
   UsdPrim lhsPrim = stage->GetPrimAtPath(source.GetPrimPath());
   UsdPrim rhsPrim = stage->GetPrimAtPath(destination.GetPrimPath());
   if (!lhsPrim.IsValid() || !rhsPrim.IsValid()) {
@@ -771,8 +765,8 @@ void UIGenericCommand::Do()
 //==================================================================================
 // Create Reference Command
 //==================================================================================
-CreateReferenceCommand::CreateReferenceCommand(UsdStageRefPtr stage, const SdfPath &path, 
-  const std::string &identifier)
+CreateReferenceCommand::CreateReferenceCommand(
+  UsdStageRefPtr stage, const SdfPath &path, const std::string &identifier)
   : Command(true)
   , _stage(stage)
   , _path(path)

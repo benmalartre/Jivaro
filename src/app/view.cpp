@@ -8,6 +8,7 @@
 #include "../ui/tab.h"
 #include "../ui/splitter.h"
 #include "../ui/menu.h"
+#include "../ui/explorer.h"
 #include "../ui/viewport.h"
 #include "../ui/contentBrowser.h"
 #include "../ui/graphEditor.h"
@@ -106,6 +107,9 @@ View::CreateUI(UIType type)
   case UIType::VIEWPORT:
     _current = new ViewportUI(this);
     break;
+  case UIType::EXPLORER:
+    _current = new ExplorerUI(this);
+    break;
   case UIType::GRAPHEDITOR:
     _current = new GraphEditorUI(this);
     break;
@@ -190,7 +194,7 @@ View::GetUIs()
 void
 View::TransferUIs(View* source)
 {
-  _uis = std::move(source->_uis);
+  _uis = source->_uis;
   for (auto& ui : _uis)ui->SetParent(this);
   source->_uis.clear();
   if(_uis.size()) {
@@ -479,9 +483,9 @@ View::Split(double perc, bool horizontal, int fixed, int pixels)
   ComputePixels();
   ClearFlag(LEAF);
 
-  if (_tab && _left->_tab) {
-    _left->TransferUIs(this);
-  }
+  _left->TransferUIs(this);
+  _current = NULL;
+
   RemoveTab();
   _window->Resize(_window->GetWidth(), _window->GetHeight());
 }

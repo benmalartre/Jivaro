@@ -65,33 +65,38 @@ void Layout::StandardLayout(Window* window)
   glfwGetWindowSize(window->GetGlfwWindow(), &width, &height);
   window->SplitView(mainView, 0.5, true, View::LFIXED, window->GetMenuBarHeight());
 
-  View* bottomView = mainView->GetRight();
-  window->SplitView(bottomView, 0.9, true, false);
-
-  View* timelineView = bottomView->GetRight();
-  timelineView->SetTabed(false);
-
-  View* centralView = bottomView->GetLeft();
-  window->SplitView(centralView, 0.6, true);
-
-  View* middleView = centralView->GetLeft();
   View* menuView = mainView->GetLeft();
   menuView->SetTabed(false);
+
+  View* view = mainView->GetRight();
+  window->SplitView(view, 0.9, true, false);
+
+  View* timelineView = view->GetRight();
+  timelineView->SetTabed(false);
+
+  view = view->GetLeft();
+  window->SplitView(view, 0.6, true, false);
+
+  View* graphView = view->GetRight();
+  View* centralView = view->GetLeft();
+  
+  window->SplitView(centralView, 0.1, false, View::LFIXED, 32);
+
+  View* toolView = centralView->GetLeft();
+  toolView->SetTabed(false);
+
+  View* middleView = centralView->GetRight();
 
   window->SplitView(middleView, 0.8, false);
 
   View* workingView = middleView->GetLeft();
+  View* propertyView = middleView->GetRight();
+
   window->SplitView(workingView, 0.25, false);
 
-  View* propertyView = middleView->GetRight();
-  View* leftTopView = workingView->GetLeft();
-  window->SplitView(leftTopView, 0.1, false, View::LFIXED, 32);
-
-  View* toolView = leftTopView->GetLeft();
-  toolView->SetTabed(false);
-  View* explorerView = leftTopView->GetRight();
+  View* explorerView = workingView->GetLeft();
   View* viewportView = workingView->GetRight();
-  View* graphView = centralView->GetRight();
+  
 
   window->Resize(width, height);
 

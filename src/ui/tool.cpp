@@ -6,8 +6,10 @@
 #include <pxr/usd/usdGeom/primvarsAPI.h>
 #include <pxr/usd/usdGeom/pointInstancer.h>
 
+#include "../ui/utils.h"
 #include "../ui/tool.h"
 #include "../utils/timer.h"
+#include "../utils/files.h"
 #include "../acceleration/hashGrid.h"
 #include "../geometry/mesh.h"
 #include "../geometry/subdiv.h"
@@ -17,6 +19,8 @@
 #include "../app/selection.h"
 #include "../app/commands.h"
 #include "../app/notice.h"
+#include "../app/view.h"
+#include "../app/window.h"
 #include "../app/application.h"
 #include "../command/block.h"
 
@@ -277,6 +281,29 @@ bool ToolUI::Draw()
   if (ImGui::Button("Create Root Prim")) {
     ADD_COMMAND(CreatePrimCommand, _model->GetRootLayer(), SdfPath("/Root"), TfToken("Xform"), true);
   } ImGui::SameLine();
+
+  if (ImGui::Button("Create Reference")) {
+    Selection* selection =  _model->GetSelection();
+    if(selection->GetNumSelectedItems()) {
+      std::string folder = GetInstallationFolder();
+      const char* filters[] = {
+        ".usd",
+        ".usda",
+        ".usdc",
+        ".usdz"
+      };
+      int numFilters = 4;
+
+      ImVec2 pos = _parent->GetWindow()->GetMousePosition();
+      std::string filename =
+        UI::BrowseFile(pos[0], pos[1], folder.c_str(), filters, numFilters, "reference file", false);
+
+      ADD_COMMAND(CreateReferenceCommand, _model->GetStage(), selection->GetItem(0).path, filename);
+    } else {
+      std::cout << "Create reference need a node selected!" << std::endl;
+    }
+  } ImGui::SameLine();
+
   if (ImGui::Button("Create Random Mesh")) {
     Mesh mesh;
     mesh.Random2DPattern(32);

@@ -266,7 +266,7 @@ public:
 //==================================================================================
 class CreateNodeCommand : public Command {
 public:
-  CreateNodeCommand(const std::string& name, const SdfPath& path);
+  CreateNodeCommand(UsdStageRefPtr stage, const std::string& name, const SdfPath& path);
   ~CreateNodeCommand() {};
   void Do() override;
 private:
@@ -279,7 +279,7 @@ private:
 //==================================================================================
 class MoveNodeCommand : public Command {
 public:
-  MoveNodeCommand(const SdfPathVector& paths, const GfVec2f& offset);
+  MoveNodeCommand(UsdStageRefPtr stage, const SdfPathVector& paths, const GfVec2f& offset);
   ~MoveNodeCommand() {};
   void Do() override;
 private:
@@ -292,7 +292,7 @@ private:
 //==================================================================================
 class SizeNodeCommand : public Command {
 public:
-  SizeNodeCommand(const SdfPathVector& paths, const GfVec2f& offset);
+  SizeNodeCommand(UsdStageRefPtr stage, const SdfPathVector& paths, const GfVec2f& offset);
   ~SizeNodeCommand() {};
   void Do() override;
 private:
@@ -305,7 +305,7 @@ private:
 //==================================================================================
 class ExpendNodeCommand : public Command {
 public:
-  ExpendNodeCommand(const SdfPathVector& nodes, const TfToken& state);
+  ExpendNodeCommand(UsdStageRefPtr stage, const SdfPathVector& nodes, const TfToken& state);
   ~ExpendNodeCommand() {};
   void Do() override;
 private:
@@ -317,7 +317,7 @@ private:
 //==================================================================================
 class ConnectNodeCommand : public Command {
 public:
-  ConnectNodeCommand(const SdfPath& source, const SdfPath& destination);
+  ConnectNodeCommand(UsdStageRefPtr stage, const SdfPath& source, const SdfPath& destination);
   ~ConnectNodeCommand() {};
   void Do() override;
 private:

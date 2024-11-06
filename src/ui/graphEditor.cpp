@@ -555,6 +555,7 @@ void
 GraphEditorUI::Node::Draw(GraphEditorUI* editor) 
 {
   Window* window = editor->GetWindow();
+  Model* model = editor->GetModel();
 
   ImDrawList* drawList = ImGui::GetWindowDrawList();
   const GfVec3f nodeColor = UnpackColor3<GfVec3f>(GetColor());
@@ -612,7 +613,7 @@ GraphEditorUI::Node::Draw(GraphEditorUI* editor)
     if (ImGui::Selectable(UI::HiddenLabel(_expended.GetString().c_str()).c_str(), 
       true, ImGuiSelectableFlags_SelectOnClick, expendSize)) {
       _expended = _GetNextExpendedStateToken(_expended);
-      ADD_COMMAND(ExpendNodeCommand, {_node->GetPath()}, _expended);
+      ADD_COMMAND(ExpendNodeCommand, model->GetStage() , {_node->GetPath()}, _expended);
       SetDirty(GraphEditorUI::Node::DIRTY_SIZE);
     }
 
@@ -1009,28 +1010,6 @@ GraphEditorUI::Draw()
   }
   ImGui::SameLine();
 
-  if (ImGui::Button("REF")) {
-
-    Selection* selection =  _model->GetSelection();
-    if(selection->GetNumSelectedItems()) {
-      std::string folder = GetInstallationFolder();
-      const char* filters[] = {
-        ".usd",
-        ".usda",
-        ".usdc",
-        ".usdz"
-      };
-      int numFilters = 4;
-
-      ImVec2 pos = _parent->GetWindow()->GetMousePosition();
-      std::string filename =
-        UI::BrowseFile(pos[0], pos[1], folder.c_str(), filters, numFilters, "reference file", false);
-
-      ADD_COMMAND(CreateReferenceCommand, _model->GetStage(), selection->GetItem(0).path, filename);
-    } else {
-      std::cout << "Create reference need a node selected!" << std::endl;
-    }
-  }
   ImGui::SameLine();
   */
 
@@ -1260,7 +1239,7 @@ GraphEditorUI::MouseButton(int button, int action, int mods)
       double diffMs = (CurrentTime() - _lastClick) * 1e-3;
 
       if (_drag == true && _dragOffset.GetLength() > 0.000001f) {
-        ADD_COMMAND(MoveNodeCommand, GetSelectedNodesPath(), _dragOffset);
+        ADD_COMMAND(MoveNodeCommand, _model->GetStage(), GetSelectedNodesPath(), _dragOffset);
       } else if(diffMs > 10 && diffMs < 250){
         switch(mods) {
         case GLFW_MOD_SHIFT :
@@ -1434,11 +1413,11 @@ GraphEditorUI::EndConnexion()
 {
   if (_connector.startPort && _connector.endPort) {
     if (!_connector.inputOrOutput) {
-      ADD_COMMAND(ConnectNodeCommand, 
+      ADD_COMMAND(ConnectNodeCommand, _model->GetStage(),
         _connector.endPort->Get()->GetPath(), _connector.startPort->Get()->GetPath());
     }
     else {
-      ADD_COMMAND(ConnectNodeCommand,
+      ADD_COMMAND(ConnectNodeCommand, _model->GetStage(),
         _connector.startPort->Get()->GetPath(), _connector.endPort->Get()->GetPath());
     }
   }

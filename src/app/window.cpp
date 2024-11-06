@@ -434,26 +434,33 @@ Window::RemoveView(View* view)
     sibling = parent->GetRight();
   } else if(parent->GetRight() == view) {
     sibling = parent->GetLeft();
+  } 
+
+  if (sibling->IsFixed()) {
+    std::cerr << "[view] can't remove view, sibling is fixed!" << std::endl;
+    return;
   }
 
-  if (sibling) {
-    if (sibling->GetFlag(View::LEAF)) {
-      parent->TransferUIs(sibling);
-      parent->SetFlag(View::LEAF);
-      parent->SetPerc(1.f);
-    }
-    else {     
-      parent->SetLeft(sibling->GetLeft());
-      parent->SetRight(sibling->GetRight());
-      parent->SetPerc(sibling->GetPerc());
-      parent->SetFlags(sibling->GetFlags());
-      sibling->SetLeft(NULL);
-      sibling->SetRight(NULL);
-    }
-    delete sibling;
+  if (sibling->GetFlag(View::LEAF)) {
+    parent->SetTabed(true);
+    parent->TransferUIs(sibling);
+    parent->SetFlag(View::LEAF);
+    parent->SetPerc(1.f);
+    parent->SetLeft(NULL);
+    parent->SetRight(NULL);
+  } else {
+    parent->SetTabed(false);
+    parent->SetPerc(sibling->GetPerc());
+    View* left = sibling->GetLeft();
+    parent->SetLeft(left);
+    View* right = sibling->GetRight();
+    parent->SetRight(right);
+    sibling->SetLeft(NULL);
+    sibling->SetRight(NULL);
   }
-
   delete view;
+  delete sibling;
+
   Resize(_width, _height);
   _mainView->SetDirty();
 }
