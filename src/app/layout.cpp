@@ -97,7 +97,6 @@ void Layout::StandardLayout(Window* window)
   View* explorerView = workingView->GetLeft();
   View* viewportView = workingView->GetRight();
   
-
   window->Resize(width, height);
 
   uint64_t Ts[8];

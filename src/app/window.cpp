@@ -436,11 +436,6 @@ Window::RemoveView(View* view)
     sibling = parent->GetLeft();
   } 
 
-  if (sibling->IsFixed()) {
-    std::cerr << "[view] can't remove view, sibling is fixed!" << std::endl;
-    return;
-  }
-
   if (sibling->GetFlag(View::LEAF)) {
     parent->SetTabed(true);
     parent->TransferUIs(sibling);
