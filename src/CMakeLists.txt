@@ -220,3 +220,13 @@ if(DEFINED PYTHON_BUILD)
 endif()
 
 add_compile_options(/C4244)
+
+install(
+  TARGETS ${TARGET}
+  RUNTIME DESTINATION bin
+  LIBRARY DESTINATION lib
+)
+
+install(
+  DIRECTORY ../fonts ../icons DESTINATION bin
+)
