@@ -1,9 +1,7 @@
 #ifndef JVR_PBD_ELEMENT_H
 #define JVR_PBD_ELEMENT_H
 
-#include <pxr/imaging/hd/changeTracker.h>
 #include <pxr/usd/usd/prim.h>
-
 #include "../common.h"
 
 

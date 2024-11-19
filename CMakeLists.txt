@@ -38,6 +38,27 @@ else()
   add_definitions("/MP")
 endif()
 
+# Discover cmake modules.
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/packages
+)
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
+# Exposes build options (with default values) for this project.
+include(Options)
+
+# Set project defaults.
+include(Defaults)
+
+# Import the package dependencies (USD, TBB, ...).
+include(Packages)
+
+# Include USD plugin building CMake utilities.
+include(USDPluginTools)
+
+
 # nfd (native file dialog)
 set(NFD_INCLUDE_DIR "./utils/nfd/include")
 
@@ -158,7 +179,7 @@ list(APPEND BOOST_LIB_NAMES
 set(BOOST_LIBRARIES "")
 set(BOOST_VERSION "")
 if(NOT UNIX)
-	set(BOOST_VERSION "-vc142-mt-gd-x64-1_76")
+	set(BOOST_VERSION "-vc142-mt-x64-1_76")
 endif()
 foreach(BOOST_LIB_NAME IN LISTS BOOST_LIB_NAMES)
   set(BOOST_LIBRARIES 
@@ -175,7 +196,7 @@ list(APPEND TBB_LIB_NAMES
   tbb
   #tbbmalloc_proxy
   tbbmalloc
-  tbb_debug
+  #tbb_debug
 )
 
 set(TBB_LIBRARIES "")
@@ -219,22 +240,6 @@ foreach(OPENSUBDIV_LIB_NAME IN LISTS OPENSUBDIV_LIB_NAMES)
   )
 endforeach()
 
-# custom usd plugins
-set(USD_PLUGINS_INCLUDE_DIR "${USD_PLUGINS_DIR}/include")
-set(USD_PLUGINS_LIBRARY_DIR "${USD_PLUGINS_DIR}/lib")
-
-list(APPEND USD_PLUGINS_LIB_NAMES 
-  usdPbd
-)
-
-set(USD_PLUGINS_LIBRARIES "")
-foreach(USD_PLUGINS_LIB_NAME IN LISTS USD_PLUGINS_LIB_NAMES)
-  set(USD_PLUGINS_LIBRARIES 
-    ${USD_PLUGINS_LIBRARIES} 
-      "${USD_PLUGINS_LIBRARY_DIR}/${LIB_PREFIX}${USD_PLUGINS_LIB_NAME}${LIB_DYNAMIC_EXT}"
-  )
-endforeach()
-
 # system
 IF(APPLE)
   SET(ADDITIONAL_LIBRARIES ${ADDITIONAL_LIBRARIES} 
@@ -246,6 +251,8 @@ if(WIN32)
   add_definitions("/wd4305")
 endif(WIN32)
 
+add_subdirectory (plugins)
 add_subdirectory (src)
 add_subdirectory (tests)
 add_subdirectory (fonts)
+

@@ -29,6 +29,7 @@
 #include "../pbd/solver.h"
 #include "../pbd/force.h"
 
+
 JVR_NAMESPACE_OPEN_SCOPE
 
 Plane* _CreateCollidePlane(UsdStageRefPtr& stage, const SdfPath& path,

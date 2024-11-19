@@ -95,7 +95,7 @@ public:
   //-------------------------------------------------------------------
   class Node {
     public: 
-      Node(const SdfPath& path);
+      Node(UsdPrim& prim);
       ~Node();
 
       void AddInput(UsdAttribute& attribute, const TfToken& name, 
@@ -107,9 +107,8 @@ public:
 
       size_t GetNumPorts() { return _ports.size(); };
       std::vector<Port>& GetPorts() { return _ports; };
-      const SdfPath& GetPath() const {return _path;};
-      UsdPrim& GetPrim(UsdStageRefPtr& stage) { return stage->GetPrimAtPath(_path); };
-      const UsdPrim& GetPrim(UsdStageRefPtr& stage) const { return stage->GetPrimAtPath(_path); };
+      UsdPrim& GetPrim() { return _prim; };
+      const UsdPrim& GetPrim() const { return _prim; };
       bool IsCompound();
 
       TfToken GetName() { return _name; };
@@ -122,15 +121,15 @@ public:
       
       Node*                       _parent;
       TfToken                     _name;
-      SdfPath                     _path;
+      UsdPrim                     _prim;
       std::vector<Port>           _ports;
   };
 
 public:
-  Graph(SdfLayerRefPtr layer);
+  Graph(const UsdPrim& prim);
   virtual ~Graph();
 
-  virtual void Populate(SdfLayerRefPtr layer);
+  virtual void Populate(const UsdPrim& prim);
   virtual void Clear();
 
   virtual void AddNode(Node* node);
@@ -144,10 +143,11 @@ public:
   const std::vector<Node*>& GetNodes() const { return _nodes; };
   std::vector<Node*>& GetNodes() { return _nodes; };
 
-  const Node* GetNode(const SdfPath& path) const;
-  Node* GetNode(const SdfPath& path);
-
-  SdfLayerRefPtr GetLayer(){return _layer;};
+  const Node* GetNode(const UsdPrim& prim) const;
+  Node* GetNode(const UsdPrim& prim);
+  
+  const UsdPrim& GetPrim() const { return _prim; };
+  UsdPrim& GetPrim() { return _prim; };
 
   const std::vector<Connexion*>& GetConnexions() const { return _connexions; };
   std::vector<Connexion*>& GetConnexions() { return _connexions; };
@@ -161,7 +161,7 @@ protected:
   
   std::vector<Node*>              _nodes;
   std::vector<Connexion*>         _connexions;
-  SdfLayerRefPtr                  _layer;
+  UsdPrim                         _prim;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

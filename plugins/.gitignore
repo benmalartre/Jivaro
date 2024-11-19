@@ -1,0 +1,73 @@
+# USDPlugins
+Pixar OpenUSD Plugins experiments
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+*.so
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Eclipse Projects
+*.cproject
+*.project
+
+# MacOS Files
+*.DS_Store
+*.xcodeproj
+*.bundle
+
+# Qt Creator Files
+*.config
+*.creator
+*.files
+*.includes
+*.pro
+
+# Visual Studio Code
+*.vscode
+*.clang*
+
+# Python Bytecode
+*.pyc
+
+# Rez 
+.group
+
+# windows
+windows
+*/x64/*
+*/Debug/*
+*.pys
+*ipch*
+*vcxproj*
+*.sln*
+*.opensdf
+*.sdf
+*.suo
+
+# build folder
+*build/*

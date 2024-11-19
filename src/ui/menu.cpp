@@ -20,6 +20,8 @@
 #include "../app/notice.h"
 #include "../app/commands.h"
 #include "../app/model.h"
+#include "../pbd/menu.h"
+#include "../exec/menu.h"
 
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -188,6 +190,7 @@ MenuUI::MenuUI(View* parent)
   testItem->Add("Create Cone", false, true, std::bind(CreatePrimCallback, _model, TfToken("Cone")));
 
   AddPbdMenu(this);
+  AddExecMenu(this);
 
   MenuUI::Item* demoItem = Add("Demo", false, true);
   demoItem->Add("Child Window", false, true, std::bind(OpenChildWindowCallback, this));

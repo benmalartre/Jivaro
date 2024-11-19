@@ -51,25 +51,20 @@ Index::Update(const float time)
   }
 }
 
-
-/*
 void 
-Model::InitExec()
+Index::SetExec(Execution* exec)
 {
+  if(_exec)delete _exec;
+  _exec = exec;
+}
+
+void 
+Index::InitExec()
+{
+  if(!_exec)return;
+
   Time* time = Time::Get();
   time->SetActiveTime(time->GetStartTime());
-  //_exec = new TestPendulum();
-  //_exec = new TestVelocity();
-  _exec = new TestPoints();
-  //_exec = new TestGrid();
-  //_exec = new TestParticles();
-  //_exec = new TestInstancer();
-  //_exec = new TestRaycast();
-  //_exec = new TestPBD();
-  //_exec = new TestPush();
-  //_exec = new TestHair();
-  //_exec = new TestGeodesic();
-  //_exec = new TestBVH();
 
   _exec->InitExec(_stage);
 
@@ -79,7 +74,7 @@ Model::InitExec()
   _execSceneIndex->UpdateExec();
 }
 
-*/
+/*
 void 
 Index::InitExec(Execution* exec)
 {
@@ -95,6 +90,7 @@ Index::InitExec(Execution* exec)
   SetCurrentSceneIndex(_execSceneIndex);
   _execSceneIndex->UpdateExec();
 }
+*/
 
 void
 Index::UpdateExec(float time)
@@ -127,7 +123,7 @@ void
 Index::ToggleExec() 
 {
   _execute = 1 - _execute; 
-  if (_execute)InitExec(_exec);
+  if (_execute)InitExec();
   else TerminateExec();
 };
 

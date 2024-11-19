@@ -31,10 +31,13 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 // Node constructor
 //------------------------------------------------------------------------------
-Graph::Node::Node(const SdfPath& path)
-  : _path(path)
+Graph::Node::Node(UsdPrim& prim)
+  : _prim(prim)
 {
-  _name = _path.GetNameToken();
+  if (_prim.IsValid())
+  {
+    _name = _prim.GetName();
+  }
 }
 
 // Node destructor
@@ -46,20 +49,22 @@ Graph::Node::~Node()
 
 // Get node
 //------------------------------------------------------------------------------
+// Get node
+//------------------------------------------------------------------------------
 const Graph::Node*
-Graph::GetNode(const SdfPath& path) const
+Graph::GetNode(const UsdPrim& prim) const
 {
   for (const Graph::Node* node : _nodes) {
-    if(node->GetPath() == path)return node;
+    if(node->GetPrim().GetPath() == prim.GetPath())return node;
   }
   return NULL;
 }
 
 Graph::Node* 
-Graph::Graph::GetNode(const SdfPath& path)
+Graph::Graph::GetNode(const UsdPrim& prim)
 {
   for (Graph::Node* node : _nodes) {
-    if (node->GetPath() == path)return node;
+    if (node->GetPrim().GetPath() == prim.GetPath())return node;
   }
   return NULL;
 }
@@ -133,7 +138,7 @@ Graph::Port::Port(Graph::Node* node, size_t flags,
 SdfPath
 Graph::Port::GetPath()
 {
-  return _node->GetPath().AppendProperty(GetName());
+  return _node->GetPrim().GetPath().AppendProperty(GetName());
 }
 
 
@@ -151,8 +156,8 @@ Graph::Port::IsConnected(Graph* graph, Graph::Connexion* foundConnexion)
 
 // Graph constructor
 //------------------------------------------------------------------------------
-Graph::Graph(SdfLayerRefPtr layer)
- : _layer(layer)
+Graph::Graph(const UsdPrim& prim)
+  : _prim(prim)
 {
 }
 
@@ -167,10 +172,10 @@ Graph::~Graph()
 
 // Graph populate
 //------------------------------------------------------------------------------
-void Graph::Populate(SdfLayerRefPtr layer)
+void Graph::Populate(const UsdPrim& prim)
 {
-  _layer = layer;
   Clear();
+  _prim = prim;
   _DiscoverNodes();
   _DiscoverConnexions();
 }

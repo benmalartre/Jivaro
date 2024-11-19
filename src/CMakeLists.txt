@@ -1,12 +1,29 @@
 set(TARGET jivaro)
 
+# custom usd plugins
+set(USD_PLUGINS_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/build/include")
+set(USD_PLUGINS_LIBRARY_DIR "${CMAKE_SOURCE_DIR}/build/lib")
+
+list(APPEND USD_PLUGINS_LIB_NAMES 
+  usdPbd
+)
+
+set(USD_PLUGINS_LIBRARIES "")
+foreach(USD_PLUGINS_LIB_NAME IN LISTS USD_PLUGINS_LIB_NAMES)
+  set(USD_PLUGINS_LIBRARIES 
+    ${USD_PLUGINS_LIBRARIES} 
+      "${USD_PLUGINS_LIBRARY_DIR}/${LIB_PREFIX}${USD_PLUGINS_LIB_NAME}${LIB_DYNAMIC_EXT}"
+  )
+endforeach()
+
 set(USDIMAGINGGL_ENGINE_ENABLE_SCENE_INDEX true)
 
   add_definitions(
     -DTASKING_TBB
     -DNOMINMAX
-    -DTBB_USE_DEBUG
+  #  -DTBB_USE_DEBUG
   )
+
 
 add_executable(${TARGET}
   imgui/imgui_demo.cpp
@@ -54,6 +71,7 @@ add_executable(${TARGET}
 
   exec/sceneIndex.cpp
   exec/execution.cpp
+  exec/menu.cpp
   #exec/node.cpp 
   #exec/network.cpp 
 

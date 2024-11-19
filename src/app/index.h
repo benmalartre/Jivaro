@@ -44,11 +44,12 @@ public:
   void SetStage(UsdStageRefPtr& stage);
 
   // execution
+  void SetExec(Execution* exec);
   void ToggleExec();
   void SetExec(bool state);
   bool GetExec();
 
-  virtual void InitExec(Execution* exec);
+  virtual void InitExec();
   virtual void UpdateExec(float time);
   virtual void TerminateExec();
   virtual void SendExecViewEvent(const ViewEventData &data);

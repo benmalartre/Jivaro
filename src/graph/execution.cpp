@@ -114,10 +114,10 @@ _GetRuntimeTypeName(SdfValueTypeName vtn)
 
 // Graph constructor
 //------------------------------------------------------------------------------
-ExecutionGraph::ExecutionGraph(SdfLayerRefPtr layer) 
-  : Graph(layer)
+ExecutionGraph::ExecutionGraph(const UsdPrim& prim)
+  : Graph(prim)
 {
-  Populate(layer);
+  Populate(prim);
 }
 
 // Graph destructor
@@ -126,8 +126,8 @@ ExecutionGraph::~ExecutionGraph()
 {
 }
 
-ExecutionGraph::ExecutionNode::ExecutionNode(const SdfPath& path)
-  : Graph::Node(path)
+ExecutionGraph::ExecutionNode::ExecutionNode(UsdPrim& prim)
+  : Graph::Node(prim)
 {
   _PopulatePorts();
 }

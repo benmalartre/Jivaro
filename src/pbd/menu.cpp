@@ -1,9 +1,5 @@
 #include <pxr/usd/usd/stage.h>
 
-#include <usdPbd/solver.h>
-#include <usdPbd/bodyAPI.h>
-#include <usdPbd/collisionAPI.h>
-#include <usdPbd/constraintAPI.h>
 
 #include "../utils/strings.h"
 #include "../ui/menu.h"
@@ -13,6 +9,11 @@
 #include "../app/application.h"
 #include "../app/commands.h"
 #include "../app/callbacks.h"
+
+#include <usdPbd/solver.h>
+#include <usdPbd/bodyAPI.h>
+#include <usdPbd/collisionAPI.h>
+#include <usdPbd/constraintAPI.h>
 
 JVR_NAMESPACE_OPEN_SCOPE
 

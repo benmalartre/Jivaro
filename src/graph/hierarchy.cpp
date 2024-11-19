@@ -9,10 +9,11 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 // Graph constructor
 //------------------------------------------------------------------------------
-HierarchyGraph::HierarchyGraph(SdfLayerRefPtr& layer) 
-  : Graph(layer)
+HierarchyGraph::HierarchyGraph(const SdfLayerRefPtr& layer, const UsdPrim& prim)
+  : Graph(prim)
+  , _layer(layer)
 {
-  Populate(_layer);
+  Populate(prim);
 }
 
 // Graph destructor
@@ -23,48 +24,22 @@ HierarchyGraph::~HierarchyGraph()
 
 // Graph populate
 //------------------------------------------------------------------------------
-void HierarchyGraph::Populate(SdfLayerRefPtr layer)
+void HierarchyGraph::Populate(const UsdPrim& prim)
 {
-  _layer = layer;
+  _prim = prim;
   Clear();
-
-  std::vector<SdfPath> paths;
-
-  _layer->Traverse(SdfPath::AbsoluteRootPath(),
-    [&paths, layer](SdfPath const& path) {
-      if(path.IsPrimPath()) paths.push_back(path);
-    });
-  
-  for(auto path: paths) {
-    std::cout << path << std::endl;
-
-    HierarchyGraph::HierarchyNode* node =
-      new HierarchyGraph::HierarchyNode(path);
-
-    AddNode(node);
-    /*
-    parent->AddChild(node);
-
-    Graph::Connexion* connexion = 
-      new Graph::Connexion(parent->GetChildrenPort(), node->GetParentPort());
-    AddConnexion(connexion);
-    _RecurseNodes(node);
-    */
-  
-  }
-  /*
   _DiscoverNodes();
   _DiscoverConnexions();
-  */
 }
 
 
-HierarchyGraph::HierarchyNode::HierarchyNode(const SdfPath& path)
-  : Graph::Node(path)
+HierarchyGraph::HierarchyNode::HierarchyNode(UsdPrim& prim,
+  HierarchyGraph::HierarchyNode* parent)
+  : Graph::Node(prim)
+  , _parent(parent)
 {
   _PopulatePorts();
 }
-
 
 void HierarchyGraph::HierarchyNode::_PopulatePorts()
 {
@@ -72,15 +47,15 @@ void HierarchyGraph::HierarchyNode::_PopulatePorts()
   _ports.push_back(Graph::Port(this, Graph::Port::INPUT | Graph::Port::HIDDEN, ChildrenPortToken));
 }
 
-/*
 void
 HierarchyGraph::_RecurseNodes(HierarchyGraph::HierarchyNode* parent)
 {
-  UsdPrim prim = _stage->GetPrimAtPath(parent->GetPrim().GetPath());
-  for (auto& child : prim.GetChildren()) {
+  SdfPrimSpecHandle primSpec = _layer->GetPrimAtPath(parent->GetPrim().GetPath());
+  for (const auto& child : primSpec.GetSpec().GetNameChildren()) {
+    UsdPrim childPrim = 
+      parent->GetPrim().GetChild(TfToken(child->GetName()));
     HierarchyGraph::HierarchyNode* node =
-      new HierarchyGraph::HierarchyNode(child, parent);
-
+      new HierarchyGraph::HierarchyNode(childPrim, parent);
     AddNode(node);
     parent->AddChild(node);
 
@@ -104,7 +79,7 @@ HierarchyGraph::_DiscoverNodes()
 void
 HierarchyGraph::_DiscoverConnexions()
 {
-  
+  /*
   std::cout << "execution discover connexions ..." << std::endl;
   for (UsdPrim child : _prim.GetChildren()) {
     if (child.IsA<UsdExecNode>()) {
@@ -127,7 +102,7 @@ HierarchyGraph::_DiscoverConnexions()
       }
     }
   }
-  
+  */
 }
-*/
+
 JVR_NAMESPACE_CLOSE_SCOPE

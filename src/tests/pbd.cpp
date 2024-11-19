@@ -1,4 +1,5 @@
 #include <pxr/usd/usd/prim.h>
+
 #include <usdPbd/solver.h>
 #include <usdPbd/bodyAPI.h>
 #include <usdPbd/collisionAPI.h>
@@ -24,6 +25,7 @@
 
 #include "../tests/utils.h"
 #include "../tests/pbd.h"
+
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -221,7 +223,7 @@ void TestPBD::InitExec(UsdStageRefPtr& stage)
       GfMatrix4d().SetTranslate(GfVec3f(0.f, -0.5f, 0.f)));
     _scene.AddGeometry(_groundId, _ground);
 
-    Collision* collision = new PlaneCollision(_ground, _groundId, restitution, friction);
+    Collision* collision = new PlaneCollision(_ground, _groundId, 0.5f, 0.5f);
     _solver->AddElement(collision, _ground, _groundId);
   }
   

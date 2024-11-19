@@ -10,7 +10,6 @@
 #include "../common.h"
 #include "../ui/ui.h"
 #include "../ui/utils.h"
-#include "../pbd/menu.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 

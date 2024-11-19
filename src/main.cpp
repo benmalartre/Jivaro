@@ -1,3 +1,4 @@
+#include <pxr/base/arch/env.h>
 
 #include "common.h"
 #include "utils/keys.h"

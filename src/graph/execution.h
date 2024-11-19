@@ -14,7 +14,7 @@ class ExecutionGraph : public Graph
 {
   class ExecutionNode : public Graph::Node {
   public:
-    ExecutionNode(const SdfPath& path);
+    ExecutionNode(UsdPrim& prim);
     ~ExecutionNode() {};
 
   protected:
@@ -22,7 +22,7 @@ class ExecutionGraph : public Graph
   };
 
 public:
-  explicit ExecutionGraph(SdfLayerRefPtr layer);
+  explicit ExecutionGraph(const UsdPrim& prim);
   ~ExecutionGraph();
 
   short GetType() override { return Graph::Type::EXECUTION; };

@@ -319,8 +319,10 @@ public:
   void FrameSelection();
   void FrameAll();
 
+  GfVec2f GetInsertionPos(Node* node);
+
   // io
-  bool Populate();
+  bool Populate(Graph* graph);
   void Clear();
   bool Read(UsdStageRefPtr& stage);
   bool Write(UsdStageRefPtr& stage);
@@ -339,6 +341,8 @@ private:
   int                                   _depth;
   GfVec2f                               _offset;  
   GfVec2f                               _dragOffset;
+  GfVec2f                               _insertionPos;
+  GfVec2f                               _parentPos;
   float                                 _scale;
   float                                 _invScale;
   int                                   _lastX;

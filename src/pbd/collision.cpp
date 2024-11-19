@@ -1,4 +1,4 @@
-#include <usdPbd/collisionAPI.h>
+
 #include <pxr/base/work/loops.h>
 
 #include "../utils/color.h"
@@ -14,6 +14,8 @@
 #include "../pbd/contact.h"
 #include "../pbd/solver.h"
 #include "../pbd/constraint.h"
+
+#include <usdPbd/collisionAPI.h>
 
 JVR_NAMESPACE_OPEN_SCOPE
 

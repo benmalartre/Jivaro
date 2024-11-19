@@ -53,7 +53,7 @@ namespace Callbacks {
   void ToggleExec()
   {
     std::cout << "TOGGLE EXEC NOT IMPLEMENTED!!" << std::endl;
-    //Application::Get()->GetIndex()->ToggleExec();
+    Application::Get()->GetIndex()->ToggleExec();
   }
   
 }

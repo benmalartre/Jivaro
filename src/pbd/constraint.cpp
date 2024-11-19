@@ -1,5 +1,5 @@
 #include <pxr/base/work/loops.h>
-#include <usdPbd/constraintAPI.h>
+
 
 #include "../geometry/geometry.h"
 #include "../geometry/mesh.h"
@@ -8,6 +8,8 @@
 #include "../pbd/collision.h"
 #include "../pbd/particle.h"
 #include "../pbd/solver.h"
+
+#include <usdPbd/constraintAPI.h>
 
 
 JVR_NAMESPACE_OPEN_SCOPE
