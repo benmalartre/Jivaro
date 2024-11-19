@@ -1,8 +1,8 @@
 set(TARGET jivaro)
 
 # custom usd plugins
-set(USD_PLUGINS_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/build/include")
-set(USD_PLUGINS_LIBRARY_DIR "${CMAKE_SOURCE_DIR}/build/lib")
+set(USD_PLUGINS_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/build/install/include")
+set(USD_PLUGINS_LIBRARY_DIR "${CMAKE_SOURCE_DIR}/build/install/lib")
 
 list(APPEND USD_PLUGINS_LIB_NAMES 
   usdPbd
@@ -229,4 +229,8 @@ install(
 
 install(
   DIRECTORY ../fonts ../icons DESTINATION bin
+)
+
+install(
+  FILES ../plugins/plugInfo.json DESTINATION lib/usd
 )
