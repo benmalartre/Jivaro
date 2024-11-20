@@ -14,7 +14,7 @@ Jivaro is develloped and tested on Windows (Windows 10 Pro) and on MacBookPro M1
 5. from this build repo run
     - cmake -DUSD_DIR=path_to_usd_build -DGLFW_DIR=path_to_glfw_build ../
     - cmake --build . --config Release
-    - cmake --install . -prefix path_to_jivaro_build\install
+    - cmake --install . -prefix path_to_jivaro_install
 6. update your system PATHS
     - add path_to_jivaro_install\lib to your PATH
     - add path_to_jivaro_install\lib\usd to PXR_PLUGINPATH_NAME
