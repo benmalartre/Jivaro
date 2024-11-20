@@ -230,10 +230,10 @@ void _BenchMark2( const std::string &filename) {
   sparse.Resize(N, N);
   dense.Resize(N, N);
 
-  uint64_t startT = CurrentTime();
+  uint64_t startT = ArchGetTickTime();
   
   SparseMatrixInfos<Scalar> infos = GetLaplacianMatrix<Scalar>(mesh);
-  std::cout << "compute infos took : " << ((CurrentTime() - startT) * 1e-6) << std::endl;
+  std::cout << "compute infos took : " << ((ArchGetTickTime() - startT) * 1e-6) << std::endl;
 
   sparse.Set(infos.keys.size(), &infos.keys[0], &infos.values[0]);
   dense.Set(infos.keys.size(), &infos.keys[0], &infos.values[0]);
@@ -256,13 +256,13 @@ void _BenchMark2( const std::string &filename) {
   std::cout<< "initial equals :" << _CompareMatrices(dense, sparse) << std::endl;;
   std::cout<< "inverse equals :" << _CompareMatrices(invDense, invSparse) << std::endl;
 
-  startT = CurrentTime();
+  startT = ArchGetTickTime();
   SparseMatrix<Scalar> finalSparse = invSparse.Multiply(invSparse.Transpose());
-  std::cout<< "multiply sparse took :" << ((CurrentTime() - startT) * 1e-6) << std::endl;
+  std::cout<< "multiply sparse took :" << ((ArchGetTickTime() - startT) * 1e-6) << std::endl;
 
-  startT = CurrentTime();
+  startT = ArchGetTickTime();
   Matrix<Scalar> finalDense = invDense.Multiply(invDense.Transpose());
-  std::cout<< "multiply dense took :" << ((CurrentTime() - startT) * 1e-6) << std::endl;
+  std::cout<< "multiply dense took :" << ((ArchGetTickTime() - startT) * 1e-6) << std::endl;
 
 
   std::cout<< "final equals   :" << _CompareMatrices(finalDense , finalSparse)<< std::endl;

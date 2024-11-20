@@ -2,6 +2,7 @@
 
 #include <pxr/pxr.h>
 #include <pxr/base/arch/defines.h>
+#include <pxr/base/arch/timing.h>
 #include <pxr/base/tf/token.h>
 #include <pxr/base/tf/hashMap.h>
 #include <pxr/base/tf/type.h>
@@ -75,7 +76,7 @@ void _FindHits(size_t begin, size_t end, const pxr::GfVec3f* positions,
 void _Raycast(const pxr::GfVec3f* positions, Intersector* intersector, const char* title)
 {
   std::cout << title << " raycast  " << _numRays << " random rays..." << std::endl;
-  uint64_t sT = CurrentTime();
+  uint64_t sT = ArchGetTickTime();
 
   pxr::VtArray<pxr::GfVec3f> points(_numRays);
   pxr::VtArray<bool> hits(_numRays, false);
@@ -97,7 +98,7 @@ void _Raycast(const pxr::GfVec3f* positions, Intersector* intersector, const cha
     };
   }
 
-  std::cout << title << " time : " << ((double)(CurrentTime() - sT) *1e-9) << "seconds" << std::endl;
+  std::cout << title << " time : " << ((double)(ArchGetTickTime() - sT) *1e-9) << "seconds" << std::endl;
   std::cout << title << " hits : " << numHits << std::endl;
 
 
@@ -130,17 +131,17 @@ int main (int argc, char *argv[])
     for(size_t p=0; p<(2*_numRays);++p) 
       rays[p] = pxr::GfVec3f(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
 
-    uint64_t sT = CurrentTime();
+    uint64_t sT = ArchGetTickTime();
     BVH bvh;
     bvh.Init({_meshes});
-    std::cout << "bvh build took " << ((double)(CurrentTime() - sT) *1e-9) << "seconds" << std::endl;
+    std::cout << "bvh build took " << ((double)(ArchGetTickTime() - sT) *1e-9) << "seconds" << std::endl;
 
     _Raycast(&rays[0], &bvh, "bvh");
 
-    sT = CurrentTime();
+    sT = ArchGetTickTime();
     Grid3D grid;
     grid.Init({_meshes});
-    std::cout << "grid build took " << ((double)(CurrentTime() - sT) *1e-9) << "seconds" << std::endl;
+    std::cout << "grid build took " << ((double)(ArchGetTickTime() - sT) *1e-9) << "seconds" << std::endl;
 
     _Raycast(&rays[0], &grid, "grid");
  

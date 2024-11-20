@@ -1,3 +1,4 @@
+#include <pxr/base/arch/timing.h>
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/quatf.h>
 #include <pxr/base/gf/matrix3f.h>
@@ -9,7 +10,6 @@
 using VectorXf = Eigen::Matrix<float, Eigen::Dynamic, 1>;
 
 #include "../../src/utils/timer.h"
-
 #include "../../src/geometry/matrix.h"
 
 PXR_NAMESPACE_USING_DIRECTIVE
@@ -23,7 +23,7 @@ float LagrangeMultiplierCustom(size_t N, pxr::GfVec3f* grad, float* w)
     result += 
       grad[n][0] * w[n] * grad[n][0] +
       grad[n][1] * w[n] * grad[n][1] +
-      grad[n][2] * w[n]      * grad[n][2];
+      grad[n][2] * w[n] * grad[n][2];
   }
   return result;
 }
@@ -62,15 +62,14 @@ int main (int argc, char *argv[])
       gradient(m * 3 + 2) = grad[m][2];
     }
 
-
-    sT = JVR::CurrentTime();
+    sT = ArchGetTickTime();
     eR = LagrangeMultiplierEigen(n, gradient, &w[0]);
-    eT = (double)((JVR::CurrentTime() - sT) * 1e-6);
+    eT = (double)((ArchGetTickTime() - sT) * 1e-6);
     std::cout << "eigen  (" << n << ") : " << eR << " took " << eT << std::endl;
    
-    sT = JVR::CurrentTime();
+    sT = ArchGetTickTime();
     cR = LagrangeMultiplierCustom(n, &grad[0], &w[0]);
-    cT = (double)((JVR::CurrentTime() - sT) * 1e-6);
+    cT = (double)((ArchGetTickTime() - sT) * 1e-6);
     std::cout << "custom (" << n << ") : " << cR << " took " << cT << std::endl;
 
   }
