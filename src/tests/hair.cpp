@@ -58,7 +58,7 @@ HdDirtyBits
 TestHair::_HairEmit(UsdStageRefPtr& stage, Curve* curve, UsdGeomMesh& mesh, 
   GfMatrix4d& xform, double time)
 {
-  uint64_t T = CurrentTime();
+  uint64_t T = ArchGetTickTime();
   HdDirtyBits bits = HdChangeTracker::Clean;
  
   VtArray<GfVec3f> positions;
@@ -72,18 +72,18 @@ TestHair::_HairEmit(UsdStageRefPtr& stage, Curve* curve, UsdGeomMesh& mesh,
   mesh.GetFaceVertexCountsAttr().Get(&counts, time);
   mesh.GetFaceVertexIndicesAttr().Get(&indices, time);
 
-  //uint64_t T1 = CurrentTime() - T;
-  //T = CurrentTime();
+  //uint64_t T1 = ArchGetTickTime() - T;
+  //T = ArchGetTickTime();
   TriangulateMesh(counts, indices, triangles);
-  //uint64_t T2 = CurrentTime() - T;
-  //T = CurrentTime();
+  //uint64_t T2 = ArchGetTickTime() - T;
+  //T = ArchGetTickTime();
   ComputeVertexNormals(positions, counts, indices, triangles, normals);
-  //uint64_t T3 = CurrentTime() - T;
-  //T = CurrentTime();
+  //uint64_t T3 = ArchGetTickTime() - T;
+  //T = ArchGetTickTime();
   //PoissonSampling(_radius, _density, positions, normals, triangles, samples);
   StochasticSampling(_density, positions, normals, triangles, samples);
-  //uint64_t T4 = CurrentTime() - T;
-  //T = CurrentTime();  
+  //uint64_t T4 = ArchGetTickTime() - T;
+  //T = ArchGetTickTime();  
 
   size_t numCVs = 4 * samples.size();
 
@@ -120,14 +120,14 @@ TestHair::_HairEmit(UsdStageRefPtr& stage, Curve* curve, UsdGeomMesh& mesh,
 
     cvCounts[sampleIdx] = 4;
   }
-  //uint64_t T5 = CurrentTime() - T; 
-  //T = CurrentTime();
+  //uint64_t T5 = ArchGetTickTime() - T; 
+  //T = ArchGetTickTime();
 
   curve->SetTopology(points, radii, cvCounts);
   curve->SetColors(colors);
 
-  //uint64_t T6 = CurrentTime() - T;
-  //T = CurrentTime();
+  //uint64_t T6 = ArchGetTickTime() - T;
+  //T = ArchGetTickTime();
 
   return HdChangeTracker::DirtyTopology;
 }

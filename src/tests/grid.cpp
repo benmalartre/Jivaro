@@ -118,18 +118,18 @@ void TestGrid::_UpdateHits()
   VtArray<bool> hits(numRays * 2, false);
 
 
-  uint64_t startT = CurrentTime();
+  uint64_t startT = ArchGetTickTime();
   WorkParallelForN(_rays->GetNumCurves(),
     std::bind(&TestGrid::_FindHits, this, std::placeholders::_1, 
       std::placeholders::_2, positions, &points[0], &hits[0], &_grid));
-  uint64_t bvhRaycastT = CurrentTime() - startT;
+  uint64_t bvhRaycastT = ArchGetTickTime() - startT;
   std::cout << "raycast bvh : " << ((double)bvhRaycastT * 1e-6) << " seconds" << std::endl;
 
-  startT = CurrentTime();
+  startT = ArchGetTickTime();
   WorkParallelForN(_rays->GetNumCurves(),
     std::bind(&TestGrid::_FindHits, this, std::placeholders::_1, 
       std::placeholders::_2, positions, &points[numRays], &hits[numRays], &_bvh));
-  uint64_t gridRaycastT = CurrentTime() - startT;
+  uint64_t gridRaycastT = ArchGetTickTime() - startT;
   std::cout << "raycast grid : " << ((double)gridRaycastT * 1e-6) << " seconds" << std::endl;
 
 
@@ -235,15 +235,15 @@ void TestGrid::InitExec(UsdStageRefPtr& stage)
       //_meshes[m]->SetInputOnly();
     }
 
-    uint64_t startT = CurrentTime();
+    uint64_t startT = ArchGetTickTime();
     _bvh.Init(_meshes);
-    uint64_t bvhBuildT = CurrentTime() - startT;
+    uint64_t bvhBuildT = ArchGetTickTime() - startT;
     std::cout << "build bvh : " << ((double)bvhBuildT * 1e-6) << " seconds" << std::endl;
 
 
-    startT = CurrentTime();
+    startT = ArchGetTickTime();
     _grid.Init(_meshes);
-    uint64_t gridBuildT = CurrentTime() - startT;
+    uint64_t gridBuildT = ArchGetTickTime() - startT;
     std::cout << "build grid : " << ((double)gridBuildT * 1e-6) << " seconds" << std::endl;
     
 
@@ -287,14 +287,14 @@ void TestGrid::UpdateExec(UsdStageRefPtr& stage, float time)
   _scene.Sync(stage, time);
   
   if (_meshes.size()) {
-    uint64_t startT = CurrentTime();
+    uint64_t startT = ArchGetTickTime();
     _bvh.Update();
-    uint64_t bvhUpdateT = CurrentTime() - startT;
+    uint64_t bvhUpdateT = ArchGetTickTime() - startT;
     std::cout << "update bvh : " << ((double)bvhUpdateT * 1e-6) << " seconds" << std::endl;
 
-     startT = CurrentTime();
+     startT = ArchGetTickTime();
     _grid.Update();
-    uint64_t gridUpdateT = CurrentTime() - startT;
+    uint64_t gridUpdateT = ArchGetTickTime() - startT;
     std::cout << "update grid : " << ((double)gridUpdateT * 1e-6) << " seconds" << std::endl;
     _UpdateGridInstancer(stage, _gridId, &_grid, time);
     _scene.MarkPrimDirty(_gridId, HdChangeTracker::DirtyInstancer);

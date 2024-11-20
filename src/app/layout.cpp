@@ -101,29 +101,15 @@ void Layout::StandardLayout(Window* window)
 
   uint64_t Ts[8];
   
-  Ts[0] = CurrentTime();
   ViewportUI* viewport = new ViewportUI(viewportView);
-  Ts[1] = CurrentTime();
   new TimelineUI(timelineView);
-  Ts[2] = CurrentTime();
   new MenuUI(menuView);
-  Ts[3] = CurrentTime();
   new ToolbarUI(toolView, true);
-  Ts[4] = CurrentTime();
   new ExplorerUI(explorerView);
-  Ts[5] = CurrentTime();
   new PropertyEditorUI(propertyView);
-  Ts[6] = CurrentTime();
   new ToolUI(graphView);
   //AttributeEditorUIditorUI(graphView);
-  Ts[7] = CurrentTime();
   EngineRegistry::SetActiveEngine(viewport->GetEngine());
-
-  std::string names[7] = { "viewport", "timeline", "menu", "toolbar", "explorer", "property", "graph" };
-
-  for (size_t t = 0; t < 7; ++t) {
-    std::cout << names[t] << " : " << (double)((Ts[t + 1] - Ts[t]) * 1e-9) << " seconds" << std::endl;
-  }
 }
 
 void Layout::RawLayout(Window* window)

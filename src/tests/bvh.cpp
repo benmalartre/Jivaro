@@ -264,7 +264,7 @@ void TestBVH::InitExec(UsdStageRefPtr& stage)
 
 void TestBVH::UpdateExec(UsdStageRefPtr& stage, float time)
 {
-  uint64_t startT = CurrentTime();
+  uint64_t startT = ArchGetTickTime();
   _scene.Sync(stage, time);
   
   if (_meshes.size()) {
@@ -283,7 +283,7 @@ void TestBVH::UpdateExec(UsdStageRefPtr& stage, float time)
 
   _UpdateHits();
   _scene.MarkPrimDirty(_hitsId, HdChangeTracker::AllDirty);
-  double elapsedT = (double)(CurrentTime() - startT)*1e-6;
+  double elapsedT = (double)(ArchGetTickTime() - startT)*1e-6;
   size_t numRays = _mesh->GetNumPoints();
   Window* mainWindow = WindowRegistry::Get()->GetWindow(0);
   mainWindow->SetViewportMessage("launch " + std::to_string(numRays) + " took " +std::to_string(elapsedT) + " seconds.");

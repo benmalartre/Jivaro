@@ -31,14 +31,14 @@ SplitterUI::SplitterUI(Window* window)
 
 SplitterUI::~SplitterUI()
 {
-  if (_pixels)delete[] _pixels;
+  if (_pixels) delete[] _pixels;
 };
 
 void 
 SplitterUI::BuildMap(int width, int height)
 {
   // delete previous allocated memory
-  if (_pixels)delete[]_pixels;
+  if (_pixels) delete[] _pixels;
 
   // reallocate memory according to new resolution
   size_t numPixels = width * height;
@@ -104,7 +104,7 @@ SplitterUI::Draw()
   const ImGuiStyle& style = ImGui::GetStyle();
   //ImU32 color = ImColor(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
   ImU32 color = ImColor(style.Colors[ImGuiCol_MenuBarBg]);
-  ImDrawList* drawList = ImGui::GetForegroundDrawList();
+  ImDrawList* drawList = ImGui::GetWindowDrawList();
   
   for(auto view : views)
     if(view->GetFlag(View::LEAF) /*&& view->GetFlag(View::DIRTY)*/)

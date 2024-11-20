@@ -1195,7 +1195,7 @@ GraphEditorUI::MouseButton(int button, int action, int mods)
 
   if (button == GLFW_MOUSE_BUTTON_LEFT) {
     if (action == GLFW_PRESS) {
-      if((CurrentTime() - _lastClick) * 1e-3 < 250) {
+      if((ArchGetTickTime() - _lastClick) * 1e-3 < 250) {
         if (_hoveredNode) {
           int element = _hoveredNode->GetElementUnderMouse(this, mousePos);
           if(element == 1) {
@@ -1206,7 +1206,7 @@ GraphEditorUI::MouseButton(int button, int action, int mods)
             ADD_DEFERRED_COMMAND(UIGenericCommand, std::bind(&WindowRegistry::SetPopup, popup));
           }
         }
-      } else _lastClick = CurrentTime();
+      } else _lastClick = ArchGetTickTime();
 
       if (mods & GLFW_MOD_ALT) _navigate = NavigateMode::PAN;
       else if (_hoveredPort) {
@@ -1255,7 +1255,7 @@ GraphEditorUI::MouseButton(int button, int action, int mods)
     else if (action == GLFW_RELEASE) {
       _navigate = NavigateMode::IDLE;
 
-      double diffMs = (CurrentTime() - _lastClick) * 1e-3;
+      double diffMs = (ArchGetTickTime() - _lastClick) * 1e-3;
 
       if (_drag == true && _dragOffset.GetLength() > 0.000001f) {
         ADD_COMMAND(MoveNodeCommand, _model->GetStage(), GetSelectedNodesPath(), _dragOffset);
@@ -1278,7 +1278,7 @@ GraphEditorUI::MouseButton(int button, int action, int mods)
 
   else if (button == GLFW_MOUSE_BUTTON_MIDDLE) {
     if (action == GLFW_PRESS) {
-      _lastClick = CurrentTime();
+      _lastClick = ArchGetTickTime();
       if (mods & GLFW_MOD_ALT) _navigate = NavigateMode::PAN;
     } else if (action == GLFW_RELEASE) {
       if (mods & GLFW_MOD_ALT) _navigate = NavigateMode::IDLE;
@@ -1287,7 +1287,7 @@ GraphEditorUI::MouseButton(int button, int action, int mods)
 
   else if (button == GLFW_MOUSE_BUTTON_RIGHT) {
     if (action == GLFW_PRESS) {
-      _lastClick = CurrentTime();
+      _lastClick = ArchGetTickTime();
       if (mods & GLFW_MOD_ALT) _navigate = NavigateMode::ZOOM;
     }
     else if (action == GLFW_RELEASE) {

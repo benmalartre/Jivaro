@@ -1,5 +1,10 @@
 #include <pxr/usd/usd/prim.h>
 
+#include <usdPbd/solver.h>
+#include <usdPbd/bodyAPI.h>
+#include <usdPbd/collisionAPI.h>
+#include <usdPbd/constraintAPI.h>
+
 #include "../geometry/sampler.h"
 #include "../geometry/geometry.h"
 #include "../geometry/mesh.h"
@@ -24,10 +29,6 @@
 #include "../tests/utils.h"
 #include "../tests/particles.h"
 
-#include "../../plugins/usdPbd/solver.h"
-#include "../../plugins/usdPbd/bodyAPI.h"
-#include "../../plugins/usdPbd/collisionAPI.h"
-#include "../../plugins/usdPbd/constraintAPI.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 

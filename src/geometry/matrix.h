@@ -8,10 +8,11 @@
 
 #include <Eigen/Sparse>
  
+#include <pxr/base/arch/timing.h>
 #include <pxr/base/gf/math.h>
 #include <pxr/base/vt/array.h>
 #include "../common.h"
-#include "../utils/timer.h"
+
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -321,18 +322,18 @@ T Matrix<T>::GetDeterminant(const Matrix<T>::Pivots& pivots) const
 template <typename T>
 void Matrix<T>::Set(size_t row, size_t column, T value)
 {
-  uint64_t startT = CurrentTime();
+  uint64_t startT = ArchGetTickTime();
   _matrix[row * _columns + column] = value;
-  feedT += (CurrentTime() - startT);
+  feedT += (ArchGetTickTime() - startT);
 }
 
 template <typename T>
 void Matrix<T>::Set(int n, Matrix<T>::Key *keys, T* values)
 {
-  uint64_t startT = CurrentTime();
+  uint64_t startT = ArchGetTickTime();
   for(size_t i = 0; i < n; ++i)
     _matrix[keys[i].first * _columns + keys[i].second] = values[i];
-  feedT += (CurrentTime() - startT);
+  feedT += (ArchGetTickTime() - startT);
 }
 
 template <typename T>
@@ -528,12 +529,12 @@ Matrix<T> Matrix<T>::AsDiagonal()
 template <typename T>
 Matrix<T> Matrix<T>::Inverse()
 {
-  uint64_t startT = CurrentTime();
+  uint64_t startT = ArchGetTickTime();
   Matrix<T> result(_columns, _columns);
   Matrix<T> lu = LUDecomposition();
-  computeT += CurrentTime() - startT;
+  computeT += ArchGetTickTime() - startT;
 
-  startT = CurrentTime();
+  startT = ArchGetTickTime();
   if (lu.IsValid()) {
     Matrix<T>::Vector b(_columns, 0);
     for (size_t i = 0; i < _columns; ++i) {
@@ -542,18 +543,18 @@ Matrix<T> Matrix<T>::Inverse()
       result.SetColumn(i, lu.SolveLU(b));
     }
   }
-  solveT += CurrentTime() - startT;
+  solveT += ArchGetTickTime() - startT;
   return result;
 }
 
 template <typename T>
 void Matrix<T>::InverseInPlace()
 {
-  uint64_t startT = CurrentTime();
+  uint64_t startT = ArchGetTickTime();
   Matrix<T> lu = LUDecomposition();
-  computeT += CurrentTime() - startT;
+  computeT += ArchGetTickTime() - startT;
 
-  startT = CurrentTime();
+  startT = ArchGetTickTime();
   if (lu.IsValid()) {
     Matrix<T>::Vector b(_columns, 0);
     for (size_t i = 0; i < _columns; ++i) {
@@ -562,7 +563,7 @@ void Matrix<T>::InverseInPlace()
       SetColumn(i, lu.SolveLU(b));
     }
   }
-  solveT += CurrentTime() - startT;
+  solveT += ArchGetTickTime() - startT;
 }
 
 template <typename T>
@@ -822,21 +823,21 @@ void SparseMatrix<T>::TransposeInPlace() {
 template <typename T>
 void SparseMatrix<T>::Set(size_t row, size_t column, T value)
 {
-  uint64_t startT = CurrentTime();
+  uint64_t startT = ArchGetTickTime();
   _matrix.coeffRef(row, column) = value;
-  feedT += (CurrentTime() - startT);
+  feedT += (ArchGetTickTime() - startT);
 }
 
 template <typename T>
 void SparseMatrix<T>::Set(int n, SparseMatrix<T>::Key *keys, T* values)
 {   
-  uint64_t startT = CurrentTime();
+  uint64_t startT = ArchGetTickTime();
   std::vector<SparseMatrix<T>::Triplet> triplets(n);
   for (size_t i = 0; i < n; ++i) 
     triplets[i] = SparseMatrix<T>::Triplet( keys[i].first, keys[i].second, values[i]);
   
   _matrix.setFromTriplets(triplets.begin(), triplets.end());
-  feedT += (CurrentTime() - startT);
+  feedT += (ArchGetTickTime() - startT);
 }
 
 
@@ -922,17 +923,17 @@ void SparseMatrix<T>::ScaleInPlace(float scale)
 template <typename T>
 SparseMatrix<T> SparseMatrix<T>::Inverse(  SparseMatrix<T>::Solver &solver)
 {
-  uint64_t startT = CurrentTime();
+  uint64_t startT = ArchGetTickTime();
   solver.analyzePattern(_matrix);
   solver.factorize(_matrix);
   Eigen::SparseMatrix<T> I(_matrix.rows(),_matrix.rows());
   I.setIdentity();
-  computeT += (CurrentTime() - startT);
+  computeT += (ArchGetTickTime() - startT);
 
-  startT = CurrentTime();
+  startT = ArchGetTickTime();
   SparseMatrix<T> result;
   result._matrix = solver.solve(I);
-  solveT += (CurrentTime() - startT);
+  solveT += (ArchGetTickTime() - startT);
 
   return result;
 }
@@ -941,7 +942,7 @@ SparseMatrix<T> SparseMatrix<T>::Inverse(  SparseMatrix<T>::Solver &solver)
 template <typename T>
 void SparseMatrix<T>::InverseInPlace(  typename SparseMatrix<T>::Solver &solver)
 {
-  uint64_t startT = CurrentTime();
+  uint64_t startT = ArchGetTickTime();
   solver.compute(_matrix); 
   
   if(solver.info()!=Eigen::Success) {
@@ -950,11 +951,11 @@ void SparseMatrix<T>::InverseInPlace(  typename SparseMatrix<T>::Solver &solver)
 
   Eigen::SparseMatrix<T> I(_matrix.rows(),_matrix.rows());
   I.setIdentity();
-  computeT += (CurrentTime() - startT);
+  computeT += (ArchGetTickTime() - startT);
 
-  startT = CurrentTime();
+  startT = ArchGetTickTime();
   _matrix = solver.solve(I);
-  solveT += (CurrentTime() - startT);
+  solveT += (ArchGetTickTime() - startT);
 }
 
 template <typename T>
