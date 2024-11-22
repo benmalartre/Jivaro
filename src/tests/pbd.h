@@ -24,15 +24,15 @@ protected:
   void _AddAnimationSamples(UsdStageRefPtr& stage, SdfPath& path);
 
 private:
-  Solver*                   _solver;
-  Plane*                    _ground;
-  SdfPath              _groundId;
-  SdfPath              _solverId;
+  Solver*                _solver;
+  Plane*                 _ground;
+  SdfPath                _groundId;
+  SdfPath                _solverId;
 
-  std::vector<Geometry*>    _clothes;
-  std::vector<SdfPath> _clothesId;
-  std::vector<Geometry*>    _colliders;
-  std::vector<SdfPath> _collidersId;
+  std::vector<Geometry*> _clothes;
+  std::vector<SdfPath>   _clothesId;
+  std::vector<Geometry*> _colliders;
+  std::vector<SdfPath>   _collidersId;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

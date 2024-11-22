@@ -241,7 +241,19 @@ void TestPBD::TerminateExec(UsdStageRefPtr& stage)
 {
   std::cout << "TEST PBD TERMINATE EXEC" << std::endl;
   if (!stage) return;
+
+  for(auto& cloth: _clothes)
+    delete cloth;
+  _clothes.clear();
+  _clothesId.clear();
+
+  for(auto& collider: _colliders)
+    delete collider;
+  _colliders.clear();
+  _collidersId.clear();
+
   _scene.RemoveAllGeometries();
+  delete _solver;
 
   std::cout << "TEST PBD TERMINATED" << std::endl;
 }
