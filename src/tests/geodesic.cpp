@@ -62,7 +62,7 @@ TestGeodesic::_BenchmarckClosestPoints()
 
   VtArray<GfVec3f> result1(N);
 
-  uint64_t startT1 = ArchGetTickTime();
+  uint64_t startT1 = CurrentTime();
   
   for (size_t n = 0; n < N; ++n) {
     Location hit;
@@ -72,18 +72,18 @@ TestGeodesic::_BenchmarckClosestPoints()
         result1[n] = GfVec3f(hit.GetPoint());
   }
 
-  uint64_t elapsedT1 = ArchGetTickTime() - startT1;
+  uint64_t elapsedT1 = CurrentTime() - startT1;
   
   VtArray<GfVec3f> result2(N);
 
-  uint64_t startT2 = ArchGetTickTime();
+  uint64_t startT2 = CurrentTime();
   for(size_t n = 0; n < N  ; ++n) {
     Location hit;
     if(_bvh.Closest(points[n], &hit, DBL_MAX)) {
       result2[n] = GfVec3f(hit.GetPoint());
     }
   }
-  uint64_t elapsedT2 = ArchGetTickTime() - startT2;
+  uint64_t elapsedT2 = CurrentTime() - startT2;
 
   std::cout << "================== benchmark closest points with " << N << " random points" << std::endl;
   std::cout << "brute force took : " << (elapsedT1 * 1e-6) << " seconds" << std::endl;
@@ -128,14 +128,14 @@ TestGeodesic::_BenchmarckClosestPoints2()
   for(auto& point: points)
     point = GfVec3f(RANDOM_LO_HI(-10,10), RANDOM_LO_HI(-10,10), RANDOM_LO_HI(-10,10));
 
-  uint64_t startT = ArchGetTickTime();
+  uint64_t startT = CurrentTime();
   VtArray<GfVec3f> results(N);
 
   WorkParallelForN(N,
     std::bind(&TestGeodesic::_ClosestPointQuery, this, std::placeholders::_1, 
       std::placeholders::_2, &points[0], &results[0]), N / 32);
 
-  uint64_t elapsedT = ArchGetTickTime() - startT;
+  uint64_t elapsedT = CurrentTime() - startT;
   
 
   std::cout << "================== benchmark parallel closest points with " << N << " random points" << std::endl;
@@ -162,9 +162,9 @@ void TestGeodesic::InitExec(UsdStageRefPtr& stage)
   if (_meshes.size()) {
     std::cout << "init kdtree" << std::endl;
 
-    uint64_t startT = ArchGetTickTime();
+    uint64_t startT = CurrentTime();
     _kdtree.Init(_meshes);
-    uint64_t elapsedT = ArchGetTickTime() - startT;
+    uint64_t elapsedT = CurrentTime() - startT;
 
     std::cout << "================== kdtree initialize : "  << std::endl;
     std::cout << "- build took      : " << (elapsedT * 1e-6) << " seconds" << std::endl;
@@ -172,10 +172,10 @@ void TestGeodesic::InitExec(UsdStageRefPtr& stage)
     std::cout << "- num cells       : " << _kdtree.GetNumCells() << std::endl;
     
 
-    startT = ArchGetTickTime();
+    startT = CurrentTime();
     _bvh.Init(_meshes);
 
-    elapsedT = ArchGetTickTime() - startT;
+    elapsedT = CurrentTime() - startT;
 
     std::cout << "================== bvh initialize : "  << std::endl;
     std::cout << "- build took      : " << (elapsedT * 1e-6) << " seconds" << std::endl;

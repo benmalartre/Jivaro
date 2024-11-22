@@ -21,7 +21,6 @@ HashGrid::Init(size_t n, const GfVec3f* points, float spacing)
 void 
 HashGrid::Update(const GfVec3f* points)
 {
-  uint64_t T = ArchGetTickTime();
   memset(&_cellStart[0], 0, _cellStart.size() * sizeof(int));
   memset(&_cellEntries[0], 0, _cellEntries.size() * sizeof(int));
 

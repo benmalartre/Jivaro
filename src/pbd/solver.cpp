@@ -514,7 +514,7 @@ Solver::_SolveVelocities(std::vector<Constraint*>& constraints)
 
 void Solver::Update(UsdStageRefPtr& stage, float time)
 {
-
+  std::cout << "Solver Update At Time " << time << std::endl;
   size_t numParticles = _particles.GetNumParticles();
   if (!_initialized ||GfIsClose(time, _startTime, 0.001f)) {
     Reset(stage);
@@ -533,6 +533,7 @@ void Solver::Update(UsdStageRefPtr& stage, float time)
 
 void Solver::Reset(UsdStageRefPtr& stage)
 {
+  std::cout << "Solver Reset Num Bodies : " << _bodies.size() << std::endl;
   UpdateInputs(stage, _startTime);
   UpdateParameters(stage, _startTime);
   UpdateCollisions(stage, _startTime);

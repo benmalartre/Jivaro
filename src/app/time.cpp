@@ -1,4 +1,4 @@
-#include <pxr/base/arch/timing.h>
+#include "../utils/timer.h"
 #include "../geometry/geometry.h"
 #include "../app/time.h"
 
@@ -95,10 +95,10 @@ void Time::StopPlayback()
 int Time::Playback()
 {
   // check for real time
-  if(_mode == PLAYBACK_REALTIME && ((ArchGetTickTime() - _lastT) < _frame))
+  if(_mode == PLAYBACK_REALTIME && ((CurrentTime() - _lastT) < _frame))
     return PLAYBACK_WAITING;
 
-  _lastT = ArchGetTickTime();
+  _lastT = CurrentTime();
   // idle
   if(!_playback)return PLAYBACK_IDLE;
 

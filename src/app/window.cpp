@@ -192,7 +192,7 @@ Window::CaptureFramebuffer()
 void 
 Window::BeginRepeatKey()
 {
-  _lastRepeatT = ArchGetTickTime();
+  _lastRepeatT = CurrentTime();
 }
 
 void 
@@ -204,7 +204,7 @@ Window::EndRepeatKey()
 bool 
 Window::ShouldRepeatKey()
 {
-  uint64_t currentT = ArchGetTickTime();
+  uint64_t currentT = CurrentTime();
   if ((currentT - _lastRepeatT) > REPEAT_KEY_DURATION) {
     _lastRepeatT = currentT;
     return true;
