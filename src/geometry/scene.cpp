@@ -32,9 +32,9 @@ Scene::Scene()
 
 Scene::~Scene()
 {
-  for(auto& prim: _prims) {
-    if(prim.second.geom)delete prim.second.geom;
-  }
+  for(auto& prim: _prims) 
+    if(prim.second.geom)
+      delete prim.second.geom;
 }
 
 void 
@@ -198,7 +198,13 @@ void Scene::InjectGeometry(UsdStageRefPtr& stage,
 
 void Scene::RemoveGeometry(const SdfPath& path)
 {
-  if(_prims.find(path) != _prims.end())_prims.erase(path);
+  if(_prims.find(path) != _prims.end())
+    _prims.erase(path);
+}
+
+void Scene::RemoveAllGeometries()
+{
+  _prims.clear();
 }
 
 

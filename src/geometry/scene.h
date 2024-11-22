@@ -59,6 +59,7 @@ public:
     Geometry* geometry, const UsdTimeCode& time=UsdTimeCode::Default());
 
   void RemoveGeometry(const SdfPath& path);
+  void RemoveAllGeometries();
 
   void Remove(const SdfPath& path);
   bool IsMesh(const SdfPath& path);

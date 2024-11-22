@@ -6,6 +6,7 @@
 #include "../tests/bvh.h"
 #include "../tests/pbd.h"
 #include "../tests/hair.h"
+#include "../tests/particles.h"
 #include "../app/time.h"
 #include "../app/index.h"
 #include "../app/application.h"
@@ -22,6 +23,7 @@ void AddExecMenu(MenuUI* menu)
   subItem = testItem->Add("BVH", false, true, std::bind(SetExecCallback, "bvh"));
   subItem = testItem->Add("PBD", false, true, std::bind(SetExecCallback, "pbd"));
   subItem = testItem->Add("Hair", false, true, std::bind(SetExecCallback, "hair"));
+  subItem = testItem->Add("Particles", false, true, std::bind(SetExecCallback, "particles"));
 }
 
 void SetExecCallback(const std::string &name)
@@ -36,6 +38,7 @@ void SetExecCallback(const std::string &name)
   else if(name == "bvh")index->SetExec(new TestBVH());
   else if(name == "pbd")index->SetExec(new TestPBD());
   else if(name == "hair")index->SetExec(new TestHair());
+  else if(name == "particles")index->SetExec(new TestParticles());
     
   //_exec = new TestPoints();
   //_exec = new TestGrid();

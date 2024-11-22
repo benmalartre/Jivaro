@@ -32,6 +32,7 @@ Index::Index()
 //----------------------------------------------------------------------------
 Index::~Index()
 {
+  if(_exec) delete _exec;
 };
 
 void
@@ -74,23 +75,6 @@ Index::InitExec()
   _execSceneIndex->UpdateExec();
 }
 
-/*
-void 
-Index::InitExec(Execution* exec)
-{
-  Time* time = Time::Get();
-  time->SetActiveTime(time->GetStartTime());
-
-  if(_exec && _exec != exec)delete _exec;
-  _exec = exec;
-  _exec->InitExec(_stage);
-
-  _execSceneIndex = ExecSceneIndex::New(_sceneIndexBases);
-  _execSceneIndex->SetExec(_exec);
-  SetCurrentSceneIndex(_execSceneIndex);
-  _execSceneIndex->UpdateExec();
-}
-*/
 
 void
 Index::UpdateExec(float time)
@@ -106,7 +90,7 @@ Index::TerminateExec()
   SetCurrentSceneIndex(_sceneIndexBases);
   _exec->TerminateExec(_stage);
   _execute = false;
-  _exec = nullptr;
+  //_exec = nullptr;
   _execSceneIndex = nullptr;
   NewSceneNotice().Send();
 }

@@ -125,7 +125,6 @@ void TestPBD::InitExec(UsdStageRefPtr& stage)
     _scene.AddGeometry(_clothesId[c], _clothes[c]);
   }
  
-  
   // create solver with attributes
   _solverId = rootId.AppendChild(TfToken("Solver"));
   _solver = _CreateSolver(&_scene, stage, _solverId, 5);
@@ -134,7 +133,6 @@ void TestPBD::InitExec(UsdStageRefPtr& stage)
   
   // create cloth meshes
   float size = .025f;
-
 
   for(size_t x = 0; x < 0; ++x) {
     std::string name = "Cloth_"+std::to_string(x);
@@ -147,7 +145,6 @@ void TestPBD::InitExec(UsdStageRefPtr& stage)
     _clothes.push_back(clothMesh);
     _scene.AddGeometry(clothPath, clothMesh);
   }
-  
   
   for (size_t c = 0; c < _clothesId.size(); ++c) {
     size_t offset = _solver->GetNumParticles();
@@ -244,8 +241,8 @@ void TestPBD::TerminateExec(UsdStageRefPtr& stage)
 {
   std::cout << "TEST PBD TERMINATE EXEC" << std::endl;
   if (!stage) return;
-  _scene.RemoveGeometry(_solverId);
-  delete _solver;
+  _scene.RemoveAllGeometries();
+
   std::cout << "TEST PBD TERMINATED" << std::endl;
 }
 
