@@ -63,7 +63,8 @@ NewSceneCommand::NewSceneCommand(const std::string& filename)
   SdfFileFormatConstPtr usdaFormat = SdfFileFormat::FindByExtension("usda");
   SdfLayerRefPtr layer = SdfLayer::New(usdaFormat, filename);
   if (layer) {
-    model->SetStage(UsdStage::Open(layer));
+    UsdStageRefPtr stage = UsdStage::Open(layer);
+    model->SetStage(stage);
     app->GetIndex()->SetStage(model->GetStage());
   }
 

@@ -23,7 +23,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 //==================================================================================
 // Create XformCommonAPI
 //==================================================================================
-void  _EnsureXformCommonAPI(UsdPrim& prim, const UsdTimeCode& timeCode)
+void  _EnsureXformCommonAPI(UsdPrim prim, const UsdTimeCode& timeCode)
 {
   UsdGeomXformable xformable(prim);
   if(xformable.GetXformOpOrderAttr().IsDefined()) {

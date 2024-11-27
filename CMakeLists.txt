@@ -58,7 +58,6 @@ include(Packages)
 # Include USD plugin building CMake utilities.
 include(USDPluginTools)
 
-
 # nfd (native file dialog)
 set(NFD_INCLUDE_DIR "./utils/nfd/include")
 
@@ -73,11 +72,6 @@ find_library(GLFW NAMES glfw3 PATHS "${GLFW_DIR}/build/src" "${GLFW_DIR}/build/s
 # usd 
 if(NOT DEFINED USD_DIR)
 	message(FATAL_ERROR "No USD_DIR variable set! USD installation path must be passed to cmake!!!")
-endif()
-
-# usd 
-if(NOT DEFINED USD_PLUGINS_DIR)
-	message(FATAL_ERROR "No USD_PLUGINS_DIR variable set! USDPlugins installation path must be passed to cmake!!!")
 endif()
 
 # eigen

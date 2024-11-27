@@ -285,7 +285,7 @@ bool ContentBrowserUI::Draw()
   
   SdfLayerHandle selectedLayer(_model->GetRootLayer());
   SdfLayerHandle selectedStage(_model->GetStage() 
-    ? _model->GetRootLayer() : SdfLayerHandle());
+    ? SdfLayerHandle(_model->GetRootLayer()) : SdfLayerHandle());
   auto layers = SdfLayer::GetLoadedLayers();
   //DrawLayerSet(app->GetStageCache(), layers, &selectedLayer, &selectedStage, options);
   

@@ -17,10 +17,10 @@ enum WindowLayout {
 
 class Layout {
 public:
-  static void Layout::BaseLayout(Window* window);
-  static void Layout::RandomLayout(Window* window);
-  static void Layout::StandardLayout(Window* window);
-  static void Layout::RawLayout(Window* window);
+  static void BaseLayout(Window* window);
+  static void RandomLayout(Window* window);
+  static void StandardLayout(Window* window);
+  static void RawLayout(Window* window);
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

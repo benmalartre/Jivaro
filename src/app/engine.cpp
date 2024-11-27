@@ -307,7 +307,7 @@ void
 Engine::Prepare()
 {
   _PrepareDefaultLighting();
-  _taskController->ComputeInverseProjectionViewMatrix(_camView, _camProj);
+  //_taskController->ComputeInverseProjectionViewMatrix(_camView, _camProj);
   _taskController->SetFreeCameraMatrices(_camView, _camProj);
 
 /*

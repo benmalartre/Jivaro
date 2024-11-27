@@ -61,7 +61,7 @@ struct HandleTargetGeometryDesc {
 typedef std::vector<HandleTargetGeometryDesc> HandleTargetGeometryDescList;
 
 
-void _EnsureXformCommonAPI(UsdPrim& prim, const UsdTimeCode& timeCode);
+void _EnsureXformCommonAPI(UsdPrim prim, const UsdTimeCode& timeCode);
 
 
 class BaseHandle {

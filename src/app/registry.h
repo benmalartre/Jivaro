@@ -104,7 +104,7 @@ public:
   template <class ConcreteUI>
   void Register(const std::string &identifier)
   {
-    _creators[identifier] =  Wrapper<ConcreteUI>;
+    _creators[identifier] =  Wrapper<ConcreteUI>();
   }
 
   BaseUI *Create(View* view, const std::string &identifier)
