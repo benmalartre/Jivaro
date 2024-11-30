@@ -245,8 +245,9 @@ if(WIN32)
   add_definitions("/wd4305")
 endif(WIN32)
 
+
 add_subdirectory (plugins)
 add_subdirectory (src)
-add_subdirectory (tests)
-add_subdirectory (fonts)
+#add_subdirectory (tests)
+#add_subdirectory (fonts)
 

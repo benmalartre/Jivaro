@@ -26,6 +26,10 @@ void _AddMainDemoLight();
 Solver* _CreateSolver(Scene* scene, UsdStageRefPtr& stage, const SdfPath& path,
   int subSteps=5, float sleepThreshold=0.001f);
 
+Mesh* _CreateTexturedMeshGrid(UsdStageRefPtr& stage, const SdfPath& path, 
+  size_t subdivX, size_t subdivY, float sizeX, float sizeY, const std::string& filename,
+  const GfMatrix4d& m);
+
 Mesh* _CreateMeshGrid(UsdStageRefPtr& stage, const SdfPath& path, 
   size_t subd=8, const GfMatrix4d& m=GfMatrix4d(1.0));
 

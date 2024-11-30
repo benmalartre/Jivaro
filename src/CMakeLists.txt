@@ -198,7 +198,7 @@ target_include_directories(${TARGET}
     ${EIGEN_INCLUDE_DIR}
 )
 
-if(PYTHON_BUILD)
+if(DEFINED PYTHON_BUILD)
   target_include_directories(${TARGET}  PUBLIC ${Python3_INCLUDE_DIRS})
 endif()
 

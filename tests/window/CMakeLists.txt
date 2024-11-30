@@ -61,7 +61,7 @@ target_link_libraries(${TARGET}
   
 )
 
-if(DEFINED PYTHON_BUILD)
+if(PYTHON_BUILD)
   target_link_libraries(${TARGET} ${Python3_LIBRARIES})
 endif()
 

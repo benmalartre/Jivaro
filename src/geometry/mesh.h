@@ -202,6 +202,8 @@ public:
   void Cube();
   void TriangularGrid2D(float spacing, const GfMatrix4f& space=GfMatrix4f(1.f));
   void RegularGrid2D(float spacing, const GfMatrix4f& space=GfMatrix4f(1.f));
+  void RegularGrid2D(size_t subdivX, size_t subdivY, float sizeX, float sizeY, 
+    const GfMatrix4f& space=GfMatrix4f(1.f));
   void VoronoiDiagram(const std::vector<GfVec3f>& points);
 
 

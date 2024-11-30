@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <pxr/base/vt/array.h>
 #include <pxr/usd/usd/prim.h>
 #include <pxr/usd/usd/primRange.h>
@@ -89,32 +90,6 @@ Mesh* _CreateClothMesh(UsdStageRefPtr& stage, const SdfPath& path,
   UsdPbdConstraintAPI::Apply(prim, TfToken("stretch"));
   UsdPbdConstraintAPI::Apply(prim, TfToken("shear"));
   UsdPbdConstraintAPI::Apply(prim, TfToken("bend"));
-  
-  //api.GetGravityAttr().Set(gravity);
-
-  /*/
-  usdPrim.CreateAttribute(PBDTokens->mass, SdfValueTypeNames->Float).Set(mass);
-  usdPrim.CreateAttribute(PBDTokens->damp, SdfValueTypeNames->Float).Set(damp);
-  usdPrim.CreateAttribute(PBDTokens->velocity, SdfValueTypeNames->Float3).Set(GfVec3f(0.f));
-  
-  TfToken stretchStiffness(PBDTokens->stretch.GetString()+":"+PBDTokens->stiffness.GetString());
-  usdPrim.CreateAttribute(stretchStiffness, SdfValueTypeNames->Float).Set(100000.f);
-  TfToken stretchDamp(PBDTokens->stretch.GetString()+":"+PBDTokens->damp.GetString());
-  usdPrim.CreateAttribute(stretchDamp, SdfValueTypeNames->Float).Set(0.1f);
-
-  TfToken shearStiffness(PBDTokens->shear.GetString()+":"+PBDTokens->stiffness.GetString());
-  usdPrim.CreateAttribute(shearStiffness, SdfValueTypeNames->Float).Set(100000.f);
-  TfToken shearDamp(PBDTokens->shear.GetString()+":"+PBDTokens->damp.GetString());
-  usdPrim.CreateAttribute(shearDamp, SdfValueTypeNames->Float).Set(0.1f);
-
-  TfToken bendStiffness(PBDTokens->bend.GetString() + ":" + PBDTokens->stiffness.GetString());
-  usdPrim.CreateAttribute(bendStiffness, SdfValueTypeNames->Float).Set(20000.f);
-  TfToken bendDamp(PBDTokens->bend.GetString() + ":" + PBDTokens->damp.GetString());
-  usdPrim.CreateAttribute(bendDamp, SdfValueTypeNames->Float).Set(0.1f);
-  */
- 
-
-
 
   return mesh;
 
@@ -145,6 +120,28 @@ Mesh* _CreateMeshGrid(UsdStageRefPtr& stage, const SdfPath& path,
   mesh->SetInputOutput();
 
   return mesh;
+}
+
+Mesh* _CreateTexturedMeshGrid(UsdStageRefPtr& stage, const SdfPath& path, 
+  size_t subdivX, size_t subdivY, float sizeX, float sizeY, const std::string& filename,
+  const GfMatrix4d& m)
+{
+  Mesh* mesh = new Mesh(m);
+  mesh->RegularGrid2D(subdivX, subdivY, sizeX, sizeY, m);
+  //mesh.Randomize(0.1f);
+  UsdGeomMesh usdMesh = UsdGeomMesh::Define(stage, path);
+
+  usdMesh.GetPointsAttr().Set(mesh->GetPositions());
+  usdMesh.GetFaceVertexCountsAttr().Set(mesh->GetFaceCounts());
+  usdMesh.GetFaceVertexIndicesAttr().Set(mesh->GetFaceConnects());
+/*
+billboard.CreateExtentAttr([(-430, -145, 0), (430, 145, 0)])
+texCoords = UsdGeom.PrimvarsAPI(billboard).CreatePrimvar("st",
+                                    Sdf.ValueTypeNames.TexCoord2fArray,
+                                    UsdGeom.Tokens.varying)
+texCoords.Set([(0, 0), (1, 0), (1,1), (0, 1)])
+*/
+return nullptr;
 }
 
 Sphere* _CreateCollideSphere(UsdStageRefPtr& stage, const SdfPath& path, 

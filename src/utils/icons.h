@@ -5,8 +5,6 @@
 #include <map>
 #include <type_traits>
 
-#include <pxr/usd/ar/asset.h>
-#include <pxr/usd/ar/resolver.h>
 #include <pxr/imaging/hio/image.h>
 
 #include "../common.h"

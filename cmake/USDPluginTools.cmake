@@ -875,3 +875,69 @@ function(_usd_set_test_properties
     )
 
 endfunction() # _usd_set_test_properties
+
+# Initialize a variable to accumulate an rpath.  The origin is the
+# RUNTIME DESTINATION of the target.  If not absolute it's appended
+# to CMAKE_INSTALL_PREFIX.
+function(_jvr_init_rpath rpathRef origin)
+    if(NOT IS_ABSOLUTE ${origin})
+        set(origin "${CMAKE_INSTALL_PREFIX}/${origin}")
+        get_filename_component(origin "${origin}" REALPATH)
+    endif()
+    set(${rpathRef} "${origin}" PARENT_SCOPE)
+endfunction()
+
+# Add a relative target path to the rpath.  If target is absolute compute
+# and add a relative path from the origin to the target.
+function(_jvr_add_rpath rpathRef target)
+    if(IS_ABSOLUTE "${target}")
+        # Make target relative to $ORIGIN (which is the first element in
+        # rpath when initialized with _pxr_init_rpath()).
+        list(GET ${rpathRef} 0 origin)
+        file(RELATIVE_PATH
+            target
+            "${origin}"
+            "${target}"
+        )
+        if("x${target}" STREQUAL "x")
+            set(target ".")
+        endif()
+    endif()
+    file(TO_CMAKE_PATH "${target}" target)
+    set(new_rpath "${${rpathRef}}")
+    list(APPEND new_rpath "$ORIGIN/${target}")
+    set(${rpathRef} "${new_rpath}" PARENT_SCOPE)
+endfunction()
+
+function(_jvr_install_rpath rpathRef NAME)
+    # Get and remove the origin.
+    list(GET ${rpathRef} 0 origin)
+    set(rpath ${${rpathRef}})
+    list(REMOVE_AT rpath 0)
+
+    # Canonicalize and uniquify paths.
+    set(final "")
+    foreach(path ${rpath})
+        # Replace $ORIGIN with @loader_path
+        if(APPLE)
+            if("${path}/" MATCHES "^[$]ORIGIN/")
+                # Replace with origin path.
+                string(REPLACE "$ORIGIN/" "@loader_path/" path "${path}/")
+            endif()
+        endif()
+
+        # Strip trailing slashes.
+        string(REGEX REPLACE "/+$" "" path "${path}")
+
+        # Ignore paths we already have.
+        if (NOT ";${final};" MATCHES ";${path};")
+            list(APPEND final "${path}")
+        endif()
+    endforeach()
+
+    set_target_properties(${NAME}
+        PROPERTIES
+            INSTALL_RPATH_USE_LINK_PATH TRUE
+            INSTALL_RPATH "${final}"
+    )
+endfunction()

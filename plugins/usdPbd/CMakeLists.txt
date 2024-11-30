@@ -26,19 +26,19 @@ usd_library(usdPbd
         solver.h 
         tokens.h
 
-    PYTHON_CPPFILES
-        moduleDeps.cpp
-
-    PYMODULE_CPPFILES
-        module.cpp
-        wrapCollisionAPI.cpp
-        wrapConstraintAPI.cpp
-        wrapBodyAPI.cpp
-        wrapSolver.cpp
-        wrapTokens.cpp
-    
-    PYTHON_FILES
-        __init__.py
+#   PYTHON_CPPFILES
+#       moduleDeps.cpp
+#
+#    PYMODULE_CPPFILES
+#        module.cpp
+#        wrapCollisionAPI.cpp
+#        wrapConstraintAPI.cpp
+#        wrapBodyAPI.cpp
+#        wrapSolver.cpp
+#        wrapTokens.cpp
+#    
+#    PYTHON_FILES
+#        __init__.py
 
     RESOURCE_FILES
         plugInfo.json
