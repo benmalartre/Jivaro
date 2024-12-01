@@ -143,7 +143,8 @@ Application::Delete()
 {
   Selection* selection = _model->GetSelection();
   const SdfPathVector& paths = selection->GetSelectedPaths();
-  selection->Clear();
+  //selection->Clear();
+  
   ADD_COMMAND(DeletePrimCommand, _model->GetRootLayer(), paths);
 }
 

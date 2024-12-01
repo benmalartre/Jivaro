@@ -810,6 +810,7 @@ KeyboardCallback(
         break;
       }
       case GLFW_KEY_DELETE:
+      case GLFW_KEY_BACKSPACE:
       {
         if (mods & GLFW_MOD_CONTROL)app->Delete();
         break;
@@ -1004,6 +1005,7 @@ ClickCallback(GLFWwindow* window, int button, int action, int mods)
         parent->EndDragSplitter();
         parent->Resize(width, height);
       }
+      parent->Draw(false);
     } else {
       if (splitterHovered) {
         View* activeView = parent->GetActiveView();

@@ -266,8 +266,10 @@ DeletePrimCommand::DeletePrimCommand(SdfLayerRefPtr layer, const SdfPathVector& 
     if (!parent) continue;
     parent->RemoveNameChild(spec);
   }
-  
+  selection->Clear();
   UndoRouter::Get().TransferEdits(&_inverse);
+  SelectionChangedNotice().Send();
+  EngineRegistry::UpdateAllEnginesSelection(SdfPathVector());
   SceneChangedNotice().Send();
 }
 
@@ -276,7 +278,10 @@ void DeletePrimCommand::Do() {
   std::vector<Selection::Item> current = selection->GetItems();
   _inverse.Invert();
   selection->SetItems(_selection);
+  EngineRegistry::UpdateAllEnginesSelection(selection->GetSelectedPaths());
   _selection = current;
+  SelectionChangedNotice().Send();
+  
   SceneChangedNotice().Send();
 }
 

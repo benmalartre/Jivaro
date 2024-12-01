@@ -34,6 +34,12 @@ void  _EnsureXformCommonAPI(UsdPrim prim, const UsdTimeCode& timeCode)
   UsdGeomXformCommonAPI::RotationOrder rotOrder;
   UsdGeomXformCommonAPI api(prim);
   api.GetXformVectors(&translation, &rotation, &scale, &pivot, &rotOrder, timeCode);
+
+  std::cout << "ensure xform common API on " << prim.GetPath() << std::endl;
+  std::cout << "translate : " << translation << std::endl;
+  std::cout << "rotation : " << rotation << std::endl;
+  std::cout << "scale : " << scale << std::endl;
+  std::cout << "pivot : " << pivot << std::endl;
   xformable.SetResetXformStack(true);
   xformable.ClearXformOpOrder();
   api.SetXformVectors(translation, rotation, scale, pivot, rotOrder, timeCode);
