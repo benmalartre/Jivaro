@@ -198,7 +198,7 @@ target_include_directories(${TARGET}
     ${EIGEN_INCLUDE_DIR}
 )
 
-if(DEFINED PYTHON_BUILD)
+if(PYTHON_BUILD)
   target_include_directories(${TARGET}  PUBLIC ${Python3_INCLUDE_DIRS})
 endif()
 
@@ -215,7 +215,7 @@ target_link_libraries(${TARGET}
   ${ADDITIONAL_LIBRARIES}
 )
 
-if(DEFINED PYTHON_BUILD)
+if(PYTHON_BUILD)
   target_link_libraries(${TARGET} ${Python3_LIBRARIES})
 endif()
 

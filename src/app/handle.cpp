@@ -26,9 +26,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 void  _EnsureXformCommonAPI(UsdPrim prim, const UsdTimeCode& timeCode)
 {
   UsdGeomXformable xformable(prim);
-  if(xformable.GetXformOpOrderAttr().IsDefined()) {
-    std::cout << prim.GetPath() << " have already xform ops" << std::endl;
-  }
+ 
   GfVec3d translation;
   GfVec3f rotation;
   GfVec3f scale;
@@ -272,22 +270,9 @@ BaseHandle::ResetSelection()
 
     if (!_HasCommonXformOps(UsdGeomXformable(prim)))
       paths.push_back(prim.GetPath());
-
-    /*
-    UsdGeomXformCommonAPI api(prim);
-    GfVec3d translation; 
-    GfVec3f rotation;
-    GfVec3f scale;
-    GfVec3f pivot;
-    UsdGeomXformCommonAPI::RotationOrder rotOrder;
-    if(!api.GetXformVectors(&translation, &rotation, &scale, &pivot, &rotOrder, UsdTimeCode::Default()))
-      paths.push_back(prim.GetPath());
-    */
   }
 
   if(paths.size()) {
-    std::cout << "INITIALIZE XFORM COMMON API ON:" << std::endl;
-    for(auto& path: paths) std::cout << "\t" << path << std::endl;
     UndoBlock block;
     for(auto& path: paths)
       _EnsureXformCommonAPI(stage->GetPrimAtPath(path), UsdTimeCode::Default());
