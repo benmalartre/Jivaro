@@ -113,6 +113,7 @@ Mesh* _CreateMeshGrid(UsdStageRefPtr& stage, const SdfPath& path,
   extentArray[1] = GfVec3f(0.5f,0.f,0.5f);
   usdMesh.GetExtentAttr().Set(extentArray);
 */
+
   UsdGeomXformOp op = usdMesh.AddTransformOp();
   op.Set(m, UsdTimeCode::Default());
 
@@ -127,7 +128,7 @@ Mesh* _CreateTexturedMeshGrid(UsdStageRefPtr& stage, const SdfPath& path,
   const GfMatrix4d& m)
 {
   Mesh* mesh = new Mesh(m);
-  mesh->RegularGrid2D(subdivX, subdivY, sizeX, sizeY, m);
+  mesh->RegularGrid2D(subdivX, subdivY, sizeX, sizeY, pxr::GfMatrix4f(m));
   //mesh.Randomize(0.1f);
   UsdGeomMesh usdMesh = UsdGeomMesh::Define(stage, path);
 

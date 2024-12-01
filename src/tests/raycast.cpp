@@ -147,11 +147,11 @@ void TestRaycast::_AddAnimationSamples(UsdStageRefPtr& stage, SdfPath& path)
   UsdPrim prim = stage->GetPrimAtPath(path);
   if(prim.IsValid()) {
     UsdGeomXformable xformable(prim);
-    GfRotation rotation(GfVec3f(0.f, 0.f, 1.f), 0.f);
+    GfRotation rotation(GfVec3f(0.f, 0.f, 1.f), 180.f);
     GfMatrix4d scale = GfMatrix4d().SetScale(GfVec3f(10.f, 10.f, 10.f));
     GfMatrix4d rotate = GfMatrix4d().SetRotate(rotation);
-    GfMatrix4d translate1 = GfMatrix4d().SetTranslate(GfVec3f(0.f, 0.f, -10.f));
-    GfMatrix4d translate2 = GfMatrix4d().SetTranslate(GfVec3f(0.f, 0.f, 10.f));
+    GfMatrix4d translate1 = GfMatrix4d().SetTranslate(GfVec3f(0.f, 12.f, -10.f));
+    GfMatrix4d translate2 = GfMatrix4d().SetTranslate(GfVec3f(0.f, 12.f, 10.f));
     auto op = xformable.GetTransformOp();
     op.Set(scale * rotate * translate1, 1);
     op.Set(scale * rotate * translate2, 101);
@@ -195,6 +195,7 @@ void TestRaycast::InitExec(UsdStageRefPtr& stage)
   // create rays
   _raysId = rootId.AppendChild(TfToken("rays"));
   _rays = (Curve*)_scene.AddGeometry(_raysId, Geometry::CURVE, GfMatrix4d(1.0));
+  _scene.InjectGeometry(stage, _raysId, _rays);
 
   _UpdateRays();
   _scene.MarkPrimDirty(_raysId, HdChangeTracker ::AllDirty);
@@ -202,6 +203,7 @@ void TestRaycast::InitExec(UsdStageRefPtr& stage)
   // create hits
   _hitsId = rootId.AppendChild(TfToken("hits"));
   _hits = (Points*)_scene.AddGeometry(_hitsId, Geometry::POINT, GfMatrix4d(1.0));
+  _scene.InjectGeometry(stage, _hitsId, _hits);
 
   _UpdateHits();
   UpdateExec(stage, Time::Get()->GetActiveTime());
