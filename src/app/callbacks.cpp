@@ -26,13 +26,19 @@ namespace Callbacks {
 
   void CreatePrim(Model* model, const TfToken& type)
   {
+    std::cout << "Create Prim Callback..." << std::endl;
+    std::cout << "Model : " << model << std::endl;
+    std::cout << "Type : " << type.GetString() << std::endl;
+ 
     Selection* selection = model->GetSelection();
     TfToken name(type.GetString() + "_" + RandomString(6));
 
     if (selection->GetNumSelectedItems()) {
+      std::cout << "Create Child Prim : " << selection->GetItem(0).path << std::endl;
       ADD_COMMAND(CreatePrimCommand, model->GetRootLayer(), selection->GetItem(0).path.AppendChild(name), type);
     }
     else {
+      std::cout << "Create Root Prim " << std::endl;
       ADD_COMMAND(CreatePrimCommand, model->GetRootLayer(), SdfPath("/" + name.GetString()), type);
     }
   }

@@ -773,13 +773,17 @@ GraphEditorUI::GetPort(Graph::Port* port)
 bool
 GraphEditorUI::Populate(Graph* graph)
 {
+  std::cout << "POPULATE!!!" << std::endl;
   Clear();
+  std::cout << "  cleared" << std::endl;
+  std::cout << "  graph " << graph << std::endl;
   _graph = graph;
 
   for (auto& node : _graph->GetNodes()) {
     _nodes.push_back(new GraphEditorUI::Node(node));
     _nodes.back()->Read(this);
   }
+  /*
   for (auto& connexion : _graph->GetConnexions()) {
     GraphEditorUI::Port* start = GetPort(connexion->GetStart());
     GraphEditorUI::Port* end = GetPort(connexion->GetEnd());
@@ -787,7 +791,9 @@ GraphEditorUI::Populate(Graph* graph)
       _connexions.push_back(new GraphEditorUI::Connexion(start, end, connexion, GRAPH_COLOR_FLOAT));
     }
   }
+  */
   UpdateFont();
+  std::cout << "POPULATED!!!" << std::endl;
   return true;
 }
 
@@ -1066,13 +1072,17 @@ void
 GraphEditorUI::OnSceneChangedNotice(const SceneChangedNotice& n)
 {
   std::cout << "Graph Editor SCene Change Callback..." << std::endl;
+  std::cout << "Graph : " << _graph << std::endl;
   if (!_graph) return;
   if (!_graph->GetPrim().IsValid()) {
     Clear();
   }
   else {
+    std::cout << "Populate GRAPH..." << std::endl;
     _graph->Clear();
+    std::cout << "cleared" << std::endl;
     _graph->Populate(_graph->GetPrim());
+    std::cout << "poulated" << std::endl;
     Populate(_graph);
   }
   _parent->SetDirty();
@@ -1320,6 +1330,7 @@ GraphEditorUI::Keyboard(int key, int scancode, int action, int mods)
     }
     else if (mappedKey == GLFW_KEY_TAB) {
       GfVec2f mousePos = _parent->GetWindow()->GetMousePosition();
+      std::cout << "Create Prim Callback Model : " << _model << std::endl;
       ListPopupUI* popup = new ListPopupUI("Create Prim", mousePos[0], mousePos[1], 200, 100,
         std::bind(&Callbacks::CreatePrim, _model, std::placeholders::_1));
 

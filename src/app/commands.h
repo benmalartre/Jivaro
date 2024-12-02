@@ -88,15 +88,35 @@ private:
 };
 
 //==================================================================================
+// Modify Selection Command Base Class 
+//==================================================================================
+class ModifySelectionCommand : public Command {
+public:
+  ModifySelectionCommand();
+  virtual ~ModifySelectionCommand() {};
+
+protected:
+  void _PreDo();
+  void _PostDo();
+
+private:
+  std::vector<Selection::Item> _selection;
+  std::vector<Selection::Item> _previous;
+
+};
+
+//==================================================================================
 // Create new prim
 //==================================================================================
 class Geometry;
-class CreatePrimCommand : public Command {
+class CreatePrimCommand : public ModifySelectionCommand {
 public:
   CreatePrimCommand(SdfLayerRefPtr layer, const SdfPath& path, const TfToken& type, 
     bool asDefault=false, Geometry* geometry=NULL);
   ~CreatePrimCommand() {};
   void Do() override;
+private:
+  std::vector<Selection::Item> _selection;
 
 };
 

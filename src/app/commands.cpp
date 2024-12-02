@@ -135,14 +135,39 @@ void LayerTextEditCommand::Do() {
   SceneChangedNotice().Send();
 }
 
+//==================================================================================
+// Modify Selection Command
+//==================================================================================
+ModifySelectionCommand::ModifySelectionCommand()
+  : Command(true)
+{
+  Selection* selection = Application::Get()->GetModel()->GetSelection();
+  _selection = selection->GetItems();
+}
 
+void ModifySelectionCommand::_PreDo()
+{
+  Selection* selection = Application::Get()->GetModel()->GetSelection();
+  _previous = std::move(selection->GetItems());
+
+}
+
+void ModifySelectionCommand::_PostDo()
+{
+  Selection* selection = Application::Get()->GetModel()->GetSelection();
+  selection->SetItems(_selection);
+  SelectionChangedNotice().Send();
+  EngineRegistry::UpdateAllEnginesSelection(selection->GetSelectedPaths());
+  _selection = _previous;
+
+}
 
 //==================================================================================
 // Create Prim
 //==================================================================================
 CreatePrimCommand::CreatePrimCommand(SdfLayerRefPtr layer, const SdfPath& path, const TfToken& type, 
   bool asDefault, Geometry* geometry) 
-  : Command(true)
+  : ModifySelectionCommand()
 {
    if (!layer) 
     return;
@@ -162,14 +187,21 @@ CreatePrimCommand::CreatePrimCommand(SdfLayerRefPtr layer, const SdfPath& path, 
 
   /*if(geometry)
     _SetSpecsFromGeometry(primSpec, geometry);*/
+  Selection* selection = Application::Get()->GetModel()->GetSelection();
+  selection->Clear();
+  selection->AddItem(path);
+  SelectionChangedNotice().Send();
+  EngineRegistry::UpdateAllEnginesSelection(selection->GetSelectedPaths());
 
   UndoRouter::Get().TransferEdits(&_inverse);
   SceneChangedNotice().Send();
 }
 
 void CreatePrimCommand::Do() {
+  _PreDo();
   _inverse.Invert();
   SceneChangedNotice().Send();
+  _PostDo();
 }
 
 
