@@ -142,6 +142,7 @@ HdSceneIndexPrim ExecSceneIndex::GetPrim(const SdfPath &primPath) const
     if(prim) {
       switch (prim->geom->GetType()) {
         case Geometry::POINT:
+        case Geometry::CURVE:
         case Geometry::MESH:
         {
           HdSceneIndexPrim siPrim = _GetInputSceneIndex()->GetPrim(primPath);

@@ -133,6 +133,7 @@ void TestParticles::InitExec(UsdStageRefPtr& stage)
   _solverId = rootId.AppendChild(TfToken("Solver"));
   _solver = _CreateSolver(&_scene, stage, _solverId);
   _scene.AddGeometry(_solverId, _solver);
+  _scene.InjectGeometry(stage, _solver->GetPointsId(), _solver->GetPoints());
 
   GfRotation rotation(GfVec3f(0.f,1.f,0.f), RANDOM_LO_HI(0.f, 360.f));
 

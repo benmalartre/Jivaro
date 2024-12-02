@@ -273,11 +273,11 @@ AddAttributeWidget(const UsdAttribute& attribute, const UsdTimeCode& timeCode)
   } else if (value.IsHolding<SdfAssetPath>()) {
     SdfAssetPath sdfAssetPath = value.Get<SdfAssetPath>();
     std::string assetPath = sdfAssetPath.GetAssetPath();
-    static char buf[255];
+    static char buf[512];
     strcpy(&buf[0], assetPath.c_str());
     ImGui::InputText(attribute.GetName().GetText(), &buf[0], 255);
     if (ImGui::IsItemDeactivatedAfterEdit()) {
-      return VtValue(std::string(buf));
+      return VtValue(SdfAssetPath(std::string(buf)));
     }
   } else if (value.IsHolding<GfMatrix4d>()) {
     return AddMatrixWidget<GfMatrix4d, ImGuiDataType_Double, 4, 4>(attribute, timeCode);

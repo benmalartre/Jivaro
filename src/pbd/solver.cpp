@@ -582,12 +582,14 @@ void Solver::Reset(UsdStageRefPtr& stage)
   for(auto& collision: _collisions)
     collision->Reset();
   
+  if(!stage->GetPrimAtPath(_pointsId).IsValid())
+    _scene->InjectGeometry(stage, _pointsId, _points, UsdTimeCode::Default());
+
   UpdateCurves();
 }
 
 void Solver::Step(UsdStageRefPtr& stage, float time)
 {
-
   UpdateInputs(stage, time);
   UpdateParameters(stage, time);
   UpdateCollisions(stage, time);
@@ -599,7 +601,6 @@ void Solver::Step(UsdStageRefPtr& stage, float time)
 
   size_t packetSize = numParticles / (numThreads > 1 ? numThreads - 1 : 1);
 
-  
   _PrepareContacts();
   for(size_t si = 0; si < _subSteps; ++si) {
 
@@ -672,6 +673,7 @@ void Solver::UpdateCollisions(UsdStageRefPtr& stage, float time)
 
 void Solver::UpdateGeometries()
 {
+  std::cout << "update geometries : " << std::endl;
   const auto* positions = &_particles.position[0];
   _ElementMap::iterator it = _elements.begin();
   for (; it != _elements.end(); ++it)
@@ -679,6 +681,7 @@ void Solver::UpdateGeometries()
     if(it->first->GetType() == Element::BODY) {
       Body* body = (Body*)it->first;
       SdfPath id = it->second.first;
+      std::cout << "deformable : " << id << std::endl;
       Geometry* geometry = it->second.second;
       if(geometry->GetType() >= Geometry::POINT) {
         Deformable* deformable = (Deformable*)geometry;

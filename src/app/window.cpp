@@ -1,5 +1,12 @@
+#include <chrono>
+#include <thread>
+#include <pxr/imaging/glf/contextCaps.h>
+#include <pxr/base/arch/systemInfo.h>
+
 #include "../utils/glutils.h"
 #include "../utils/files.h"
+#include "../utils/timer.h"
+#include "../utils/prefs.h"
 #include "../utils/icons.h"
 #include "../utils/keys.h"
 #include "../ui/style.h"
@@ -7,22 +14,11 @@
 #include "../ui/viewport.h"
 #include "../ui/splitter.h"
 #include "../ui/popup.h"
-
-#include <chrono>
-#include <thread>
-#include <pxr/imaging/glf/contextCaps.h>
-#include <pxr/base/arch/systemInfo.h>
-
 #include "../app/window.h"
 #include "../app/view.h"
 #include "../app/tools.h"
 #include "../app/layout.h"
 #include "../app/application.h"
-
-#include "../utils/files.h"
-#include "../utils/timer.h"
-#include "../utils/prefs.h"
-
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -40,7 +36,7 @@ static ImGuiWindowFlags JVR_BACKGROUND_FLAGS =
   ImGuiWindowFlags_NoBackground;
 
 
-// width/height window constructor
+// Window Constructor
 //----------------------------------------------------------------------------
 Window::Window(const std::string& name, const GfVec4i& dimension, bool fullscreen, Window* parent) :
   _pixels(NULL), _debounce(0),_mainView(NULL), _activeView(NULL), _hoveredView(NULL),
@@ -84,7 +80,7 @@ Window::Window(const std::string& name, const GfVec4i& dimension, bool fullscree
   Init();
 }
 
-// initialize
+// Initialize
 //----------------------------------------------------------------------------
 void 
 Window::Init()
@@ -148,7 +144,6 @@ Window::~Window()
   if(_shared) 
     DeleteFontAtlas();
 }
-
 
 void
 Window::ClearViews()
@@ -655,36 +650,7 @@ Window::SetupImgui()
   
   _io = &(ImGui::GetIO());
   _io->FontAllowUserScaling = true;
-  /*
-  // load fonts
-  std::string exeFolder = GetInstallationFolder();
-  std::string fontPath;
-  for (int i = 0; i < 3; ++i) {
-    fontPath = exeFolder + "/../../fonts/montserrat/Montserrat-Bold.otf";
-    _boldFont[i] = _io->Fonts->AddFontFromFileTTF(
-      fontPath.c_str(),
-      fontSizes[i],
-      NULL,
-      _io->Fonts->GetGlyphRangesDefault()
-    );
-
-    fontPath = exeFolder + "/../../fonts/montserrat/Montserrat-Medium.otf";
-    _mediumFont[i] = _io->Fonts->AddFontFromFileTTF(
-      fontPath.c_str(),
-      fontSizes[i],
-      NULL,
-      _io->Fonts->GetGlyphRangesDefault()
-    );
-
-    fontPath = exeFolder + "/../../fonts/montserrat/Montserrat-Regular.otf";
-    _regularFont[i] = _io->Fonts->AddFontFromFileTTF(
-      fontPath.c_str(),
-      fontSizes[i],
-      NULL,
-      _io->Fonts->GetGlyphRangesDefault()
-    );
-  }
-  */
+ 
   // setup imgui style
   SetStyle(&ImGui::GetStyle());
 
