@@ -15,6 +15,7 @@
 #include "../common.h"
 #include "../utils/timer.h"
 #include "../geometry/implicit.h"
+#include "../graph/graph.h"
 #include "../pbd/element.h"
 #include "../pbd/particle.h"
 
@@ -33,7 +34,7 @@ class Curve;
 class Scene;
 class Timer;
 
-class Solver : public Xform {
+class Solver : public Graph::Node {
 public:
   const static size_t INVALID_INDEX = std::numeric_limits<size_t>::max();
 

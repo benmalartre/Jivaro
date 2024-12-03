@@ -38,7 +38,7 @@ struct ManipTargetDesc {
 typedef std::vector<ManipTargetDesc> ManipTargetDescList;
 
 void _GetManipTargetXformVectors(UsdGeomXformCommonAPI& xformApi,
-  ManipXformVectors& vectors, UsdTimeCode& time);
+  ManipXformVectors& vectors, const UsdTimeCode& time);
 
 template<typename T>
 static inline double ComputeDistanceSquared(const T& a, const T& b)

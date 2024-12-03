@@ -111,7 +111,7 @@ void Particles::RemoveBody(Body* item)
     radius[lhi]    = radius[rhi];
     rest[lhi]      = rest[rhi];
     input[lhi]     = input[rhi];
-    previous[lhi] = previous[rhi];
+    previous[lhi]  = previous[rhi];
     position[lhi]  = position[rhi];
     predicted[lhi] = predicted[rhi];
     rotation[lhi]  = rotation[rhi];

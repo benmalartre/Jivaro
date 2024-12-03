@@ -117,6 +117,7 @@ void TestParticles::InitExec(UsdStageRefPtr& stage)
   float restitution = 0.05f;
   float friction = 0.9f;
 
+  UndoBlock block;
   // get root prim
   UsdPrim rootPrim = stage->GetDefaultPrim();
   if(!rootPrim.IsValid()) {

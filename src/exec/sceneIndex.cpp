@@ -210,12 +210,10 @@ HdSceneIndexPrim ExecSceneIndex::GetPrim(const SdfPath &primPath) const
   if(_exec) {    
     Scene::_Prim* prim = _exec->GetScene()->GetPrim(primPath);
     if(prim) {
-      std::cout << "ExecSceneIndex Get Prim " << primPath << " OUTPUT ONLY ? " << (!prim->geom->IsInput()) << std::endl;
       if(!prim->geom->IsInput()) {
         switch (prim->geom->GetType()) {
           case Geometry::POINT:
           {
-            std::cout << "hydra 2.0 add output points..." << std::endl;
             return _GetPointsSceneIndexPrim((Points*)prim->geom); 
           }
           case Geometry::CURVE:

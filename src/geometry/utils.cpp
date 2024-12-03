@@ -8,9 +8,9 @@ JVR_NAMESPACE_OPEN_SCOPE
 // HELPERS
 //==================================================================================
 void _GetManipTargetXformVectors(UsdGeomXformCommonAPI& xformApi,
-  ManipXformVectors& vectors, UsdTimeCode& time)
+  ManipXformVectors& vectors, const UsdTimeCode& time)
 {
-  xformApi.GetXformVectors(&vectors.translation, &vectors.rotation, &vectors.scale,
+  xformApi.GetXformVectorsByAccumulation(&vectors.translation, &vectors.rotation, &vectors.scale,
     &vectors.pivot, &vectors.rotOrder, time);
 }
 

@@ -2,7 +2,6 @@
 #include "../common.h"
 #include "../graph/input.h"
 #include "../graph/output.h"
-#include "../graph/node.h"
 #include "../graph/graph.h"
 #include "../graph/connectableAPI.h"
 #include "../graph/stage.h"

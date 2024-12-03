@@ -26,23 +26,17 @@ JVR_NAMESPACE_OPEN_SCOPE
 void  _EnsureXformCommonAPI(UsdPrim prim, const UsdTimeCode& timeCode)
 {
   UsdGeomXformable xformable(prim);
-
-  GfMatrix4d worldMatrix = xformable.ComputeLocalToWorldTransform(timeCode);
-  GfVec3d translation = worldMatrix.ExtractTranslation();
-  GfRotation rotation = worldMatrix.ExtractRotation();
-  GfMatrix3d rotationMatrix = worldMatrix.ExtractRotationMatrix();
+ 
+  GfVec3d translation;
+  GfVec3f rotation;
   GfVec3f scale;
-  scale[0] = rotationMatrix.GetRow(0).GetLength();
-  scale[1] = rotationMatrix.GetRow(1).GetLength();
-  scale[2] = rotationMatrix.GetRow(2).GetLength();
-
-  GfVec3f pivot(0.f);
+  GfVec3f pivot;
   UsdGeomXformCommonAPI::RotationOrder rotOrder;
   UsdGeomXformCommonAPI api(prim);
+  api.GetXformVectorsByAccumulation(&translation, &rotation, &scale, &pivot, &rotOrder, timeCode);
 
-  xformable.SetResetXformStack(true);
   xformable.ClearXformOpOrder();
-  api.SetXformVectors(translation, GfVec3f(rotation.GetAxis()), scale, pivot, rotOrder, timeCode);
+  api.SetXformVectors(translation, rotation, scale, pivot, rotOrder, timeCode);
 }
 
 //==================================================================================
@@ -296,7 +290,7 @@ BaseHandle::ResetSelection()
         parentMatrix.GetInverse());
       ManipXformVectors vectors;
       UsdGeomXformCommonAPI xformApi(prim);
-      xformApi.GetXformVectors(&vectors.translation, &vectors.rotation, &vectors.scale,
+      xformApi.GetXformVectorsByAccumulation(&vectors.translation, &vectors.rotation, &vectors.scale,
         &vectors.pivot, &vectors.rotOrder, activeTime); 
       const GfMatrix4f rotationMatrix(
         UsdGeomXformOp::GetOpTransform(
@@ -507,7 +501,7 @@ BaseHandle::_ComputeCOGMatrix()
   for (auto& target: _targets) {
     /*
     UsdGeomXformCommonAPI xformApi(prim);
-    xformApi.GetXformVectors(&transformVectors.translation, &transformVectors.rotation, 
+    xformApi.GetXformVectorsByAccumulation(&transformVectors.translation, &transformVectors.rotation, 
       &transformVectors.scale, &transformVectors.pivot, &transformVectors.rotOrder, activeTime);
     const auto transMat = GfMatrix4d(1.0).SetTranslate(transformVectors.translation);
     const auto pivotMat = GfMatrix4d(1.0).SetTranslate(transformVectors.pivot);
@@ -1010,7 +1004,7 @@ _ResolveRotation(ManipTargetDesc& target,
 
   // Get latest rotation values to give a hint to the decompose function
   ManipXformVectors vectors;
-  xformApi.GetXformVectors(&vectors.translation, &vectors.rotation, &vectors.scale,
+  xformApi.GetXformVectorsByAccumulation(&vectors.translation, &vectors.rotation, &vectors.scale,
     &vectors.pivot, &vectors.rotOrder, activeTime);
 
   double thetaTw = GfDegreesToRadians(vectors.rotation[0]);

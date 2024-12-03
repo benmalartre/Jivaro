@@ -13,7 +13,14 @@ class Particles;
 class Element
 {
 public:
-  enum Type { BODY, COLLISION, FORCE, CONSTRAINT, CONTACT };
+  enum Type { 
+    BODY, 
+    COLLISION, 
+    FORCE, 
+    CONSTRAINT, 
+    CONTACT 
+  };
+  
   short GetType() {return _type;};
 
   virtual size_t GetTypeId() const = 0;
