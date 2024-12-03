@@ -1178,7 +1178,7 @@ void Mesh::RegularGrid2D(float spacing, const GfMatrix4f& matrix)
 void Mesh::RegularGrid2D(size_t subdivX, size_t subdivY, float sizeX, float sizeY, const GfMatrix4f& matrix)
 {
   size_t numPoints = (subdivX + 1) * (subdivY +1);
-  size_t numPolygons = subdivX + subdivY;
+  size_t numPolygons = subdivX * subdivY;
   size_t numSamples = numPolygons * 4;
   VtArray<GfVec3f> positions(numPoints);
 
@@ -1189,7 +1189,7 @@ void Mesh::RegularGrid2D(size_t subdivX, size_t subdivY, float sizeX, float size
 
   for(size_t y = 0; y <= subdivY; ++y) {
     for(size_t x = 0; x <= subdivX; ++x) {
-      size_t vertexId = y * (subdivY + 1) + x;
+      size_t vertexId = y * (subdivX + 1) + x;
       positions[vertexId][0] = minX + x * spaceX;
       positions[vertexId][1] = 0.f;
       positions[vertexId][2] = minY + y * spaceY;

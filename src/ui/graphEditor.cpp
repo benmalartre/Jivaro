@@ -747,15 +747,16 @@ RefreshGraphCallback(GraphEditorUI* editor)
     if (item.type == Selection::PRIM) {
       UsdStageRefPtr stage = editor->GetModel()->GetStage();
       UsdPrim selected = stage->GetPrimAtPath(item.path);
+      editor->SetGraph(new HierarchyGraph(stage->GetRootLayer(), selected));
 
       if (selected.IsValid()) {
-        editor->Populate(new HierarchyGraph(SdfLayerRefPtr(
-          stage->GetRootLayer()), selected));
+        editor->Populate();
         return;
       }
     }
   }
   editor->Clear();
+  
 }
 
 GraphEditorUI::Port*
@@ -771,19 +772,17 @@ GraphEditorUI::GetPort(Graph::Port* port)
 // populate
 //------------------------------------------------------------------------------
 bool
-GraphEditorUI::Populate(Graph* graph)
+GraphEditorUI::Populate()
 {
-  std::cout << "POPULATE!!!" << std::endl;
   Clear();
-  std::cout << "  cleared" << std::endl;
-  std::cout << "  graph " << graph << std::endl;
-  _graph = graph;
+
+  if(!_graph) return false;
 
   for (auto& node : _graph->GetNodes()) {
     _nodes.push_back(new GraphEditorUI::Node(node));
     _nodes.back()->Read(this);
   }
-  /*
+  
   for (auto& connexion : _graph->GetConnexions()) {
     GraphEditorUI::Port* start = GetPort(connexion->GetStart());
     GraphEditorUI::Port* end = GetPort(connexion->GetEnd());
@@ -791,9 +790,8 @@ GraphEditorUI::Populate(Graph* graph)
       _connexions.push_back(new GraphEditorUI::Connexion(start, end, connexion, GRAPH_COLOR_FLOAT));
     }
   }
-  */
+  
   UpdateFont();
-  std::cout << "POPULATED!!!" << std::endl;
   return true;
 }
 
@@ -823,8 +821,8 @@ GraphEditorUI::Clear()
   _currentPort = nullptr;
   _hoveredConnexion = nullptr;
 
-  if(_graph)delete _graph;
-  _graph = nullptr;
+  //if(_graph)delete _graph;
+  //_graph = nullptr;
 }
 
 // read
@@ -982,7 +980,6 @@ GraphEditorUI::Draw()
   ImGui::SetWindowFontScale(1.0);
   ImGui::SetCursorPos(ImVec2(0, 0));
 
-
   UI::AddIconButton(0, ICON_FA_RECYCLE, UI::STATE_DEFAULT,
     std::bind(RefreshGraphCallback, this));
   ImGui::SameLine();
@@ -1071,21 +1068,18 @@ GraphEditorUI::OnNewSceneNotice(const NewSceneNotice& n)
 void
 GraphEditorUI::OnSceneChangedNotice(const SceneChangedNotice& n)
 {
-  std::cout << "Graph Editor SCene Change Callback..." << std::endl;
-  std::cout << "Graph : " << _graph << std::endl;
+  std::cout << "scene changed callback" << std::endl;
   if (!_graph) return;
   if (!_graph->GetPrim().IsValid()) {
     Clear();
   }
   else {
-    std::cout << "Populate GRAPH..." << std::endl;
     _graph->Clear();
-    std::cout << "cleared" << std::endl;
     _graph->Populate(_graph->GetPrim());
-    std::cout << "poulated" << std::endl;
-    Populate(_graph);
+    Populate();
   }
   _parent->SetDirty();
+  std::cout << "scene changed callback done" << std::endl;
 }
 
 void

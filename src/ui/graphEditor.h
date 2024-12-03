@@ -290,6 +290,7 @@ public:
   GfVec2f GridPositionToViewPosition(const GfVec2f& gridPos);
 
   // graph
+  void SetGraph(Graph* graph){if(_graph)delete _graph; _graph=graph;};
   Graph* GetGraph() { return _graph; };
   
   // nodes
@@ -322,7 +323,7 @@ public:
   GfVec2f GetInsertionPos(Node* node);
 
   // io
-  bool Populate(Graph* graph);
+  bool Populate();
   void Clear();
   bool Read(UsdStageRefPtr& stage);
   bool Write(UsdStageRefPtr& stage);

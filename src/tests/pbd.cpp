@@ -152,7 +152,7 @@ void TestPBD::InitExec(UsdStageRefPtr& stage)
     Body* body = _solver->CreateBody((Geometry*)_clothes[c], 
       _clothes[c]->GetMatrix(), 1.f, size * 9.f, 0.1f, true);
     
-    _solver->CreateConstraints(body, Constraint::BEND, 2000.f, 0.1f);
+    _solver->CreateConstraints(body, Constraint::DIHEDRAL, 2000.f, 0.1f);
     _solver->CreateConstraints(body, Constraint::STRETCH, 10000.f, 0.5f);
     _solver->CreateConstraints(body, Constraint::SHEAR, 6000.f, 0.1f);
     

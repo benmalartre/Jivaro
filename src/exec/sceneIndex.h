@@ -56,7 +56,7 @@ class ExecSceneIndex : public HdSingleInputFilteringSceneIndexBase {
     Execution* _exec;
 
     SdfPath _gridPath;
-    HdSceneIndexPrim _prim;
+    HdSceneIndexPrim _gridPrim;
     bool _isPopulated;
 
 };

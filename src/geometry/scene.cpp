@@ -194,6 +194,7 @@ void Scene::InjectGeometry(UsdStageRefPtr& stage,
   const GfMatrix4d& parent = _GetParentXform(prim, time);
   geometry->SetPrim(prim);
   geometry->Inject(parent, time);
+  geometry->SetInputOutput();
 }
 
 void Scene::RemoveGeometry(const SdfPath& path)

@@ -18,7 +18,7 @@
 #include "../ui/debug.h"
 #include "../ui/demo.h"
 #include "../ui/icon.h"
-#include "../ui/tool.h"
+#include "../ui/commands.h"
 
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -134,8 +134,8 @@ View::CreateUI(UIType type)
   case UIType::ICON:
     _current = new IconUI(this);
     break;
-  case UIType::TOOL:
-    _current = new ToolUI(this);
+  case UIType::COMMANDS:
+    _current = new CommandsUI(this);
     break;
   default:
     break;

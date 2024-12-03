@@ -133,7 +133,7 @@ void TestParticles::InitExec(UsdStageRefPtr& stage)
   _solverId = rootId.AppendChild(TfToken("Solver"));
   _solver = _CreateSolver(&_scene, stage, _solverId);
   _scene.AddGeometry(_solverId, _solver);
-  _scene.InjectGeometry(stage, _solver->GetPointsId(), _solver->GetPoints());
+  //_scene.InjectGeometry(stage, _solver->GetPointsId(), _solver->GetPoints());
 
   GfRotation rotation(GfVec3f(0.f,1.f,0.f), RANDOM_LO_HI(0.f, 360.f));
 
@@ -171,10 +171,11 @@ void TestParticles::InitExec(UsdStageRefPtr& stage)
 
   _voxelsId = _solverId.AppendChild(TfToken("voxels"));
   _voxels = _Voxelize(_emitter, radius);
-  _scene.InjectGeometry(stage, _voxelsId, _voxels);
   _scene.AddGeometry(_voxelsId, _voxels);
+  _scene.InjectGeometry(stage, _voxelsId, _voxels);
+  _voxels->SetInputOutput();
 
-  UsdPbdBodyAPI::Apply(_voxels->GetPrim());
+  UsdPbdBodyAPI::Apply(stage->GetPrimAtPath(_voxelsId));
 
   std::cout << "voxels num cells " << _voxels->GetNumCells() << std::endl;
   std::cout << "voxels num points " << _voxels->GetNumPoints() << std::endl;
@@ -186,7 +187,7 @@ void TestParticles::InitExec(UsdStageRefPtr& stage)
   std::cout << _voxels << std::endl;
 
   Body* body = _solver->CreateBody((Geometry*)_voxels, matrix, mass, radius, damping, false);
-  _solver->AddElement(body, _voxels, _emitterId);
+  _solver->AddElement(body, _voxels, _voxelsId);
   std::cout << "added particles" << _solver->GetNumParticles() << std::endl;
 
 

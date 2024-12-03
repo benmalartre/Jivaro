@@ -195,7 +195,7 @@ void TestRaycast::InitExec(UsdStageRefPtr& stage)
   // create rays
   _raysId = rootId.AppendChild(TfToken("rays"));
   _rays = (Curve*)_scene.AddGeometry(_raysId, Geometry::CURVE, GfMatrix4d(1.0));
-  _scene.InjectGeometry(stage, _raysId, _rays);
+  //_scene.InjectGeometry(stage, _raysId, _rays);
 
   _UpdateRays();
   _scene.MarkPrimDirty(_raysId, HdChangeTracker ::AllDirty);
@@ -203,7 +203,7 @@ void TestRaycast::InitExec(UsdStageRefPtr& stage)
   // create hits
   _hitsId = rootId.AppendChild(TfToken("hits"));
   _hits = (Points*)_scene.AddGeometry(_hitsId, Geometry::POINT, GfMatrix4d(1.0));
-  _scene.InjectGeometry(stage, _hitsId, _hits);
+  //_scene.InjectGeometry(stage, _hitsId, _hits);
 
   _UpdateHits();
   UpdateExec(stage, Time::Get()->GetActiveTime());

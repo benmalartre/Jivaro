@@ -235,7 +235,7 @@ void Solver::CreateConstraints(Body* body, short type, float stiffness, float da
       if(geom->GetType() == Geometry::MESH) {
         group = CreateDihedralConstraints(body, stiffness, damping);
       } else {
-        //TF_WARN("Dihedral constraints can only be applied on meshes !");
+        TF_WARN("Dihedral constraints can only be applied on meshes !");
       }
       break;
   }
@@ -564,7 +564,7 @@ void Solver::Reset(UsdStageRefPtr& stage)
     for(size_t i = 0; i < nL; ++i)
       locked[i]  = pairs[i].first;
 
-    //LockPoints(_bodies[b], locked);
+    LockPoints(_bodies[b], locked);
   }
 
   _particles.SetAllState(Particles::ACTIVE);
@@ -581,9 +581,6 @@ void Solver::Reset(UsdStageRefPtr& stage)
 
   for(auto& collision: _collisions)
     collision->Reset();
-  
-  if(!stage->GetPrimAtPath(_pointsId).IsValid())
-    _scene->InjectGeometry(stage, _pointsId, _points, UsdTimeCode::Default());
 
   UpdateCurves();
 }

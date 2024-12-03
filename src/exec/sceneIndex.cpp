@@ -7,11 +7,14 @@
 #include <pxr/imaging/hd/primvarSchema.h>
 #include <pxr/imaging/hd/primvarsSchema.h>
 #include <pxr/imaging/hd/purposeSchema.h>
+#include "pxr/imaging/hd/dataSource.h"
+#include "pxr/imaging/hd/dataSourceLocator.h"
 
 #include <pxr/imaging/hd/overlayContainerDataSource.h>
 #include <pxr/imaging/hd/retainedDataSource.h>
 
 #include <pxr/imaging/hd/sceneIndex.h>
+#include "pxr/imaging/hd/renderIndex.h"
 #include <pxr/imaging/hd/visibilitySchema.h>
 
 #include "../exec/sceneIndex.h"
@@ -31,13 +34,68 @@ ExecSceneIndex::ExecSceneIndex(const HdSceneIndexBaseRefPtr  &inputSceneIndex)
   , _isPopulated(false)
 {
   _gridPath = SdfPath("/Grid");
-  _prim = _CreateGridPrim();
+  _gridPrim = _CreateGridPrim();
   Populate(true);
 }
 
 ExecSceneIndex::~ExecSceneIndex()
 {
   Populate(false);
+}
+
+
+HdSceneIndexPrim
+_GetPointsSceneIndexPrim(Points* points) 
+{
+ HdSceneIndexPrim prim = HdSceneIndexPrim(
+    {HdPrimTypeTokens->points,
+      HdRetainedContainerDataSource::New(
+        HdPrimvarsSchemaTokens->primvars,
+          HdRetainedContainerDataSource::New(
+            HdTokens->points,
+            HdPrimvarSchema::Builder()
+              .SetPrimvarValue(
+                HdRetainedTypedSampledDataSource<VtVec3fArray>::New(
+                  points->GetPositions()))
+              .SetInterpolation(
+                HdPrimvarSchema::BuildInterpolationDataSource(
+                  HdPrimvarSchemaTokens->varying))
+              .SetRole(HdPrimvarSchema::BuildRoleDataSource(
+                HdPrimvarSchemaTokens->color))
+              .Build(),
+          HdPrimvarsSchemaTokens->widths,
+          HdPrimvarSchema::Builder()
+            .SetPrimvarValue(
+              HdRetainedTypedSampledDataSource<VtFloatArray>::New(
+                points->GetWidths()))
+            .SetInterpolation(
+              HdPrimvarSchema::BuildInterpolationDataSource(
+                HdPrimvarSchemaTokens->varying))
+            .Build())/*,
+          HdTokens->displayColor,
+          HdPrimvarSchema::Builder()
+            .SetPrimvarValue(_PointDataSource::New(colors))
+            .SetInterpolation(
+              HdPrimvarSchema::BuildInterpolationDataSource(
+                HdPrimvarSchemaTokens->vertex))
+            .SetRole(HdPrimvarSchema::BuildRoleDataSource(
+              HdPrimvarSchemaTokens->color))
+            .Build()),
+        HdPurposeSchemaTokens->purpose,
+        HdPurposeSchema::Builder()
+          .SetPurpose(
+            _TokenDataSource::New(HdRenderTagTokens->geometry))
+          .Build(),
+        HdVisibilitySchemaTokens->visibility,
+        HdVisibilitySchema::Builder()
+          .SetVisibility(_BoolDataSource::New(true))
+          .Build(),
+        HdXformSchemaTokens->xform,
+        HdXformSchema::Builder()
+          .SetMatrix(_MatrixDataSource::New(GfMatrix4d(1)))
+          .SetResetXformStack(_BoolDataSource::New(false))
+          .Build()*/)});
+  return prim;
 }
 
 void ExecSceneIndex::SetExec(Execution* exec)
@@ -50,7 +108,7 @@ void ExecSceneIndex::SetExec(Execution* exec)
   Scene* scene = _exec->GetScene();
   for(size_t g = 0; g < scene->GetNumGeometries();++g) {
     Geometry* geometry = scene->GetGeometry(g);
-    SdfPath path = geometry->GetPrim().GetPath();
+    SdfPath path = scene->GetPrimPath(geometry);
     HdSceneIndexPrim indexPrim;
     switch(geometry->GetType()) {
       case Geometry::MESH:
@@ -63,13 +121,22 @@ void ExecSceneIndex::SetExec(Execution* exec)
       case Geometry::POINT:
         std::cout << "exec populate points : " << path << std::endl;
         if(path.IsEmpty()) continue;
-        indexPrim = _GetInputSceneIndex()->GetPrim(path);
+        if(!geometry->IsInput()) {
+          indexPrim = _GetPointsSceneIndexPrim((Points*)geometry);
+        } else {
+          indexPrim = _GetInputSceneIndex()->GetPrim(path);
+        }
+        
         _SendPrimsAdded({{path, HdPrimTypeTokens->points}});
         break;
 
       case Geometry::CURVE:
         std::cout << "exec populate curve : " << path << std::endl;
+        if(path.IsEmpty()) continue;
+        indexPrim = _GetInputSceneIndex()->GetPrim(path);
+        _SendPrimsAdded({{path, HdPrimTypeTokens->basisCurves}});
         break;
+
     }
   }
 }
@@ -126,7 +193,10 @@ ExecSceneIndex::UpdateExec()
     if(prim.second.geom->GetType() == Geometry::MESH) {
       HdDataSourceLocator locator(HdPrimvarsSchemaTokens->primvars);
         entries.push_back({prim.first, locator});
-    }else if(prim.second.geom->GetType() == Geometry::POINT) {
+    } else if(prim.second.geom->GetType() == Geometry::POINT) {
+      HdDataSourceLocator locator(HdPrimvarsSchemaTokens->primvars);
+        entries.push_back({prim.first, locator});
+    } else if(prim.second.geom->GetType() == Geometry::CURVE) {
       HdDataSourceLocator locator(HdPrimvarsSchemaTokens->primvars);
         entries.push_back({prim.first, locator});
     }
@@ -136,39 +206,78 @@ ExecSceneIndex::UpdateExec()
 
 HdSceneIndexPrim ExecSceneIndex::GetPrim(const SdfPath &primPath) const
 {
-  if (primPath == _gridPath) return _prim;
+  if (primPath == _gridPath) return _gridPrim;
   if(_exec) {    
     Scene::_Prim* prim = _exec->GetScene()->GetPrim(primPath);
     if(prim) {
-      switch (prim->geom->GetType()) {
-        case Geometry::POINT:
-        case Geometry::CURVE:
-        case Geometry::MESH:
-        {
-          HdSceneIndexPrim siPrim = _GetInputSceneIndex()->GetPrim(primPath);
-          VtArray<GfVec3f> points();
+      std::cout << "ExecSceneIndex Get Prim " << primPath << " OUTPUT ONLY ? " << (!prim->geom->IsInput()) << std::endl;
+      if(!prim->geom->IsInput()) {
+        switch (prim->geom->GetType()) {
+          case Geometry::POINT:
+          {
+            std::cout << "hydra 2.0 add output points..." << std::endl;
+            return _GetPointsSceneIndexPrim((Points*)prim->geom); 
+          }
+          case Geometry::CURVE:
+          case Geometry::MESH:
+          {
+            HdSceneIndexPrim siPrim = _GetInputSceneIndex()->GetPrim(primPath);
+            VtArray<GfVec3f> points();
 
-          siPrim.dataSource = 
-            HdOverlayContainerDataSource::New(
-              HdRetainedContainerDataSource::New(
-                HdPrimvarsSchemaTokens->primvars,
+            siPrim.dataSource = 
+              HdOverlayContainerDataSource::New(
                 HdRetainedContainerDataSource::New(
-                  HdTokens->points,
-                  HdPrimvarSchema::Builder()
-                    .SetPrimvarValue(
-                      HdRetainedTypedSampledDataSource<VtVec3fArray>::New(
-                        ((Deformable*)prim->geom)->GetPositions()
-                      ))
-                    .SetInterpolation(
-                      HdPrimvarSchema::BuildInterpolationDataSource(
-                        HdPrimvarSchemaTokens->varying))
-                    .SetRole(HdPrimvarSchema::BuildRoleDataSource(
-                      HdPrimvarSchemaTokens->color))
-                    .Build())),
-              siPrim.dataSource);
-          return siPrim;
-        
+                  HdPrimvarsSchemaTokens->primvars,
+                  HdRetainedContainerDataSource::New(
+                    HdTokens->points,
+                    HdPrimvarSchema::Builder()
+                      .SetPrimvarValue(
+                        HdRetainedTypedSampledDataSource<VtVec3fArray>::New(
+                          ((Deformable*)prim->geom)->GetPositions()
+                        ))
+                      .SetInterpolation(
+                        HdPrimvarSchema::BuildInterpolationDataSource(
+                          HdPrimvarSchemaTokens->varying))
+                      .SetRole(HdPrimvarSchema::BuildRoleDataSource(
+                        HdPrimvarSchemaTokens->color))
+                      .Build())),
+                siPrim.dataSource);
+            return siPrim;
+          
 
+          }
+        }
+      } else {
+        switch (prim->geom->GetType()) {
+          case Geometry::POINT:
+          case Geometry::CURVE:
+          case Geometry::MESH:
+          {
+            HdSceneIndexPrim siPrim = _GetInputSceneIndex()->GetPrim(primPath);
+            VtArray<GfVec3f> points();
+
+            siPrim.dataSource = 
+              HdOverlayContainerDataSource::New(
+                HdRetainedContainerDataSource::New(
+                  HdPrimvarsSchemaTokens->primvars,
+                  HdRetainedContainerDataSource::New(
+                    HdTokens->points,
+                    HdPrimvarSchema::Builder()
+                      .SetPrimvarValue(
+                        HdRetainedTypedSampledDataSource<VtVec3fArray>::New(
+                          ((Deformable*)prim->geom)->GetPositions()
+                        ))
+                      .SetInterpolation(
+                        HdPrimvarSchema::BuildInterpolationDataSource(
+                          HdPrimvarSchemaTokens->varying))
+                      .SetRole(HdPrimvarSchema::BuildRoleDataSource(
+                        HdPrimvarSchemaTokens->color))
+                      .Build())),
+                siPrim.dataSource);
+            return siPrim;
+          
+
+          }
         }
       }
     }
@@ -181,8 +290,26 @@ SdfPathVector ExecSceneIndex::GetChildPrimPaths(
     const SdfPath &primPath) const
 {
   if (!_isPopulated) return {};
-    if (primPath == SdfPath::AbsoluteRootPath()) return {_gridPath};
-    else return {};
+
+  if (primPath == SdfPath::AbsoluteRootPath()) {
+    SdfPathVector paths;
+    if(_exec) {
+      Scene* scene = _exec->GetScene();
+      for(auto& primIt: scene->GetPrims()) {
+        if(!primIt.second.geom->IsInput())
+          paths.push_back(primIt.first);
+      }
+      paths.push_back(_gridPath);
+    }
+    std::cout << "ROOT CHILD PRIM PATHS : ";
+    for(auto& path: paths)
+      std::cout << path << ",";
+    std::cout << std::endl;
+    return paths;
+  }
+
+ 
+  else return {};
 }
 
 void ExecSceneIndex::_PrimsAdded(

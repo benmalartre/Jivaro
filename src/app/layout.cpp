@@ -13,7 +13,7 @@
 #include "../ui/timeline.h"
 #include "../ui/demo.h"
 #include "../ui/toolbar.h"
-#include "../ui/tool.h"
+#include "../ui/commands.h"
 #include "../ui/explorer.h"
 #include "../ui/propertyEditor.h"
 
@@ -107,7 +107,7 @@ void Layout::StandardLayout(Window* window)
   new ToolbarUI(toolView, true);
   new ExplorerUI(explorerView);
   new PropertyEditorUI(propertyView);
-  new ToolUI(graphView);
+  new CommandsUI(graphView);
   //AttributeEditorUIditorUI(graphView);
   EngineRegistry::SetActiveEngine(viewport->GetEngine());
 }

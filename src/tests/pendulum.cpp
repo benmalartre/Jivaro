@@ -52,7 +52,7 @@ void TestPendulum::InitExec(UsdStageRefPtr& stage)
     _pointsId = rootId.AppendChild(TfToken("pendulum"));
 
     _scene.AddGeometry(_pointsId, _points);
-    _scene.InjectGeometry(stage, _pointsId, _points, 1.f);
+    //_scene.InjectGeometry(stage, _pointsId, _points, 1.f);
   }
 
   _solverId =  rootId.AppendChild(TfToken("Solver"));

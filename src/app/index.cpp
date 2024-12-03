@@ -32,6 +32,7 @@ Index::Index()
 //----------------------------------------------------------------------------
 Index::~Index()
 {
+  std::cout << "destroy Scene Index Execution" << _exec << std::endl;
   if(_exec) delete _exec;
 };
 
@@ -88,9 +89,8 @@ Index::TerminateExec()
 {
   _finalSceneIndex->RemoveInputScene(_execSceneIndex);
   SetCurrentSceneIndex(_sceneIndexBases);
-  _exec->TerminateExec(_stage);
+  if(_exec)_exec->TerminateExec(_stage);
   _execute = false;
-  //_exec = nullptr;
   _execSceneIndex = nullptr;
   NewSceneNotice().Send();
 }

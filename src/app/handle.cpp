@@ -26,23 +26,23 @@ JVR_NAMESPACE_OPEN_SCOPE
 void  _EnsureXformCommonAPI(UsdPrim prim, const UsdTimeCode& timeCode)
 {
   UsdGeomXformable xformable(prim);
- 
-  GfVec3d translation;
-  GfVec3f rotation;
+
+  GfMatrix4d worldMatrix = xformable.ComputeLocalToWorldTransform(timeCode);
+  GfVec3d translation = worldMatrix.ExtractTranslation();
+  GfRotation rotation = worldMatrix.ExtractRotation();
+  GfMatrix3d rotationMatrix = worldMatrix.ExtractRotationMatrix();
   GfVec3f scale;
-  GfVec3f pivot;
+  scale[0] = rotationMatrix.GetRow(0).GetLength();
+  scale[1] = rotationMatrix.GetRow(1).GetLength();
+  scale[2] = rotationMatrix.GetRow(2).GetLength();
+
+  GfVec3f pivot(0.f);
   UsdGeomXformCommonAPI::RotationOrder rotOrder;
   UsdGeomXformCommonAPI api(prim);
-  api.GetXformVectors(&translation, &rotation, &scale, &pivot, &rotOrder, timeCode);
 
-  std::cout << "ensure xform common API on " << prim.GetPath() << std::endl;
-  std::cout << "translate : " << translation << std::endl;
-  std::cout << "rotation : " << rotation << std::endl;
-  std::cout << "scale : " << scale << std::endl;
-  std::cout << "pivot : " << pivot << std::endl;
   xformable.SetResetXformStack(true);
   xformable.ClearXformOpOrder();
-  api.SetXformVectors(translation, rotation, scale, pivot, rotOrder, timeCode);
+  api.SetXformVectors(translation, GfVec3f(rotation.GetAxis()), scale, pivot, rotOrder, timeCode);
 }
 
 //==================================================================================
@@ -430,7 +430,7 @@ BaseHandle::_DrawShape(Shape* shape, const GfMatrix4f& m)
 void 
 BaseHandle::Draw(float width, float height)
 {
-  _UpdateActiveMask();
+  //_UpdateActiveMask();
   SetVisibility(_activeAxis, _activeMask);
   ComputeSizeMatrix(width, height);
   ComputeViewPlaneMatrix();
@@ -624,10 +624,10 @@ BaseHandle::BeginUpdate(float x, float y, float width, float height)
 void 
 BaseHandle::EndUpdate()
 {
-  _interacting = false;
-  _shape.SetVisibility(0b1111111111111111);
   _UpdateTargets(false);
+  _interacting = false;
   SetActiveAxis(AXIS_XYZ);
+  SetVisibility(AXIS_XYZ, 0b1111111111);
 }
 
 void
@@ -731,17 +731,18 @@ TranslateHandle::SetVisibility(short axis, short mask)
   case AXIS_Z:
     bits = 0b0001001000 & mask; break;
   case AXIS_XY:
-    bits = 0b100110110 & mask; break;
+    bits = 0b1001101100 & mask; break;
   case AXIS_XZ:
     bits = 0b0101011010 & mask; break;
   case AXIS_YZ:
     bits = 0b0011101100 & mask; break;
   case AXIS_XYZ:
-    bits = 0b0000001111 & mask; break;
+    bits = 0b1111111111 & mask; break;
   default:
     bits = 0b1111111111 & mask; break;
   }
   _shape.SetVisibility(bits);
+  _activeMask = mask;
 }
 
 void 
@@ -750,7 +751,6 @@ TranslateHandle::BeginUpdate(float x, float y, float width, float height)
   GfRay ray = _camera->GetRay(x, y, width, height);
   double distance;
   bool frontFacing;
-  size_t visibilityMask = 0;
   _startMatrix = _matrix;
   if(ray.Intersect(_plane, &distance, &frontFacing)) {
     if(_activeAxis == AXIS_CAMERA) {

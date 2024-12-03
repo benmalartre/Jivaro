@@ -43,7 +43,7 @@ enum UIType {
   DEBUG,
   DEMO,
   ICON,
-  TOOL,
+  COMMANDS,
   COUNT
 };
 
@@ -64,7 +64,7 @@ static const char* UITypeName[UIType::COUNT] = {
   "debug",
   "demo",
   "icon",
-  "tool"
+  "commands"
 };
 
 typedef std::map<std::string, int> UITypeCounter;

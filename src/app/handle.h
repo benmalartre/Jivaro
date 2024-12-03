@@ -105,7 +105,7 @@ public:
     : _activeAxis(AXIS_NONE)
     , _hoveredAxis(AXIS_NONE)
     , _activeNormal(NORMAL_CAMERA)
-    , _activeMask(0b1111111111111111)
+    , _activeMask(0b1111111111)
     , _camera(NULL)
     , _interacting(false)
     , _compensate(compensate)
