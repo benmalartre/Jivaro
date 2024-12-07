@@ -235,7 +235,7 @@ void TestParticles::InitExec(UsdStageRefPtr& stage)
         case Geometry::MESH:
           std::cerr << "Create collision shape MESH for " << _collidersId[c] << std::endl;
           collision = new MeshCollision(_colliders[c], _collidersId[c], restitution, friction);
-          ((MeshCollision*)collision)->Init(_solver->GetNumParticles());
+
           break;
       }
       

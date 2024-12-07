@@ -32,12 +32,8 @@ Particles::~Particles()
   _EnsureDataSize(0);
 }
 
-void Particles::_EnsureDataSize(size_t desired)
+void Particles::_EnsureDataSize(size_t size)
 {
-  size_t size = std::floor(num / BLOCK_SIZE) * BLOCK_SIZE;
-  if(desired && size > desired)return;
-
-  size = desired ? ((desired + BLOCK_SIZE) / BLOCK_SIZE) * BLOCK_SIZE : 0;
   state =     _ResizeArray<short>(state, num, size);
   body =      _ResizeArray<Body*>(body, num, size);
   mass =      _ResizeArray<float>(mass, num, size);
@@ -75,20 +71,20 @@ void Particles::AddBody(Body* item, const GfMatrix4d& matrix)
     
     pos = GfVec3f(matrix.Transform(points[idx - base]));
     float bY = float(idx) / float(size);
+    state[idx] = ACTIVE;
+    body[idx] = item;
     mass[idx] = m;
     invMass[idx] = w;
     radius[idx] = item->GetRadius();
+    counter[idx] = GfVec2f(0.f);
     rest[idx] = pos;
     input[idx] = pos;
     previous[idx] = pos;
     position[idx] = pos;
     predicted[idx] = pos;
-    rotation[idx] = GfQuatf(1.f);
     velocity[idx] = item->GetVelocity();
-    body[idx] = item;
     color[idx] = (GfVec3f(RANDOM_LO_HI(0.f, 0.2f)+0.6) + item->GetColor()) * 0.5f * bY;
-    state[idx] = ACTIVE;
-    counter[idx] = GfVec2f(0.f);
+    rotation[idx] = GfQuatf(1.f);
   }
 
   item->SetOffset(base);

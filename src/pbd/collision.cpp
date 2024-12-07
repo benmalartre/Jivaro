@@ -670,7 +670,6 @@ MeshCollision::MeshCollision(Geometry* collider, const SdfPath& path,
   float restitution, float friction)
   : Collision(collider, path, restitution, friction)
 {
-  Mesh* mesh = (Mesh*)_collider;
   _CreateAccelerationStructure();
 }
 
@@ -686,8 +685,6 @@ void MeshCollision::Update(const UsdPrim& prim, double time)
 
 void MeshCollision::Init(size_t numParticles)
 {
-  _query.clear();
-  _query.resize(numParticles, Location());
   _closest.clear();
   _closest.resize(numParticles, Location());
 }

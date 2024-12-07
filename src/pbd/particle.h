@@ -123,10 +123,10 @@ struct Particles
     ACTIVE
   };
 
-  Particles() :num(0){};
+  Particles() : num(0){};
   ~Particles();
 
-  size_t GetNumParticles() { return num; };
+  size_t GetNumParticles() {return num; };
   void AddBody(Body* body, const GfMatrix4d& matrix);
   void RemoveBody(Body* body);
   void RemoveAllBodies();
@@ -138,11 +138,11 @@ struct Particles
 
   void _EnsureDataSize(size_t size);
 
-  short*              state;
-  Body**              body;
-  float*              mass;
-  float*              invMass;
-  float*              radius;
+  short*         state;
+  Body**         body;
+  float*         mass;
+  float*         invMass;
+  float*         radius;
   GfVec3f*       rest;
   GfQuatf*       rotation;
   GfVec3f*       input;
@@ -152,7 +152,7 @@ struct Particles
   GfVec3f*       velocity;
   GfVec3f*       color;
   GfVec2f*       counter;
-  size_t              num;
+  size_t         num;
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

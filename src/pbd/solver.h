@@ -34,13 +34,13 @@ class Curve;
 class Scene;
 class Timer;
 
-class Solver : public Graph::Node {
+class Solver : public Xform {
 public:
   const static size_t INVALID_INDEX = std::numeric_limits<size_t>::max();
 
   typedef std::map<Element*, std::pair<SdfPath, Geometry*>> _ElementMap;
 
-  explicit Solver(Scene* scene, const UsdGeomXform& xform, const GfMatrix4d& world);
+  explicit Solver(Scene* scene, UsdPrim& prim);
   ~Solver();
   
   void CreateConstraints(Body* body, short type, float stiffness=10000.f, float damping=0.1f);

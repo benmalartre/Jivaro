@@ -485,7 +485,6 @@ void TranslateCommand::Do()
 {
   _inverse.Invert();
   AttributeChangedNotice().Send();
-  SelectionChangedNotice().Send();
 }
 
 //==================================================================================
@@ -681,7 +680,7 @@ void MoveNodeCommand::Do()
 //==================================================================================
 SizeNodeCommand::SizeNodeCommand(
   UsdStageRefPtr stage, const SdfPathVector& nodes, const GfVec2f& offset)
-  : Command(false)
+  : Command(true)
   , _nodes(nodes)
   , _offset(offset)
 {
@@ -723,7 +722,7 @@ void SizeNodeCommand::Do()
 //==================================================================================
 ExpendNodeCommand::ExpendNodeCommand(
   UsdStageRefPtr stage, const SdfPathVector& nodes, const TfToken& state)
-  : Command(false)
+  : Command(true)
   , _nodes(nodes)
 {
   for (auto& node : nodes) {

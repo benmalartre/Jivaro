@@ -35,15 +35,14 @@ public:
   //-------------------------------------------------------------------
   class Port {
     public:
-      enum Alignement {
-        HORIZONTAL,
-        VERTICAL
-      };
+
       enum Flag {
         INPUT = 1,
         OUTPUT = 2,
         INTERNAL = 4,
-        HIDDEN = 8
+        HIDDEN = 8,
+        HORIZONTAL = 16,
+        VERTICAL = 32
       };
 
       Port() {};
@@ -70,7 +69,6 @@ public:
       Node*                 _node;
       TfToken               _label;
       size_t                _flags;
-      Alignement            _align;
       UsdAttribute          _attr;
   };
 
@@ -99,11 +97,11 @@ public:
       ~Node();
 
       void AddInput(UsdAttribute& attribute, const TfToken& name, 
-        size_t flags=Port::INPUT);
+        size_t flags=Port::INPUT|Port::HORIZONTAL);
       void AddOutput(UsdAttribute& attribute, const TfToken& name, 
-        size_t flags=Port::OUTPUT);
+        size_t flags=Port::OUTPUT|Port::HORIZONTAL);
       void AddPort(UsdAttribute& attribute, const TfToken& name, 
-        size_t flags=Port::INPUT|Port::OUTPUT);
+        size_t flags=Port::INPUT|Port::OUTPUT|Port::HORIZONTAL);
 
       size_t GetNumPorts() { return _ports.size(); };
       std::vector<Port>& GetPorts() { return _ports; };

@@ -20,6 +20,8 @@
 #include <pxr/usd/usd/prim.h>
 #include <pxr/usd/usd/attribute.h>
 
+#include "../graph/graph.h"
+
 JVR_NAMESPACE_OPEN_SCOPE
 
 class Location;

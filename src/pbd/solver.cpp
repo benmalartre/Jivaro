@@ -35,15 +35,16 @@ static const char* TIME_NAMES[NUM_TIMES] = {
   "update particles"
 };
 
-Solver::Solver(Scene* scene, const UsdGeomXform& xform, const GfMatrix4d& world)
-  : Xform(xform, world)
+Solver::Solver(Scene* scene, UsdPrim& prim)
+  : Xform(UsdGeomXform(prim), GfMatrix4d(1.0))
+  , _particles()
   , _scene(scene)
   , _selfCollisions(nullptr)
   , _subSteps(5)
   , _sleepThreshold(0.001f)
   , _paused(true)
   , _startTime(1.f)
-  , _solverId(xform.GetPrim().GetPath())
+  , _solverId(prim.GetPath())
   , _gravity(nullptr)
   , _damp(nullptr)
 {
@@ -60,7 +61,7 @@ Solver::Solver(Scene* scene, const UsdGeomXform& xform, const GfMatrix4d& world)
   _curves = (Curve*)_scene->AddGeometry(_curvesId, Geometry::CURVE, GfMatrix4d(1.0));
 
   //UsdSolver
-  UsdPbdSolver solver(xform.GetPrim());
+  UsdPbdSolver solver(prim);
   UsdAttribute gravityAttr = solver.GetGravityAttr();
    _gravity = new GravityForce(gravityAttr);
   AddElement(_gravity, NULL, _solverId.AppendProperty(gravityAttr.GetName()));
@@ -171,8 +172,8 @@ Body* Solver::CreateBody(Geometry* geom, const GfMatrix4d& matrix,
   if(attach)
     CreateConstraints(body, Constraint::ATTACH, 10000.f, 0.25f);
 
-  if(_showPoints)UpdatePoints();
-  else ClearPoints();
+  //if(_showPoints)UpdatePoints();
+  //else ClearPoints();
 
   return body;
 }
@@ -545,7 +546,7 @@ void Solver::Reset(UsdStageRefPtr& stage)
   }
 
   _particles.ResetCounter(_constraints, 0);
-
+  
   size_t nL = 5;
   for (size_t b = 0; b < _bodies.size(); ++b) {
     WeightBoundaries(_bodies[b]);
@@ -670,7 +671,6 @@ void Solver::UpdateCollisions(UsdStageRefPtr& stage, float time)
 
 void Solver::UpdateGeometries()
 {
-  std::cout << "update geometries : " << std::endl;
   const auto* positions = &_particles.position[0];
   _ElementMap::iterator it = _elements.begin();
   for (; it != _elements.end(); ++it)
@@ -678,7 +678,6 @@ void Solver::UpdateGeometries()
     if(it->first->GetType() == Element::BODY) {
       Body* body = (Body*)it->first;
       SdfPath id = it->second.first;
-      std::cout << "deformable : " << id << std::endl;
       Geometry* geometry = it->second.second;
       if(geometry->GetType() >= Geometry::POINT) {
         Deformable* deformable = (Deformable*)geometry;

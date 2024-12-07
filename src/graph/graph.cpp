@@ -10,6 +10,8 @@
 #include <pxr/usd/usd/attribute.h>
 #include <pxr/usd/ndr/property.h>
 #include <pxr/usd/ndr/node.h>
+#include <pxr/usd/usd/schemaRegistry.h>
+#include <pxr/usd/usd/primDefinition.h>
 #include <pxr/usd/usd/primRange.h>
 #include <pxr/usd/usd/modelAPI.h>
 #include <pxr/usd/usdShade/shader.h>
@@ -37,6 +39,47 @@ Graph::Node::Node(UsdPrim& prim)
   if (_prim.IsValid())
   {
     _name = _prim.GetName();
+    //for(auto& name: _prim.GetPropertyNames()) {
+      const UsdPrimTypeInfo &infos = _prim.GetPrimTypeInfo();
+      std::cout << infos.GetTypeName() << std::endl;
+
+      TfType primType = UsdSchemaRegistry::GetTypeFromName(infos.GetTypeName());
+      std::cout << "Prim Type : " << primType.GetTypeName() << std::endl;
+      const UsdPrimDefinition& primDef = _prim.GetPrimDefinition();
+      for(auto& propName: primDef.GetPropertyNames()) {
+        std::cout << propName << std::endl;
+        UsdAttribute attribute = _prim.GetAttribute(propName);
+        Graph::Node::AddInput(attribute, propName, Graph::Port::INPUT|Graph::Port::HORIZONTAL);
+        std::cout << "attribute : " << prim.GetPath() << " " << propName << std::endl;
+      }
+
+      /*
+
+# Use it to define a new variable (get its python class with `pythonClass`)
+# which points to the same Cube prim instance
+myObj : prim_tftype_type.pythonClass = cube
+print(myObj.GetSizeAttr().Get()) # "100"
+
+# Get the textual representation of its class type receiving 'cube_prim' in its constructor
+prim_typed_schema = prim_tftype_type.pythonClass(cube_prim)
+print(prim_typed_schema) # "UsdGeom.Cube(Usd.Prim(</World/Cube>))"
+
+
+
+      TfTokenVector schemas = _prim.GetAppliedSchemas();
+
+      for(auto &schema: schemas) {
+        std::cout << schema << std::endl;
+
+        const TfTokenVector attributeNames = schema.GetSchemaAttributeNames();
+        for(auto& attributeName: attributeNames) {
+          UsdAttribute attribute = _prim.GetAttribute(attributeName);
+          Graph::Node::AddInput(attribute, attributeName, Graph::Port::INPUT|Graph::Port::HORIZONTAL);
+          std::cout << "attribute : " << prim.GetPath() << " " << attributeName << std::endl;
+        }
+      }
+    //}
+    */
   }
 }
 

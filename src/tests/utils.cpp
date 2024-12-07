@@ -56,9 +56,9 @@ Solver* _CreateSolver(Scene* scene, UsdStageRefPtr& stage, const SdfPath& path,
 {
   UsdPrim prim = stage->GetPrimAtPath(path);
   if(prim.IsValid())
-    return new Solver(scene, UsdPbdSolver(prim), GfMatrix4d(1.0));
+    return new Solver(scene, prim);
   
-  return new Solver(scene, UsdPbdSolver::Define(stage, path), GfMatrix4d(1.0));
+  return new Solver(scene, UsdPbdSolver::Define(stage, path).GetPrim());
 }
 
 
@@ -89,7 +89,7 @@ Mesh* _CreateClothMesh(UsdStageRefPtr& stage, const SdfPath& path,
   UsdPbdConstraintAPI::Apply(prim, TfToken("attach"));
   UsdPbdConstraintAPI::Apply(prim, TfToken("stretch"));
   UsdPbdConstraintAPI::Apply(prim, TfToken("shear"));
-  UsdPbdConstraintAPI::Apply(prim, TfToken("bend"));
+  UsdPbdConstraintAPI::Apply(prim, TfToken("dihedral"));
 
   return mesh;
 

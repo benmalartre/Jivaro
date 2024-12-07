@@ -97,7 +97,7 @@ void AddClothCallback()
     UsdPbdConstraintAPI::Apply(prim, TfToken("attach"));
     UsdPbdConstraintAPI::Apply(prim, TfToken("stretch"));
     UsdPbdConstraintAPI::Apply(prim, TfToken("shear"));
-    UsdPbdConstraintAPI::Apply(prim, TfToken("bend"));
+    UsdPbdConstraintAPI::Apply(prim, TfToken("dihedral"));
 
   }
   else {
@@ -107,7 +107,7 @@ void AddClothCallback()
       UsdPbdConstraintAPI::Apply(prim, TfToken("attach"));
       UsdPbdConstraintAPI::Apply(prim, TfToken("stretch"));
       UsdPbdConstraintAPI::Apply(prim, TfToken("shear"));
-      UsdPbdConstraintAPI::Apply(prim, TfToken("bend"));
+      UsdPbdConstraintAPI::Apply(prim, TfToken("dihedral"));
     }
     
   }
@@ -174,17 +174,20 @@ void RemoveClothCallback()
     if(prim.HasAPI<UsdPbdBodyAPI>())
       prim.RemoveAPI(UsdPbdTokens->PbdBodyAPI);
     
-    if(prim.HasAPI<UsdPbdConstraintAPI>())
+    if(prim.HasAPI<UsdPbdConstraintAPI>(TfToken("attach")))
       prim.RemoveAPI(UsdPbdTokens->PbdConstraintAPI, TfToken("attach"));
     
-    if(prim.HasAPI<UsdPbdConstraintAPI>())
+    if(prim.HasAPI<UsdPbdConstraintAPI>(TfToken("stretch")))
       prim.RemoveAPI(UsdPbdTokens->PbdConstraintAPI, TfToken("stretch"));
     
-    if(prim.HasAPI<UsdPbdConstraintAPI>())
+    if(prim.HasAPI<UsdPbdConstraintAPI>(TfToken("shear")))
       prim.RemoveAPI(UsdPbdTokens->PbdConstraintAPI, TfToken("shear"));
     
-    if(prim.HasAPI<UsdPbdConstraintAPI>())
+    if(prim.HasAPI<UsdPbdConstraintAPI>(TfToken("bend")))
       prim.RemoveAPI(UsdPbdTokens->PbdConstraintAPI, TfToken("bend"));
+
+    if(prim.HasAPI<UsdPbdConstraintAPI>(TfToken("dihedral")))
+      prim.RemoveAPI(UsdPbdTokens->PbdConstraintAPI, TfToken("dihedral"));
   }
 }
 

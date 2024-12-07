@@ -137,7 +137,7 @@ protected:
   float                             _margin;
   float                             _maxSeparationVelocity;
   Geometry*                         _collider;
-  TfToken                      _key;
+  TfToken                           _key;
 
 };
 
@@ -246,7 +246,6 @@ public:
   size_t GetTypeId() const override { return TYPE_ID; };
 
   virtual void Init(size_t numParticles) override;
-  const Location* GetQuery(size_t index){return &_query[index];};
 
   float GetValue(Particles* particles, size_t index) override;
   GfVec3f GetGradient(Particles* particles, size_t index) override;
@@ -271,7 +270,6 @@ protected:
 private:
   static size_t                 TYPE_ID;
   BVH                           _bvh;
-  std::vector<Location>         _query;
   std::vector<Location>         _closest;
 };
 

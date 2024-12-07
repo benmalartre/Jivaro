@@ -285,24 +285,37 @@ GraphEditorUI::Port::Draw(GraphEditorUI* editor)
   portTextOffset.x = -NODE_PORT_RADIUS * 2.f * scale;
   portTextOffset.y -= NODE_PORT_VERTICAL_SPACING * 0.5f * scale;
 
-  drawList->AddText(
+  if(Get()->GetFlags() & Graph::Port::HORIZONTAL) {
+    drawList->AddText(
     p + (_pos * scale) - portTextOffset,
     ImColor(0, 0, 0, 255),
     _port->GetLabel().GetText());
 
-  if(Get()->GetFlags() & Graph::Port::OUTPUT) {
-    drawList->AddCircleFilled(
-      p + _pos * scale,
-      GetState(ITEM_STATE_HOVERED) ? NODE_PORT_RADIUS * scale * 1.2f : NODE_PORT_RADIUS * scale,
-      _color
-    );
-  }
+    if(Get()->GetFlags() & Graph::Port::INPUT) {
+      drawList->AddCircleFilled(
+        p + _pos * scale,
+        GetState(ITEM_STATE_HOVERED) ? NODE_PORT_RADIUS * scale * 1.2f : NODE_PORT_RADIUS * scale,
+        _color
+      );
+    }
 
-  if (Get()->GetFlags() & Graph::Port::INPUT) {
-    drawList->AddCircleFilled(
-      p + (_pos + GfVec2f(_node->GetWidth(), 0.f)) * scale,
-      GetState(ITEM_STATE_HOVERED) ? NODE_PORT_RADIUS * scale * 1.2f : NODE_PORT_RADIUS * scale,
-      _color
+    if (Get()->GetFlags() & Graph::Port::OUTPUT) {
+      drawList->AddCircleFilled(
+        p + (_pos + GfVec2f(_node->GetWidth(), 0.f)) * scale,
+        GetState(ITEM_STATE_HOVERED) ? NODE_PORT_RADIUS * scale * 1.2f : NODE_PORT_RADIUS * scale,
+        _color
+      );
+    }
+  } else {
+
+    drawList->AddRectFilled(
+      p + GfVec2f(_node->GetWidth()/2.f - NODE_PORT_RADIUS, 
+        (Get()->GetFlags() & Graph::Port::INPUT ? 0.f : _node->GetHeight()) - NODE_PORT_RADIUS) * scale,
+      p + GfVec2f(_node->GetWidth()/2.f + NODE_PORT_RADIUS, 
+        (Get()->GetFlags() & Graph::Port::INPUT ? 0.f : _node->GetHeight()) + NODE_PORT_RADIUS) * scale,
+      _color,
+      NODE_CORNER_ROUNDING * scale,
+      ImDrawCornerFlags_All
     );
   }
 }
@@ -466,23 +479,35 @@ GraphEditorUI::Node::ComputeSize(GraphEditorUI* editor)
     Graph::Connexion* connexion = NULL;
     
     for (auto& port : _ports) {
-
-      if(_expended == UsdUITokens->closed) {
-        port.SetPosition(GfVec2f(0.f, mid));
-      } else if(_expended == UsdUITokens->minimized) {
-        if (port.IsConnected(editor, connexion)) {
+      if(port.Get()->GetFlags() & Graph::Port::VERTICAL) 
+        continue;
+      
+      if(port.Get()->GetFlags() & Graph::Port::HORIZONTAL) {
+        if(_expended == UsdUITokens->closed) {
+          port.SetPosition(GfVec2f(0.f, mid));
+        } else if(_expended == UsdUITokens->minimized) {
+          if (port.IsConnected(editor, connexion)) {
+            port.SetPosition(GfVec2f(0.f, _height));
+            _height += NODE_PORT_VERTICAL_SPACING;
+          }
+          else 
+            port.SetPosition(GfVec2f(0.f, mid));
+        } else if(_expended == UsdUITokens->open) {
           port.SetPosition(GfVec2f(0.f, _height));
           _height += NODE_PORT_VERTICAL_SPACING;
         }
-        else 
-          port.SetPosition(GfVec2f(0.f, mid));
-      } else if(_expended == UsdUITokens->open) {
-        port.SetPosition(GfVec2f(0.f, _height));
-        _height += NODE_PORT_VERTICAL_SPACING;
       }
     }
 
-    SetSize(GfVec2f(_width, _height));
+    //SetSize(GfVec2f(_width, _height));
+
+    for (auto& port : _ports) 
+      if(port.Get()->GetFlags() & Graph::Port::VERTICAL) {
+        if(port.Get()->IsInput())port.SetPosition(GfVec2f(_width / 2.f, 0.f));
+        else port.SetPosition(GfVec2f(_width / 2.f, _height));
+      }
+      
+
     SetDirty(GraphEditorUI::Node::DIRTY_CLEAN);
   }
 }
@@ -514,9 +539,8 @@ GraphEditorUI::Node::Write(GraphEditorUI* editor)
 void
 GraphEditorUI::Node::Read(GraphEditorUI* editor)
 {
-  std::cout << "READ NODE " << Get()->GetPrim().GetPath() << std::endl;
   UsdStageRefPtr stage = editor->GetModel()->GetStage();
-  UsdPrim prim = stage->GetPrimAtPath(_node->GetPrim().GetPath());
+  UsdPrim prim = _node->GetPrim();
 
   if (!prim.IsValid())return;
 
@@ -540,6 +564,8 @@ GraphEditorUI::Node::Read(GraphEditorUI* editor)
     //api.CreateDisplayColorAttr().Set(UnpackColor3<GfVec3f>(RANDOM_LO_HI(0,65565)));
     api.CreateDisplayColorAttr().Set(GfVec3f(0.5f,0.5f,0.5f));
   }
+
+  ComputeSize(editor);
 }
 
 bool 
@@ -581,8 +607,8 @@ GraphEditorUI::Node::Draw(GraphEditorUI* editor)
     // head background
     drawList->AddRectFilled(
       ImVec2(x, y),
-      ImVec2(x + s[0], y + NODE_HEADER_HEIGHT * scale),
-      ImColor(150, 160, 190, 255),
+      ImVec2(x + _size[0] * scale, y + _size[1] * scale),
+      ImColor(120, 200, 160, 255),
       NODE_CORNER_ROUNDING * scale,
       ImDrawCornerFlags_All);
 
@@ -612,8 +638,8 @@ GraphEditorUI::Node::Draw(GraphEditorUI* editor)
 
     if (ImGui::Selectable(UI::HiddenLabel(_expended.GetString().c_str()).c_str(), 
       true, ImGuiSelectableFlags_SelectOnClick, expendSize)) {
-      _expended = _GetNextExpendedStateToken(_expended);
-      ADD_COMMAND(ExpendNodeCommand, model->GetStage() , {_node->GetPrim().GetPath()}, _expended);
+      TfToken nextExpended = _GetNextExpendedStateToken(_expended);
+      ADD_COMMAND(ExpendNodeCommand, model->GetStage() , {_node->GetPrim().GetPath()}, nextExpended);
       SetDirty(GraphEditorUI::Node::DIRTY_SIZE);
     }
 
@@ -741,6 +767,7 @@ static void
 RefreshGraphCallback(GraphEditorUI* editor)
 {
   Selection* selection = editor->GetModel()->GetSelection();
+  std::cout << "num slected nodes " << selection->GetNumSelectedItems() << std::endl;
 
   if (selection->GetNumSelectedItems()) {
     Selection::Item& item = selection->GetItem(0);
@@ -750,6 +777,7 @@ RefreshGraphCallback(GraphEditorUI* editor)
       editor->SetGraph(new HierarchyGraph(stage->GetRootLayer(), selected));
 
       if (selected.IsValid()) {
+        std::cout << "selected valid : popultae !!" << std::endl;
         editor->Populate();
         return;
       }
@@ -820,9 +848,6 @@ GraphEditorUI::Clear()
   _hoveredPort = nullptr;
   _currentPort = nullptr;
   _hoveredConnexion = nullptr;
-
-  //if(_graph)delete _graph;
-  //_graph = nullptr;
 }
 
 // read
@@ -830,7 +855,8 @@ GraphEditorUI::Clear()
 bool 
 GraphEditorUI::Read(UsdStageRefPtr& stage)
 {
-
+  for(auto& node: _nodes)
+    node->Read(this);
   return true;
 }
 
@@ -1070,14 +1096,11 @@ GraphEditorUI::OnSceneChangedNotice(const SceneChangedNotice& n)
 {
   std::cout << "scene changed callback" << std::endl;
   if (!_graph) return;
-  if (!_graph->GetPrim().IsValid()) {
-    Clear();
-  }
-  else {
-    _graph->Clear();
-    _graph->Populate(_graph->GetPrim());
-    Populate();
-  }
+
+  _graph->Clear();
+  _graph->Populate(_graph->GetPrim());
+  Populate();
+
   _parent->SetDirty();
   std::cout << "scene changed callback done" << std::endl;
 }
@@ -1086,6 +1109,7 @@ void
 GraphEditorUI::OnAttributeChangedNotice(const AttributeChangedNotice& n)
 {
   if (!_graph)return;
+  Populate();
   Read(_model->GetStage());
 }
 
@@ -1263,7 +1287,7 @@ GraphEditorUI::MouseButton(int button, int action, int mods)
 
       if (_drag == true && _dragOffset.GetLength() > 0.000001f) {
         ADD_COMMAND(MoveNodeCommand, _model->GetStage(), GetSelectedNodesPath(), _dragOffset);
-      } else if(diffMs > 10 && diffMs < 250){
+      } else if( diffMs < 250 ){
         switch(mods) {
         case GLFW_MOD_SHIFT :
           _model->AddToSelection(GetSelectedNodesPath());
