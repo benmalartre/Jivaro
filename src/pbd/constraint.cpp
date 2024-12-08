@@ -657,9 +657,9 @@ ConstraintsGroup* CreateBendConstraints(Body* body, float stiffness, float dampi
       size_t numCVs = curve->GetNumCVs(curveIdx);
       size_t numSegments = curve->GetNumSegments(curveIdx);
       for(size_t segmentIdx = 0; segmentIdx < numSegments - 1; ++numSegments) {
-        allElements.push_back(curveStartIdx + segmentIdx);
-        allElements.push_back(curveStartIdx + segmentIdx + 2);
-        allElements.push_back(curveStartIdx + segmentIdx + 1);
+        allElements.push_back(curveStartIdx + segmentIdx + offset);
+        allElements.push_back(curveStartIdx + segmentIdx + 2 + offset);
+        allElements.push_back(curveStartIdx + segmentIdx + 1 + offset);
       }
       curveStartIdx += numCVs;
     }
@@ -757,6 +757,7 @@ DihedralConstraint::DihedralConstraint(Body* body, const VtArray<int>& elems,
   : Constraint(ELEM_SIZE, stiffness, damping, elems)
 {
   Geometry* geometry = body->GetGeometry();
+  size_t offset = body->GetOffset();
 
   if(geometry->GetType() < Geometry::POINT) {
     // TODO add warning message here
@@ -767,15 +768,15 @@ DihedralConstraint::DihedralConstraint(Body* body, const VtArray<int>& elems,
   const size_t numElements = _elements.size() / ELEM_SIZE;
   _rest.resize(numElements);
   for(size_t elemIdx = 0; elemIdx < numElements; ++elemIdx) {
-    const GfVec3f x0(m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 0]]));
-    const GfVec3f x1(m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 1]]));
-    const GfVec3f x2(m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 2]]));
-    const GfVec3f x3(m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 3]]));
+    const GfVec3f x0(m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 0] - offset]));
+    const GfVec3f x1(m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 1] - offset]));
+    const GfVec3f x2(m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 2] - offset]));
+    const GfVec3f x3(m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 3] - offset]));
 
     GfVec3f n1 = GfCross(x1 - x0, x2 - x0).GetNormalized();
     GfVec3f n2 = GfCross(x1 - x0, x3 - x0).GetNormalized();
 
-    float dot = GfClamp(GfDot(n1, n2), 0.f, 1.f);
+    float dot = GfClamp(GfDot(n1, n2), -1.f, 1.f);
 
     _rest[elemIdx] = std::acos(dot);
   }
