@@ -98,6 +98,61 @@ _GetPointsSceneIndexPrim(Points* points)
   return prim;
 }
 
+
+HdSceneIndexPrim
+_GetCurveSceneIndexPrim(Curve* curve) 
+{
+ HdSceneIndexPrim prim = HdSceneIndexPrim(
+    {HdPrimTypeTokens->basisCurves,
+      HdRetainedContainerDataSource::New(
+        HdPrimvarsSchemaTokens->primvars,
+          HdRetainedContainerDataSource::New(
+            HdTokens->points,
+            HdPrimvarSchema::Builder()
+              .SetPrimvarValue(
+                HdRetainedTypedSampledDataSource<VtVec3fArray>::New(
+                  points->GetPositions()))
+              .SetInterpolation(
+                HdPrimvarSchema::BuildInterpolationDataSource(
+                  HdPrimvarSchemaTokens->varying))
+              .SetRole(HdPrimvarSchema::BuildRoleDataSource(
+                HdPrimvarSchemaTokens->color))
+              .Build(),
+          HdPrimvarsSchemaTokens->widths,
+          HdPrimvarSchema::Builder()
+            .SetPrimvarValue(
+              HdRetainedTypedSampledDataSource<VtFloatArray>::New(
+                points->GetWidths()))
+            .SetInterpolation(
+              HdPrimvarSchema::BuildInterpolationDataSource(
+                HdPrimvarSchemaTokens->varying))
+            .Build())/*,
+          HdTokens->displayColor,
+          HdPrimvarSchema::Builder()
+            .SetPrimvarValue(_PointDataSource::New(colors))
+            .SetInterpolation(
+              HdPrimvarSchema::BuildInterpolationDataSource(
+                HdPrimvarSchemaTokens->vertex))
+            .SetRole(HdPrimvarSchema::BuildRoleDataSource(
+              HdPrimvarSchemaTokens->color))
+            .Build()),
+        HdPurposeSchemaTokens->purpose,
+        HdPurposeSchema::Builder()
+          .SetPurpose(
+            _TokenDataSource::New(HdRenderTagTokens->geometry))
+          .Build(),
+        HdVisibilitySchemaTokens->visibility,
+        HdVisibilitySchema::Builder()
+          .SetVisibility(_BoolDataSource::New(true))
+          .Build(),
+        HdXformSchemaTokens->xform,
+        HdXformSchema::Builder()
+          .SetMatrix(_MatrixDataSource::New(GfMatrix4d(1)))
+          .SetResetXformStack(_BoolDataSource::New(false))
+          .Build()*/)});
+  return prim;
+}
+
 void ExecSceneIndex::SetExec(Execution* exec)
 {
   if(_exec)delete _exec;
