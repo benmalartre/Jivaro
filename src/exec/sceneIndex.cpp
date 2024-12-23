@@ -111,7 +111,7 @@ _GetCurveSceneIndexPrim(Curve* curve)
             HdPrimvarSchema::Builder()
               .SetPrimvarValue(
                 HdRetainedTypedSampledDataSource<VtVec3fArray>::New(
-                  points->GetPositions()))
+                  curve->GetPositions()))
               .SetInterpolation(
                 HdPrimvarSchema::BuildInterpolationDataSource(
                   HdPrimvarSchemaTokens->varying))
@@ -122,7 +122,7 @@ _GetCurveSceneIndexPrim(Curve* curve)
           HdPrimvarSchema::Builder()
             .SetPrimvarValue(
               HdRetainedTypedSampledDataSource<VtFloatArray>::New(
-                points->GetWidths()))
+                curve->GetWidths()))
             .SetInterpolation(
               HdPrimvarSchema::BuildInterpolationDataSource(
                 HdPrimvarSchemaTokens->varying))

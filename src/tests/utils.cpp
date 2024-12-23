@@ -58,7 +58,8 @@ Solver* _CreateSolver(Scene* scene, UsdStageRefPtr& stage, const SdfPath& path,
   if(prim.IsValid())
     return new Solver(scene, prim);
   
-  return new Solver(scene, UsdPbdSolver::Define(stage, path).GetPrim());
+  prim = UsdPbdSolver::Define(stage, path).GetPrim();
+  return new Solver(scene, prim);
 }
 
 
