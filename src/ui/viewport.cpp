@@ -236,7 +236,7 @@ void ViewportUI::MouseButton(int button, int action, int mods)
         _interactionMode = INTERACTION_ORBIT;
       }
       else if (button == GLFW_MOUSE_BUTTON_MIDDLE) {
-        _interactionMode = INTERACTION_WALK;
+        _interactionMode = INTERACTION_PAN;
       }
       else if (button == GLFW_MOUSE_BUTTON_RIGHT) {
         _interactionMode = INTERACTION_DOLLY;
@@ -244,7 +244,7 @@ void ViewportUI::MouseButton(int button, int action, int mods)
     }
     else if (mods & GLFW_MOD_SUPER) {
       if (button == GLFW_MOUSE_BUTTON_LEFT) {
-        _interactionMode = INTERACTION_WALK;
+        _interactionMode = INTERACTION_PAN;
       }
       else if (button == GLFW_MOUSE_BUTTON_MIDDLE) {
         _interactionMode = INTERACTION_ORBIT;
@@ -281,7 +281,7 @@ void ViewportUI::MouseMove(int x, int y)
     double dy = static_cast<double>(y) - _lastY;
     switch(_interactionMode)
     {
-      case INTERACTION_WALK:
+      case INTERACTION_PAN:
       {
         _camera->Walk(
           dx / static_cast<double>(GetWidth()), 
