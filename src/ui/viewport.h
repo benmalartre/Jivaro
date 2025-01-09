@@ -10,10 +10,10 @@
 #include <pxr/usd/usdGeom/camera.h>
 #include <pxr/usd/usdLux/domeLight.h>
 #include <pxr/base/gf/camera.h>
-#include "pxr/imaging/glf/simpleMaterial.h"
-#include "pxr/imaging/glf/simpleLight.h"
-#include "pxr/imaging/glf/simpleLightingContext.h"
-#include "pxr/imaging/glf/drawTarget.h"
+#include <pxr/imaging/glf/simpleMaterial.h>
+#include <pxr/imaging/glf/simpleLight.h>
+#include <pxr/imaging/glf/simpleLightingContext.h>
+#include <pxr/imaging/glf/drawTarget.h>
 
 #include "../common.h"
 #include "../ui/ui.h"
@@ -27,26 +27,17 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 enum InteractionMode{
   INTERACTION_NONE,
-  INTERACTION_WALK,
+  INTERACTION_PAN,
   INTERACTION_ORBIT,
-  INTERACTION_DOLLY,
-  INTERACTION_PICKSELECT,
-  INTERACTION_RECTANGLESELECT,
-  INTERACTION_FREESELECT,
-  INTERACTION_TRANSLATE,
-  INTERACTION_ROTATE,
-  INTERACTION_SCALE
+  INTERACTION_DOLLY
 };
 
 static const char* DRAW_MODE_NAMES[] = { 
-  "Points", 
-  "Wireframe", 
-  "Wireframe On Surface", 
-  "Shaded Flat", 
-  "Shaded Smooth", 
-  "Geom Only",
-  "Geom Flat",
-  "Geom Smooth"
+  "points",
+  "shaded flat",
+  "shaded smooth",
+  "wireframe",
+  "wireframe on shaded"
 };
 
 class ViewportUI : public BaseUI
@@ -54,14 +45,17 @@ class ViewportUI : public BaseUI
   public:
     ViewportUI(View* parent);
     ~ViewportUI();
+
     void Init();
+    void Update();
 
     Engine* GetEngine(){return _engine;};
     Camera* GetCamera(){return _camera;};
-    pxr::GfVec4f ComputeCameraViewport(float cameraAspectRatio);
+    GfVec4f ComputeCameraViewport(float cameraAspectRatio);
     double GetLastMouseX(){return _lastX;};
     double GetLastMouseY(){return _lastY;};
 
+    void UpdateLighting();
     void Render();
 
     // overrides
@@ -71,21 +65,26 @@ class ViewportUI : public BaseUI
     void Keyboard(int key, int scancode, int action, int mods) override;
     bool Draw() override;
     void Resize() override;
-    void Update();
+
     
-    pxr::GfFrustum _ComputePickFrustum(int x, int y);
+    GfFrustum _ComputePickFrustum(int x, int y);
     bool Pick(int x, int y, int mods);
+    bool Select(int x, int y, int mods);
+
+    void SetMessage(const std::string& message){_message = message;};
+
+  protected:
+    void _BuildDrawTargets(const pxr::GfVec2i &resolution);
+    void _DrawAov();
+    void _DrawPickMode();
+    void _DrawRenderer();
 
     /*
-    pxr::HdSelectionSharedPtr _Pick(pxr::GfVec2i const& startPos,
-      pxr::GfVec2i const& endPos, pxr::TfToken const& pickTarget);*/
-    
-    
+    HdSelectionSharedPtr _Pick(GfVec2i const& startPos,
+      GfVec2i const& endPos, TfToken const& pickTarget);*/
+
   private:
-    void                                _DrawPickMode();
     GLuint                              _texture;
-    int*                                _pixels;
-    int*                                _lowPixels;
     int                                 _width;
     int                                 _height;
     Camera*                             _camera;
@@ -94,24 +93,27 @@ class ViewportUI : public BaseUI
     short                               _interactionMode;
     bool                                _valid;
     bool                                _highlightSelection;
-    // usd imaging engine
+
+    TfToken                             _aov;
     Engine*                             _engine;
-    pxr::UsdImagingGLRenderParams       _renderParams;
-    pxr::UsdPrim                        _root;
-    pxr::UsdLuxDomeLight                _light;
-    pxr::GlfDrawTargetRefPtr            _drawTarget;
+    UsdPrim                             _root;
+    UsdLuxDomeLight                     _light;
+    GlfSimpleLightingContextRefPtr      _lightingContext;
+    GlfDrawTargetRefPtr                 _drawTarget;
     GLuint                              _drawTexId = 0;
-    pxr::GlfDrawTargetRefPtr            _toolTarget;
+    GlfDrawTargetRefPtr                 _toolTarget;
     GLuint                              _toolTexId = 0;
     int                                 _drawMode;
+    int                                 _pickMode;
     int                                 _rendererIndex;
     static ImGuiWindowFlags             _flags;
+    Engine::PickHit                     _pickHit;
 
     const char**                        _rendererNames;
     int                                 _numRenderers;
-    pxr::CameraUtilConformWindowPolicy  _conformWindowPolicy;
+    CameraUtilConformWindowPolicy       _conformWindowPolicy;
 
-    uint64_t                            _counter;
+    std::string                         _message;
 
 };
 JVR_NAMESPACE_CLOSE_SCOPE
