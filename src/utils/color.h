@@ -1,14 +1,24 @@
-#pragma once
+#ifndef JVR_UTILS_COLOR_H
+#define JVR_UTILS_COLOR_H
+
+#include <pxr/base/gf/vec3f.h>
+#include <pxr/base/gf/vec4f.h>
 
 #include "../common.h"
+
 
 JVR_NAMESPACE_OPEN_SCOPE
 
 // index to random color
-static inline unsigned RandomColorByIndex(unsigned index)
+static inline GfVec3f RandomColorByIndex(uint32_t index)
 {
   srand(index);
-  return rand();
+  uint32_t color = rand();
+  float r = ((color >> 16) & 0xff) / 255.0f;
+  float g = ((color >>  8) & 0xff) / 255.0f;
+  float b = ((color      ) & 0xff) / 255.0f;
+
+  return GfVec3f(r, g, b);
 }
 
 template <typename T>
@@ -59,9 +69,9 @@ template <typename T>
 static int PackColor4(const T& c)
 {
   int code = 0;
-  code |= (((int)c[1] * 255) & 255) << 16;
+  code |= (((int)c[1] * 255) & 255);
   code |= (((int)c[2] * 255) & 255) << 8;
-  code |= (((int)c[3] * 255) & 255);
+  code |= (((int)c[3] * 255) & 255) << 16;
   return code;
 }
 
@@ -69,13 +79,13 @@ template <typename T>
 static int PackColor3(const T& c)
 {
   int code = 0;
-  code |= (((int)c[1] * 255) & 255) << 16;
-  code |= (((int)c[2] * 255) & 255) << 8;
-  code |= (((int)c[3] * 255) & 255);
+  code |= (((int)(c[0] * 255)) & 255);
+  code |= (((int)(c[1] * 255)) & 255) << 8;
+  code |= (((int)(c[2] * 255)) & 255) << 16;
   return code;
 }
 
-static float PackColorAsFloat(const pxr::GfVec4f& c)
+static float PackColorAsFloat(const GfVec4f& c)
 {
   int code = PackColor4(c);
   return *(float*)&code;
@@ -89,3 +99,5 @@ static T UnpackColor4AsFloat(const float& code)
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE
+
+#endif // JVR_UTILS_COLOR_H

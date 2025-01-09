@@ -20,58 +20,49 @@ ImGuiWindowFlags SplitterUI::_flags =
   ImGuiWindowFlags_NoTitleBar |
   ImGuiWindowFlags_NoScrollbar;
 
-SplitterUI::SplitterUI()
+SplitterUI::SplitterUI(Window* window)
   : BaseUI(NULL, UIType::SPLITTER)
   , _hovered(NULL)
   , _pixels(NULL)
   , _valid(false)
+  , _window(window)
 {
 };
 
 SplitterUI::~SplitterUI()
 {
-  if (_pixels)delete[] _pixels;
+  if (_pixels) delete[] _pixels;
 };
-
-void SplitterUI::RecurseBuildMap(View* view)
-{
-  if(!view) return;
-  _views.push_back(view);
-  int viewID = _views.size();
-  if(!view->GetFlag(View::LEAF))
-  {
-    View* parent = view->GetParent();
-    if(!parent)parent = view;
-
-    if (!view->GetFlag(View::LFIXED|View::RFIXED)) {
-      pxr::GfVec2f sMin, sMax;
-      view->GetSplitInfos(sMin, sMax, _width, _height);
-      for (int y = sMin[1]; y < sMax[1]; ++y)
-      {
-        for (int x = sMin[0]; x < sMax[0]; ++x)
-        {
-          _pixels[y * _width + x] = viewID;
-        }
-      }
-    }
-    
-    RecurseBuildMap(view->GetLeft());
-    RecurseBuildMap(view->GetRight());
-  }
-  //else if(view->GetContent())view->GetContent()->SetActive(true);
-}
 
 void 
 SplitterUI::BuildMap(int width, int height)
 {
+  // delete previous allocated memory
+  if (_pixels) delete[] _pixels;
+
+  // reallocate memory according to new resolution
   size_t numPixels = width * height;
-  if (_pixels)delete[]_pixels;
   _pixels = new int[numPixels];
   _valid = true;
   _width = width;
   _height = height;
-  _views.clear();
+
+  // fill with black
   memset((void*)&_pixels[0], 0, numPixels * sizeof(int));
+
+  // then for each leaf view assign an indexed color
+  const std::vector<View*>& views = GetWindow()->GetViews();
+
+  for (size_t viewIdx = 0; viewIdx < views.size(); ++viewIdx) {
+    View* current = views[viewIdx];
+    if (current->GetFlag(View::LEAF))continue;
+    if (current->GetFlag(View::LFIXED | View::RFIXED)) continue;
+    GfVec2f sMin, sMax;
+    current->GetSplitInfos(sMin, sMax, _width, _height);
+    for (int y = sMin[1]; y < sMax[1]; ++y)
+      for (int x = sMin[0]; x < sMax[0]; ++x)
+        _pixels[y * _width + x] = viewIdx + 1;
+  }
 }
 
 // pick splitter
@@ -81,11 +72,13 @@ SplitterUI::Pick(int x, int y)
   if(!_valid || x<0 || y <0 || x >= _width || y >= _height) 
     return -1;
 
-  int idx = y * _width + x;
-  if(idx >= 0 && idx < (_width * _height))
+  int pixelIdx = y * _width + x;
+  if(pixelIdx >= 0 && pixelIdx < (_width * _height))
   {
-    _hovered = _views[_pixels[idx] - 1];
-    return _pixels[idx] - 1;
+    const std::vector<View*>& views = GetWindow()->GetViews();
+    int viewIdx = _pixels[pixelIdx] - 1;
+    _hovered = viewIdx >= 0 ? views[viewIdx] : nullptr;
+    return viewIdx;
   }
   return -1;
 }
@@ -94,24 +87,28 @@ SplitterUI::Pick(int x, int y)
 bool 
 SplitterUI::Draw()
 {
-  static bool open;
+  const std::vector<View*>& views = GetWindow()->GetViews();
+  ImGui::SetNextWindowPos(ImVec2(0, 0));
+  ImGui::SetNextWindowSize(ImVec2(_width, _height));
 
-  ImGui::Begin(_name.c_str(), &open, _flags);
-  ImGui::SetWindowPos(ImVec2(0, 0));
-  ImGui::SetWindowSize(ImVec2(_width, _height));
-  
-  for(auto view : _views)
-  {
-    if(view->GetFlag(View::LEAF)) continue;
+  ImGui::Begin(_name.c_str(), NULL, _flags);
 
-    if(_cursor == ImGuiMouseCursor_ResizeEW) {
-      ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
-    } else if(_cursor == ImGuiMouseCursor_ResizeNS) {
-      ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
-    } else {
-      ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
-    }
+  if(_cursor == ImGuiMouseCursor_ResizeEW) {
+    ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
+  } else if(_cursor == ImGuiMouseCursor_ResizeNS) {
+    ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
+  } else {
+    ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
   }
+
+  const ImGuiStyle& style = ImGui::GetStyle();
+  //ImU32 color = ImColor(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1);
+  ImU32 color = ImColor(style.Colors[ImGuiCol_MenuBarBg]);
+  ImDrawList* drawList = ImGui::GetWindowDrawList();
+  
+  for(auto view : views)
+    if(view->GetFlag(View::LEAF) /*&& view->GetFlag(View::DIRTY)*/)
+      drawList->AddRect(view->GetMin(), view->GetMax(), color, 0.f, 0, 2.f);
 
   ImGui::End();
   return true;
@@ -120,13 +117,19 @@ SplitterUI::Draw()
 View* 
 SplitterUI::GetViewByIndex(int index)
 {
-  return _views[index];
+  return GetWindow()->GetViews()[index];
 }
 
 void 
 SplitterUI::Resize(int width, int height)
 {
   BuildMap(width, height);
+}
+
+Window*
+SplitterUI::GetWindow()
+{
+  return _window;
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

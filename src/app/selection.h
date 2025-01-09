@@ -3,11 +3,10 @@
 
 #include "../common.h"
 #include <pxr/usd/sdf/path.h>
+#include <pxr/usd/usd/prim.h>
 #include <pxr/base/tf/token.h>
 #include <pxr/imaging/hd/selection.h>
 #include <vector>
-#include <boost/optional.hpp>
-#include <boost/functional/hash.hpp>
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -23,16 +22,14 @@ public:
   };
 
   enum Mode {
-    ASSEMBLY,
+    OBJECT,
     MODEL,
-    GROUP,
-    COMPONENT,
-    SUBCOMPONENT
+    ASSEMBLY
   };
 
   struct Item {
     Type                type;
-    pxr::SdfPath        path;
+    SdfPath             path;
     std::vector<int>    components;
     std::vector<float>  weights;
     size_t              hash;
@@ -42,31 +39,34 @@ public:
 
   void ComputeHash();
   size_t GetHash() { return _hash; };
-	void AddItem(const pxr::SdfPath& item);
-  void RemoveItem(const pxr::SdfPath& item);
-  void ToggleItem(const pxr::SdfPath& item);
+  void AddItem(const SdfPath& path);
+  void RemoveItem(const SdfPath& item);
+  void ToggleItem(const SdfPath& item);
 
-  void AddComponent(const pxr::SdfPath& object,
+  void AddComponent(const SdfPath& object,
     Type type, int index);
-  void RemoveComponent(const pxr::SdfPath& object,
+  void RemoveComponent(const SdfPath& object,
     Type type, int index);
-  void AddComponents(const pxr::SdfPath& object,
+  void AddComponents(const SdfPath& object,
     Type type, std::vector<int> indices);
-  void RemoveComponents(const pxr::SdfPath& object,
+  void RemoveComponents(const SdfPath& object,
     Type type, std::vector<int> indices);
   void Clear();
 
-  bool IsEmpty();
-  bool IsObject();
-  bool IsComponent();
-  bool IsAttribute();
+  bool IsEmpty() const;
+  bool IsObject() const;
+  bool IsComponent() const;
+  bool IsAttribute() const;
 
   void SetMode(Mode mode) {_mode = mode; };
   Mode GetMode() { return _mode; };
 
-  bool IsPickablePath(const pxr::UsdStage& stage, 
-    const pxr::SdfPath& path);
-  pxr::SdfPathVector GetSelectedPrims();
+  bool IsPickablePath(const UsdStage& stage, 
+    const SdfPath& path);
+  SdfPathVector GetSelectedPaths() const;
+  SdfPath GetAnchorPath() const;
+  SdfPathVector ComputeAffectedPaths(UsdStageRefPtr& stage);
+
   size_t GetNumSelectedItems() { return _items.size(); };
   Item& operator[](size_t index) {
     return _items[index];
@@ -77,10 +77,10 @@ public:
   std::vector<Item>& GetItems() { return _items; };
   void SetItems(const std::vector<Item>& items) {_items = items;};
 
-  bool IsSelected(const pxr::UsdPrim& prim);
+  bool IsSelected(const UsdPrim& prim) const;
+  bool IsSelected(const SdfPrimSpec& prim) const;
 
 private:
-  bool                        _CheckKind(Mode mode, const pxr::TfToken& kind);
   Mode                        _mode = Mode::MODEL;
   std::vector<Item>           _items;
   size_t                      _hash;

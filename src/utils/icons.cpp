@@ -5,7 +5,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 IconList ICONS = IconList(3);
 
-void IconHoverDatas(pxr::HioImage::StorageSpec* storage, int nchannels)
+void IconHoverDatas(HioImage::StorageSpec* storage, int nchannels)
 {
   uint32_t* pixels = (uint32_t*)storage->data;
   if (nchannels == 4)
@@ -45,13 +45,13 @@ static uint16_t GetIconResolution(ICON_SIZE size)
 GLuint CreateIconFromImage(const std::string& filename,
   int index, ICON_SIZE size)
 {
-  pxr::HioImageSharedPtr img = pxr::HioImage::OpenForReading(filename);
-  size_t s = GetIconResolution(size); 
-  pxr::HioImage::StorageSpec storage;
+  HioImageSharedPtr img = HioImage::OpenForReading(filename);
+  int s = GetIconResolution(size); 
+  HioImage::StorageSpec storage;
   storage.width = s;
   storage.height = s ;
   storage.flipped = false;
-  storage.format = pxr::HioFormat::HioFormatInt32Vec4;
+  storage.format = img->GetFormat();
   storage.data = new char[(size_t)storage.width * (size_t)storage.height * img->GetBytesPerPixel()];
 
   img->Read(storage);
@@ -78,7 +78,7 @@ GLuint CreateIconFromImage(const std::string& filename,
 void InitializeIcons()
 {
   std::string installDir = GetInstallationFolder();
-  std::string iconDir = installDir + "/icons";
+  std::string iconDir = installDir + SEPARATOR + "icons";
 
   for (size_t i=0; i < ICON_MAX_ID; ++i) {
     //ICONS[size][index] = { s, tex };
@@ -89,15 +89,12 @@ void InitializeIcons()
     for(size_t j=0; j < 3; ++j) {
       std::string filename = 
         iconDir + SEPARATOR + ICON_NAMES[i] + "_" + ICON_SUFFIX[j] + ".png";
-
+      std::cout << filename << std::endl;
       if (FileExists(filename) &&
-        pxr::HioImage::IsSupportedImageFile(filename)) {
+        HioImage::IsSupportedImageFile(filename)) {
         tex_small[j] = CreateIconFromImage(filename, i, ICON_SIZE_SMALL);
         tex_medium[j] = CreateIconFromImage(filename, i, ICON_SIZE_MEDIUM);
         tex_large[j] = CreateIconFromImage(filename, i, ICON_SIZE_LARGE);
-      }
-      else {
-        std::cout << "DID NOT FOUND " << filename << std::endl;
       }
     }
     ICONS[ICON_SIZE_SMALL][i] = Icon {

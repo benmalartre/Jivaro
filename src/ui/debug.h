@@ -18,6 +18,7 @@ public:
 private:
   void _DrawDebugCodes();
   void _DrawTraceReporter();
+  void _DrawPlugins();
   static ImGuiWindowFlags _flags;
   
 };

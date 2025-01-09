@@ -4,7 +4,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 void RecurseStagePrim(GraphEditorUI* ui, 
                       NodeUI* parent,
-                      const pxr::UsdPrim& prim, 
+                      const UsdPrim& prim, 
                       int stageIndex)
 {
 
@@ -18,7 +18,7 @@ void RecurseStagePrim(GraphEditorUI* ui,
 }
 
 void TestStageUI(GraphEditorUI* ui, 
-  const std::vector<pxr::UsdStageRefPtr>& stages)
+  const std::vector<UsdStageRefPtr>& stages)
 {
   int numStages = stages.size();
   ui->Init(stages);
@@ -26,7 +26,7 @@ void TestStageUI(GraphEditorUI* ui,
   {
     
     //ui->_stages[i] = new GraphStageUI(stages[i]);
-    pxr::UsdPrim root = stages[i]->GetPseudoRoot();
+    UsdPrim root = stages[i]->GetPseudoRoot();
     RecurseStagePrim(ui, NULL, root, i);
   }
 }

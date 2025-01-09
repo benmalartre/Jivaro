@@ -34,7 +34,7 @@ void GLSLShader::Load(const char* filename)
 
 void GLSLShader::Set(const char* code)
 {
-  unsigned long len = strlen(code);
+  size_t len = strlen(code);
   _code = (GLchar*) new char[len+1];
   _code[len] = 0;
   memcpy(_code, code, len);

@@ -22,14 +22,14 @@ static void SetStyle(ImGuiStyle* dst)
   style->PopupRounding = 2.0f;
   style->ScrollbarRounding = 2.0f;
   style->TabRounding = 0.0f;
-  style->WindowPadding = pxr::GfVec2f(2.f, 2.f);
-  style->FramePadding = pxr::GfVec2f(4.f, 4.f);
-  style->CellPadding = pxr::GfVec2f(4.f, 4.f);
+  style->WindowPadding = GfVec2f(2.f, 2.f);
+  style->FramePadding = GfVec2f(4.f, 4.f);
+  style->CellPadding = GfVec2f(4.f, 4.f);
   style->ChildBorderSize = 0.f;
   style->FrameBorderSize = 0.f;
   style->IndentSpacing = 8.f;
-  style->ItemSpacing = pxr::GfVec2f(4.f,4.f);
-  style->ItemInnerSpacing = pxr::GfVec2f(4.f, 4.f);
+  style->ItemSpacing = GfVec2f(4.f,4.f);
+  style->ItemInnerSpacing = GfVec2f(4.f, 4.f);
   style->FrameBorderSize = 1.0f;
   style->AntiAliasedLines = true;
   style->AntiAliasedFill = true;
@@ -37,21 +37,21 @@ static void SetStyle(ImGuiStyle* dst)
   style->ScrollbarSize = 12.f;
   style->GrabMinSize = 4.f;
 
-  colors[ImGuiCol_Text] = ImVec4(0.75f, 0.75f, 0.75f, 1.f);
+  colors[ImGuiCol_Text] = ImVec4(0.85f, 0.85f, 0.85f, 1.f);
   colors[ImGuiCol_TextDisabled] = ImVec4(0.5f, 0.5f, 0.5f, 1.f);
   colors[ImGuiCol_WindowBg] = ImVec4(0.2f, 0.2f, 0.2f, 1.f);
   //colors[ImGuiCol_ChildWindowBg]         = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
   colors[ImGuiCol_ChildBg] = ImVec4(0.25f, 0.25f, 0.25f, 1.0f);
   colors[ImGuiCol_PopupBg] = ImVec4(0.1f, 0.1f, 0.1f, 1.0f);
   colors[ImGuiCol_Border] = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
-  colors[ImGuiCol_BorderShadow] = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
+  colors[ImGuiCol_BorderShadow] = ImVec4(0.0f, 0.0f, 0.0f, 0.25f);
   colors[ImGuiCol_FrameBg] = ImVec4(0.15f, 0.15f, 0.15f, 1.0f);
   colors[ImGuiCol_FrameBgHovered] = ImVec4(0.1f, 0.1f, 0.1f, 1.0f);
   colors[ImGuiCol_FrameBgActive] = ImVec4(0.2f, 0.2f, 0.2f, 1.0f);
   colors[ImGuiCol_TitleBg] = ImVec4(0.85f, 0.85f, 0.85f, 1.00f);
   colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.82f, 0.78f, 0.78f, 0.51f);
   colors[ImGuiCol_TitleBgActive] = ImVec4(0.78f, 0.78f, 0.78f, 1.f);
-  colors[ImGuiCol_MenuBarBg] = ImVec4(0.2f, 0.2f, 0.2f, 1.f);
+  colors[ImGuiCol_MenuBarBg] = ImVec4(0.15f, 0.15f, 0.15f, 1.f);
   colors[ImGuiCol_ScrollbarBg] = ImVec4(0.25f, 0.25f, 0.25f, 1.f);
   colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.90f, 0.90f, 0.90f, 0.6f);
   colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.90f, 0.9f, 0.9f, 0.8f);
@@ -82,6 +82,7 @@ static void SetStyle(ImGuiStyle* dst)
   colors[ImGuiCol_NavWindowingHighlight] = ImVec4(0.70f, 0.70f, 0.70f, 0.70f);
   colors[ImGuiCol_Tab] = ImVec4(0.1f, 0.1f, 0.1f, 1.f);
   colors[ImGuiCol_TabActive] = ImVec4(0.2f, 0.2f, 0.2f, 1.f);
+  colors[ImGuiCol_TabUnfocused] = ImVec4(0.1f, 0.1f, 0.1f, 1.f);
   colors[ImGuiCol_TabHovered] = ImVec4(0.3f, 0.3f, 0.3f, 1.f);
  
 }

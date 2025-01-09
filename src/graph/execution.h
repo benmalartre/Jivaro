@@ -14,15 +14,18 @@ class ExecutionGraph : public Graph
 {
   class ExecutionNode : public Graph::Node {
   public:
-    ExecutionNode(pxr::UsdPrim& prim);
+    ExecutionNode(UsdPrim& prim);
     ~ExecutionNode() {};
+
   protected:
     void _PopulatePorts() override;
   };
 
 public:
-  ExecutionGraph(pxr::UsdPrim& prim);
+  explicit ExecutionGraph(const UsdPrim& prim);
   ~ExecutionGraph();
+
+  short GetType() override { return Graph::Type::EXECUTION; };
 
 protected:
   virtual void _DiscoverNodes() override;

@@ -4,32 +4,30 @@
 #ifndef JVR_GEOMETRY_POINT_H
 #define JVR_GEOMETRY_POINT_H
 
-#include <algorithm>
-#include <math.h>
-#include <stdio.h>
-#include <limits>
-
-#include <pxr/base/gf/vec3f.h>
-#include <pxr/base/gf/ray.h>
-#include "../common.h"
+#include "../geometry/component.h"
 
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-#define INVALID_POINT_ID std::numeric_limits<uint32_t>::max()
+class Deformable;
+class Location;
+struct Point : public Component {
 
-class Geometry;
-class Points;
-class Mesh;
-struct Point {
-  uint32_t id;    
-  float radius;
+  Point()
+    : Component(){};
+  Point(uint32_t index)
+    : Component(index){};
 
-  void GetPosition(Geometry* geom, pxr::GfVec3f& center);
-  void GetNormal(Geometry* geom, pxr::GfVec3f& normal);
-  void Raycast(Geometry* geom, const pxr::GfRay& point,
-    pxr::GfVec3f& closest, double maxDistance = -1, double* minDistance = NULL);
+  float GetWidth(Deformable* geom);
+  GfVec3f GetPosition(Deformable* geom);
+  GfVec3f GetNormal(Deformable* geom);
+  
+  virtual bool Raycast(const GfVec3f* points, const GfRay& ray, Location* hit) const override;
+  virtual bool Closest(const GfVec3f* points, const GfVec3f& point, Location* hit) const override;
+  virtual bool Touch(const GfVec3f* points, const GfVec3f& center, const GfVec3f& halfSize) const override;
 
+  virtual GfRange3f GetBoundingBox(const GfVec3f* positions, const GfMatrix4d& m) const override;
+  virtual short GetType() const override {return Component::POINT;};
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

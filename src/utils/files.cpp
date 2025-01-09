@@ -44,12 +44,12 @@ bool CreateDirectory(const std::string& path)
 
 int GetFileSize(const std::string& filePath)
 {
-    struct stat results;
-    
-    if (stat((const char*)filePath.c_str(), &results) == 0)
-      return results.st_size;
-    else
-      return -1;
+  struct stat results;
+  
+  if (stat((const char*)filePath.c_str(), &results) == 0)
+    return results.st_size;
+  else
+    return -1;
 }
 
 std::string GetFileName(const std::string& filePath)
@@ -57,50 +57,6 @@ std::string GetFileName(const std::string& filePath)
   return SplitString(filePath, SEPARATOR).back();
 }
 
-size_t NumFilesInDirectory(const char* path)
-{
-  /*
-  DIR *dir;
-  struct dirent *ent;
-  int num_files = 0;
-  if ((dir = opendir (path)) != NULL) 
-  {
-    // print all the files and directories within directory
-    while ((ent = readdir (dir)) != NULL) 
-    {
-      if(
-        ! strncmp(ent->d_name, ".", 1) ||
-        ! strncmp(ent->d_name, "..", 2) ||
-        ! strncmp(ent->d_name, ".DS_Store", 9)
-      ) continue;
-      num_files++;
-    }
-    closedir (dir);
-    return num_files;
-  } 
-  else 
-  {
-    // could not open directory
-    std::cerr << "Could Not Open Directory : " << path << std::endl;
-    return EXIT_FAILURE;
-  }
-  */
-
-  /*
-  int num_files = 0;
-  for (auto i = boost::filesystem::directory_iterator(path);
-    i != boost::filesystem::directory_iterator(); i++)
-  {
-    const char* fname = (i->path()).c_str();
-    if (boost::filesystem::is_directory(i->path())
-      || !strncmp(fname, ".", 1)
-      || !strncmp(fname, "..", 2)
-      || !strncmp(fname, ".DS_Store", 9)) continue;
-    num_files++;
-  }
-  */
-  return 0;
-}
 
 static bool _IsHiddenFile(const char* filename)
 {
@@ -124,7 +80,9 @@ size_t GetVolumes(std::vector<EntryInfo>& entries)
         entries.push_back({
           (std::string)(const char*)szDrive,
           EntryInfo::Type::FOLDER,
-          false
+          false,
+          0,
+          time_t()
           });
       }
       // increment, check next drive
@@ -139,7 +97,8 @@ size_t GetVolumes(std::vector<EntryInfo>& entries)
   return entries.size();
 }
 
-size_t GetEntriesInDirectory(const char* path, std::vector<EntryInfo>& entries)
+size_t GetEntriesInDirectory(const char* path, std::vector<EntryInfo>& entries, 
+  bool ignoreCurrent, bool ignoreParent)
 {
   entries.clear();
   DIR *dir;
@@ -149,18 +108,27 @@ size_t GetEntriesInDirectory(const char* path, std::vector<EntryInfo>& entries)
     // print all the files and directories within directory
     while ((ent = readdir (dir)) != NULL) 
     {
+      struct stat result;
+      stat(ent->d_name, &result);
+
       if(ent->d_type == DT_REG) {
         entries.push_back({
           (std::string)ent->d_name,
           EntryInfo::Type::FILE,
-          _IsHiddenFile(ent->d_name)
+          _IsHiddenFile(ent->d_name),
+          (size_t)result.st_size,
+          result.st_mtime
         });
-      } else if(ent->d_type == DT_DIR) {
-         entries.push_back({
-          (std::string)ent->d_name,
-          EntryInfo::Type::FOLDER,
-          _IsHiddenFile(ent->d_name)
-        });
+      } else if (ent->d_type == DT_DIR) {
+        if (ignoreCurrent && strcmp(ent->d_name, ".") == 0) continue;
+        if (ignoreParent && strcmp(ent->d_name, "..") == 0) continue;
+        entries.push_back({
+         (std::string)ent->d_name,
+         EntryInfo::Type::FOLDER,
+         _IsHiddenFile(ent->d_name),
+         (size_t)result.st_size,
+         result.st_mtime
+         });
       }
     }
     closedir (dir);
@@ -169,54 +137,9 @@ size_t GetEntriesInDirectory(const char* path, std::vector<EntryInfo>& entries)
   return 0;
 }
 
-size_t GetFilesInDirectory(const char* path, std::vector<std::string>& filenames)
-{
-  filenames.clear();
-#ifdef _WIN32
-    std::string search_path = std::string(path) + "/*.*";
-    WIN32_FIND_DATA fd;
-    HANDLE hFind = ::FindFirstFile(search_path.c_str(), &fd);
-    if (hFind != INVALID_HANDLE_VALUE) {
-      do {
-        if ((fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ||
-          !strncmp(fd.cFileName, ".DS_Store", 9)) continue;
-        filenames.push_back(fd.cFileName);
-      } while (::FindNextFile(hFind, &fd));
-      ::FindClose(hFind);
-    }
-    return 0;
-#else
-  DIR *dir;
-  struct dirent *ent;
-  if ((dir = opendir (path)) != NULL) 
-  {
-    // print all the files and directories within directory
-    while ((ent = readdir (dir)) != NULL) 
-    {
-      if(
-        ! strncmp(ent->d_name, ".", 1) ||
-        ! strncmp(ent->d_name, "..", 2) ||
-        ! strncmp(ent->d_name, ".DS_Store", 9)
-      ) continue;
-      filenames.push_back((std::string)ent->d_name);
-    }
-    closedir (dir);
-    return filenames.size();
-  } 
-  else 
-  {
-    // could not open directory
-    std::cerr << "Could Not Open Directory : " << path << std::endl;
-    return EXIT_FAILURE;
-  }
-  
-  return 0;
-#endif
-}
-
 std::string GetInstallationFolder()
 {
-  std::string exePath = pxr::ArchGetExecutablePath();
+  std::string exePath = ArchGetExecutablePath();
   std::vector<std::string> tokens = SplitString(exePath, SEPARATOR);
   tokens.pop_back();
   return JoinString(tokens, SEPARATOR);
@@ -232,8 +155,8 @@ File::File(const std::string& fileName)
 void File::_CreatePath(const std::string& directory, 
   const std::string& name, const std::string& extension)
 {
-    if(EndsWithString(name, extension)) path = directory+SEPARATOR+name;
-    else path = directory+SEPARATOR+name+extension;
+  if(EndsWithString(name, extension)) path = directory+SEPARATOR+name;
+  else path = directory+SEPARATOR+name+extension;
 }
 
 bool File::Open(FILE_MODE mode)
@@ -255,7 +178,7 @@ bool File::Close()
     
 void File::Write(const std::string& s)
 {
-    *file << s << "\n";
+  *file << s << "\n";
 }
 
 uint64_t File::GetFileLength()
@@ -285,13 +208,13 @@ std::string File::Read()
     
 std::string File::ReadAll()
 {
-    file->seekg(0, std::ios::end);
-    content.reserve(file->tellg());
-    file->seekg(0, std::ios::beg);
-    
-    content.assign((std::istreambuf_iterator<char>(*file)),
-                    std::istreambuf_iterator<char>());
-    return content;
+  file->seekg(0, std::ios::end);
+  content.reserve(file->tellg());
+  file->seekg(0, std::ios::beg);
+  
+  content.assign((std::istreambuf_iterator<char>(*file)),
+                  std::istreambuf_iterator<char>());
+  return content;
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

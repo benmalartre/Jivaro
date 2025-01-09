@@ -4,29 +4,42 @@
 #ifndef JVR_GEOMETRY_EDGE_H
 #define JVR_GEOMETRY_EDGE_H
 
-#include <algorithm>
-#include <math.h>
-#include <stdio.h>
-
-#include <pxr/base/gf/vec2i.h>
-#include <pxr/base/gf/vec3f.h>
-#include <pxr/base/gf/ray.h>
-#include "../common.h"
+#include "../geometry/component.h"
 
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-class Geometry;
-struct Edge {
-  pxr::GfVec2i vertices;    
+class Deformable;
+class Location;
+struct Edge : public Component {
+
+  Edge()
+    : Component()
+    , radius(1.f) {};
+  Edge(uint32_t index, const GfVec2i& vertices, float radius = 1.f)
+    : Component(index)
+    , vertices(vertices)
+    , radius(radius) {};
+
+  GfVec2i vertices;    
   float radius;
 
-  void GetCenter(Geometry* geom, pxr::GfVec3f& center);
-  void GetPosition(Geometry* geom, pxr::GfVec3f& center, short idx);
-  void GetNormal(Geometry* geom, pxr::GfVec3f& normal);
-  void Raycast(Geometry* geom, const pxr::GfRay& point , 
-    pxr::GfVec3f& closest, double maxDistance=-1, double* minDistance=NULL);
+/*
+  uint32_t GetStartIndex(){return vertices[0];};
+  uint32_t GetEndIndex(){return vertices[1];};
+  float GetRadius(){return radius;};
+  GfVec3f GetCenter(Deformable* geom);
+  GfVec3f GetPosition(Deformable* geom, short idx);
+  GfVec3f GetNormal(Deformable* geom);
+
   bool Intersect(const Edge& other, float epsilon=0.0001);
+*/
+  virtual bool Touch(const GfVec3f* points, const GfVec3f& center, const GfVec3f& halfSize) const override;
+  virtual bool Raycast(const GfVec3f* points, const GfRay& ray, Location* hit) const override;
+  virtual bool Closest(const GfVec3f* points, const GfVec3f& point, Location* hit) const override;
+
+  virtual GfRange3f GetBoundingBox(const GfVec3f* positions, const GfMatrix4d& m) const override;
+  virtual short GetType() const override;
 
 };
 

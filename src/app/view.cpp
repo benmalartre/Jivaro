@@ -8,22 +8,23 @@
 #include "../ui/tab.h"
 #include "../ui/splitter.h"
 #include "../ui/menu.h"
+#include "../ui/explorer.h"
 #include "../ui/viewport.h"
 #include "../ui/contentBrowser.h"
 #include "../ui/graphEditor.h"
 #include "../ui/propertyEditor.h"
+#include "../ui/attributeEditor.h"
 #include "../ui/curveEditor.h"
-#include "../ui/layerEditor.h"
-#include "../ui/textEditor.h"
 #include "../ui/debug.h"
 #include "../ui/demo.h"
-
+#include "../ui/icon.h"
+#include "../ui/commands.h"
 
 
 JVR_NAMESPACE_OPEN_SCOPE
 // View constructor
 //----------------------------------------------------------------------------
-View::View(View* parent, const pxr::GfVec2f& min, const pxr::GfVec2f& max, unsigned flags)
+View::View(View* parent, const GfVec2f& min, const GfVec2f& max, unsigned flags)
   : _parent(parent)
   , _tab(NULL)
   , _left(NULL)
@@ -32,12 +33,13 @@ View::View(View* parent, const pxr::GfVec2f& min, const pxr::GfVec2f& max, unsig
   , _max(max)
   , _flags(flags)
   , _perc(0.5)
-  , _buffered(0)
-  , _fixedPixels(-1)
+  , _fixed(-1)
+  , _buffered(2)
   , _current(NULL)
   , _currentIdx(-1)
+  , _fixedSizeFn(NULL)
 {
-  if(_parent!=NULL)_window = _parent->_window;
+  if(_parent)_window = _parent->_window;
   if (_flags & View::TAB)CreateTab();
 }
 
@@ -46,24 +48,29 @@ View::View(View* parent, int x, int y, int w, int h, unsigned flags)
   , _tab(NULL)
   , _left(NULL)
   , _right(NULL)
-  , _min(pxr::GfVec2f(x, y))
-  , _max(pxr::GfVec2f(x+w, y+h))
+  , _min(GfVec2f(x, y))
+  , _max(GfVec2f(x+w, y+h))
   , _flags(flags)
   , _perc(0.5)
-  , _buffered(0)
-  , _fixedPixels(-1)
+  , _fixed(-1)
+  , _buffered(2)
   , _current(NULL)
   , _currentIdx(-1)
+  , _fixedSizeFn(NULL)
 {
-  if(_parent!=NULL)_window = _parent->_window;
+  if(_parent)_window = _parent->_window;
   if (_flags & View::TAB)CreateTab();
 }
 
 View::~View()
 {
-  if (_tab) delete _tab;
   if (_left) delete _left;
   if (_right) delete _right;
+
+  for (auto& ui : _uis)
+    delete ui;
+
+  if (_tab) delete _tab;
 }
 
 void 
@@ -100,8 +107,8 @@ View::CreateUI(UIType type)
   case UIType::VIEWPORT:
     _current = new ViewportUI(this);
     break;
-  case UIType::CONTENTBROWSER:
-    _current = new ContentBrowserUI(this);
+  case UIType::EXPLORER:
+    _current = new ExplorerUI(this);
     break;
   case UIType::GRAPHEDITOR:
     _current = new GraphEditorUI(this);
@@ -109,20 +116,28 @@ View::CreateUI(UIType type)
   case UIType::CURVEEDITOR:
     _current = new CurveEditorUI(this);
     break;
-  case UIType::LAYEREDITOR:
-    _current = new LayerEditorUI(this);
+  case UIType::CONTENTBROWSER:
+    _current = new ContentBrowserUI(this);
     break;
   case UIType::DEMO:
     _current = new DemoUI(this);
     break;
   case UIType::PROPERTYEDITOR:
-    _current = new PropertyUI(this);
+    _current = new PropertyEditorUI(this);
     break;
-  case UIType::TEXTEDITOR:
-    _current = new TextEditorUI(this);
+  case UIType::ATTRIBUTEEDITOR:
+    _current = new AttributeEditorUI(this);
     break;
   case UIType::DEBUG:
     _current = new DebugUI(this);
+    break;
+  case UIType::ICON:
+    _current = new IconUI(this);
+    break;
+  case UIType::COMMANDS:
+    _current = new CommandsUI(this);
+    break;
+  default:
     break;
   }
 }
@@ -153,16 +168,6 @@ View::GetCurrentUI()
 }
 
 void
-View::RemoveUI(int index)
-{
-  if (index >= 0 && index < _uis.size()) {
-    BaseUI* ui = _uis[index];
-
-    _uis.erase(_uis.begin() + index);
-  }
-}
-
-void
 View::RemoveUI(BaseUI* ui)
 {
   for (size_t i = 0; i < _uis.size(); ++i) {
@@ -189,9 +194,24 @@ View::GetUIs()
 void
 View::TransferUIs(View* source)
 {
-  _uis = std::move(source->_uis);
+  _uis = source->_uis;
   for (auto& ui : _uis)ui->SetParent(this);
   source->_uis.clear();
+  if(_uis.size()) {
+    _currentIdx = 0;
+    _current = _uis[0];
+  } else {
+    _currentIdx = -1;
+    _current = NULL;
+  }
+}
+
+void
+View::SetViewportMessage(const std::string &message)
+{
+  for(auto& ui: _uis)
+    if(ui->GetType() == UIType::VIEWPORT)
+      ((ViewportUI*)ui)->SetMessage(message);
 }
 
 bool
@@ -202,36 +222,38 @@ View::Contains(int x, int y)
 }
 
 bool
-View::Intersect(const pxr::GfVec2i& min, const pxr::GfVec2i& size)
+View::Intersect(const GfVec2f& min, const GfVec2f& size)
 {
-  pxr::GfRange2f viewRange(GetMin(), GetMax());
-  pxr::GfRange2f boxRange(min, min + size);
+  GfRange2f viewRange(GetMin(), GetMax());
+  GfRange2f boxRange(min, min + size);
   return !boxRange.IsOutside(viewRange);
 }
 
 bool
 View::DrawTab()
 {
-  if (_tab) return (_tab->Draw());
-  return false;
+  if (_tab) return (!_tab->Draw());
+  return true;
 }
 
 void 
-View::Draw(bool forceRedraw)
+View::Draw(bool force)
 {
   if (!GetFlag(LEAF)) {
-    if (_left)_left->Draw(forceRedraw);
-    if (_right)_right->Draw(forceRedraw);
+    if (_left)_left->Draw(force);
+    if (_right)_right->Draw(force);
   }
-  else {
-    if (!DrawTab()) {
-      Time& time = GetApplication()->GetTime();
-      if (_current && (forceRedraw || GetFlag(INTERACTING) || GetFlag(DIRTY))) {
-        if (!_current->Draw() && !IsActive() && !(GetFlag(TIMEVARYING) && time.IsPlaying())) {
-          SetClean();
-        }
-      }
-    }
+  if(_tab) DrawTab();
+
+  if (_current && (GetFlag(INTERACTING) || GetFlag(DIRTY))) {
+    bool isPlaying = Time::Get()->IsPlaying();
+    bool isTimeVarying = GetFlag(TIMEVARYING) && isPlaying;
+    bool isEdited = _current->Draw();
+
+    bool doClean = !force && !IsActive() && !isEdited && !isTimeVarying;
+
+    if ( doClean) 
+      SetClean();
   }
 }
 
@@ -260,22 +282,28 @@ View* View::GetSibling()
   return NULL;
 }
 
-void View::DeleteChildren()
+void View::Clear()
 {
-  if (_left)delete _left;
+  if (_left) delete _left;
   if (_right) delete _right;
   _left = _right = NULL;
+
+  for(auto& ui: _uis)
+    delete ui;
+  _uis.clear();
+  _current = NULL;
+  _currentIdx = -1;
+  SetFlag(LEAF);
 }
 
 // mouse positon relative to the view
-void 
-View::GetRelativeMousePosition(const int inX, const int inY, int& outX, int& outY)
+GfVec2f 
+View::GetRelativeMousePosition(const int inX, const int inY)
 {
-  pxr::GfVec2f position = GetMin();
+  GfVec2f position = GetMin();
   int x = position[0];
   int y = position[1];
-  outX = inX - x;
-  outY = inY - y;
+  return GfVec2f(inX - x, inY - y);
 }
 
 float View::GetTabHeight() {
@@ -290,7 +318,8 @@ View::MouseButton(int button, int action, int mods)
   glfwGetCursorPos(GetWindow()->GetGlfwWindow(), &x, &y);
   if (_tab) {
     const float relativeY = y - GetY();
-    if (relativeY > 0 && relativeY < GetTabHeight() * 2) {
+    
+    if (_tab->Invade() || (relativeY > 0 && relativeY < GetTabHeight())) {
       _tab->MouseButton(button, action, mods);
     } else {
       if (_current && !GetFlag(DISCARDMOUSEBUTTON)) {
@@ -348,7 +377,15 @@ View::Input(int key)
 }
 
 void
-View::GetChildMinMax(bool leftOrRight, pxr::GfVec2f& cMin, pxr::GfVec2f& cMax)
+View::Focus(int state)
+{
+  if (state)SetFlag(FOCUS);
+  else ClearFlag(FOCUS);
+  if (_tab)_tab->Focus(state);
+}
+
+void
+View::GetChildMinMax(bool leftOrRight, GfVec2f& cMin, GfVec2f& cMax)
 {
   // horizontal splitter
   if(GetFlag(HORIZONTAL)) {
@@ -382,7 +419,7 @@ View::GetChildMinMax(bool leftOrRight, pxr::GfVec2f& cMin, pxr::GfVec2f& cMax)
 }
 
 void
-View::GetSplitInfos(pxr::GfVec2f& sMin, pxr::GfVec2f& sMax,
+View::GetSplitInfos(GfVec2f& sMin, GfVec2f& sMax,
   const int width, const int height)
 {
   if(GetFlag(HORIZONTAL))
@@ -393,28 +430,31 @@ View::GetSplitInfos(pxr::GfVec2f& sMin, pxr::GfVec2f& sMax,
     int h = GetMin()[1] + (GetMax()[1] - GetMin()[1]) * GetPerc();
     sMin[1] = h - SPLITTER_THICKNESS;
     sMax[1] = h + SPLITTER_THICKNESS;
-    sMin[1] = (sMin[1] < 0) ? 0 : ((sMin[1] > height) ? height : sMin[1]);
-    sMax[1] = (sMax[1] < 0) ? 0 : ((sMax[1] > height) ? height : sMax[1]);
   }
   else
   {
+    sMin[1] = GetMin()[1] - SPLITTER_THICKNESS;
+    sMax[1] = GetMax()[1] + SPLITTER_THICKNESS;
+
     int w = GetMin()[0] + (GetMax()[0] - GetMin()[0]) * GetPerc();
     sMin[0] = w - SPLITTER_THICKNESS;
     sMax[0] = w + SPLITTER_THICKNESS;
-    sMin[1] = GetMin()[1] - SPLITTER_THICKNESS;
-    sMax[1] = GetMax()[1] + SPLITTER_THICKNESS;
-    sMin[1] = (sMin[1] < 0) ? 0 : ((sMin[1] > width) ? width : sMin[1]);
-    sMax[1]= (sMax[1] < 0) ? 0 : ((sMax[1] > width) ? width : sMax[1]);
   }
+
+  sMin[0] = GfClamp(sMin[0], 0, width);
+  sMin[1] = GfClamp(sMin[1], 0, height);
+  sMax[0] = GfClamp(sMax[0], 0, width);
+  sMax[1] = GfClamp(sMax[1], 0, height);
+
 }
 
 void
-View::Split(double perc, bool horizontal, int fixed, int numPixels)
+View::Split(double perc, bool horizontal, int fixed, int pixels)
 {
   if(horizontal)SetFlag(HORIZONTAL);
   else ClearFlag(HORIZONTAL);
 
-  if (fixed && numPixels) {
+  if (fixed && pixels > 0) {
     if (fixed & LFIXED) {
       SetFlag(LFIXED); 
       ClearFlag(RFIXED);
@@ -429,9 +469,9 @@ View::Split(double perc, bool horizontal, int fixed, int numPixels)
     ClearFlag(RFIXED);
   }
   _perc = perc;
-  _fixedPixels = numPixels;
+  _fixed = pixels;
 
-  pxr::GfVec2f cMin, cMax;    
+  GfVec2f cMin, cMax;    
   GetChildMinMax(true, cMin, cMax);
   _left = new View(this, cMin, cMax);
   _left->_parent = this;
@@ -440,34 +480,31 @@ View::Split(double perc, bool horizontal, int fixed, int numPixels)
   _right = new View(this, cMin, cMax);
   _right->_parent = this;
 
-  ComputeNumPixels(false);
+  ComputePixels();
   ClearFlag(LEAF);
 
-  if (_tab && _left->_tab) {
-    _left->TransferUIs(this);
-  }
+  _left->TransferUIs(this);
+  _current = NULL;
+
   RemoveTab();
+  _window->Resize(_window->GetWidth(), _window->GetHeight());
 }
 
 void 
-View::Resize(int x, int y, int w, int h, bool rationalize)
+View::Resize(int x, int y, int w, int h)
 {
-  pxr::GfVec2f ratio;
-
-  if(rationalize)
-  {
-    ratio[0] = 1 / ((double)(_max[0] - _min[0]) / (double)w);
-    ratio[1] = 1 / ((double)(_max[1] - _min[1]) / (double)h);
-  }
-  _min = pxr::GfVec2f(x , y);
-  _max = pxr::GfVec2f(x + w, y + h);
+  _min = GfVec2f(x , y);
+  _max = GfVec2f(x + w, y + h);
 
   if(!GetFlag(LEAF))
   {
+    if(_left)_left->ComputeFixedSize();
+    if(_right)_right->ComputeFixedSize();
+    
     if(GetFlag(HORIZONTAL))
     {
-      if (GetFlag(LFIXED)) _perc = (double)_fixedPixels / (double)h;
-      else if (GetFlag(RFIXED)) _perc = (double)(h - _fixedPixels) / (double)h;
+      if (GetFlag(LFIXED)) _perc = (double)_left->GetFixedSize() / (double)h;
+      else if (GetFlag(RFIXED)) _perc = ((double)h - _right->GetFixedSize()) / (double)h;
       
       double ph = (double)h * _perc;
       if (_left)_left->Resize(x, y, w, ph);
@@ -475,8 +512,8 @@ View::Resize(int x, int y, int w, int h, bool rationalize)
     }
     else
     {
-      if (GetFlag(LFIXED)) _perc = (float)_fixedPixels / (float)w;
-      else if (GetFlag(RFIXED)) _perc = (float)(w - _fixedPixels) / (float)w;
+      if (GetFlag(LFIXED)) _perc = (float)_left->GetFixedSize() / (float)w;
+      else if (GetFlag(RFIXED)) _perc = (float)(w - _right->GetFixedSize()) / (float)w;
       
       double pw = (double)w * _perc;
       if (_left)_left->Resize(x, y, pw, h);
@@ -487,11 +524,7 @@ View::Resize(int x, int y, int w, int h, bool rationalize)
   {
     if(_current)_current->Resize();
   }
-  if(rationalize)RescaleNumPixels(ratio);
-  SetDirty();
-  
-  _window->ForceRedraw();
-  
+  SetFlag(DIRTY);
 }
 
 void 
@@ -500,16 +533,16 @@ View::GetPercFromMousePosition(int x, int y)
   if(GetFlag(HORIZONTAL))
   {
     if(GetHeight()<0.01)return;
-    double perc = (double)(y - _min[1]) / (double)(_max[1] - _min[1]);
+    double perc = ((double)y - _min[1]) / ((double)_max[1] - _min[1]);
     _perc = perc < 0.05 ? 0.05 : perc > 0.95 ? 0.95 : perc;
   }
   else
   {
     if(GetWidth()<0.01)return;
-    double perc = (double)(x - _min[0]) / (double)(_max[0] - _min[0]);
+    double perc = ((double)x - _min[0]) / ((double)_max[0] - _min[0]);
     _perc = perc < 0.05 ? 0.05 : perc > 0.95 ? 0.95 : perc;
   }
-  ComputeNumPixels(true);
+  ComputePixels();
  
 }
 
@@ -517,44 +550,38 @@ void
 View::SetPerc(double perc)
 {
   _perc=perc;
-  ComputeNumPixels(false);
+  ComputePixels();
 };
 
 void
-View::ComputeNumPixels(bool postFix)
+View::ComputePixels()
 {
-  float side = GetFlag(HORIZONTAL) ? GetHeight() : GetWidth();
+  double side = GetFlag(HORIZONTAL) ? GetHeight() : GetWidth();
 
   if (GetFlag(LFIXED)) {
-    _numPixels[0] = _fixedPixels;
-    _numPixels[1] = side - _fixedPixels;
+    _pixels[0] = _fixed;
+    _pixels[1] = side - _fixed;
   }
   else if (GetFlag(RFIXED)) {
-    _numPixels[0] = side - _fixedPixels;
-    _numPixels[1] = _fixedPixels;
+    _pixels[0] = side - _fixed;
+    _pixels[1] = _fixed;
   }
   else {
-    _numPixels[0] = _perc * side;
-    _numPixels[1] = (1 - _perc) * side;
-  }
-
-  if(postFix)
-  {
-    if(_left)RescaleLeft();
-    if(_right)RescaleRight();
+    _pixels[0] = std::ceil(_perc * side);
+    _pixels[1] = std::ceil((1 - _perc) * side);
   }
 }
 
 void 
-View::RescaleNumPixels(pxr::GfVec2f  ratio)
+View::RescalePixels(GfVec2d  ratio)
 {
   if(!GetFlag(LEAF))
   {
-    if(GetFlag(HORIZONTAL)){_numPixels[0] *= ratio[1]; _numPixels[1] *= ratio[1];}
-    else {_numPixels[0] *= ratio[0]; _numPixels[1] *= ratio[0];}
+    if(GetFlag(HORIZONTAL)){_pixels[0] *= ratio[1]; _pixels[1] *= ratio[1];}
+    else {_pixels[0] *= ratio[0]; _pixels[1] *= ratio[0];}
 
-    if(_left)_left->RescaleNumPixels(ratio);
-    if(_right)_right->RescaleNumPixels(ratio);
+    if(_left)_left->RescalePixels(ratio);
+    if(_right)_right->RescalePixels(ratio);
   }
 }
 
@@ -566,11 +593,11 @@ View::RescaleLeft()
     double perc;
     if(GetFlag(HORIZONTAL)) {
       double height = GetHeight() * _perc;
-      perc = (double)_left->_numPixels[0] / height;
+      perc = (double)_left->_pixels[0] / height;
     }
     else { 
       double width = GetWidth() * _perc;
-      perc = (double)_left->_numPixels[0] / width;
+      perc = (double)_left->_pixels[0] / width;
     }
 
      _left->_perc = perc < 0.05 ? 0.05 : perc > 0.95 ? 0.95 : perc;
@@ -591,11 +618,11 @@ View::RescaleRight()
     double perc;
     if(GetFlag(HORIZONTAL)) {
       double height = GetHeight() * (1.0 - _perc);
-      perc = 1.0-(double)_right->_numPixels[1] / (double)height;
+      perc = 1.0-(double)_right->_pixels[1] / (double)height;
     }
     else { 
       double width = GetWidth() * (1.0 - _perc);
-      perc = 1.0 - (double)_right->_numPixels[1] / (double)width;
+      perc = 1.0 - (double)_right->_pixels[1] / (double)width;
     }
     _right->_perc = perc < 0.05 ? 0.05 : perc > 0.95 ? 0.95 : perc;
 
@@ -608,12 +635,26 @@ View::RescaleRight()
 }
 
 void
+View::ComputeFixedSize()
+{
+  if(_fixedSizeFn)
+    _fixed = (*_fixedSizeFn)(GetCurrentUI());
+}
+
+int
+View::GetFixedSize() {
+  ComputeFixedSize();
+  return _fixed;
+}
+
+void
 View::SetClean()
 {
-  if (_buffered <= 0) {
+  if(!GetFlag(View::LEAF))return;
+  if(!_current || WindowRegistry::IsPlaybackView(this))return;
+  _buffered--;
+  if (_buffered <= 0)
     ClearFlag(DIRTY);
-  }
-  else _buffered--;
 }
 
 void

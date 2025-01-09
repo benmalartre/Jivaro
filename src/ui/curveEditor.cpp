@@ -1,8 +1,5 @@
-#include <pxr/usd/usdAnimX/fileFormat.h>
-#include <pxr/usd/usdAnimX/curve.h>
-
 #include "../ui/curveEditor.h"
-#include "../app/application.h"
+#include "../app/model.h"
 #include "../app/notice.h"
 #include "../app/window.h"
 #include "../app/view.h"
@@ -43,14 +40,14 @@ void CurveEditorUI::Init()
 
 void CurveEditorUI::Update()
 {
-  if (GetApplication()->GetWorkStage()) {
+  if (_model->GetStage()) {
     //RecurseStage();
   }
 }
 
 void CurveEditorUI::MouseButton(int button, int action, int mods)
 {
-  const pxr::GfVec2f& mousePos = ImGui::GetMousePos();
+  const GfVec2f& mousePos = ImGui::GetMousePos();
   _lastX = mousePos[0];
   _lastY = mousePos[1];
 
@@ -112,7 +109,7 @@ void CurveEditorUI::MouseButton(int button, int action, int mods)
 void CurveEditorUI::MouseMove(int x, int y)
 {
   if (_navigate) {
-    _offset += pxr::GfVec2f(
+    _offset += GfVec2f(
       (x - _lastX) * _invScale[0], 
       (y - _lastY) * _invScale[1]);
     _parent->SetDirty();
@@ -120,7 +117,7 @@ void CurveEditorUI::MouseMove(int x, int y)
   /*
   else if (_drag) {
     for (auto& node : _selected) {
-      node->Move(pxr::GfVec2f(x - _lastX, y - _lastY) / _scale);
+      node->Move(GfVec2f(x - _lastX, y - _lastY) / _scale);
     }
     _parent->SetDirty();
   }*/
@@ -130,7 +127,7 @@ void CurveEditorUI::MouseMove(int x, int y)
   }
   /*
   else {
-    _GetNodeUnderMouse(pxr::GfVec2f(x, y), true);
+    _GetNodeUnderMouse(GfVec2f(x, y), true);
     if (_connect && _hoveredPort)UpdateConnexion();
     if (_hoveredPort)_parent->SetDirty();
   }*/
@@ -140,12 +137,13 @@ void CurveEditorUI::MouseMove(int x, int y)
 
 void CurveEditorUI::Keyboard(int key, int scancode, int action, int mods)
 {
+  /*
   if (action == GLFW_PRESS)
   {
-    pxr::SdfPath path = pxr::SdfPath("/Cube").AppendProperty(pxr::TfToken("size"));
-    AnimXCurves *curves = pxr::TfMapLookupPtr(_curves, path);
-    pxr::UsdAnimXCurve *curve = (*(curves))[0];
-    pxr::UsdAnimXKeyframe keyframe;
+    SdfPath path = SdfPath("/Cube").AppendProperty(TfToken("size"));
+    AnimXCurves *curves = TfMapLookupPtr(_curves, path);
+    UsdAnimXCurve *curve = (*(curves))[0];
+    UsdAnimXKeyframe keyframe;
     curve->keyframeAtIndex(1, keyframe);
     if(key == GLFW_KEY_K)keyframe.value += 2;
     else if (key == GLFW_KEY_L)keyframe.value -= 2;
@@ -154,29 +152,28 @@ void CurveEditorUI::Keyboard(int key, int scancode, int action, int mods)
     if (_layer) {
       _layer->SetField(
         path,
-        pxr::SdfFieldKeys->Default,
-        pxr::VtValue(keyframe.value));
+        SdfFieldKeys->Default,
+        VtValue(keyframe.value));
     }
-   
-    GetWindow()->ForceRedraw();
   }
+  */
 }
 
 void CurveEditorUI::MouseWheel(int x, int y)
 {
-  const pxr::GfVec2f min(GetX(), GetY());
-  pxr::GfVec2f mousePos = 
+  const GfVec2f min(GetX(), GetY());
+  GfVec2f mousePos = 
     (ImGui::GetMousePos() - min);
-  pxr::GfVec2f originalPos(
+  GfVec2f originalPos(
     mousePos[0] / _scale[0], 
     mousePos[1] / _scale[1]);
 
-  _scale += pxr::GfVec2f(y * 1.f, y * 1.f);
+  _scale += GfVec2f(y * 1.f, y * 1.f);
   _scale[0] = CLAMP(_scale[0], 0.01f, 100.f);
   _scale[1] = CLAMP(_scale[1], 0.01f, 100.f);
   _invScale[0] = 1.f / _scale[0];
   _invScale[1] = 1.f / _scale[1];
-  pxr::GfVec2f scaledPos(
+  GfVec2f scaledPos(
     mousePos[0] / _scale[0],
     mousePos[1] / _scale[1]);
   _offset -= (originalPos - scaledPos);
@@ -185,39 +182,45 @@ void CurveEditorUI::MouseWheel(int x, int y)
 
 }
 
-void CurveEditorUI::SetLayer(pxr::SdfLayerHandle layer)
+void CurveEditorUI::SetLayer(SdfLayerHandle layer)
 {
+  /*
   std::cout << "### CURVE EDITOR UI : SET LAYER!!!" << std::endl;
   _layer = layer;
-  pxr::UsdAnimXFileFormatConstPtr fileFormat =
-    pxr::TfStatic_cast<pxr::UsdAnimXFileFormatConstPtr>(layer->GetFileFormat());
-  pxr::SdfAbstractDataConstPtr datas = fileFormat->GetData(&(*layer));
-  pxr::UsdAnimXDataPtr animXDatas =
-    pxr::TfDynamic_cast<pxr::UsdAnimXDataPtr>(
-      pxr::TfConst_cast<pxr::SdfAbstractDataPtr>(datas));
+  UsdAnimXFileFormatConstPtr fileFormat =
+    TfStatic_cast<UsdAnimXFileFormatConstPtr>(layer->GetFileFormat());
+  SdfAbstractDataConstPtr datas = fileFormat->GetData(&(*layer));
+  UsdAnimXDataPtr animXDatas =
+    TfDynamic_cast<UsdAnimXDataPtr>(
+      TfConst_cast<SdfAbstractDataPtr>(datas));
   std::cout << "[ANIMX] DATAS : " << animXDatas->GetCurrentCount() << std::endl;
   SetDatas(animXDatas);
   PopulateCurves();
   std::cout << "##############################################" << std::endl;
   std::cout << "###   " << _layer.GetUniqueIdentifier() << std::endl;
   std::cout << "##############################################" << std::endl;
+  */
 }
 
-void CurveEditorUI::SetDatas(const pxr::UsdAnimXDataRefPtr& datas)
+/*
+void CurveEditorUI::SetDatas(const UsdAnimXDataRefPtr& datas)
 {
   _curves.clear();
   _datas = datas;
 }
+*/
 
 void CurveEditorUI::PopulateCurves()
 {
+  /*
   if (_datas) {
-    std::vector<pxr::SdfPath> animatedPrims;
+    std::vector<SdfPath> animatedPrims;
     _datas->GetAnimatedPrims(animatedPrims);
     for (auto& animatedPrim : animatedPrims) {
-      _datas->GetCurves(animatedPrim, _curves);
+      //_datas->GetCurves(animatedPrim, _curves);
     }
   }
+  */
 }
 
 void CurveEditorUI::DrawBackground()
@@ -231,14 +234,14 @@ void CurveEditorUI::DrawBackground()
   vMax.y += ImGui::GetWindowPos().y;
 }
 
-void CurveEditorUI::DrawCurve(pxr::UsdAnimXCurve* crv)
+void CurveEditorUI::DrawCurve(/*UsdAnimXCurve* crv*/)
 {
 
 }
 
 void CurveEditorUI::DrawTime()
 {
-  Time& time = APPLICATION->GetTime();
+  Time& time = *Time::Get();
   ImDrawList* drawList = ImGui::GetWindowDrawList();
   float ox = _parent->GetX() + _offset[0] * _scale[0];
   float oy = _parent->GetY() + _offset[1] * _scale[1];
@@ -273,8 +276,9 @@ size_t CurveEditorUI::_GetNumSamples(float width)
 
 void CurveEditorUI::DrawCurves()
 {
-  pxr::UsdAnimXKeyframe keyframe;
-  pxr::UsdAnimXKeyframe lastKeyframe;
+  /*
+  UsdAnimXKeyframe keyframe;
+  UsdAnimXKeyframe lastKeyframe;
   ImDrawList* drawList = ImGui::GetWindowDrawList();
   float ox = _parent->GetX() + _offset[0] * _scale[0];
   float oy = _parent->GetY() + _offset[1] * _scale[1];
@@ -283,18 +287,18 @@ void CurveEditorUI::DrawCurves()
   static ImU32 blue = ImColor(64, 32, 255);
   size_t cid = 0;
 
-  /*
+ 
   adsk::evaluateCurveSegment(interpolationMethod,
     CurveInterpolatorMethod curveInterpolatorMethod,
     double time,
     double startX, double startY,
     double x1, double y1,
     double x2, double y2,
-    double endX, double endY);*/
+    double endX, double endY);
 
   
   for (auto& it : _curves) {
-    const std::vector<pxr::UsdAnimXCurve*>& curves = it.second;
+    const std::vector<UsdAnimXCurve*>& curves = it.second;
     cid = 0;
     for (const auto& curve: curves) {
       // draw curve
@@ -345,22 +349,24 @@ void CurveEditorUI::DrawCurves()
     }
     cid++;
   }
+  */
 }
 
 bool CurveEditorUI::Draw()
 {
   if (!_initialized)Init();
 
-  const pxr::GfVec2f min(GetX(), GetY());
-  const pxr::GfVec2f size(GetWidth(), GetHeight());
-  const pxr::GfVec2f max(min + size);
+  const GfVec2f min(GetX(), GetY());
+  const GfVec2f size(GetWidth(), GetHeight());
+  const GfVec2f max(min + size);
   
   //if (!_active)return false;
+  ImGui::SetNextWindowPos(min);
+  ImGui::SetNextWindowSize(size);
+
   ImGui::Begin(_name.c_str(), NULL, _flags);
-  ImGui::SetWindowPos(min);
-  ImGui::SetWindowSize(size);
+  
   ImGui::PushClipRect(min, max, false);
-  Application* app = GetApplication();
   /*
   if (app->GetStage())
   {

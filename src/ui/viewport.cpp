@@ -1,3 +1,10 @@
+#include <pxr/imaging/hd/light.h>
+#include <pxr/imaging/hdx/shadowTask.h>
+#include <pxr/imaging/hdx/pickTask.h>
+#include <pxr/imaging/cameraUtil/conformWindow.h>
+#include <pxr/usdImaging/usdImaging/sceneIndices.h>
+#include <pxr/usdImaging/usdImaging/stageSceneIndex.h>
+
 
 #include "../utils/strings.h"
 #include "../utils/glutils.h"
@@ -9,31 +16,31 @@
 #include "../geometry/shape.h"
 #include "../command/command.h"
 #include "../app/view.h"
+#include "../app/model.h"
 #include "../app/window.h"
 #include "../app/camera.h"
 #include "../app/tools.h"
 #include "../app/handle.h"
-#include "../app/application.h"
-
-#include <pxr/imaging/cameraUtil/conformWindow.h>
+#include "../app/index.h"
+#include "../app/registry.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
 extern bool LEGACY_OPENGL;
 
-ImGuiWindowFlags ViewportUI::_flags = 
-  ImGuiWindowFlags_None |
-  ImGuiWindowFlags_NoMove |
-  ImGuiWindowFlags_NoResize |
-  ImGuiWindowFlags_NoTitleBar |
-  ImGuiWindowFlags_NoCollapse |
-  ImGuiWindowFlags_NoNav |
-  ImGuiWindowFlags_NoScrollWithMouse |
-  ImGuiWindowFlags_NoScrollbar |
-  ImGuiWindowFlags_NoBackground;
+ImGuiWindowFlags ViewportUI::_flags =
+ImGuiWindowFlags_None |
+ImGuiWindowFlags_NoMove |
+ImGuiWindowFlags_NoResize |
+ImGuiWindowFlags_NoTitleBar |
+ImGuiWindowFlags_NoCollapse |
+ImGuiWindowFlags_NoNav |
+ImGuiWindowFlags_NoScrollWithMouse |
+ImGuiWindowFlags_NoScrollbar;/* |
+  ImGuiWindowFlags_NoBackground;*/
 
 
-static void _BlitFramebufferFromTarget(pxr::GlfDrawTargetRefPtr target, 
+static void _BlitFramebufferFromTarget(GlfDrawTargetRefPtr target, 
   int x, int y, int width, int height)
 {
   glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
@@ -52,44 +59,25 @@ static void _BlitFramebufferFromTarget(pxr::GlfDrawTargetRefPtr target,
 ViewportUI::ViewportUI(View* parent)
   : BaseUI(parent, UIType::VIEWPORT)
   , _texture(0)
-  , _drawMode((int)pxr::UsdImagingGLDrawMode::DRAW_SHADED_SMOOTH)
-  , _pixels(nullptr)
+  , _drawMode()
+  , _pickMode(Selection::OBJECT)
   , _camera(new Camera("Camera"))
   , _valid(true)
   , _interactionMode(INTERACTION_NONE)
   , _engine(nullptr)
   , _rendererIndex(0)
   , _rendererNames(NULL)
-  , _counter(0)
   , _highlightSelection(true)
+  , _lightingContext(nullptr)
+  , _aov(HdAovTokens->color)
 {
-  _camera->Set(pxr::GfVec3d(12,24,12),
-              pxr::GfVec3d(0,0,0),
-              pxr::GfVec3d(0,1,0));
+  _camera->Set(GfVec3d(12,24,12),
+              GfVec3d(0,0,0),
+              GfVec3d(0,1,0));
+  
+  const GfVec2i resolution(GetWindow()->GetResolution());
+  _BuildDrawTargets(resolution);
 
-  const pxr::GfVec2i resolution(GetWidth(), GetHeight());
-
-  {
-    _drawTarget = pxr::GlfDrawTarget::New(resolution, false);
-    _drawTarget->Bind();
-    _drawTarget->AddAttachment("color", GL_RGBA, GL_FLOAT, GL_RGBA);
-    _drawTarget->AddAttachment("depth", GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_COMPONENT32F);
-    auto color = _drawTarget->GetAttachment("color");
-    _drawTexId = color->GetGlTextureName();
-    _drawTarget->Unbind();
-  }
-
-  {
-    _toolTarget = pxr::GlfDrawTarget::New(resolution, true /*multisamples*/);
-    _toolTarget->Bind();
-    _toolTarget->AddAttachment("color", GL_RGBA, GL_FLOAT, GL_RGBA);
-    _toolTarget->AddAttachment("depth", GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_COMPONENT32F);
-    auto color = _toolTarget->GetAttachment("color");
-    _toolTexId = color->GetGlTextureName();
-    _toolTarget->Unbind();
-  }
-
-  GetApplication()->SetActiveViewport(this);
 }
 
 // destructor
@@ -98,61 +86,103 @@ ViewportUI::~ViewportUI()
   if(_rendererNames)delete[] _rendererNames;
   if(_texture) glDeleteTextures(1, &_texture);
   if(_camera) delete _camera;
-  if(_engine) delete _engine;
+  if (_engine) {
+    EngineRegistry::RemoveEngine(_engine);
+    delete _engine;
+  }
+}
+
+void ViewportUI::_BuildDrawTargets(const pxr::GfVec2i &resolution)
+{
+  _drawTarget = GlfDrawTarget::New(resolution, false);
+  _drawTarget->Bind();
+  _drawTarget->AddAttachment("color", GL_RGBA, GL_FLOAT, GL_RGBA);
+  _drawTarget->AddAttachment("depth", GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_COMPONENT32F);
+  auto color = _drawTarget->GetAttachment("color");
+  _drawTexId = color->GetGlTextureName();
+  _drawTarget->Unbind();
+
+  _toolTarget = GlfDrawTarget::New(resolution, false);
+  _toolTarget->Bind();
+  _toolTarget->AddAttachment("color", GL_RGBA, GL_FLOAT, GL_RGBA);
+  _toolTarget->AddAttachment("depth", GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_COMPONENT32F);
+   color = _toolTarget->GetAttachment("color");
+  _toolTexId = color->GetGlTextureName();
+  _toolTarget->Unbind();
+}
+
+void ViewportUI::UpdateLighting()
+{
+  /*
+  if(!_lightingContext) 
+    _lightingContext = GlfSimpleLightingContext::New();
+
+  GlfSimpleLight light;
+  light.SetHasShadow(true);
+  light.SetDiffuse(GfVec4f(1,1,1,1));
+  light.SetAmbient(GfVec4f(0,0,0,1));
+  light.SetSpecular(GfVec4f(1,1,1,1));
+
+  const float t = Time::Get()->GetActiveTime();
+  light.SetPosition(GfVec4f(pxr::GfSin(t), 10.f, pxr::GfCos(t), 1));
+
+  GlfSimpleMaterial material;
+  material.SetAmbient(GfVec4f(0.2, 0.2, 0.2, 1.0));
+  material.SetDiffuse(GfVec4f(0.8, 0.8, 0.8, 1.0));
+  material.SetSpecular(GfVec4f(0,0,0,1));
+  material.SetShininess(0.0001f);
+
+  _lightingContext->SetLights({ light });
+  _lightingContext->SetMaterial(material);
+  _lightingContext->SetSceneAmbient(GfVec4f(0.2,0.2,0.2,1.0));
+  _engine->SetLightingState(_lightingContext);
+  */
+  //_engine->ActivateShadows(true);
+  
 }
 
 void ViewportUI::Init()
 {
-  Application* app = GetApplication();
   if (_engine) {
-    app->RemoveEngine(_engine);
+    EngineRegistry::RemoveEngine(_engine);
     delete _engine;
+    _engine = nullptr;
   }
-  pxr::SdfPathVector excludedPaths;
-  _engine = new Engine(pxr::SdfPath("/"), excludedPaths);
-  app->AddEngine(_engine);
 
-  pxr::TfTokenVector rendererTokens = _engine->GetRendererPlugins();
+  TfTokenVector rendererTokens = _engine->GetRendererPlugins();
   if (_rendererNames) delete[] _rendererNames;
   _numRenderers = rendererTokens.size();
   _rendererNames = new const char* [_numRenderers];
   for (short rendererIndex = 0; rendererIndex < _numRenderers; ++rendererIndex) {
     _rendererNames[rendererIndex] = rendererTokens[rendererIndex].GetText();
   }
-  if (LEGACY_OPENGL) {
-    _engine->SetRendererPlugin(pxr::TfToken("LoFiRendererPlugin"));
-  } else {
-    _engine->SetRendererPlugin(pxr::TfToken(_rendererNames[_rendererIndex]));
-  }
 
-  pxr::GlfSimpleMaterial material;
-  pxr::GlfSimpleLight light;
-  light.SetAmbient({ 0.2, 0.2, 0.2, 1.0 });
-  light.SetDiffuse({ 1.0, 1.0, 1.0, 1.f });
-  light.SetSpecular({ 0.2, 0.2, 0.2, 1.f });
-  light.SetPosition({ 200, 200, 200, 1.0 });
-  pxr::GlfSimpleLightVector lights;
-  lights.push_back(light);
+  //auto editableSceneIndex = _model->GetEditableSceneIndex();
 
-  material.SetAmbient({ 0.0, 0.0, 0.0, 1.f });
-  material.SetDiffuse({ 1.0, 1.0, 1.0, 1.f });
-  material.SetSpecular({ 0.2, 0.2, 0.2, 1.f });
-  auto lightingContext = pxr::GlfSimpleLightingContext::New();
+  Index* index = _parent->GetWindow()->GetIndex();
 
-  _engine->SetLightingState(lights,
-                            material,
-                            pxr::GfVec4f(0.5,0.5,0.5,1.0));
+  //TfToken plugin = Engine::GetDefaultRendererPlugin();
+  TfToken plugin = TfToken(_rendererNames[_rendererIndex]);
+  _engine = new Engine(index->GetFinalSceneIndex(), plugin);
+
+  EngineRegistry::AddEngine(_engine);
+
+  //_engine->SetRendererPlugin(TfToken(_rendererNames[_rendererIndex]));
+
+
+  UpdateLighting();
 
   Resize();
+
 
   /*
   glEnable(GL_DEPTH_TEST);
   size_t imageWidth = 512;
   size_t imageHeight = 512;
   std::string imagePath = "E:/Projects/RnD/Amnesie/build/src/Release/";
-  pxr::GfVec2i renderResolution(imageWidth, imageHeight);
+  GfVec2i renderResolution(imageWidth, imageHeight);
 
-  pxr::GlfDrawTargetRefPtr drawTarget = pxr::GlfDrawTarget::New(renderResolution);
+  GlfDrawTargetRefPtr drawTarget = GlfDrawTarget::New(renderResolution);
   drawTarget->Bind();
 
   drawTarget->AddAttachment("color",
@@ -176,6 +206,7 @@ void ViewportUI::MouseButton(int button, int action, int mods)
   double x, y;
   Window* window = _parent->GetWindow();
   Tool* tool = window->GetTool();
+
   glfwGetCursorPos(window->GetGlfwWindow(), &x, &y);
 
   const float width = GetWidth();
@@ -183,30 +214,29 @@ void ViewportUI::MouseButton(int button, int action, int mods)
 
   if (action == GLFW_RELEASE)
   {
-    _interactionMode = INTERACTION_NONE;
-    SetInteracting(false);
-
     if (!(mods & GLFW_MOD_ALT) && !(mods & GLFW_MOD_SUPER)) {
       if (tool->IsInteracting()) {
         tool->EndUpdate(x - GetX(), y - GetY(), width, height);
       }
       else {
-        Pick(x, y, mods);
+        Select(x, y, mods);
       }
     }
+    _interactionMode = INTERACTION_NONE;
+    SetInteracting(false);
   }
   else if (action == GLFW_PRESS)
   {
     _lastX = (int)x;
     _lastY = (int)y;
-    GetApplication()->SetActiveViewport(this);
+    EngineRegistry::SetActiveEngine(_engine);
     SetInteracting(true);
     if (mods & GLFW_MOD_ALT) {
       if (button == GLFW_MOUSE_BUTTON_LEFT) {
         _interactionMode = INTERACTION_ORBIT;
       }
       else if (button == GLFW_MOUSE_BUTTON_MIDDLE) {
-        _interactionMode = INTERACTION_WALK;
+        _interactionMode = INTERACTION_PAN;
       }
       else if (button == GLFW_MOUSE_BUTTON_RIGHT) {
         _interactionMode = INTERACTION_DOLLY;
@@ -214,7 +244,7 @@ void ViewportUI::MouseButton(int button, int action, int mods)
     }
     else if (mods & GLFW_MOD_SUPER) {
       if (button == GLFW_MOUSE_BUTTON_LEFT) {
-        _interactionMode = INTERACTION_WALK;
+        _interactionMode = INTERACTION_PAN;
       }
       else if (button == GLFW_MOUSE_BUTTON_MIDDLE) {
         _interactionMode = INTERACTION_ORBIT;
@@ -232,8 +262,12 @@ void ViewportUI::MouseButton(int button, int action, int mods)
 
     }
   }
-  _engine->SetDirty(true);
   _parent->SetDirty();
+
+  /*
+  if(_model->GetExec()) 
+    _model->SendExecViewEvent(_MouseButtonEventData(button, action, mods, x, y));*/
+  
 }
 
 void ViewportUI::MouseMove(int x, int y) 
@@ -247,7 +281,7 @@ void ViewportUI::MouseMove(int x, int y)
     double dy = static_cast<double>(y) - _lastY;
     switch(_interactionMode)
     {
-      case INTERACTION_WALK:
+      case INTERACTION_PAN:
       {
         _camera->Walk(
           dx / static_cast<double>(GetWidth()), 
@@ -277,7 +311,6 @@ void ViewportUI::MouseMove(int x, int y)
         break;
       }
     }
-    _engine->SetDirty(true);
     _parent->SetDirty();
   } else {
     tool->Pick(x - GetX(), y - GetY(), GetWidth(), GetHeight());
@@ -289,274 +322,224 @@ void ViewportUI::MouseMove(int x, int y)
 
 void ViewportUI::MouseWheel(int x, int y)
 {
-  Application* app = GetApplication();
   _camera->Dolly(
     static_cast<double>(x) / static_cast<double>(GetWidth()), 
     static_cast<double>(x) / static_cast<double>(GetHeight())
   );
-  _engine->SetDirty(true);
   _parent->SetDirty();
 }
 
 void ViewportUI::Keyboard(int key, int scancode, int action, int mods)
 {
-  Application* app = GetApplication();
+  WindowRegistry* registry = WindowRegistry::Get();
   int mappedKey = GetMappedKey(key);
   if (action == GLFW_PRESS) {
     switch (mappedKey) {
       case GLFW_KEY_A:
       {
-        _camera->FrameSelection(GetApplication()->GetStageBoundingBox());
-        _engine->SetDirty(true);
+        _camera->FrameSelection(_model->GetStageBoundingBox());
         break;
       }
       case GLFW_KEY_F:
       {
-        if (app->GetSelection()->IsEmpty())return;
-        _camera->FrameSelection(GetApplication()->GetSelectionBoundingBox());
-        _engine->SetDirty(true);
+        if (_model->GetSelection()->IsEmpty())return;
+        _camera->FrameSelection(_model->GetSelectionBoundingBox());
         break;
       }
       case GLFW_KEY_S:
       {
-        app->SetActiveTool(TOOL_SCALE);
+        registry->SetActiveTool(Tool::SCALE);
         break;
       }
       case GLFW_KEY_R:
       {
-        app->SetActiveTool(TOOL_ROTATE);
+        registry->SetActiveTool(Tool::ROTATE);
         break;
       }
       case GLFW_KEY_T:
       {
-        app->SetActiveTool(TOOL_TRANSLATE);
+        registry->SetActiveTool(Tool::TRANSLATE);
         break;
       }
     }
   }
 }
 
-static bool ComboWidget(const char* label, BaseUI* ui, 
-  const char** names, const size_t count, int& last, size_t width=300)
-{
-  int current = last;
-  ImGui::Text("%s", label);
-  ImGui::SameLine();
-  ImGui::SetNextItemWidth(300);
-  std::string name("##");
-  name += label;
-  if (ImGui::BeginCombo(name.c_str(), names[current], ImGuiComboFlags_PopupAlignLeft))
-  {
-    for (int n = 0; n < count; ++n)
-    {
-      const bool is_selected = (current == n);
-      if (ImGui::Selectable(names[n], is_selected))
-      {
-        current = n;
-      }
-
-      if (is_selected) {
-        ImGui::SetItemDefaultFocus();
-      }
-    }
-    ui->GetView()->SetFlag(View::DISCARDMOUSEBUTTON);
-    ImGui::EndCombo();
-  }
-  if (current != last) {
-    last = current;
-    ui->GetView()->ClearFlag(View::DISCARDMOUSEBUTTON);
-    ImGui::SameLine();
-    return true;
-  }
-  ImGui::SameLine();
-  return false;
-}
-
 void ViewportUI::Render()
 {
-  Application* app = GetApplication();
   Window* window = GetWindow();
 
-  _engine->SetRendererAov(pxr::HdAovTokens->color);
+  //_engine->PollForAsynchronousUpdates();
   _engine->SetRenderViewport(
-    pxr::GfVec4d(
-      0,
-      0,
-      static_cast<double>(GetWidth()),
-      static_cast<double>(GetHeight())));
+    pxr::GfVec4i(0, window->GetHeight() - GetHeight(), GetWidth(), GetHeight()));
 
-  _engine->SetCameraState(
+  _engine->SetCameraMatrices(
     _camera->GetViewMatrix(),
     _camera->GetProjectionMatrix()
   );
 
-  _engine->SetSelectionColor(pxr::GfVec4f(1, 0, 0, 0.5));
-
-  _renderParams.frame = pxr::UsdTimeCode(app->GetTime().GetActiveTime());
-  _renderParams.complexity = 1.0f;
-  _renderParams.drawMode = (pxr::UsdImagingGLDrawMode)_drawMode;
-  _renderParams.showGuides = true;
-  _renderParams.showRender = true;
-  _renderParams.showProxy = true;
-  _renderParams.forceRefresh = true;
-  _renderParams.cullStyle = pxr::UsdImagingGLCullStyle::CULL_STYLE_BACK_UNLESS_DOUBLE_SIDED;
-  _renderParams.gammaCorrectColors = false;
-  _renderParams.enableIdRender = false;
-  _renderParams.enableSampleAlphaToCoverage = true;
-  _renderParams.highlight = true;
-  _renderParams.enableSceneMaterials = false;
-  _renderParams.enableSceneLights = true;
-  //_renderParams.colorCorrectionMode = ???
-  _renderParams.clearColor = pxr::GfVec4f(0.5,0.5,0.5,1.0);
-
-  if (_highlightSelection) {
-    Selection* selection = app->GetSelection();
-    if (!selection->IsEmpty() && selection->IsObject()) {
-      _engine->SetSelected(selection->GetSelectedPrims());
-    } else {
-      _engine->ClearSelected();
-    }
-  } else {
-    _engine->ClearSelected();
-  }
-
-  // clear to black
+  // clear to grey
   _drawTarget->Bind();
   glEnable(GL_DEPTH_TEST);
-  glClearColor(_renderParams.clearColor[0], 
-               _renderParams.clearColor[1], 
-               _renderParams.clearColor[2],
-               _renderParams.clearColor[3]);
+  glClearColor(0.5,0.5,0.5,1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glViewport(0, 0, GetWidth(), GetHeight());
 
-  if (app->GetDisplayStage()->HasDefaultPrim()) {
-    _engine->Render(app->GetDisplayStage()->GetDefaultPrim(), _renderParams);
+  if (_model->GetStage()->HasDefaultPrim()) {
+
+    _engine->Prepare();
+    _engine->Render();
   }
+    
   _drawTarget->Unbind();
-  
-  _engine->SetDirty(false);
+}
+
+void 
+ViewportUI::_DrawRenderer()
+{ 
+  // renderer
+  ImGui::SetCursorPosX(0);
+  //DiscardEventsIfMouseInsideBox(GfVec2f(0, 0), GfVec2f(GetWidth(), 24));
+  if (UI::AddComboWidget("Renderer", _rendererNames, _numRenderers, _rendererIndex, 250)) {
+    Init();
+    GetView()->SetFlag(View::DISCARDMOUSEBUTTON);
+  }
+  ImGui::SameLine();
 }
 
 void 
 ViewportUI::_DrawPickMode()
 { 
-  ImGui::SameLine();
-  static const char *pickModeStr[5] = {
-    ICON_FA_HAND_POINTER "    Assembly",
-    ICON_FA_HAND_POINTER "       Model",
-    ICON_FA_HAND_POINTER "       Group",
-    ICON_FA_HAND_POINTER "   Component",
-    ICON_FA_HAND_POINTER "SubComponent",
+  static const size_t numPickModes = 3;
+  static const char *pickModeStr[numPickModes] = {
+    ICON_FA_ARROW_POINTER " Prim",
+    ICON_FA_ARROW_POINTER " Model",
+    ICON_FA_ARROW_POINTER " Assembly"
   };
-  Selection* selection = GetApplication()->GetSelection();
-  if (ImGui::BeginCombo("##Pick mode", pickModeStr[int(selection->GetMode())], ImGuiComboFlags_NoArrowButton)) {
-    if (ImGui::Selectable(pickModeStr[0])) {
-      selection->SetMode(Selection::Mode::ASSEMBLY);
-    }
-    if (ImGui::Selectable(pickModeStr[1])) {
-      selection->SetMode(Selection::Mode::MODEL);
-    }
-    if (ImGui::Selectable(pickModeStr[2])) {
-      selection->SetMode(Selection::Mode::GROUP);
-    }
-    if (ImGui::Selectable(pickModeStr[3])) {
-      selection->SetMode(Selection::Mode::COMPONENT);
-    }
-    if (ImGui::Selectable(pickModeStr[4])) {
-      selection->SetMode(Selection::Mode::SUBCOMPONENT);
-    }
-    ImGui::EndCombo();
+
+  Selection* selection = _model->GetSelection();
+  if (UI::AddComboWidget("Pick", pickModeStr, numPickModes, _pickMode, 250)) {
+    selection->SetMode((Selection::Mode)_pickMode);
+    GetView()->SetFlag(View::DISCARDMOUSEBUTTON);
   }
+  ImGui::SameLine();
 }
+
+
+void 
+ViewportUI::_DrawAov()
+{ 
+  ImGui::SetNextItemWidth(32);
+  const size_t numAovs = 6;
+  static const TfToken aovTokens[numAovs] = {
+    HdAovTokens->color,
+    HdAovTokens->depth,
+    HdAovTokens->depthStencil,
+    HdAovTokens->cameraDepth,
+    HdAovTokens->primId,
+    HdAovTokens->instanceId
+  };
+  
+  if (UI::AddComboWidget("Aov", aovTokens, numAovs, _aov, 140)) {
+    Init();
+    GetView()->SetFlag(View::DISCARDMOUSEBUTTON);
+  }
+  ImGui::SameLine();
+}
+
 
 bool ViewportUI::Draw()
 {    
-  Application* app = GetApplication();
   Window* window = GetWindow();
   if (!_initialized)Init();
   if(!_valid)return false;  
-  
-  if (app->GetDisplayStage() != nullptr) {
-    if ( _engine->IsDirty() || !_engine->IsConverged()) {
-      Render();
-    }
 
+  if (_model->GetStage() != nullptr) {
+    if(!(Time::Get()->IsPlaying() && !WindowRegistry::IsPlaybackView(_parent)))
+      Render();
+    
     Tool* tool = window->GetTool();
-    const bool shouldDrawTool = tool->IsActive();
+    
+    const bool shouldDrawTool = tool->IsActive() && this->GetView()->GetFlag(View::ACTIVE);
    
     if (shouldDrawTool) {
       _toolTarget->Bind();
-      glViewport(0, 0, GetWidth(), GetHeight());
-
       // clear to black
       glClearColor(0.0f, 0.0f, 0.0f, 0.f);
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-      tool->SetViewport(pxr::GfVec4f(0, 0, GetWidth(), GetHeight()));
+      const float& wh = window->GetHeight();
+      const float& h = GetHeight();
+      const float& w = GetWidth();
+      tool->SetViewport(GfVec4f(0, wh - (h), w, h));
       tool->SetCamera(_camera);
       tool->Draw();
       _toolTarget->Unbind();
-      _toolTarget->Resolve();
     }
+    
+    const GfVec2f min(GetX(), GetY());
+    const GfVec2f size(GetWidth(), GetHeight());
+    const float u = (float)GetWidth() / (float)window->GetWidth();
+    const float v = 1.f - (float)GetHeight() / (float)window->GetHeight();
 
-    const pxr::GfVec2f min(GetX(), GetY());
-    const pxr::GfVec2f size(GetWidth(), GetHeight());
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, { 0, 0, 0, 1 });
+
+    ImGui::SetNextWindowPos(min);
+    ImGui::SetNextWindowSize(size);
 
     ImGui::Begin(_name.c_str(), NULL, _flags);
-    ImGui::SetWindowPos(min);
-    ImGui::SetWindowSize(size);
+    
   
     ImDrawList* drawList = ImGui::GetWindowDrawList();
-
+    
     if (_drawTexId) {
        drawList->AddImage(
-         (ImTextureID)_drawTexId, 
-         min, min + size, ImVec2(0, 1), ImVec2(1, 0));
-    } 
 
+         (ImTextureID)(size_t)_drawTexId, 
+         min, min + size, ImVec2(0, 1), 
+         ImVec2(u, v));
+    } 
+    
     if( shouldDrawTool && _toolTexId) {
       drawList->AddImage(
-        (ImTextureID)(size_t)_toolTexId,
+        (ImTextureID)(uintptr_t)_toolTexId,
         min, min + size, ImVec2(0, 1), ImVec2(1, 0), ImColor(255, 255, 255, 255));
     }
     
-    std::string msg = "Hello Jivaro!";
+    std::string msg = _message;
     
     drawList->AddText(
       ImVec2(min[0] + 20, (min[1] + size[1]) - 20), 
       0xFFFFFFFF, 
       msg.c_str());
 
-    msg = "FPS : "+ std::to_string(app->GetTime().GetFramerate());
+    msg = "fps : "+ std::to_string(Time::Get()->IsPlaying() ?  ImGui::GetIO().Framerate : 0.f);
     drawList->AddText(
       ImVec2((min[0] + size[0]) - 128.f, (min[1] + size[1]) - 20),
       0xFFFFFFFF,
       msg.c_str());
-    
-    // renderer
-    ImGui::SetCursorPosX(0);
-    DiscardEventsIfMouseInsideBox(pxr::GfVec2f(0, 0), pxr::GfVec2f(GetWidth(), 24));
-    if (ComboWidget("Renderer", this, _rendererNames, _numRenderers, _rendererIndex, 300)) {
-      Init();
-    }
 
+    _DrawRenderer();
+  
+
+    Engine::RenderParams* params = _engine->GetRenderParams();
     // shaded mode
-    if (ComboWidget("Mode", this, DRAW_MODE_NAMES, IM_ARRAYSIZE(DRAW_MODE_NAMES), _drawMode, 300)) {
-      _engine->SetDirty(true);
+    if (UI::AddComboWidget("Draw", DRAW_MODE_NAMES, IM_ARRAYSIZE(DRAW_MODE_NAMES), params->drawMode, 250)) {
+      GetView()->SetFlag(View::DISCARDMOUSEBUTTON);
     }
+    ImGui::SameLine();
 
     _DrawPickMode();
+    _DrawAov();
 
     // engine
-    ImGui::Text("%s", _engine->GetRendererDisplayName(
-      _engine->GetCurrentRendererId()).c_str());
+    //ImGui::Text("%s", _engine->GetRendererDisplayName(_engine->GetCurrentRendererId()).c_str());
     
 
     //ImGui::PopFont();
     
     ImGui::End();
-
-    return GetView()->IsInteracting();
+    ImGui::PopStyleColor();
+  
+    return ImGui::IsAnyItemActive() || GetView()->IsInteracting();
   }
   /*
   if(_pixels)
@@ -585,7 +568,7 @@ bool ViewportUI::Draw()
 
 // Conform the camera viewport to the camera's aspect ratio,
 // and center the camera viewport in the window viewport.
-pxr::GfVec4f ViewportUI::ComputeCameraViewport(float cameraAspectRatio)
+GfVec4f ViewportUI::ComputeCameraViewport(float cameraAspectRatio)
 {
      /*   
   windowPolicy = CameraUtil.MatchVertically
@@ -604,35 +587,34 @@ pxr::GfVec4f ViewportUI::ComputeCameraViewport(float cameraAspectRatio)
 
   return viewport
   */
- return pxr::GfVec4f();
+ return GfVec4f();
 }
 
 void ViewportUI::Resize()
 {
+  Window* window = GetWindow();
   if(!_initialized)return;
+
   if(GetWidth() <= 0 || GetHeight() <= 0)_valid = false;
   else _valid = true;
   
-  GetWindow()->SetGLContext();
+  window->SetGLContext();
   double aspectRatio = (double)GetWidth()/(double)GetHeight();
   _camera->Get()->SetPerspectiveFromAspectRatioAndFieldOfView(
     aspectRatio,
     _camera->GetFov(),
-    pxr::GfCamera::FOVHorizontal
+    GfCamera::FOVHorizontal
   );
 
-  _drawTarget->Bind();
-  _drawTarget->SetSize(pxr::GfVec2i(GetWidth(), GetHeight()));
-  _drawTarget->Unbind();
 
-  _toolTarget->Bind();
-  _toolTarget->SetSize(pxr::GfVec2i(GetWidth(), GetHeight()));
-  _toolTarget->Unbind();
-
-  _engine->SetDirty(true);
+  const GfVec2i& targetSize = _drawTarget->GetSize();
+  if (window->GetWidth() != targetSize[0] || window->GetHeight() != targetSize[1]) {
+    _BuildDrawTargets(pxr::GfVec2i(window->GetWidth(), window->GetHeight()));
+  }
+  GetView()->SetDirty();
 }
 
-static pxr::GfVec4i _ViewportMakeCenteredIntegral(pxr::GfVec4f& viewport)
+static GfVec4i _ViewportMakeCenteredIntegral(GfVec4f& viewport)
 {
   // The values are initially integraland containing the
   // the given rect
@@ -659,107 +641,78 @@ static pxr::GfVec4i _ViewportMakeCenteredIntegral(pxr::GfVec4f& viewport)
     left += 1;
     width -= 2;
   }
-  return pxr::GfVec4i(left, bottom, width, height);
+  return GfVec4i(left, bottom, width, height);
 }
 
  
-pxr::GfFrustum 
+GfFrustum 
 ViewportUI::_ComputePickFrustum(int x, int y)
 {
-  const float targetAspectRatio = float(GetWidth()) / float(pxr::GfMax(1, GetHeight()));
+  const float targetAspectRatio = float(GetWidth()) / float(GfMax(1, GetHeight()));
   // normalize position and pick size by the viewport size
-  pxr::GfVec2d point(
+  GfVec2d point(
     (double)(x - GetX()) / (double)GetWidth(),
     (double)(y - GetY()) / (double)GetHeight());
 
   point[0] = (point[0] * 2.0 - 1.0);
   point[1] = -1.0 * (point[1] * 2.0 - 1.0);
 
-  pxr::GfVec2d size(1.0 / (double)GetWidth(), 1.0 / (double)GetHeight());
+  GfVec2d size(1.0 / (double)GetWidth(), 1.0 / (double)GetHeight());
 
-  pxr::GfCamera camera = *(_camera->Get());
-  pxr::CameraUtilConformWindow(
+  GfCamera camera = *(_camera->Get());
+  CameraUtilConformWindow(
     &camera,
-    pxr::CameraUtilConformWindowPolicy::CameraUtilFit,
+    CameraUtilConformWindowPolicy::CameraUtilFit,
     targetAspectRatio
   );
 
-  pxr::GfFrustum cameraFrustum = camera.GetFrustum();
+  GfFrustum cameraFrustum = camera.GetFrustum();
   return cameraFrustum.ComputeNarrowedFrustum(point, size);
 }
 
 bool ViewportUI::Pick(int x, int y, int mods)
 {
   if (y - GetY() < 32) return false;
-  Application* app = GetApplication();
-  Selection* selection = app->GetSelection();
-  pxr::UsdStageRefPtr stage = app->GetWorkStage();
+
+  GfFrustum pickFrustum = _ComputePickFrustum(x, y);
+
+  return _engine->TestIntersection(pickFrustum.ComputeViewMatrix(), 
+    pickFrustum.ComputeProjectionMatrix(), pxr::SdfPath("/"), &_pickHit);
+}
+
+bool ViewportUI::Select(int x, int y, int mods)
+{
+  if (y - GetY() < 32) return false;
+
+  Selection* selection = _model->GetSelection();
+  UsdStageRefPtr stage = _model->GetStage();
   if (!stage)return false;
 
-  pxr::GfFrustum pickFrustum = _ComputePickFrustum(x, y);
-  pxr::GfVec3d outHitPoint;
-  pxr::GfVec3d outHitNormal;
-  pxr::SdfPath outHitPrimPath;
-  pxr::SdfPath outHitInstancerPath;
-  int outHitInstanceIndex;
-  pxr::HdInstancerContext outInstancerContext;
-
-  if (_engine->TestIntersection(
-    pickFrustum.ComputeViewMatrix(),
-    pickFrustum.ComputeProjectionMatrix(),
-    GetApplication()->GetDisplayStage()->GetPseudoRoot(),
-    _renderParams,
-    &outHitPoint,
-    &outHitNormal,
-    &outHitPrimPath,
-    &outHitInstancerPath,
-    &outHitInstanceIndex,
-    &outInstancerContext)) {
-      while (!selection->IsPickablePath(*stage, outHitPrimPath)) {
-        outHitPrimPath = outHitPrimPath.GetParentPath();
+  GfFrustum pickFrustum = _ComputePickFrustum(x, y);
+  Engine::PickHit hit;
+  
+  if(_engine->TestIntersection(pickFrustum.ComputeViewMatrix(), 
+    pickFrustum.ComputeProjectionMatrix(), pxr::SdfPath("/"), &hit)) {
+      while (!selection->IsPickablePath(*stage, hit.objectId)) {
+        hit.objectId = hit.objectId.GetParentPath();
       }
 
       if (mods & GLFW_MOD_CONTROL && mods & GLFW_MOD_SHIFT) {
-        app->ToggleSelection({ outHitPrimPath });
+        _model->ToggleSelection({ hit.objectId });
       }
       else if (mods & GLFW_MOD_SHIFT) {
-        app->AddToSelection({ outHitPrimPath });
+        _model->AddToSelection({ hit.objectId });
       }
       else {
-        app->SetSelection({ outHitPrimPath });
+        _model->SetSelection({ hit.objectId });
       }
     return true;
   } else {
-    app->ClearSelection();
+    _model->ClearSelection();
     return false;
   }
+  
+  return false;
 }
 
-/*
-pxr::HdSelectionSharedPtr
-ViewportUI::_Pick(pxr::GfVec2i const& startPos, pxr::GfVec2i const& endPos,
-  pxr::TfToken const& pickTarget)
-{
-  pxr::HdxPickHitVector allHits;
-  pxr::HdxPickTaskContextParams p;
-  p.resolution = pxr::HdxUnitTestUtils::CalculatePickResolution(
-    startPos, endPos, pxr::GfVec2i(4, 4));
-  p.pickTarget = pickTarget;
-  p.resolveMode = pxr::HdxPickTokens->resolveUnique;
-  p.viewMatrix = _camera->GetViewMatrix();
-  p.projectionMatrix = pxr::HdxUnitTestUtils::ComputePickingProjectionMatrix(
-    startPos, endPos, pxr::GfVec2i(GetWidth(), GetHeight()), _camera->_GetFrustum());
-  p.collection = _pickablesCol;
-  p.outHits = &allHits;
-
-  pxr::HdTaskSharedPtrVector tasks;
-  tasks.push_back(_renderIndex->GetTask(pxr::SdfPath("/pickTask")));
-  pxr::VtValue pickParams(p);
-  _engine->SetTaskContextData(HdxPickTokens->pickParams, pickParams);
-  _engine->Execute(_renderIndex.get(), &tasks);
-
-  return pxr::HdxUnitTestUtils::TranslateHitsToSelection(
-    p.pickTarget, pxr::HdSelection::HighlightModeSelect, allHits);
-}
-*/
 JVR_NAMESPACE_CLOSE_SCOPE

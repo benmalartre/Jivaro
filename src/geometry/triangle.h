@@ -4,13 +4,7 @@
 #ifndef JVR_GEOMETRY_TRIANGLE_H
 #define JVR_GEOMETRY_TRIANGLE_H
 
-#include "../common.h"
-#include <pxr/base/gf/vec3f.h>
-#include <pxr/base/gf/bbox3d.h>
-#include <pxr/base/gf/ray.h>
-#include <algorithm>
-#include <math.h>
-#include <stdio.h>
+#include "../geometry/component.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -71,40 +65,56 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 
 class Mesh;
-class Hit;
-struct Triangle {
-  uint32_t     id;
-  pxr::GfVec3i vertices;
+class Location;
+struct Triangle : public Component{
 
-  void GetCenter(const pxr::GfVec3f* points, pxr::GfVec3f& center);
-  void GetNormal(const pxr::GfVec3f* points, pxr::GfVec3f& normal);
-  float GetArea(const pxr::GfVec3f* points);
-  bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
-    double maxDistance = -1.0, double* minDistance = NULL) const;
-  bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
-    double maxDistance = -1.0, double* minDistance = NULL) const;
-  bool Touch(const pxr::GfVec3f* points, const pxr::GfVec3f& center,
-    const pxr::GfVec3f& boxhalfsize);
-  bool PlaneBoxTest(const pxr::GfVec3f& normal, const pxr::GfVec3f& point, 
-    const pxr::GfVec3f& box);
+  Triangle()
+    : Component() {};
+  Triangle(uint32_t index, const GfVec3i& vertices)
+    : Component(index)
+    , vertices(vertices) {};
+
+  GfVec3i vertices;
+
+  GfVec3f GetCenter(const GfVec3f* points) const;
+  GfVec3f GetNormal(const GfVec3f* points) const;
+  GfVec3f GetVelocity(const GfVec3f* points, const GfVec3f* previous) const;
+  float GetArea(const GfVec3f* points) const;
+  bool PlaneBoxTest(const GfVec3f& normal, const GfVec3f& point, 
+    const GfVec3f& box) const;
+
+  // overrides
+  virtual bool Raycast(const GfVec3f* points, const GfRay& ray, Location* hit) const override;
+  virtual bool Closest(const GfVec3f* points, const GfVec3f& point, Location* hit) const override;
+  virtual bool Touch(const GfVec3f* points, const GfVec3f& center, const GfVec3f& boxhalfsize) const override;
+
+  virtual GfRange3f GetBoundingBox(const GfVec3f* positions, const GfMatrix4d& m) const override;
+  virtual short GetType() const override {return Component::TRIANGLE;};
 
 };
 
-struct TrianglePair {
+struct TrianglePair : public Component {
   Triangle* left;
   Triangle* right;
 
-  TrianglePair();
-  TrianglePair(Triangle* t1);
-  TrianglePair(Triangle* t1, Triangle* t2);
+  TrianglePair(uint32_t index, Triangle* t1, Triangle* t2)
+    : Component(index)
+    , left(t1)
+    , right(t2) {};
 
-  pxr::GfRange3d GetBoundingBox(const pxr::GfVec3f* points);
+  GfVec4i GetVertices() const;
 
-  bool Raycast(const pxr::GfVec3f* points, const pxr::GfRay& ray, Hit* hit,
-    double maxDistance = -1.0, double* minDistance = NULL) const;
-  bool Closest(const pxr::GfVec3f* points, const pxr::GfVec3f& point, Hit* hit,
-    double maxDistance = -1.0, double* minDistance = NULL) const;
+  virtual bool Raycast(const GfVec3f* points, const GfRay& ray, Location* hit) const override;
+  virtual bool Closest(const GfVec3f* points, const GfVec3f& point, Location* hit) const override;
+  virtual bool Touch(const GfVec3f* points, const GfVec3f& center, const GfVec3f& halfSize) const override;
+
+  virtual GfRange3f GetBoundingBox(const GfVec3f* positions, const GfMatrix4d& m) const override;
+  virtual short GetType() const override {return Component::TRIANGLEPAIR;};
 };
+
+/// Longest edge in a triangle
+static size_t GetLongestEdgeInTriangle(const GfVec3i& vertices, 
+  const GfVec3f* positions);
 
 JVR_NAMESPACE_CLOSE_SCOPE
 

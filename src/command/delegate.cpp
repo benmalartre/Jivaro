@@ -13,7 +13,7 @@ UndoStateDelegate::UndoStateDelegate()
 
 UndoStateDelegateRefPtr UndoStateDelegate::New() 
 {
-  return pxr::TfCreateRefPtr(new UndoStateDelegate());
+  return TfCreateRefPtr(new UndoStateDelegate());
 }
 
 bool

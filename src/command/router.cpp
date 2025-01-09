@@ -32,7 +32,7 @@
 
 
 PXR_NAMESPACE_USING_DIRECTIVE 
-TF_INSTANTIATE_SINGLETON(AMN::UndoRouter);
+TF_INSTANTIATE_SINGLETON(JVR::UndoRouter);
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -50,7 +50,7 @@ void UndoRouter::AddInverse(std::function<bool()> inverse) {
 }
 
 UndoRouter& UndoRouter::Get() {
-    return pxr::TfSingleton<UndoRouter>::GetInstance();
+    return TfSingleton<UndoRouter>::GetInstance();
 }
 
 bool UndoRouter::TransferEdits(UndoInverse* inverse){

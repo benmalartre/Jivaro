@@ -4,37 +4,37 @@
 #include "../common.h"
 #include "../ui/ui.h"
 #include "../ui/utils.h"
-#include "../ui/viewport.h"
-#include "../app/handle.h"
 #include <pxr/usd/usd/prim.h>
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-enum TOOLS
-{
-  TOOL_NONE,
-  TOOL_SELECT,
-  TOOL_TRANSLATE,
-  TOOL_ROTATE,
-  TOOL_SCALE,
-  TOOL_BRUSH
-};
-
 class Camera;
 class GLSLProgram;
+class BaseHandle;
 class Tool {
 public:
+  enum Type
+  {
+    NONE,
+    SELECT,
+    TRANSLATE,
+    ROTATE,
+    SCALE,
+    BRUSH
+  };
+
   Tool();
   ~Tool();
 
   void SetActiveTool(short tool);
   void SetProgram(GLSLProgram* pgm);
-  void SetViewport(const pxr::GfVec4f& viewport);
+  void SetViewport(const GfVec4f& viewport);
   void SetCamera(Camera* camera);
   void ResetSelection();
 
   bool IsActive();
   bool IsInteracting();
+  short GetActiveTool();
 
   void Draw();
   void Select(float x, float y, float width, float height, bool lock);
@@ -47,7 +47,7 @@ private:
   void            _ResetActiveTool();
   short           _last;
   short           _current;
-  pxr::GfVec4f    _viewport;
+  GfVec4f         _viewport;
   bool            _interacting;
   BaseHandle*     _active;
   short           _activeAxis;

@@ -12,14 +12,12 @@ add_executable(${TARGET}
 target_include_directories(${TARGET} 
   PUBLIC
     ${USD_INCLUDE_DIR}
-#    ${Python2_INCLUDE_DIRS}
     ${TBB_INCLUDE_DIR}
 	${BOOST_INCLUDE_DIR}
 )
 
 target_link_libraries(${TARGET}
   ${WINLIBS}
-#  ${Python2_LIBRARIES}
   ${BOOST_LIBRARIES}
   ${USD_LIBRARIES}
   ${ADDITIONAL_LIBRARIES}

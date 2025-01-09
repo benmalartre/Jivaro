@@ -5,13 +5,11 @@
 #include <map>
 #include <type_traits>
 
-#include <pxr/usd/ar/asset.h>
-#include <pxr/usd/ar/resolver.h>
 #include <pxr/imaging/hio/image.h>
-#include <pxr/imaging/hio/stb_image.h>
-#include <pxr/imaging/hio/stb_image_resize.h>
 
 #include "../common.h"
+#include "../stb/stb_image.h"
+#include "../stb/stb_image_resize.h"
 #include "../utils/files.h"
 #include "../utils/glutils.h"
 
@@ -133,7 +131,7 @@ struct Icon {
 typedef std::vector<std::vector<Icon> > IconList;
 extern IconList ICONS;
 
-void IconHoverDatas(pxr::HioImage::StorageSpec* storage, int numChannels);
+void IconHoverDatas(HioImage::StorageSpec* storage, int numChannels);
 GLuint CreateIconFromImage(const std::string& filename, int index, ICON_SIZE size);
 void InitializeIcons();
 void TerminateIcons();

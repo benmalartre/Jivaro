@@ -3,8 +3,10 @@
 #include "../common.h"
 #include "../ui/style.h"
 #include "../ui/tab.h"
+#include "../command/manager.h"
 #include "../app/view.h"
 #include "../app/window.h"
+#include "../app/commands.h"
 
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -53,51 +55,49 @@ bool
 ViewTabUI::Draw()
 {
   ImGuiStyle& style = ImGui::GetStyle();
-  const pxr::GfVec2f min(_parent->GetMin());
-  const pxr::GfVec2f size(_parent->GetWidth(), GetHeight());
-  static bool open;
+  const GfVec2f min(_parent->GetMin());
+  const GfVec2f size(_parent->GetWidth(), GetHeight());
+  
+  ImGui::SetNextWindowPos(min);
+  ImGui::SetNextWindowSize(size);
 
-  ImGui::Begin(_ComputeName(_id).c_str(), &open, ViewTabUI::_flags);
-  ImGui::SetWindowPos(min);
-  ImGui::SetWindowSize(size);
+  ImGui::Begin(_ComputeName(_id).c_str(), NULL, ViewTabUI::_flags);
 
   _height = ImGui::GetTextLineHeight() + style.FramePadding[1] * 2 + style.WindowPadding[1];
 
   const ImVec4* colors = style.Colors;
   ImDrawList* drawList = ImGui::GetWindowDrawList();
   
-  drawList->AddRectFilled(
-    min,
-    min + size,
-    ImColor(style.Colors[ImGuiCol_FrameBgHovered])
-  );
-
-  /*
   if (_parent->IsActive()) {
     drawList->AddRectFilled(
-      min + pxr::GfVec2f(0, size[1] - 4),
-      min + size - pxr::GfVec2f(0, 3),
-      ImColor(pxr::GfVec4f(1.f, 1.f, 1.f, 0.5f))
+      min + GfVec2f(0, size[1] - 4),
+      min + size,
+      ImColor(style.Colors[ImGuiCol_Tab])
+    );
+  } else {
+
+    drawList->AddRectFilled(
+      min,
+      min + size,
+      ImColor(style.Colors[ImGuiCol_TabUnfocused])
     );
   }
-  */
 
+
+  
   static ImGuiTabBarFlags tabBarFlags = 
     ImGuiTabBarFlags_AutoSelectNewTabs | 
     ImGuiTabBarFlags_Reorderable | 
     ImGuiTabBarFlags_FittingPolicyScroll;
 
-  int button_state = 0;
-
   if (ImGui::BeginTabBar(_ComputeName(_id, "TabBar").c_str(), tabBarFlags))
   {
-    const char* popupName = _ComputeName(_id, "Popup").c_str();
-    if (ImGui::TabItemButton(ICON_FA_GEAR, ImGuiTabItemFlags_Leading | ImGuiTabItemFlags_NoTooltip)) {
-      ImGui::SetNextWindowPos(min + pxr::GfVec2i(12, 12));
-      ImGui::OpenPopup(popupName);
+    if (ImGui::TabItemButton(ICON_FA_CARET_DOWN, ImGuiTabItemFlags_Leading | ImGuiTabItemFlags_NoTooltip)) {
+      ImGui::SetNextWindowPos(min + GfVec2i(12, 12));
+      ImGui::OpenPopup(_ComputeName(_id, "Uis").c_str());
       _invade = true;
     }
-    if (ImGui::BeginPopup(popupName))
+    if (ImGui::BeginPopup(_ComputeName(_id, "Uis").c_str()))
     {
       if (_invade)_parent->SetFlag(View::DISCARDMOUSEBUTTON);
       for (size_t n = UIType::VIEWPORT; n < UIType::COUNT; ++n) {
@@ -110,17 +110,14 @@ ViewTabUI::Draw()
       }
       ImGui::EndPopup();
     }
-
+    
     // Submit our regular tabs
-
     BaseUI* current = _parent->GetCurrentUI();
     std::vector<BaseUI*>& uis = _parent->GetUIs();
     for (int n = 0; n < uis.size(); ++n)
     {
-      bool open = true;
       const char* name = UITypeName[uis[n]->GetType()];
-      if (ImGui::BeginTabItem(name, &open,
-        ImGuiTabItemFlags_NoCloseButton | 
+      if (ImGui::BeginTabItem(name, NULL,
         ImGuiTabItemFlags_NoCloseWithMiddleMouseButton | 
         ImGuiTabItemFlags_NoPushId))
       {
@@ -132,11 +129,6 @@ ViewTabUI::Draw()
         ImGui::EndTabItem();
       }
     }
-    if(uis.size() && ImGui::TabItemButton(ICON_FA_ERASER, 
-      ImGuiTabItemFlags_Trailing | ImGuiTabItemFlags_NoTooltip)) {
-      _parent->RemoveUI(current);
-    }
-
 
     ImGui::EndTabBar();
 
@@ -145,40 +137,55 @@ ViewTabUI::Draw()
     ImGui::SetCursorPos(
       ImVec2(
         _parent->GetWidth() - 
-        (3 * BUTTON_MINI_SIZE[0] + 2 * style.ItemSpacing[0] + style.FramePadding[0]),
+        (UI::BUTTON_MINI_SIZE[0] + 2 * style.ItemSpacing[0] + style.FramePadding[0]),
         0
       ));
 
-    Window* window = _parent->GetWindow();
-    
-    if (ImGui::Button(ICON_FA_GRIP_LINES, BUTTON_MINI_SIZE)) {
-      _parent->Split(0.5, true);
-      window->Resize(window->GetWidth(), window->GetHeight());
+    if (ImGui::Button(ICON_FA_BARS, UI::BUTTON_MINI_SIZE)) {
+      ImGui::SetNextWindowPos(min + GfVec2i(12, 12));
+      ImGui::OpenPopup(_ComputeName(_id, "View").c_str());
+      _invade = true;
     }
-    ImGui::SameLine();
-    if (ImGui::Button(ICON_FA_GRIP_LINES_VERTICAL, BUTTON_MINI_SIZE)) {
-      _parent->Split(0.5, false);
-      window->Resize(window->GetWidth(), window->GetHeight());
-    }
-    ImGui::SameLine();
-    if (ImGui::Button(ICON_FA_TRASH, BUTTON_MINI_SIZE)) {
-      /*
-      View* parent = _parent->GetParent();
-      View* other = _parent->GetSibling();
-      ViewTabUI* head = _parent->GetHead();
-      BaseUI* content = other->GetContent();
-      parent->SetHead(head);
-      parent->DeleteChildren();
-      //parent->SetContent(content);
-      _parent->GetWindow()->ForceRedraw();
-      */
-      std::cout << "not implemented yet..." << std::endl;
+    if (ImGui::BeginPopup(_ComputeName(_id, "View").c_str()))
+    {
+      if (_invade)_parent->SetFlag(View::DISCARDMOUSEBUTTON);
+      ImGui::Selectable("Split Horizontaly");
+      if (ImGui::IsItemClicked()) {
+        ADD_DEFERRED_COMMAND(UIGenericCommand,
+          std::bind(&View::Split, _parent, 0.5, true, false, 0));
+        _invade = false;
+      }
 
-    };
-    ImGui::SameLine();
-    ImGui::PopStyleVar();
-    ImGui::PopStyleColor();
-  }
+      ImGui::Selectable("Split Verticaly");
+      if (ImGui::IsItemClicked()) {
+        ADD_DEFERRED_COMMAND(UIGenericCommand, 
+          std::bind(&View::Split, _parent, 0.5, false, false, 0));
+        _invade = false;
+      }
+
+      ImGui::Selectable("Delete View");
+      if (ImGui::IsItemClicked()) {
+        Window* window = _parent->GetWindow();
+        ADD_DEFERRED_COMMAND(UIGenericCommand,
+          std::bind(&Window::RemoveView, window, _parent));
+        _invade = false;
+      }
+
+      ImGui::Selectable("Delete Current UI");
+      if (ImGui::IsItemClicked()) {
+        BaseUI* current = _parent->GetCurrentUI();
+        ADD_DEFERRED_COMMAND(UIGenericCommand,
+          std::bind(&View::RemoveUI, _parent, current));
+        _invade = false;
+      }
+      
+      ImGui::EndPopup();
+    }
+  };
+    
+
+  ImGui::PopStyleVar();
+  ImGui::PopStyleColor();
 
   ImGui::End();
   return _invade;
@@ -190,13 +197,17 @@ void ViewTabUI::MouseMove(int x, int y)
 
 }
 
+void ViewTabUI::Focus(bool state)
+{
+  if (_invade && !state)_invade = false;
+}
+
 void ViewTabUI::MouseButton(int button, int action, int mods)
 {
   if (action == GLFW_RELEASE && button == GLFW_MOUSE_BUTTON_LEFT) {
-    if (_invade) {
-      _parent->SetDirty();
-      _parent->GetWindow()->ForceRedraw();
-    }
+    if (_invade)
+      _parent->GetWindow()->DirtyAllViews(false);
+    
     _invade = false;
   }
 }

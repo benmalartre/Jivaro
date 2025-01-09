@@ -1,6 +1,5 @@
 #ifndef JVR_APPLICATION_MODAL_H
 #define JVR_APPLICATION_MODAL_H
-#pragma once
 
 #include "../common.h"
 #include "window.h"
@@ -10,7 +9,7 @@
 JVR_NAMESPACE_OPEN_SCOPE
 
 // base class for modal window
-class BaseModal
+class ModalBase
 {
 public:
   enum Status {
@@ -22,8 +21,8 @@ public:
 
 
   // constructor
-  BaseModal(int x, int y, int width, int height, const std::string& title);
-  virtual ~BaseModal();
+  ModalBase(Window* parent, int x, int y, int width, int height, const std::string& title);
+  virtual ~ModalBase();
 
   // get data
   Status GetStatus(){return _status;};
@@ -41,6 +40,7 @@ protected:
   size_t        _y;
   size_t        _width;
   size_t        _height;
+  Window*       _parent;
   Window*       _window;
   BaseUI*       _ui;
   std::string   _title;
@@ -48,7 +48,7 @@ protected:
 };
 
 // file browser
-class ModalFileBrowser : public BaseModal
+class ModalFileBrowser : public ModalBase
 {
 public:
   enum Mode {
@@ -58,7 +58,8 @@ public:
     MULTI
   };
 
-  ModalFileBrowser(int x, int y, const std::string& title, Mode mode);
+  ModalFileBrowser(Window* parent, int x, int y, const std::string& title, Mode mode,
+    size_t numFilter=0, const char* filters[]={});
   std::string& GetResult(){return _result;};
 
   void _LoopImpl() override;
@@ -67,13 +68,13 @@ private:
   std::string               _result;
   std::string               _folder;
   Mode                      _mode;
-};
+}; 
 
 // folder browser
-class ModalFolderBrowser : public BaseModal
+class ModalFolderBrowser : public ModalBase
 {
 public:
-  ModalFolderBrowser(int x, int y, const std::string& title);
+  ModalFolderBrowser(Window* parent, int x, int y, const std::string& title);
   std::string& GetResult(){return _result;};
 
   void _LoopImpl() override;
@@ -83,19 +84,8 @@ private:
   std::string               _folder;
 };
 
-class ModalDemo : public BaseModal
-{
-public:
-  ModalDemo(int x, int y, const std::string& title);
-  void _LoopImpl() override;
-};
 
-class ModalMenu : public BaseModal
-{
-public:
-  ModalMenu(int x, int y, const std::string& title);
-  void _LoopImpl() override;
-};
+
 
 JVR_NAMESPACE_CLOSE_SCOPE
 

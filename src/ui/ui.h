@@ -3,6 +3,9 @@
 
 #include <map>
 
+#define GLFW_INCLUDE_NONE
+#include <GLFW/glfw3.h>
+
 #include "../imgui/imgui.h"
 #include "../imgui/imgui_internal.h"
 #include "../common.h"
@@ -17,9 +20,11 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 #define UI_HEADER_HEIGHT 32
 
+class Model;
 class View;
 class Window;
 class Application;
+
 
 enum UIType {
   MAINMENU,
@@ -31,13 +36,14 @@ enum UIType {
   VIEWPORT,
   EXPLORER,
   PROPERTYEDITOR,
+  ATTRIBUTEEDITOR,
+  CONTENTBROWSER,
   CURVEEDITOR,
   GRAPHEDITOR,
-  LAYEREDITOR,
-  TEXTEDITOR,
-  CONTENTBROWSER,
   DEBUG,
   DEMO,
+  ICON,
+  COMMANDS,
   COUNT
 };
 
@@ -51,36 +57,64 @@ static const char* UITypeName[UIType::COUNT] = {
   "viewport",
   "explorer",
   "propertyEditor",
+  "attributeEditor",
+  "contentBrowser",
   "curveEditor",
   "graphEditor", 
-  "layerEditor",
-  "textEditor",
-  "contentBrowser",
   "debug",
-  "demo"
+  "demo",
+  "icon",
+  "commands"
 };
 
-static std::map<std::string, int> UINameIndexMap;
+typedef std::map<std::string, int> UITypeCounter;
 
 
 class HeadUI;
-class BaseUI : public pxr::TfWeakBase
+
+struct ViewEventData {
+  enum Type {
+    NONE,
+    MOUSE_BUTTON,
+    MOUSE_MOVE,
+    KEYBOARD_INPUT
+  };
+
+  short type;
+  int button;
+  int action;
+  int mods;
+  int x;
+  int y;
+  int key;
+  int width;
+  int height;
+};
+
+
+class BaseUI : public TfWeakBase
 {
 public:
   BaseUI(View* parent, short type, bool popup=false);
   virtual ~BaseUI(){};
 
+  // set model
+  void SetModel(Model* model);
+
   // get ui type
   short GetType() { return _type; };
 
   // get parent window
-  Window* GetWindow();
+  virtual Window* GetWindow();
 
   // get the parent view
   View* GetView() { return _parent; };
 
   // get parent window height
   int GetWindowHeight();
+
+  // get available font from window
+  ImFont* GetFont(size_t size, size_t index=0);
 
   // mouse position in the view space
   // (0, 0) left top corner
@@ -89,10 +123,10 @@ public:
     float& outX, float& outY);
 
   // get the (x,y) position in window space (left top corner)
-  virtual pxr::GfVec2f GetPosition();
+  virtual GfVec2f GetPosition();
 
   // get the (x,y) size in window space (left top corner)
-  virtual pxr::GfVec2f GetSize();
+  virtual GfVec2f GetSize();
 
   // get the x position in window space (x-coordinate of left top corner)
   virtual int GetX();
@@ -106,8 +140,11 @@ public:
   // get the height of the parent view
   virtual int GetHeight();
 
+  // get the related model
+  virtual Model* GetModel(){return _model;};
+
   // discard events if mouse cursor inside relative bbox
-  void DiscardEventsIfMouseInsideBox(const pxr::GfVec2f& min, const pxr::GfVec2f& max);
+  void DiscardEventsIfMouseInsideBox(const GfVec2f& min, const GfVec2f& max);
 
   // attach tooltip
   void AttachTooltip(const char* tooltip);
@@ -128,17 +165,25 @@ public:
   virtual bool Draw()=0;
   virtual void Resize(){};
 
+  inline bool IsInteracting(){return _interacting;};
+
   // notices callbacks
   virtual void OnNewSceneNotice(const NewSceneNotice& n);
   virtual void OnSceneChangedNotice(const SceneChangedNotice& n);
   virtual void OnSelectionChangedNotice(const SelectionChangedNotice& n);
   virtual void OnAttributeChangedNotice(const AttributeChangedNotice& n);
-  virtual void OnAllNotices(const pxr::TfNotice& n);
+  virtual void OnToolChangedNotice(const ToolChangedNotice& n);
+  virtual void OnAllNotices(const TfNotice& n);
   
 protected:
+  // execution event
+  ViewEventData _MouseButtonEventData(int button, int action, int mods, int x, int y);
+  ViewEventData _MouseMoveEventData(int x, int y);
+
   short                   _type;
   bool                    _initialized;
   bool                    _interacting;
+  Model*                  _model;
   View*                   _parent;
   std::string             _name;
   static ImGuiWindowFlags _flags;

@@ -1,6 +1,7 @@
 #ifndef JVR_UI_UTILS_H
 #define JVR_UI_UTILS_H
 #include <cassert>
+#include <functional>
 
 #include <pxr/usd/usd/attribute.h>
 #include <pxr/base/gf/matrix2f.h>
@@ -22,10 +23,12 @@
 
 #include <pxr/usd/sdf/listEditorProxy.h>
 #include <pxr/usd/sdf/reference.h>
+#include <pxr/usd/sdf/listOp.h>
 
 #include "../common.h"
 #include "../ui/style.h"
 #include "../ui/fonts.h"
+#include "../ui/utils.h"
 #include "../utils/icons.h"
 #include "../imgui/imgui.h"
 #include "../imgui/imgui_internal.h"
@@ -33,253 +36,109 @@
 #include "../imgui/imgui_impl_glfw.h"
 #include "../imgui/imgui_stdlib.h"
 
-
 JVR_NAMESPACE_OPEN_SCOPE
 
-const pxr::GfVec2f BUTTON_LARGE_SIZE(64.f, 64.f);
-const pxr::GfVec2f BUTTON_NORMAL_SIZE(24.f, 24.f);
-const pxr::GfVec2f BUTTON_MINI_SIZE(16.f, 20.f);
 
 class View;
-class UIUtils {
-public:
-  // callback prototype
-  typedef void(*CALLBACK_FN)(...);
+namespace UI 
+{
+  const GfVec2f BUTTON_LARGE_SIZE(64.f, 64.f);
+  const GfVec2f BUTTON_NORMAL_SIZE(24.f, 24.f);
+  const GfVec2f BUTTON_MINI_SIZE(16.f, 20.f);
 
-  static void HelpMarker(const char* desc);
+  /// Height of a row in the property editor
+  constexpr float TABLE_ROW_DEFAULT_HEIGHT = 22.f;
 
-  static void AddAttributeDisplayName(const pxr::UsdAttribute& attribute);
-  static pxr::VtValue AddTokenWidget(const pxr::UsdAttribute& attribute, const pxr::UsdTimeCode& timeCode);
-  static pxr::VtValue AddColorWidget(const pxr::UsdAttribute& attribute, const pxr::UsdTimeCode& timeCode);
-  static pxr::VtValue AddAttributeWidget(const pxr::UsdAttribute& attribute, const pxr::UsdTimeCode& timeCode);
+  enum ItemState {
+    STATE_DEFAULT,
+    STATE_SELECTED,
+    STATE_DISABLED
+  };
+
+  std::string BrowseFile(int x, int y, const char* folder, const char* filters[],
+    const int numFilters, const char* name, bool forWriting);
+
+  inline std::string HiddenLabel(const char* label) {
+    return std::string("##").append(label);}
+
+  void HelpMarker(const char* desc);
+
+  bool AddComboWidget(const char* label, const char** names, 
+    const size_t count, int& last, size_t width=300);
+  bool AddComboWidget(const char* label, const TfToken* tokens, 
+    const size_t count, TfToken& last, size_t width=300);
+
+  void AddAttributeDisplayName(const UsdAttribute& attribute);
+  VtValue AddTokenWidget(const UsdAttribute& attribute, const UsdTimeCode& timeCode);
+  VtValue AddColorWidget(const UsdAttribute& attribute, const UsdTimeCode& timeCode);
+  VtValue AddAttributeWidget(const UsdAttribute& attribute, const UsdTimeCode& timeCode);
 
   template <typename VectorType, int DataType, int N>
-  static pxr::VtValue AddVectorWidget(const pxr::UsdAttribute& attribute, const pxr::UsdTimeCode& timeCode);
+  VtValue AddVectorWidget(const UsdAttribute& attribute, const UsdTimeCode& timeCode);
 
   template <typename MatrixType, int DataType, int Rows, int Cols>
-  static pxr::VtValue AddMatrixWidget(const pxr::UsdAttribute& attribute, const pxr::UsdTimeCode& timeCode);
+  VtValue AddMatrixWidget(const UsdAttribute& attribute, const UsdTimeCode& timeCode);
 
-  template<typename FuncT, typename ...ArgsT>
-  static void IconButton(const char* icon, short state, FuncT func, ArgsT... args);
+  bool AddIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN func, ImVec4* color=NULL);
+  bool AddTransparentIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN func);
+  bool AddCheckableIconButton(ImGuiID id, const char* icon, short state, CALLBACK_FN func, ImVec4* color=NULL);
 
-  template<typename FuncT, typename ...ArgsT>
-  static bool AddIconButton(const char* icon, short state, FuncT func, ArgsT... args);
-
-  template<typename FuncT, typename ...ArgsT>
-  static bool AddIconButton(ImGuiID id, const char* icon, short state, FuncT func, ArgsT... args);
-
-  template<typename FuncT, typename ...ArgsT>
-  static bool AddTransparentIconButton(ImGuiID id, const char* icon, short state, FuncT func, ArgsT... args);
-
-  template<typename FuncT, typename ...ArgsT>
-  static bool AddCheckableIconButton(ImGuiID id, const char* icon, short state, FuncT func, ArgsT... args);
-
-  static void AddPropertyMiniButton(const char* btnStr, int rowId, 
+  void AddPropertyMiniButton(const char* btnStr, int rowId, 
     const ImVec4& btnColor = ImVec4(0.0, 0.7, 0.0, 1.0));
-  static void AddPrimKind(const pxr::SdfPrimSpecHandle& primSpec);
-  static void AddPrimType(const pxr::SdfPrimSpecHandle& primSpec, ImGuiComboFlags comboFlags = 0);
-  static void AddPrimSpecifier(const pxr::SdfPrimSpecHandle& primSpec, ImGuiComboFlags comboFlags = 0);
-  static void AddPrimInstanceable(const pxr::SdfPrimSpecHandle& primSpec);
-  static void AddPrimHidden(const pxr::SdfPrimSpecHandle& primSpec);
-  static void AddPrimActive(const pxr::SdfPrimSpecHandle& primSpec);
-  static void AddPrimName(const pxr::SdfPrimSpecHandle& primSpec);
+  void AddPrimKind(const SdfPrimSpecHandle& primSpec);
+  void AddPrimType(const SdfPrimSpecHandle& primSpec, ImGuiComboFlags comboFlags = 0);
+  void AddPrimSpecifier(const SdfPrimSpecHandle& primSpec, ImGuiComboFlags comboFlags = 0);
+  void AddPrimInstanceable(const SdfPrimSpecHandle& primSpec);
+  void AddPrimHidden(const SdfPrimSpecHandle& primSpec);
+  void AddPrimActive(const SdfPrimSpecHandle& primSpec);
+  void AddPrimName(const SdfPrimSpecHandle& primSpec);
 
-};
-
-
-template<typename FuncT, typename ...ArgsT>
-void 
-UIUtils::IconButton(const char* icon, short state, FuncT func, ArgsT... args)
-{
-  ImGui::BeginGroup();
-  ImGui::Button(icon, BUTTON_NORMAL_SIZE);
-  ImGui::EndGroup();
-}
-
-template<typename FuncT, typename ...ArgsT>
-bool 
-UIUtils::AddIconButton(const char* icon, short state, FuncT func, ArgsT... args)
-{
-  if (ImGui::Button(icon, BUTTON_NORMAL_SIZE))
+  template <typename MatrixType, int DataType, int Rows, int Cols>
+  VtValue 
+  AddMatrixWidget(const UsdAttribute& attribute, const UsdTimeCode& timeCode)
   {
-    func(args...);
-    return true;
-  }
-  return false;
-}
-
-template<typename FuncT, typename ...ArgsT>
-bool 
-UIUtils::AddIconButton(ImGuiID id, const char* icon, short state, FuncT func, ArgsT... args)
-{
-  ImGui::PushID(id);
-  if (ImGui::Button(icon, BUTTON_NORMAL_SIZE)) {
-    func(args...);
-    ImGui::PopID();
-    return true;
-  }
-
-  ImGui::PopID();
-  return false;
-}
-
-template<typename FuncT, typename ...ArgsT>
-bool 
-UIUtils::AddTransparentIconButton(ImGuiID id, const char* icon, short state, FuncT func, ArgsT... args)
-{
-  ImGui::PushStyleColor(ImGuiCol_Button, TRANSPARENT_COLOR);
-  ImGui::PushID(id);
-  if (ImGui::Button(icon, BUTTON_NORMAL_SIZE))
-  {
-    func(args...);
-    ImGui::PopID();
-    return true;
-  }
-  ImGui::PopID();
-  ImGui::PopStyleColor();
-  return false;
-}
-
-template<typename FuncT, typename ...ArgsT>
-bool 
-UIUtils::AddCheckableIconButton(ImGuiID id, const char* icon, short state, FuncT func, ArgsT... args)
-{
-  ImGuiStyle* style = &ImGui::GetStyle();
-  ImVec4* colors = style->Colors;
-  const bool active = (state == ICON_SELECTED);
-  if(active) {
-    ImGui::PushStyleColor(ImGuiCol_Button, style->Colors[ImGuiCol_ButtonActive]);
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, style->Colors[ImGuiCol_ButtonActive]);
-    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(20, 20, 20, 255));
-  }
-  
-  ImGui::PushID(id);
-  if (ImGui::Button(icon, BUTTON_NORMAL_SIZE))
-  {
-    func(args...);
-    if(active) ImGui::PopStyleColor(3);
-    ImGui::PopID();
-    return true;
-  }
-  if (active) ImGui::PopStyleColor(3);
-  ImGui::PopID();
-  return false;
-}
-
-template <typename MatrixType, int DataType, int Rows, int Cols>
-pxr::VtValue 
-UIUtils::AddMatrixWidget(const pxr::UsdAttribute& attribute, const pxr::UsdTimeCode& timeCode)
-{
-  pxr::VtValue value;
-  attribute.Get(&value, timeCode);
-  MatrixType buffer = value.Get<MatrixType>();
-  bool valueChanged = false;
-    
-  ImGui::PushID(attribute.GetName().GetText());
-  ImGui::InputScalarN("###row0", DataType, buffer.data(), Cols, NULL, NULL, DecimalPrecision);
-  valueChanged |= ImGui::IsItemDeactivatedAfterEdit();
-  ImGui::InputScalarN("###row1", DataType, buffer.data() + Cols, Cols, NULL, NULL, DecimalPrecision);
-  valueChanged |= ImGui::IsItemDeactivatedAfterEdit();
-  if (Rows > 2) {
-    ImGui::InputScalarN("###row2", DataType, buffer.data() + 2 * Cols, Cols, NULL, NULL, DecimalPrecision);
+    VtValue value;
+    attribute.Get(&value, timeCode);
+    MatrixType buffer = value.Get<MatrixType>();
+    bool valueChanged = false;
+      
+    ImGui::PushID(attribute.GetName().GetText());
+    ImGui::InputScalarN("###row0", DataType, buffer.data(), Cols, NULL, NULL, DecimalPrecision);
     valueChanged |= ImGui::IsItemDeactivatedAfterEdit();
-    if (Rows > 3) {
-      ImGui::InputScalarN("###row3", DataType, buffer.data() + 3 * Cols, Cols, NULL, NULL, DecimalPrecision);
+    ImGui::InputScalarN("###row1", DataType, buffer.data() + Cols, Cols, NULL, NULL, DecimalPrecision);
+    valueChanged |= ImGui::IsItemDeactivatedAfterEdit();
+    if (Rows > 2) {
+      ImGui::InputScalarN("###row2", DataType, buffer.data() + 2 * Cols, Cols, NULL, NULL, DecimalPrecision);
       valueChanged |= ImGui::IsItemDeactivatedAfterEdit();
+      if (Rows > 3) {
+        ImGui::InputScalarN("###row3", DataType, buffer.data() + 3 * Cols, Cols, NULL, NULL, DecimalPrecision);
+        valueChanged |= ImGui::IsItemDeactivatedAfterEdit();
+      }
     }
+    ImGui::PopID();
+      
+    if (valueChanged) {
+      return VtValue(buffer);
+    }
+    return VtValue();
   }
-  ImGui::PopID();
-    
-  if (valueChanged) {
-    return pxr::VtValue(buffer);
-  }
-  return pxr::VtValue();
-}
 
-template <typename VectorType, int DataType, int N>
-pxr::VtValue 
-UIUtils::AddVectorWidget(const pxr::UsdAttribute& attribute, const pxr::UsdTimeCode& timeCode)
-{
-  VectorType buffer;
-  attribute.Get<VectorType>(&buffer, timeCode);
-  constexpr const char* format = DataType == ImGuiDataType_S32 ? "%d" : DecimalPrecision;
-  ImGui::InputScalarN(attribute.GetName().GetText(), DataType, buffer.data(), N,
-    NULL, NULL, format, ImGuiInputTextFlags());
-  if (ImGui::IsItemDeactivatedAfterEdit()) {
-    return pxr::VtValue(VectorType(buffer));
-  }
-  return pxr::VtValue();
-}
+  template <typename VectorType, int DataType, int N>
+  VtValue 
+  AddVectorWidget(const UsdAttribute& attribute, const UsdTimeCode& timeCode)
+  {
+    VectorType buffer;
+    attribute.Get<VectorType>(&buffer, timeCode);
+    constexpr const char* format = DataType == ImGuiDataType_S32 ? "%d" : DecimalPrecision;
+    ImGui::InputScalarN(attribute.GetName().GetText(), DataType, buffer.data(), N,
+      NULL, NULL, format, ImGuiInputTextFlags());
 
-// ExtraArgsT is used to pass additional arguments as the function passed as visitor
-// might need more than the operation and the item
-template <typename PolicyT, typename FuncT, typename ...ExtraArgsT>
-static void 
-IterateListEditorItems(const pxr::SdfListEditorProxy<PolicyT>& listEditor, const FuncT& call, ExtraArgsT... args) {
-  // TODO: should we check if the list is already all explicit ??
-  for (const typename PolicyT::value_type& item : listEditor.GetExplicitItems()) {
-    call("explicit", item, args...);
-  }
-  for (const typename PolicyT::value_type& item : listEditor.GetOrderedItems()) {
-    call("ordered", item, args...);
-  }
-  for (const typename PolicyT::value_type& item : listEditor.GetAddedItems()) {
-    call("add", item, args...); // return "add" as TfToken instead ?
-  }
-  for (const typename PolicyT::value_type& item : listEditor.GetPrependedItems()) {
-    call("prepend", item, args...);
-  }
-  for (const typename PolicyT::value_type& item : listEditor.GetAppendedItems()) {
-    call("append", item, args...);
-  }
-  for (const typename PolicyT::value_type& item : listEditor.GetDeletedItems()) {
-    call("delete", item, args...);
+    if (ImGui::IsItemDeactivatedAfterEdit()) {
+      return VtValue(VectorType(buffer));
+    }
+    return VtValue();
   }
 }
-
-/// The operations available on a SdfListEditor
-constexpr int GetListEditorOperationSize() { return 5; }
-inline const char* GetListEditorOperationName(int index) {
-  constexpr const char* names[GetListEditorOperationSize()] = { "Add", "Prepend", "Append", "Remove", "Explicit" };
-  return names[index];
-}
-
-template <typename PolicyT>
-void CreateListEditorOperation(pxr::SdfListEditorProxy<PolicyT>&& listEditor, int operation,
-  typename pxr::SdfListEditorProxy<PolicyT>::value_type item) {
-  switch (operation) {
-  case 0:
-    listEditor.Add(item);
-    break;
-  case 1:
-    listEditor.Prepend(item);
-    break;
-  case 2:
-    listEditor.Append(item);
-    break;
-  case 3:
-    listEditor.Remove(item);
-    break;
-  case 4:
-    listEditor.GetExplicitItems().push_back(item);
-    break;
-  default:
-    assert(0);
-  }
-}
-
-/// Add modal dialogs to add composition on primspec (reference, payload, inherit, specialize)
-void AddPrimCreateReference(const pxr::SdfPrimSpecHandle &primSpec);
-void AddPrimCreatePayload(const pxr::SdfPrimSpecHandle &primSpec);
-void AddPrimCreateInherit(const pxr::SdfPrimSpecHandle &primSpec);
-void AddPrimCreateSpecialize(const pxr::SdfPrimSpecHandle &primSpec);
-
-/// Add multiple tables with the compositions (Reference, Payload, Inherit, Specialize)
-void AddPrimCompositions(const pxr::SdfPrimSpecHandle &primSpec);
-
-// Add a text summary of the composition
-void AddPrimCompositionSummary(const pxr::SdfPrimSpecHandle &primSpec);
-
 
 JVR_NAMESPACE_CLOSE_SCOPE
 

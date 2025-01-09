@@ -15,6 +15,8 @@ TF_REGISTRY_FUNCTION(TfType)
   TfType::Define<SelectionChangedNotice, TfType::Bases<BaseNotice> >();
   TfType::Define<SceneChangedNotice, TfType::Bases<BaseNotice> >();
   TfType::Define<AttributeChangedNotice, TfType::Bases<BaseNotice> >();
+  TfType::Define<TimeChangedNotice, TfType::Bases<BaseNotice> >();
+  TfType::Define<ToolChangedNotice, TfType::Bases<BaseNotice> >();
   TfType::Define<UndoStackNotice, TfType::Bases<BaseNotice> >();
 }
 
@@ -71,6 +73,28 @@ AttributeChangedNotice::~AttributeChangedNotice()
 
 ////////////////////////////////////////////////////////////
 
+TimeChangedNotice::TimeChangedNotice()
+{
+}
+
+TimeChangedNotice::~TimeChangedNotice()
+{
+}
+
+////////////////////////////////////////////////////////////
+
+ToolChangedNotice::ToolChangedNotice(short tool)
+ : _tool(tool)
+{
+}
+
+ToolChangedNotice::~ToolChangedNotice()
+{
+}
+
+
+////////////////////////////////////////////////////////////
+
 UndoStackNotice::UndoStackNotice()
 {
 }
@@ -78,6 +102,7 @@ UndoStackNotice::UndoStackNotice()
 UndoStackNotice::~UndoStackNotice()
 {
 }
+
 
 
 JVR_NAMESPACE_CLOSE_SCOPE

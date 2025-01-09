@@ -1,14 +1,16 @@
 #include <pxr/usd/sdf/layer.h>
+#include <pxr/usd/usd/stageCache.h>
 #include "../ui/contentBrowser.h"
 #include "../utils/strings.h"
 #include "../app/view.h"
-#include "../app/application.h"
-#include "../command/command.h"
+#include "../app/model.h"
+#include "../app/commands.h"
 
 
 JVR_NAMESPACE_OPEN_SCOPE
 
 ImGuiWindowFlags ContentBrowserUI::_flags = 
+  ImGuiWindowFlags_None |
   ImGuiWindowFlags_NoResize |
   ImGuiWindowFlags_MenuBar |
   ImGuiWindowFlags_NoTitleBar |
@@ -24,13 +26,13 @@ ContentBrowserUI::~ContentBrowserUI()
 }
 
 static void 
-DrawLayerTooltip(pxr::SdfLayerHandle layer) 
+DrawLayerTooltip(SdfLayerHandle layer) 
 {
   ImGui::SetTooltip("%s\n%s", layer->GetRealPath().c_str(), layer->GetIdentifier().c_str());
   auto assetInfo = layer->GetAssetInfo();
   if (!assetInfo.IsEmpty()) {
-    if (assetInfo.CanCast<pxr::VtDictionary>()) {
-      auto assetInfoDict = assetInfo.Get<pxr::VtDictionary>();
+    if (assetInfo.CanCast<VtDictionary>()) {
+      auto assetInfoDict = assetInfo.Get<VtDictionary>();
       TF_FOR_ALL(keyValue, assetInfoDict) {
         std::stringstream ss;
         ss << keyValue->second;
@@ -41,7 +43,7 @@ DrawLayerTooltip(pxr::SdfLayerHandle layer)
 }
 
 static bool 
-PassOptionsFilter(pxr::SdfLayerHandle layer, 
+PassOptionsFilter(SdfLayerHandle layer, 
    const ContentBrowserOptions& options, bool isStage)
 {
   if (!options._filterAnonymous) {
@@ -69,7 +71,7 @@ PassOptionsFilter(pxr::SdfLayerHandle layer,
   return true;
 }
 
-static inline void DrawSaveButton(pxr::SdfLayerHandle layer) 
+static inline void DrawSaveButton(SdfLayerHandle layer) 
 {
   ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(TRANSPARENT_COLOR));
   if (ImGui::SmallButton(layer->IsDirty() ? "###Save" : "  ###Save")) {
@@ -79,8 +81,8 @@ static inline void DrawSaveButton(pxr::SdfLayerHandle layer)
   ImGui::PopStyleColor();
 }
 
-static inline void DrawSelectStageButton(pxr::SdfLayerHandle layer, 
-  bool isStage, pxr::SdfLayerHandle* selectedStage) 
+static inline void DrawSelectStageButton(SdfLayerHandle layer, 
+  bool isStage, SdfLayerHandle* selectedStage) 
 {
   if (isStage) {
     if (selectedStage && *selectedStage == layer) {
@@ -140,7 +142,7 @@ static void DrawContentBrowserMenuBar(ContentBrowserOptions& options) {
   }
 }
 
-static inline std::string LayerNameFromOptions(pxr::SdfLayerHandle layer, const ContentBrowserOptions& options) {
+static inline std::string LayerNameFromOptions(SdfLayerHandle layer, const ContentBrowserOptions& options) {
   if (options._showAssetName) {
     return layer->GetAssetName();
   }
@@ -153,8 +155,8 @@ static inline std::string LayerNameFromOptions(pxr::SdfLayerHandle layer, const 
   return layer->GetIdentifier();
 }
 
-static inline void DrawLayerDescriptionRow(pxr::SdfLayerHandle layer, bool isStage, std::string& layerName, bool selected,
-  pxr::SdfLayerHandle* selectedLayer) {
+static inline void DrawLayerDescriptionRow(SdfLayerHandle layer, bool isStage, std::string& layerName, bool selected,
+  SdfLayerHandle* selectedLayer) {
   ImGui::PushStyleColor(ImGuiCol_Text, isStage ? ImVec4(1.0, 1.0, 1.0, 1.0) : ImVec4(0.6, 0.6, 0.6, 1.0));
   if (ImGui::Selectable(layerName.c_str(), selected)) {
     if (selectedLayer) {
@@ -175,7 +177,7 @@ static inline void DrawLayerDescriptionRow(pxr::SdfLayerHandle layer, bool isSta
 }
 
 /// Draw a popup menu with the possible action on a layer
-static void DrawLayerActionPopupMenu(pxr::SdfLayerHandle layer) {
+static void DrawLayerActionPopupMenu(SdfLayerHandle layer) {
   if (!layer)
     return;
   if (ImGui::MenuItem("Edit layer")) {
@@ -216,8 +218,8 @@ static void DrawLayerActionPopupMenu(pxr::SdfLayerHandle layer) {
   }
 }
 
-static void DrawLayerSet(pxr::UsdStageCache& cache, pxr::SdfLayerHandleSet& layerSet, pxr::SdfLayerHandle* selectedLayer, 
-  pxr::SdfLayerHandle* selectedStage, const ContentBrowserOptions& options, const ImVec2& listSize = ImVec2(0, -10)) 
+static void DrawLayerSet(UsdStageCache& cache, SdfLayerHandleSet& layerSet, SdfLayerHandle* selectedLayer, 
+  SdfLayerHandle* selectedStage, const ContentBrowserOptions& options, const ImVec2& listSize = ImVec2(0, -10)) 
 {
 
   static TextFilter filter;
@@ -226,7 +228,7 @@ static void DrawLayerSet(pxr::UsdStageCache& cache, pxr::SdfLayerHandleSet& laye
   ImGui::PushItemWidth(-1);
   if (ImGui::BeginListBox("##DrawLayerSet", listSize)) {
     // Sort the layer set
-    std::vector<pxr::SdfLayerHandle> sortedSet(layerSet.begin(), layerSet.end());
+    std::vector<SdfLayerHandle> sortedSet(layerSet.begin(), layerSet.end());
     std::sort(sortedSet.begin(), sortedSet.end(), [&](const auto& t1, const auto& t2) {
       return LayerNameFromOptions(t1, options) < LayerNameFromOptions(t2, options);
     });
@@ -267,29 +269,27 @@ static void DrawLayerSet(pxr::UsdStageCache& cache, pxr::SdfLayerHandleSet& laye
 
 bool ContentBrowserUI::Draw()
 {
-  const pxr::GfVec2f min(GetX(), GetY());
-  const pxr::GfVec2f size(GetWidth(), GetHeight());
+  const GfVec2f min(GetX(), GetY());
+  const GfVec2f size(GetWidth(), GetHeight());
+
+  ImGui::SetNextWindowPos(min);
+  ImGui::SetNextWindowSize(size);
 
   ImGui::Begin(_name.c_str(), NULL, _flags);
-  ImGui::SetWindowPos(min);
-  ImGui::SetWindowSize(size);
+  
 
   static ContentBrowserOptions options;
   DrawContentBrowserMenuBar(options);
 
-  Workspace* workspace = GetApplication()->GetWorkspace();
-
   // TODO: we might want to remove completely the editor here, just pass as selected layer and a selected stage
-  pxr::SdfLayerHandle selectedLayer(workspace->GetWorkLayer());
-  pxr::SdfLayerHandle selectedStage(workspace->GetWorkStage() 
-    ? workspace->GetWorkStage()->GetRootLayer() : pxr::SdfLayerHandle());
-  auto layers = pxr::SdfLayer::GetLoadedLayers();
-  DrawLayerSet(workspace->GetStageCache(), layers, &selectedLayer, &selectedStage, options);
-  /*
-  if (selected != editor.GetCurrentLayer()) {
-    editor.SetCurrentLayer(selected);
-  }
-  */
+  
+  SdfLayerHandle selectedLayer(_model->GetRootLayer());
+  SdfLayerHandle selectedStage(_model->GetStage() 
+    ? SdfLayerHandle(_model->GetRootLayer()) : SdfLayerHandle());
+  auto layers = SdfLayer::GetLoadedLayers();
+  //DrawLayerSet(app->GetStageCache(), layers, &selectedLayer, &selectedStage, options);
+  
+  
   ImGui::End();
   return true;
 }

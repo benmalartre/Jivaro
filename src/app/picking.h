@@ -25,54 +25,57 @@
 #ifndef JVR_APP_PICKING_H
 #define JVR_APP_PICKING_H
 
-#include "pxr/pxr.h"
+#include <pxr/base/gf/frustum.h>
+#include <pxr/base/gf/matrix4d.h>
+#include <pxr/base/gf/vec2i.h>
 
-#include "pxr/base/gf/frustum.h"
-#include "pxr/base/gf/matrix4d.h"
-#include "pxr/base/gf/vec2i.h"
-
-#include "pxr/imaging/garch/glApi.h"
-#include "pxr/imaging/hd/engine.h"
-#include "pxr/imaging/hd/rprimCollection.h"
-#include "pxr/imaging/hdx/pickTask.h"
-#include "pxr/imaging/hdx/selectionTracker.h"
-
+#include <pxr/imaging/garch/glApi.h>
+#include <pxr/imaging/hdx/pickTask.h>
+#include <pxr/imaging/hdx/selectionTracker.h>
 #include <memory>
+
+#include "../common.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
+class HdEngine;
+class HdRprimCollection;
 
 namespace Picking
 {
-    pxr::HdSelectionSharedPtr TranslateHitsToSelection(
-        pxr::TfToken const& pickTarget,
-        pxr::HdSelection::HighlightMode highlightMode,
-        pxr::HdxPickHitVector const& allHits);
+  HdSelectionSharedPtr TranslateHitsToSelection(
+    TfToken const& pickTarget,
+    HdSelection::HighlightMode highlightMode,
+    HdxPickHitVector const& allHits);
 
-    // For a drag-select from start to end, with given pick radius, what size
-    // ID buffer should we ask for?
-    pxr::GfVec2i CalculatePickResolution(
-        pxr::GfVec2i const& start, pxr::GfVec2i const& end, 
-		pxr::GfVec2i const& pickRadius);
+  // For a drag-select from start to end, with given pick radius, what size
+  // ID buffer should we ask for?
+  GfVec2i CalculatePickResolution(
+    GfVec2i const& start, GfVec2i const& end, GfVec2i const& pickRadius);
 
-    pxr::GfMatrix4d ComputePickingProjectionMatrix(
-        pxr::GfVec2i const& start, pxr::GfVec2i const& end, 
-		pxr::GfVec2i const& screen, pxr::GfFrustum const& viewFrustum);
+  GfMatrix4d ComputePickingProjectionMatrix(
+    GfVec2i const& start, GfVec2i const& end, GfVec2i const& screen, 
+    GfFrustum const& viewFrustum);
 
-    class Marquee {
-    public:
-        Marquee();
-        ~Marquee();
+  /// MarqueeSelect 
+  HdSelectionSharedPtr MarqueeSelect(GfVec2i const &startPos, GfVec2i const &endPos,
+    TfToken const& pickTarget, int width, int height, 
+    GfFrustum const &frustum, GfMatrix4d const &viewMatrix);
 
-        void InitGLResources();
-        void DestroyGLResources();
-        void Draw(float width, float height, 
-                  pxr::GfVec2f const& startPos, pxr::GfVec2f const& endPos);
+  class Marquee {
+  public:
+    Marquee();
+    ~Marquee();
 
-    private:
-        GLuint _vbo;
-        GLuint _program;
-    };
+    void InitGLResources();
+    void DestroyGLResources();
+    void Draw(float width, float height, 
+              GfVec2f const& startPos, GfVec2f const& endPos);
+
+  private:
+    GLuint _vbo;
+    GLuint _program;
+  };
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

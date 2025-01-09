@@ -1,8 +1,8 @@
 //------------------------------------------------------------------------------
 // GLSL SHADER UTILS
 //------------------------------------------------------------------------------
-
-#pragma once
+#ifndef JVR_UTILS_GLSL_H
+#define JVR_UTILS_GLSL_H
 
 #include <pxr/imaging/garch/glApi.h>
 #include "../common.h"
@@ -100,3 +100,5 @@ _checkGLError(const char *file, int line)
   }
   return false;
 }
+
+#endif // JVR_UTILS_GLSL_H

@@ -21,37 +21,37 @@ public:
   ~Camera(){};
 
   // get data
-  pxr::GfVec3d GetPosition();
-  pxr::GfVec3d GetViewPlaneNormal();
-  pxr::GfVec3d GetRayDirection(float x, float y, float width, float height);
+  GfVec3d GetPosition();
+  GfVec3d GetViewPlaneNormal();
+  GfVec3d GetRayDirection(float x, float y, float width, float height);
 
   // get matrices
-  const pxr::GfMatrix4d GetTransform();
-  const pxr::GfMatrix4d GetViewMatrix();
-  const pxr::GfMatrix4d GetViewInverseMatrix();
-  const pxr::GfMatrix4d GetProjectionMatrix();
-  const std::vector<pxr::GfVec4f> GetClippingPlanes();
+  const GfMatrix4d GetTransform();
+  const GfMatrix4d GetViewMatrix();
+  const GfMatrix4d GetViewInverseMatrix();
+  const GfMatrix4d GetProjectionMatrix();
+  const std::vector<GfVec4f> GetClippingPlanes();
 
   // ray
-  pxr::GfRay GetRay(float x, float y, float width, float height);
+  GfRay GetRay(float x, float y, float width, float height);
 
   // scene axis
   void SetZIsUp(bool isZUp);
-  const pxr::GfMatrix4d& GetZUpMatrix() { return _zUpMatrix; };
-  const pxr::GfMatrix4d& GetZUpInverseMatrix() { return _zUpInverseMatrix; };
+  const GfMatrix4d& GetZUpMatrix() { return _zUpMatrix; };
+  const GfMatrix4d& GetZUpInverseMatrix() { return _zUpInverseMatrix; };
 
   // frame selection
-  void FrameSelection(const pxr::GfBBox3d &selBBox);
+  void FrameSelection(const GfBBox3d &selBBox);
 
   // compute underlying GfCamera frustum
-  pxr::GfFrustum _GetFrustum(){return _camera.GetFrustum();};
+  GfFrustum _GetFrustum(){return _camera.GetFrustum();};
 
   // aspect ratio
   float GetAspectRatio() { return _camera.GetAspectRatio(); };
 
   // get spherical cooridnates
   void _GetSphericalCoordinates() {
-    pxr::GfVec3d r = _pos - _lookat;
+    GfVec3d r = _pos - _lookat;
     double d = r.GetLength();
     _polar = (-acosf(r[1]/d)) * RADIANS_TO_DEGREES;
     _azimuth = (atanf(r[0]/r[2])) * RADIANS_TO_DEGREES;
@@ -67,12 +67,12 @@ public:
 
   // compute ray from normalized xy position
   // don't forget to update the camera frustum before calling this.
-  pxr::GfRay ComputeRay(const pxr::GfVec2d& pos) const;
+  GfRay ComputeRay(const GfVec2d& pos) const;
 
   // set position, lookat and up as once
-  void Set( const pxr::GfVec3d& pos, 
-            const pxr::GfVec3d& lookat, 
-            const pxr::GfVec3d& up=pxr::GfVec3d::YAxis());
+  void Set( const GfVec3d& pos, 
+            const GfVec3d& lookat, 
+            const GfVec3d& up=GfVec3d::YAxis());
 
   // set position, lookat and up as once
   void SetWindow(int x, int y, int width, int height);
@@ -87,25 +87,25 @@ public:
   void Walk(double x, double y);
 
   // getters
-  pxr::GfCamera* Get(){return &_camera;};
+  GfCamera* Get(){return &_camera;};
   double GetFov(){return _fov;};
         
 private:
   bool                  _orthographic;
-  pxr::GfCamera         _camera;
-  pxr::GfFrustum        _frustum;
+  GfCamera         _camera;
+  GfFrustum        _frustum;
   double                _near;
   double                _far;
   double                _fov;
   double                _dist;
-  pxr::GfVec3d          _lookat;
-  pxr::GfVec3d          _pos;
-  pxr::GfVec3d          _up;
+  GfVec3d          _lookat;
+  GfVec3d          _pos;
+  GfVec3d          _up;
   double                _polar;
   double                _azimuth;
   bool                  _dirty;
-  pxr::GfMatrix4d       _zUpMatrix;
-  pxr::GfMatrix4d       _zUpInverseMatrix;
+  GfMatrix4d       _zUpMatrix;
+  GfMatrix4d       _zUpInverseMatrix;
 
   std::string _name;
 };

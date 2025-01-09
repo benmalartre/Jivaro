@@ -1,73 +1,14 @@
 #include <functional>
 #include "../utils/icons.h"
+#include "../ui/utils.h"
 #include "../ui/timeline.h"
 #include "../app/application.h"
 #include "../app/time.h"
 #include "../app/view.h"
+#include "../app/window.h"
 
 
 JVR_NAMESPACE_OPEN_SCOPE
-
-static void
-PlaybackCallback(TimelineUI* ui)
-{
-  Time& time = GetApplication()->GetTime();
-  TimeData& data = ui->GetData();
-  data.playing = 1 - data.playing;
-  if (data.playing) time.StartPlayBack();
-  else time.StopPlayBack();
-}
-
-static void
-PreviousFrameCallback(TimelineUI* ui)
-{
-  Time& time = GetApplication()->GetTime();
-  time.PreviousFrame();
-}
-
-static void
-NextFrameCallback(TimelineUI* ui)
-{
-  Time& time = GetApplication()->GetTime();
-  time.NextFrame();
-}
-
-static void
-FirstFrameCallback(TimelineUI* ui)
-{
-  Time& time = GetApplication()->GetTime();
-  TimeData& data = ui->GetData();
-  data.currentTime = data.startTime;
-  time.SetActiveTime(data.currentTime);
-}
-
-static void
-LastFrameCallback(TimelineUI* ui)
-{
-  Time& time = GetApplication()->GetTime();
-  TimeData& data = ui->GetData();
-  data.currentTime = data.endTime;
-  time.SetActiveTime(data.currentTime);
-}
-
-static void
-LoopCallback(TimelineUI* ui)
-{
-  TimeData& data = ui->GetData();
-  data.loop = 1 - data.loop;
-  Application* app = GetApplication();
-  Time& time = app->GetTime();
-  time.SetLoop(data.loop);
-}
-
-static void
-SetFrameCallback(TimelineUI* ui)
-{
-  Time& time = GetApplication()->GetTime();
-  TimeData& data = ui->GetData();
-  time.SetActiveTime(data.currentTime);
-}
-
 
 ImGuiWindowFlags TimelineUI::_flags = 
   ImGuiWindowFlags_None |
@@ -100,77 +41,86 @@ TimelineUI::Init()
 void 
 TimelineUI::Update()
 {
-  Application* app = GetApplication();
-  Time& time = app->GetTime();
-  _data.minTime = time.GetMinTime();
-  _data.startTime = time.GetStartTime();
-  _data.endTime = time.GetEndTime();
-  _data.maxTime = time.GetMaxTime();
-  _data.currentTime = time.GetActiveTime();
-  _data.loop = time.GetLoop();
-  _data.fps = time.GetFPS();
-  _data.playing = time.IsPlaying();
+  Time* time = Time::Get();
+  _minTime = time->GetMinTime();
+  _startTime = time->GetStartTime();
+  _endTime = time->GetEndTime();
+  _maxTime = time->GetMaxTime();
+  _currentTime = time->GetActiveTime();
+  _loop = time->GetLoop();
+  _fps = time->GetFPS();
+  _speed = time->GetSpeed();
+  _mode = time->GetMode();
+  _playing = time->IsPlaying();
   _parent->SetDirty();
 }
 
 void 
 TimelineUI::ValidateTime()
 {
-  Time& time = GetApplication()->GetTime();
-
-  _data.currentTime = time.GetActiveTime();
-  if (_data.minTime >= _data.maxTime)_data.maxTime = _data.minTime + 1;
-  if (_data.endTime > _data.maxTime)_data.maxTime = _data.endTime;
-  if (_data.startTime < _data.minTime)_data.startTime = _data.minTime;
-  if (_data.endTime <= _data.startTime)_data.endTime = _data.startTime + 1;
-  if (_data.currentTime < _data.startTime)_data.currentTime = _data.startTime;
-  else if (_data.currentTime > _data.endTime)_data.currentTime = _data.endTime;
+  Time* time = Time::Get();
+  _currentTime = time->GetActiveTime();
+  if (_minTime >= _maxTime)_maxTime = _minTime + 1;
+  if (_endTime > _maxTime)_maxTime = _endTime;
+  if (_startTime < _minTime)_startTime = _minTime;
+  if (_endTime <= _startTime)_endTime = _startTime + 1;
+  if (_currentTime < _startTime)_currentTime = _startTime;
+  else if (_currentTime > _endTime)_currentTime = _endTime;
   
-  time.SetMinTime(_data.minTime);
-  time.SetStartTime(_data.startTime);
-  time.SetEndTime(_data.endTime);
-  time.SetMaxTime(_data.maxTime);
-  time.SetActiveTime(_data.currentTime);
-  time.SetLoop(_data.loop);
+  //time->Lock();
+  time->SetMinTime(_minTime);
+  time->SetStartTime(_startTime);
+  time->SetEndTime(_endTime);
+  time->SetMaxTime(_maxTime);
+  time->SetActiveTime(_currentTime);
+  time->SetLoop(_loop);
+  time->SetSpeed(_speed);
+  time->SetMode(_mode);
+  time->SetFPS(_fps);
+  //time->Release();
 }
 
 float 
 TimelineUI::_GetFrameUnderMouse(int x, int y)
 {
   View* parent = GetView();
-  return RESCALE(x - parent->GetX(), 0.f, parent->GetWidth(), _data.minTime, _data.maxTime);
+  return RESCALE(x - parent->GetX(), 0.f, parent->GetWidth(), _minTime, _maxTime);
 }
 
-pxr::GfVec2f 
+GfVec2f 
 TimelineUI::_TimeToPosition(float time)
 {
-  return pxr::GfVec2f(RESCALE(time, _data.minTime, _data.maxTime, 
+  return GfVec2f(RESCALE(time,_minTime, _maxTime, 
     0.f, _parent->GetWidth()), 0.f);
 }
 
 float 
-TimelineUI::_PositionToTime(const pxr::GfVec2f& position)
+TimelineUI::_PositionToTime(const GfVec2f& position)
 {
   return RESCALE(position[0] - _parent->GetX(), 0.f, 
-    _parent->GetWidth(), _data.minTime, _data.maxTime);
+    _parent->GetWidth(), _minTime, _maxTime);
 }
 
 void TimelineUI::MouseButton(int button, int action, int mods)
 {
-  Time& time = GetApplication()->GetTime();
+  Time* time = Time::Get();
   double x, y;
   glfwGetCursorPos(_parent->GetWindow()->GetGlfwWindow(), &x, &y);
 
   if (action == GLFW_PRESS) {
-    SetInteracting(true);
-    _lastX = static_cast<double>(x);
-    _lastY = static_cast<double>(y);
-    _frame = _GetFrameUnderMouse(x, y);
+    if((_parent->GetMax()[1] - y) > TIMELINE_CONTROL_HEIGHT) {
+      SetInteracting(true);
+      _lastX = static_cast<double>(x);
+      _lastY = static_cast<double>(y);
+      _frame = _GetFrameUnderMouse(x, y);
+    }
   } else if (action == GLFW_RELEASE) {
-    SetInteracting(false);
-    _frame = _GetFrameUnderMouse(x, y);
-    _data.currentTime = _frame;
-    time.SetActiveTime(_frame);
+    if(IsInteracting()) {
+      SetInteracting(false);
+      _frame = _GetFrameUnderMouse(x, y);
+      _currentTime = _frame;
+      time->SetActiveTime(_frame);
+    }
   }
   _parent->SetDirty();
 }
@@ -179,14 +129,14 @@ void TimelineUI::MouseMove(int x, int y)
 {
   _frame = _GetFrameUnderMouse(x, y);
   if (_interacting) {
-    Time& time = GetApplication()->GetTime();
+    Time* time = Time::Get();
     _frame = _GetFrameUnderMouse(x, y);
     if (static_cast<int>(_frame) != static_cast<int>(_lastFrame)) {
-      _data.currentTime = _frame;
-      time.SetActiveTime(_frame);
+      _currentTime = _frame;
+      time->SetActiveTime(_frame);
       AttributeChangedNotice().Send();
       _lastFrame = _frame;
-      _parent->GetWindow()->ForceRedraw();
+      _parent->SetDirty();
     }
   }
   if (_parent->GetFlag(View::INTERACTING) || _parent->GetFlag(View::OVER))
@@ -195,128 +145,126 @@ void TimelineUI::MouseMove(int x, int y)
 
 void TimelineUI::DrawButtons()
 {
-  UIUtils::AddIconButton<UIUtils::CALLBACK_FN>(
-    0, ICON_FA_BACKWARD_FAST , ICON_DEFAULT,
-    (UIUtils::CALLBACK_FN)FirstFrameCallback, this
-    );
+  Time* time = Time::Get();
+  _playing = time->IsPlaying();
+  UI::AddIconButton(0, ICON_FA_BACKWARD_FAST , UI::STATE_DEFAULT,
+    [&](){
+      _currentTime = _startTime;
+      time->SetActiveTime(_currentTime);
+      WindowRegistry::Get()->SetAllWindowsDirty();
+    });
   ImGui::SameLine();
 
-  UIUtils::AddIconButton<UIUtils::CALLBACK_FN>(
-    1, ICON_FA_BACKWARD_STEP, ICON_DEFAULT,
-    (UIUtils::CALLBACK_FN)PreviousFrameCallback, this
-    );
+  UI::AddIconButton(1, ICON_FA_BACKWARD_STEP, UI::STATE_DEFAULT,
+    [&](){
+      time->PreviousFrame();
+      WindowRegistry::Get()->SetAllWindowsDirty();
+    });
   ImGui::SameLine();
 
-  if (!_data.playing) {
-    UIUtils::AddCheckableIconButton<UIUtils::CALLBACK_FN, TimelineUI*>(
-      2, ICON_FA_PLAY , ICON_DEFAULT,
-      (UIUtils::CALLBACK_FN)PlaybackCallback, this);
+  if (!_playing) {
+    UI::AddCheckableIconButton(2, ICON_FA_PLAY , UI::STATE_DEFAULT,
+    [&](){
+      _playing = 1 - _playing;
+      time->StartPlayback();
+    });
   } else {
-    UIUtils::AddCheckableIconButton<UIUtils::CALLBACK_FN, TimelineUI*>(
-      2, ICON_FA_STOP , ICON_SELECTED,
-      (UIUtils::CALLBACK_FN)PlaybackCallback, this);
+    UI::AddCheckableIconButton(2, ICON_FA_STOP , UI::STATE_SELECTED,
+    [&](){
+      _playing = 1 - _playing;
+      time->StopPlayback();
+    });
   }
   ImGui::SameLine();
 
-  UIUtils::AddIconButton<UIUtils::CALLBACK_FN>(
-    3, ICON_FA_FORWARD_STEP, ICON_DEFAULT,
-    (UIUtils::CALLBACK_FN)NextFrameCallback, this);
+  UI::AddIconButton(3, ICON_FA_FORWARD_STEP, UI::STATE_DEFAULT,
+    [&](){
+      time->NextFrame();
+      WindowRegistry::Get()->SetAllWindowsDirty();
+    });
   ImGui::SameLine();
 
-  UIUtils::AddIconButton<UIUtils::CALLBACK_FN, TimelineUI*>(
-    4, ICON_FA_FORWARD_FAST, ICON_DEFAULT,
-    (UIUtils::CALLBACK_FN)LastFrameCallback, this);
+  UI::AddIconButton(4, ICON_FA_FORWARD_FAST, UI::STATE_DEFAULT,
+    [&](){
+      _currentTime = _endTime;
+      time->SetActiveTime(_currentTime);
+      WindowRegistry::Get()->SetAllWindowsDirty();
+    });
   ImGui::SameLine();
 
-  UIUtils::AddCheckableIconButton<UIUtils::CALLBACK_FN, TimelineUI*>(
-    5, ICON_FA_ROTATE,
-    _data.loop ? ICON_SELECTED : ICON_DEFAULT,
-    (UIUtils::CALLBACK_FN)LoopCallback, this);
+  UI::AddCheckableIconButton(5, ICON_FA_ROTATE,
+    _loop ? UI::STATE_SELECTED : UI::STATE_DEFAULT,
+    [&](){
+      _loop = 1 - _loop;
+      time->SetLoop(_loop);
+    });
   ImGui::SameLine();
+}
+
+
+// this should move to UIUtils
+void TimelineUI::_DrawOneControl(const char* name, float width, float& value, 
+  float previous, short labelled, const char* tooltip)
+{
+  if(labelled == 1) {
+    ImGui::Text(name);
+    ImGui::SameLine();
+  }
+  ImGui::SetNextItemWidth(width);
+  ImGui::InputScalar(UI::HiddenLabel(name).c_str(), ImGuiDataType_Float, &value,
+    NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
+  if (!ImGui::IsItemActive() && value != previous)
+    ValidateTime();
+  
+  if (tooltip && ImGui::IsItemHovered())
+    AttachTooltip(tooltip);
+  ImGui::SameLine();
+
+  if(labelled == 2) {
+    ImGui::Text(name);
+    ImGui::SameLine();
+  }
 }
 
 void TimelineUI::DrawControls()
 {
-  Application* app = GetApplication();
+  Time* time = Time::Get();
   int width = GetWidth();
   int height = GetHeight();
 
   ImGuiStyle* style = &ImGui::GetStyle();
   const ImVec4* colors = style->Colors;
 
-  ImGui::SetCursorPosX(20);
-  ImGui::SetCursorPosY(height - TIMELINE_CONTROL_HEIGHT + 8);
+  static const int padding = 4;
 
-  //ImGui::PushFont(GetWindow()->GetMediumFont(0));
+  int itemWidth = 40;
+  float perc = width / 100.f;
+  int posY = height - (TIMELINE_CONTROL_HEIGHT - padding);
+  ImGui::SetCursorPosX(padding);
+  ImGui::SetCursorPosY(posY);
 
-  ImGui::SetNextItemWidth(60);
-  ImGui::InputScalar("##minTime", ImGuiDataType_Float, &_data.minTime,
-    NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
-  if (!ImGui::IsItemActive() && _data.minTime != app->GetTime().GetMinTime())
-  {
-    ValidateTime();
-  }
-  if (ImGui::IsItemHovered())
-    AttachTooltip("Minimum Time");
-  //AttachTooltip("Minimum Time", 0.5f, 128, GetWindow()->GetRegularFont(0));
-  ImGui::SameLine(); 
+  _DrawOneControl("min", itemWidth, _minTime, time->GetMinTime(), 2);
+  _DrawOneControl("start", itemWidth, _startTime, time->GetStartTime(), 2);
 
-  ImGui::SetNextItemWidth(60);
-  ImGui::InputScalar("##startTime", ImGuiDataType_Float, &_data.startTime,
-    NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
-  if (!ImGui::IsItemActive() && _data.startTime != app->GetTime().GetStartTime())
-  {
-    ValidateTime();
-  }
-  if (ImGui::IsItemHovered())
-    AttachTooltip("Start Time");
-  //AttachTooltip("Start Time", 0.5f, 128, GetWindow()->GetRegularFont(0));
-  ImGui::SameLine(); 
-
-  float cy = ImGui::GetCursorPosY();
-  //ImGui::SetCursorPosY(cy - 6);
-  ImGui::SetCursorPosX(width * 0.5f - 64);
+  ImGui::SetCursorPosX(20 * perc);
+  _DrawOneControl("fps", itemWidth, _fps, time->GetFPS(), 1);
+  _DrawOneControl("speed", itemWidth, _speed, time->GetSpeed(), 1);
 
   // buttons
+  ImGui::SetCursorPosX(40 * perc);
   DrawButtons();
-  ImGui::SetCursorPosY(cy);
+  _DrawOneControl("time", itemWidth, _currentTime, time->GetActiveTime(), 0);
 
-  // current time
-  ImGui::SetNextItemWidth(60);
-  ImGui::InputScalar("##currentTime", ImGuiDataType_Float, &_data.currentTime,
-    NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
-  if (!ImGui::IsItemActive() && _data.currentTime != app->GetTime().GetActiveTime())
-  {
-    ValidateTime();
-  }
-  if (ImGui::IsItemHovered())
-    AttachTooltip("Current Time");
-  //AttachTooltip("Current Time", 0.5f, 128, GetWindow()->GetRegularFont(0));
-  ImGui::SameLine(); 
-
-  ImGui::SetCursorPosX(width - 140);
-
-  ImGui::SetNextItemWidth(60);
-  ImGui::InputScalar("##endTime", ImGuiDataType_Float, &_data.endTime,
-    NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
-  if (!ImGui::IsItemActive() && _data.endTime != app->GetTime().GetEndTime())
-  {
-    ValidateTime();
-  }
+  ImGui::SetCursorPosX(60 * perc);
+  static const char* playbackModeNames[2] = {"Realtime", "AllFrames"};
+  UI::AddComboWidget("mode", &playbackModeNames[0], 2, _mode, 120);
   ImGui::SameLine();
 
-  ImGui::SetNextItemWidth(60);
-  ImGui::InputScalar("##maxTime", ImGuiDataType_Float, &_data.maxTime,
-    NULL, NULL, "%.3f", ImGuiInputTextFlags_AutoSelectAll);
-  if (!ImGui::IsItemActive() && _data.maxTime != app->GetTime().GetMaxTime())
-  {
-    ValidateTime();
-  }
-  if (ImGui::IsItemHovered())
-    AttachTooltip("Maximum Time");
-  //AttachTooltip("Maximum Time", 0.5f, 128, GetWindow()->GetRegularFont(0));
-  ImGui::SameLine();
-  //ImGui::PopFont();
+  int textWidth = ImGui::CalcTextSize("endmax")[0];
+  ImGui::SetCursorPosX(width - (2 * itemWidth + padding + textWidth));
+  _DrawOneControl("end", itemWidth, _endTime, time->GetEndTime(), 1);
+  _DrawOneControl("max", itemWidth, _maxTime, time->GetMaxTime(), 1);
+
 }
 
 void TimelineUI::DrawTimeSlider()
@@ -343,58 +291,64 @@ void TimelineUI::DrawTimeSlider()
 
   // draw background
   drawList->AddRectFilled(
-    pxr::GfVec2f(xmin, ymin),
-    pxr::GfVec2f(xmax, ymax),
+    GfVec2f(xmin, ymin),
+    GfVec2f(xmax, ymax),
     backColor, rounding, corners_none
   );
 
   // draw frames
   drawList->AddRectFilled(
-    pxr::GfVec2f(xmin, ymid),
-    pxr::GfVec2f(xmax, ymax),
+    GfVec2f(xmin, ymid),
+    GfVec2f(xmax, ymax),
     frontColor, rounding, corners_none);
 
-  Application* app = GetApplication();
+  Time* time = Time::Get();
 
   xmin += 2 * TIMELINE_SLIDER_THICKNESS;
   xmax -= 2 * TIMELINE_SLIDER_THICKNESS;
 
-  int numFrames = (app->GetTime().GetEndTime() - app->GetTime().GetStartTime());
-  float incr = 1 / (float)numFrames;
+  static const float minBlockWidth = 16.f;
+  int numFrames = (time->GetEndTime() - time->GetStartTime());
+  const float currentBlockWidth = (float)GetWidth() / (float)numFrames;
+
+  int numFramesToSkip = GfMax(1.f, GfFloor(minBlockWidth/currentBlockWidth));
+
+  float incr = 1.f / (float)numFrames; 
   for (int i = 0; i < numFrames; ++i)
   {
+    if (i % numFramesToSkip > 0)continue;
     float perc = i * incr;
-    if (((int)(i - app->GetTime().GetStartTime()) % (int)_data.fps) == 0)
+    if (((int)(i - time->GetStartTime()) % (int)_fps) == 0)
     {
-      pxr::GfVec2f p1(xmin * (1 - perc) + xmax * perc, ymin);
-      pxr::GfVec2f p2(xmin * (1 - perc) + xmax * perc, ymid);
+      GfVec2f p1(xmin * (1 - perc) + xmax * perc, ymin);
+      GfVec2f p2(xmin * (1 - perc) + xmax * perc, ymid);
       drawList->AddLine(p1, p2, frameColor, 1);
     }
     else
     {
-      pxr::GfVec2f p1(xmin * (1 - perc) + xmax * perc, ymin * 0.30 + ymid * 0.70);
-      pxr::GfVec2f p2(xmin * (1 - perc) + xmax * perc, ymid);
+      GfVec2f p1(xmin * (1 - perc) + xmax * perc, ymin * 0.30 + ymid * 0.70);
+      GfVec2f p2(xmin * (1 - perc) + xmax * perc, ymid);
       drawList->AddLine(p1, p2, frameColor, 1);
     }
   }
 
   // draw slider
   float sliderPerc =
-    (float)(app->GetTime().GetActiveTime() - app->GetTime().GetStartTime()) /
-    (float)(app->GetTime().GetEndTime() - app->GetTime().GetStartTime());
+    (float)(time->GetActiveTime() - time->GetStartTime()) /
+    (float)(time->GetEndTime() - time->GetStartTime());
   float sliderX = (xmin * (1 - sliderPerc) + xmax * sliderPerc);
   drawList->AddRectFilled(
-    pxr::GfVec2f(sliderX - TIMELINE_SLIDER_THICKNESS, ymin),
-    pxr::GfVec2f(sliderX + TIMELINE_SLIDER_THICKNESS, ymid),
+    GfVec2f(sliderX - TIMELINE_SLIDER_THICKNESS, ymin),
+    GfVec2f(sliderX + TIMELINE_SLIDER_THICKNESS, ymid),
     sliderColor, rounding, corners_all
   );
 
   // draw frame
   /*
-  const pxr::GfVec2f framePosition(_TimeToPosition(_frame));
+  const GfVec2f framePosition(_TimeToPosition(_frame));
   drawList->AddRectFilled(
-    pxr::GfVec2f(framePosition[0]- 2.f, 0.f),
-    pxr::GfVec2f(framePosition[0] + 2.f, ymid),
+    GfVec2f(framePosition[0]- 2.f, 0.f),
+    GfVec2f(framePosition[0] + 2.f, ymid),
     ImColor(255, 0, 0, 255), rounding, corners_none);
     */
 }
@@ -403,9 +357,10 @@ bool TimelineUI::Draw()
 {
   if (!_initialized)Init();
 
+  ImGui::SetNextWindowPos(_parent->GetMin());
+  ImGui::SetNextWindowSize(_parent->GetSize());
   ImGui::Begin(_name.c_str(), NULL, _flags);
-  ImGui::SetWindowPos(_parent->GetMin());
-  ImGui::SetWindowSize(_parent->GetSize());
+  
 
   DrawTimeSlider();
   DrawControls();

@@ -1,7 +1,8 @@
 //--------------------------------------------------------------------------------
 // STRING UTILS
 //--------------------------------------------------------------------------------
-#pragma once
+#ifndef JVR_UTILS_STRINGS_H
+#define JVR_UTILS_STRINGS_H
 
 #include "../common.h"
 
@@ -158,9 +159,7 @@ static std::string RandomString(size_t length)
   auto RndC = []() -> char
   {
     const char charset[] =
-      "0123456789"
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-      "abcdefghijklmnopqrstuvwxyz";
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
     const size_t max_index = (sizeof(charset) - 1);
     return charset[rand() % max_index];
   };
@@ -179,3 +178,4 @@ static std::string ConvertCodePointToUtf8(char32_t codepoint)
 
 JVR_NAMESPACE_CLOSE_SCOPE
 
+#endif // JVR_UTILS_STRINGS_H

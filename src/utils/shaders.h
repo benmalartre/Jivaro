@@ -1,4 +1,8 @@
-#pragma once
+//--------------------------------------------------------------------------------
+// SHADERS UTILS
+//--------------------------------------------------------------------------------
+#ifndef JVR_UTILS_SHADER_H
+#define JVR_UTILS_SHADER_H
 
 #include "../common.h"
 #include <stdio.h>
@@ -165,3 +169,5 @@ private:
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE
+
+#endif // JVR_UTILS_SHADER_H

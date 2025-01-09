@@ -30,7 +30,7 @@ struct MeshWrapper {
 
   // Return position pos in local grid index space for polygon n and vertex v
   void getIndexSpacePoint(size_t n, size_t v, openvdb::Vec3d& pos) const {
-    pxr::GfVec3f pt = mesh->GetPosition(mesh->GetFaceVertexIndex(n, v));
+    GfVec3f pt = mesh->GetPosition(mesh->GetFaceVertexIndex(n, v));
     pos[0] = pt[0];
     pos[1] = pt[1];
     pos[2] = pt[2];
@@ -215,7 +215,7 @@ void VDB::FloodFill() {
 }
 
 
-void VDB::Transform(const pxr::GfMatrix4f & mat) {
+void VDB::Transform(const GfMatrix4f & mat) {
   /*
   _xfo *= mat;
   math::Mat4d vMat(mat.GetPtr());
@@ -223,14 +223,14 @@ void VDB::Transform(const pxr::GfMatrix4f & mat) {
   */
 }
 
-void VDB::Translate(const pxr::GfVec3f& dir) {
+void VDB::Translate(const GfVec3f& dir) {
   /*
   tempTransform.translate(dir);
   grid->transform().postTranslate(Vec3d(dir.x, dir.y, dir.z));
   */
 }
 
-void VDB::Rotate(const pxr::GfVec3f& axis, float angle) {
+void VDB::Rotate(const GfVec3f& axis, float angle) {
   /*
   Mat4d mat;
   mat.setToRotation(Vec3R(axis.x, axis.y, axis.z), angle);
@@ -266,16 +266,16 @@ VDB::VDB(const VDB & vdb) {
   _initialized = false;
 }
 
-pxr::GfRange3f VDB::GetBBox() {
+GfRange3f VDB::GetBBox() {
   
   openvdb::math::CoordBBox bbox = _grid->evalActiveVoxelBoundingBox();
   openvdb::Coord minC = bbox.getStart();
   openvdb::Coord maxC = bbox.getEnd();
   openvdb::Vec3d minPt = _grid->indexToWorld(minC);
   openvdb::Vec3d maxPt = _grid->indexToWorld(maxC);
-  return pxr::GfRange3f(
-    pxr::GfVec3f(minPt.x(), minPt.y(), minPt.z()), 
-    pxr::GfVec3f(maxPt.x(), maxPt.y(), maxPt.z())
+  return GfRange3f(
+    GfVec3f(minPt.x(), minPt.y(), minPt.z()), 
+    GfVec3f(maxPt.x(), maxPt.y(), maxPt.z())
   );
 }
 
@@ -298,8 +298,8 @@ bool VDB::IntersectRay(const float x, const float y, const float z,
   return val;
 }
 
-bool VDB::IntersectRay(const pxr::GfVec3f& pt, const pxr::GfVec3f& dir, 
-  pxr::GfVec3f& out) 
+bool VDB::IntersectRay(const GfVec3f& pt, const GfVec3f& dir, 
+  GfVec3f& out) 
 {
 	return IntersectRay(
     pt[0], pt[1], pt[2], 
@@ -346,8 +346,8 @@ bool VDB::IntersectRay(const float x, const float y, const float z,
   }*/
 }
 
-bool VDB::IntersectRay(const pxr::GfVec3f& pt, const pxr::GfVec3f& dir, 
-  pxr::GfVec3f& out, float&t) {
+bool VDB::IntersectRay(const GfVec3f& pt, const GfVec3f& dir, 
+  GfVec3f& out, float&t) {
   return IntersectRay(
     pt[0], pt[1], pt[2], 
     dir[0], dir[1], dir[2], 
@@ -394,8 +394,8 @@ void VDB::LoadVolume(std::ifstream & buf, int w, int h, int d, float resolution)
         else {
           f = -f;
         }
-        minV = pxr::GfMin(minV, f);
-        maxV = pxr::GfMax(maxV, f);
+        minV = GfMin(minV, f);
+        maxV = GfMax(maxV, f);
         acc.setValue(ijk, f);
       }
     }
@@ -411,7 +411,7 @@ void VDB::LoadVolume(std::ifstream & buf, int w, int h, int d, float resolution)
   _initialized = false;
 }
 
-void VDB::LevelSphere(const pxr::GfVec3f& center, float radius,
+void VDB::LevelSphere(const GfVec3f& center, float radius,
     float voxelSize, float width)
 {
   // Create a FloatGrid and populate it with a narrow-band

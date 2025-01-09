@@ -16,7 +16,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 class VDB {
 public:
   typedef std::shared_ptr<VDB> Ptr;
-  pxr::GfMatrix4f _xfo;
+  GfMatrix4f _xfo;
   openvdb::FloatGrid::Ptr _grid;
   float _isovalue;
   bool _initialized;
@@ -24,7 +24,7 @@ public:
   void LoadMesh(Mesh& toLoad, float resolution = 1.0, int band = 3);
   void LoadVolume(std::ifstream & buf, int w, int h , int d, 
     float resolution = 1.0);
-  void LevelSphere(const pxr::GfVec3f& center, float radius,
+  void LevelSphere(const GfVec3f& center, float radius,
     float voxelSize=0.5f, float width=4.f);
   void Clear();
   void Offset(float amt);
@@ -40,20 +40,20 @@ public:
   bool IntersectRay(const float x, const float y, const float z, 
     const float dx, const float dy, const float dz, 
     float & ox, float &oy, float &oz);
-  bool IntersectRay(const pxr::GfVec3f& pt, const pxr::GfVec3f& dir, 
-    pxr::GfVec3f& out);
+  bool IntersectRay(const GfVec3f& pt, const GfVec3f& dir, 
+    GfVec3f& out);
   bool IntersectRay(const float x, const float y, const float z, 
     const float dx, const float dy, const float dz, 
     float & ox, float &oy, float &oz, float &t);
-  bool IntersectRay(const pxr::GfVec3f& pt, const pxr::GfVec3f& dir, 
-    pxr::GfVec3f& out, float &t);
+  bool IntersectRay(const GfVec3f& pt, const GfVec3f& dir, 
+    GfVec3f& out, float &t);
   void Blur();
   void Taubin();
 
-  void Transform(const pxr::GfMatrix4f& mat);
-  void Translate(const pxr::GfVec3f& dir);
-  void Rotate(const pxr::GfVec3f& axis, float angle);
-  pxr::GfRange3f GetBBox();
+  void Transform(const GfMatrix4f& mat);
+  void Translate(const GfVec3f& dir);
+  void Rotate(const GfVec3f& axis, float angle);
+  GfRange3f GetBBox();
   void Save(std::string filename);
 
   void ToMesh(Mesh* mesh);

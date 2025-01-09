@@ -2,20 +2,47 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
+// singleton
+//----------------------------------------------------------------------------
+CommandManager* CommandManager::_singleton=nullptr;
+
+CommandManager* CommandManager::Get() { 
+  if(_singleton==nullptr){
+    _singleton = new CommandManager();
+  }
+  return _singleton; 
+};
+
 void
 CommandManager::AddCommand(std::shared_ptr<Command> command)
 {
-  _todoStack.push_front(command);
+  if(command->IsUndoable())
+    _todoStack.push_front(command);
+}
+
+void
+CommandManager::AddDeferredCommand(std::shared_ptr<Command> command)
+{
+  _deferredStack.push(command);
 }
 
 void
 CommandManager::ExecuteCommands() 
 {
   if(_todoStack.size()) {
-    _redoStack = CommandStack_t();             // clear the redo stack
+    _redoStack = CommandQueue_t();             // clear the redo stack
     std::shared_ptr<Command> command = _todoStack.back();
     _todoStack.pop_back();
     _undoStack.push_back(command);
+  }
+}
+
+void
+CommandManager::ExecuteDeferredCommands() 
+{
+  while (!_deferredStack.empty()) {
+    _deferredStack.top()->Do();
+    _deferredStack.pop();
   }
 }
 

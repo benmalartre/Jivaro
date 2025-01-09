@@ -1,0 +1,301 @@
+#usda 1.0
+(
+    """ This file contains a schema for Position Based Dynamics simulation in USD.
+    """
+    subLayers = [
+        @usd/schema.usda@,
+        @usdGeom/schema.usda@
+    ]
+) 
+
+over "GLOBAL" (
+    customData = {
+        string libraryName       = "UsdPbd"
+        string libraryPath       = "usdPbd"
+		
+		dictionary libraryTokens = {
+            dictionary colliders = {
+                string doc = """collision objects for the solver. """
+            }
+		}
+  }) {}
+
+class PbdSolver "PbdSolver" (
+    inherits = </Xform>
+    doc = """Defines position based dynamics solver."""
+    customData = {
+        string className = "Solver"
+        string extraIncludes = """
+          #include "pxr/usd/usd/collectionAPI.h"
+        """
+    }
+    prepend apiSchemas = ["CollectionAPI:colliders, CollectionAPI:bodies"]
+) {
+
+    int pbd:startFrame = 1.0 (
+        doc = """Simulation start frame"""
+        customData = {
+            string apiName = "startFrame"
+        }
+        displayName = "Start Frame"
+    )
+
+    float pbd:sleepThreshold = 0.001(
+        doc = """Sleep threshold"""
+        customData = {
+            string apiName = "sleepThreshold"
+        }
+        displayName = "Sleep Threshold"
+    )
+
+    int pbd:subSteps = 8(
+        doc = """Num substeps per frame"""
+        customData = {
+            string apiName = "subSteps"
+        }
+        displayName = "SubSteps"
+    ) 
+
+    vector3f pbd:gravity = (0.0, -9.8, 0.0) (
+        customData = {
+            string apiName = "gravity"
+        }
+        displayName = "Gravity"
+        doc = """Gravity vector in simulation solver space"""
+    )
+
+    rel pbd:bodies (
+        customData = {
+            string apiName = "bodies"
+        } 
+        displayName = "Bodies"
+        doc = """Simulate Body List"""
+    )
+
+    rel pbd:colliders (
+        customData = {
+            string apiName = "colliders"
+        }    
+        displayName = "Colliders"   
+        doc = """Collider Object List"""
+    )
+
+    bool pbd:showPoints = true(
+        customData = {
+            string apiName = "showPoints"
+        } 
+        displayName = "Show Points"
+        doc = """Display particles in viewport"""
+    )
+
+    bool pbd:showConstraints = true(
+        customData = {
+            string apiName = "showConstraints"
+        } 
+        displayName = "Show Constraints"
+        doc = """Display constraints in viewport"""
+    )
+}
+
+class "PbdBodyAPI"
+(
+  customData = {
+      string className = "BodyAPI"
+  }
+  doc = """Applies soft body attributes to a deformable prim."""
+
+  inherits = </APISchemaBase>
+)
+{
+  bool pbd:simulationEnabled = 1 (
+    customData = {
+      string apiName = "simulationEnabled"
+    }
+    displayName = "Simulation Enabled"
+    doc = "Determines if the PbdBodyAPI is enabled."
+  )
+
+  float pbd:radius = 0.1 (
+    customData = {
+      string apiName = "radius"
+    }
+    displayName = "Radius"
+    doc = """particle radius used by collision detection."""
+  )
+
+  bool pbd:selfCollisionEnabled = 0.2 (
+    customData = {
+      string apiName = "selfCollisionEnabled"
+    }
+    displayName = "Self Collision Enabled"
+    doc = """self collision detection active state."""
+  )
+
+  float pbd:selfCollisionRadius = 1.0 (
+    customData = {
+      string apiName = "selfCollisionRadius"
+    }
+    displayName = "Self Collision Radius"
+    doc = """particle radius used by self collision detection."""
+  )
+
+  float pbd:selfCollisionDamp = 0.1 (
+    customData = {
+      string apiName = "selfCollisionDamp"
+    }
+    displayName = "Self Collision Damp"
+    doc = """self collision damp coefficient."""
+  )
+
+  float pbd:selfCollisionFriction = 0.2 (
+    customData = {
+      string apiName = "selfCollisionFriction"
+    }
+    displayName = "Self Collision Friction"
+    doc = """self collision friction coefficient."""
+  )
+
+  float pbd:selfCollisionRestitution = 0.0 (
+    customData = {
+      string apiName = "selfCollisionRestitution"
+    }
+    displayName = "Self Collision Restitution"
+    doc = """Self COllision Restitution coefficient."""
+  )
+
+  float pbd:selfCollisionMaxSeparationVelocity = 5.0 (
+    customData = {
+      string apiName = "selfCollisionMaxSeparationVelocity"
+    }
+    displayName = "Self Collision Maximum Separation Velocity"
+    doc = """Self Collision Maximum separation velocity."""
+  )
+
+  float pbd:mass = 1.0 (
+    customData = {
+      string apiName = "mass"
+    }
+    displayName = "Mass"
+    doc = """friction coefficient."""
+  )
+
+  float pbd:damp = 0.1 (
+    customData = {
+      string apiName = "damp"
+    }
+    displayName = "Damp"
+    doc = """damp coefficient."""
+  )
+
+  vector3f pbd:velocity = (0.0, 0.0, 0.0) (
+    customData = {
+        string apiName = "velocity"
+    }
+    displayName = "Velocity"
+    doc = """Velocity vector in simulation solver space"""
+  )
+
+}
+
+class "PbdCollisionAPI"
+(
+  customData = {
+      string className = "CollisionAPI"
+  }
+  doc = """Applies position based dynamics collision attributes to a UsdGeomXformable prim."""
+
+  inherits = </APISchemaBase>
+)
+{
+  bool pbd:collisionEnabled = 1 (
+    customData = {
+      string apiName = "collisionEnabled"
+    }
+    displayName = "Enabled"
+    doc = "Determines if the PbdCollisionAPI is enabled."
+  )
+
+  float pbd:margin = 0.05 (
+    customData = {
+      string apiName = "margin"
+    }
+    displayName = "Margin"
+    doc = """extend search radius by margin for safer collision detection."""
+  )
+
+  float pbd:collisionDamp = 0.25 (
+    customData = {
+      string apiName = "damp"
+    }
+    displayName = "Damp"
+    doc = """collision constraint damp."""
+  )
+
+  float pbd:collisionStiffness = 0.0 (
+    customData = {
+      string apiName = "collisionStiffness"
+    }
+    displayName = "Collision Stiffness"
+    doc = """collision constraint stiffness."""
+  )
+
+  float pbd:friction = 0.2 (
+    customData = {
+      string apiName = "friction"
+    }
+    displayName = "Friction"
+    doc = """friction coefficient."""
+  )
+
+  float pbd:restitution = 0.0 (
+    customData = {
+      string apiName = "restitution"
+    }
+    displayName = "Restitution"
+    doc = """Restitution coefficient."""
+  )
+
+  float pbd:maxSeparationVelocity = 5.0 (
+    customData = {
+      string apiName = "maxSeparationVelocity"
+    }
+    displayName = "Maximum Separation Velocity"
+    doc = """Maximum separation velocity."""
+  )
+}
+
+class "PbdConstraintAPI"
+(
+  inherits = </APISchemaBase>
+  customData = {
+    token apiSchemaType = "multipleApply"
+    string className = "ConstraintAPI"
+    token propertyNamespacePrefix = "pbd:constraint"
+  }
+  doc = """Applies position based dynamics constraint attributes to a deformable prim(s)."""
+)
+{
+  bool constraintEnabled = 1 (
+    customData = {
+      string apiName = "constraintEnabled"
+    }
+    displayName = "Constraint Enabled"
+    doc = "Determines if the PbdConstraintAPI is enabled."
+  )
+
+  float stiffness = 10000.0 (
+    customData = {
+      string apiName = "stiffness"
+    }
+    displayName = "Stiffness"
+    doc = """stiffness coefficient. Unitless."""
+  )
+
+  float damp = 0.2 (
+    customData = {
+      string apiName = "damp"
+    }
+    displayName = "Damp"
+    doc = """Damp coefficient. Unitless."""
+  )
+}

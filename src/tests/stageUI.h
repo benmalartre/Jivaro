@@ -2,7 +2,6 @@
 #include "../common.h"
 #include "../graph/input.h"
 #include "../graph/output.h"
-#include "../graph/node.h"
 #include "../graph/graph.h"
 #include "../graph/connectableAPI.h"
 #include "../graph/stage.h"
@@ -24,14 +23,14 @@ JVR_NAMESPACE_OPEN_SCOPE
 void
 TestStageUI(
   GraphEditorUI* ui, 
-  const std::vector<pxr::UsdStageRefPtr>& stages
+  const std::vector<UsdStageRefPtr>& stages
 );
 
 void 
 RecurseStagePrim(
   GraphEditorUI* ui, 
   NodeUI* parent,
-  const pxr::UsdPrim& prim, 
+  const UsdPrim& prim, 
   int stageIndex, 
   int& nodeIndex
 );

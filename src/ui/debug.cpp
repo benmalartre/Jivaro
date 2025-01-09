@@ -5,11 +5,9 @@
 
 #include <pxr/base/trace/reporter.h>
 #include <pxr/base/trace/trace.h>
+#include <pxr/base/plug/plugin.h>
+#include <pxr/base/plug/registry.h>
 #include <pxr/base/tf/debug.h>
-
-#include "../imgui/imgui_impl_glfw.h"
-#include "../imgui/imgui_impl_opengl3.h"
-#include "../imgui/imgui_internal.h"
 
 #include "../ui/debug.h"
 #include "../app/view.h"
@@ -43,27 +41,27 @@ DebugUI::_DrawTraceReporter()
   static std::string reportStr;
 
   if (ImGui::Button("Start Tracing")) {
-    pxr::TraceCollector::GetInstance().SetEnabled(true);
+    TraceCollector::GetInstance().SetEnabled(true);
   }
   ImGui::SameLine();
   if (ImGui::Button("Stop Tracing")) {
-    pxr::TraceCollector::GetInstance().SetEnabled(false);
+    TraceCollector::GetInstance().SetEnabled(false);
   }
   ImGui::SameLine();
   if (ImGui::Button("Reset counters")) {
     std::ostringstream report;
-    pxr::TraceReporter::GetGlobalReporter()->Report(report);
+    TraceReporter::GetGlobalReporter()->Report(report);
     reportStr = report.str();
   }
   ImGui::SameLine();
 
   if (ImGui::Button("Update tree")) {
-    pxr::TraceReporter::GetGlobalReporter()->UpdateTraceTrees();
+    TraceReporter::GetGlobalReporter()->UpdateTraceTrees();
   }
-  if (pxr::TraceCollector::IsEnabled()) {
+  if (TraceCollector::IsEnabled()) {
     std::ostringstream report;
     
-    reportStr = pxr::TraceCollector::GetInstance().GetLabel();
+    reportStr = TraceCollector::GetInstance().GetLabel();
   }
   ImGuiIO& io = ImGui::GetIO();
   ImGui::PushFont(io.Fonts->Fonts[1]);
@@ -78,57 +76,77 @@ DebugUI::_DrawDebugCodes()
   // TfDebug::IsCompileTimeEnabled()
   ImVec2 listBoxSize(-FLT_MIN, -10);
   if (ImGui::BeginListBox("##DebugCodes", listBoxSize)) {
-    for (auto& code : pxr::TfDebug::GetDebugSymbolNames()) {
-      bool isEnabled = pxr::TfDebug::IsDebugSymbolNameEnabled(code);
+    for (auto& code : TfDebug::GetDebugSymbolNames()) {
+      bool isEnabled = TfDebug::IsDebugSymbolNameEnabled(code);
       if (ImGui::Checkbox(code.c_str(), &isEnabled)) {
-        pxr::TfDebug::SetDebugSymbolsByName(code, isEnabled);
+        TfDebug::SetDebugSymbolsByName(code, isEnabled);
       }
     }
     ImGui::EndListBox();
   }
 }
 
-// Draw a preference like panel
-void DrawDebugUI() {
-  
-  
+void 
+DebugUI::_DrawPlugins() 
+{
+  const PlugPluginPtrVector &plugins = PlugRegistry::GetInstance().GetAllPlugins();
+  ImVec2 listBoxSize(-FLT_MIN, -10);
+  if (ImGui::BeginListBox("##Plugins", listBoxSize)) {
+    for (const auto &plug : plugins) {
+      const std::string &plugName = plug->GetName();
+      const std::string &plugPath = plug->GetPath();
+      bool isLoaded = plug->IsLoaded();
+      if(ImGui::Checkbox(plugName.c_str(), &isLoaded)) {
+        plug->Load(); // There is no Unload in the API
+      }
+      ImGui::SameLine();
+      ImGui::Text("%s", plugPath.c_str());
+    }
+    ImGui::EndListBox();
+  }
 }
 
+// Draw a preference like panel
 bool DebugUI::Draw()
 {
   static const char* const panels[] = { 
     "Timings", 
     "Debug codes", 
-    "Trace reporter"
+    "Trace reporter",
+    "Plugins"
   };
   static int current_item = 0;
 
-  const pxr::GfVec2f min(GetX(), GetY());
-  const pxr::GfVec2f size(GetWidth(), GetHeight());
+  const GfVec2f min(GetX(), GetY());
+  const GfVec2f size(GetWidth(), GetHeight());
+
+  ImGui::SetNextWindowPos(min);
+  ImGui::SetNextWindowSize(size);
 
   ImGui::Begin(_name.c_str(), NULL, _flags);
-  ImGui::SetWindowPos(min);
-  ImGui::SetWindowSize(size);
+  
 
   ImGui::PushItemWidth(100);
-  ImGui::ListBox("##DebugPanels", &current_item, panels, 3);
+  ImGui::ListBox("##DebugPanels", &current_item, panels, 4);
   ImGui::SameLine();
   if (current_item == 0) {
     ImGui::BeginChild("##Timing");
     ImGui::Text("ImGui: %.3f ms/frame  (%.1f FPS)", 
       1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     ImGui::EndChild();
-  }
-  else if (current_item == 1) {
+  } else if (current_item == 1) {
     ImGui::BeginChild("##DebugCodes");
     _DrawDebugCodes();
     ImGui::EndChild();
-  }
-  else if (current_item == 2) {
+  } else if (current_item == 2) {
     ImGui::BeginChild("##TraceReporter");
     _DrawTraceReporter();
     ImGui::EndChild();
-  }
+  } else if (current_item == 3) {
+      ImGui::BeginChild("##Plugins");
+      _DrawPlugins();
+      ImGui::EndChild();
+    }
 
   ImGui::End();
   return true;

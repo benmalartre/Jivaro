@@ -5,7 +5,6 @@
 #include "../ui/ui.h"
 #include "../ui/fonts.h"
 #include "../ui/utils.h"
-#include "../ui/splitter.h"
 #include "../app/tools.h"
 #include "pxr/imaging/glf/contextCaps.h"
 #include "pxr/imaging/glf/glContext.h"
@@ -17,10 +16,11 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 extern bool LEGACY_OPENGL;
 
-class UsdEmbreeContext;
+class Index;
 class Application;
+class Selection;
 class View;
-class Splitter;
+class SplitterUI;
 class BaseUI;
 class PopupUI;
 
@@ -57,22 +57,19 @@ CharCallback(GLFWwindow* window, unsigned c);
 // resize callback
 //----------------------------------------------------------------------------
 JVR_EXPORT void 
-ResizeCallback(GLFWwindow* window, int width, int height);
+WindowSizeCallback(GLFWwindow* window, int width, int height);
 
 // focus callback
 //----------------------------------------------------------------------------
 JVR_EXPORT void
 FocusCallback(GLFWwindow* window, int focused);
 
-
 class Window
 {
 public:
   // constructor
-  Window(int width, int height, const std::string& name);
-  Window(bool fullscreen, const std::string& name);
-  Window(int x, int y, int width, int height,
-    GLFWwindow* parent, const std::string& name, bool decorated=true);
+  Window(const std::string& name, const GfVec4i& dimension,
+    bool fullscreen=false, Window* parent=NULL);
 
   //destructor
   ~Window();
@@ -80,8 +77,13 @@ public:
   // initialize
   void Init();
 
+  // index
+  void SetIndex(Index* index) {_index=index;};
+  Index* GetIndex() {return _index;};
+
   // ui
   ImGuiContext* GetContext() { return _context; };
+  std::string ComputeUniqueUIName(short type);
 
   // tool
   Tool* GetTool() { return &_tool; };
@@ -91,55 +93,67 @@ public:
   GLFWwindow* GetGlfwWindow(){return _window;};
   bool GetDebounce(){return _debounce;};
   void SetDebounce(bool debounce){_debounce=debounce;};
-  void CollectLeaves(View* view = NULL);
   const std::string& GetName() { return _name; };
 
   // imgui context
   void SetupImgui();
   void ClearImgui();
-  int GetGuiId(){return _guiId;};
 
   // fullscreen
   bool IsFullScreen(){return _fullscreen;};
   void SetFullScreen(bool fullscreen){_fullscreen = fullscreen;};
 
-  // children
-  //void AddChild(Window* child);
-  //void RemoveChild(Window* child);
-
   // size
   int GetWidth(){return _width;};
   int GetHeight(){return _height;};
+  GfVec2i GetResolution() { return GfVec2i(_width, _height); };
   void SetWidth(int width){_width = width;};
   void SetHeight(int height){_height = height;};
   void Resize(unsigned width, unsigned height);
-  void BuildSplittersMap();
+  int GetMenuBarHeight();
+
+  // mouse
+  GfVec2f GetMousePosition();
 
   // views
   SplitterUI* GetSplitter(){return _splitter;};
   View* SplitView(View* view, double perc = 0.5, bool horizontal=true, 
     int fixed=0, int numPixels=-1);
+  void RemoveView(View* view);
   View* GetMainView(){return _mainView;};
   void SetActiveView(View* view);
   void SetHoveredView(View* view);
   View* GetActiveView(){return _activeView;};
   View* GetHoveredView() { return _hoveredView; };
   View* GetViewUnderMouse(int x, int y);
-  void DirtyViewsUnderBox(const pxr::GfVec2i& min, const pxr::GfVec2i& size);
-  void DiscardMouseEventsUnderBox(const pxr::GfVec2i& min, const pxr::GfVec2i& size);
+  void CollectLeaves();
+  const std::vector<View*>& GetLeaves();
+  const std::vector<View*>& GetViews();
+  void DirtyViewsUnderBox(const GfVec2f& min, const GfVec2f& size);
+  void DiscardMouseEventsUnderBox(const GfVec2f& min, const GfVec2f& size);
+  void DiscardKeyboardEvents();
+  void InvalidateViews();
+  void ClearViews();
+  void DirtyAllViews(bool force);
+  void SetLayout();
+  void SetDesiredLayout(size_t layout);
+  size_t GetLayout();
   
   // draw
   void SetGLContext();
-  void Draw();
-  void Draw(PopupUI* popup);
+  void Draw(bool force);
+  void DrawPopup(PopupUI* popup);
   bool PickSplitter(double mX, double mY);
-  void ForceRedraw();
   void SetIdle(bool value){_idle=value;};
   bool IsIdle(){return _idle;};
   void CaptureFramebuffer();
-
+  void BeginRepeatKey();
+  void EndRepeatKey();
+  bool ShouldRepeatKey();
+  void SetViewportMessage(const std::string &message);
+  
   // fonts
-  inline ImFont* GetFont(size_t index){return FONTS[index];};
+  inline ImFont* GetFont(size_t size, size_t index);
 
   // tool
   inline void SetActiveTool(int tool) {
@@ -150,7 +164,7 @@ public:
   };
   inline int GetActiveTool(){return _activeTool;};
   inline void RestoreLastActiveTool(){_activeTool=_lastActiveTool;};
-  bool UpdateActiveTool(int mouseX, int mouseY);
+  void UpdateActiveTool(int mouseX, int mouseY);
 
   // splitter
   void BeginDragSplitter(){_dragSplitter=true;};
@@ -173,6 +187,7 @@ private:
   View*                 _activeLeaf;
   SplitterUI*           _splitter;
   bool                  _dragSplitter;
+  std::vector<View*>    _views;
   std::vector<View*>    _leaves;
   ImGuiContext*         _context;
   Tool                  _tool;
@@ -184,9 +199,13 @@ private:
   int                   _lastActiveTool;
   int                   _width;
   int                   _height;
+  int                   _mouseX;
+  int                   _mouseY;
   unsigned*             _pixels;
   bool                  _valid;
-  int                   _forceRedraw;
+  int                   _layout;
+  bool                  _needUpdateLayout;
+  Index*                _index;
 
   // version number
   int                   _iOpenGLMajor;
@@ -198,25 +217,31 @@ private:
 
   // imgui
   ImGuiIO*              _io;
-  int                   _guiId;
   bool                  _debounce;
-
+  uint64_t              _lastRepeatT;
+  
   // fonts
   float                 _fontSize;
 
   // ui
-  float                 _dpiX;
-  float                 _dpiY;
   GLuint                _fbo;
   GLuint                _tex;
+  UITypeCounter         _uic;
 
-public:
-  // static constructor
-  //----------------------------------------------------------------------------
-  static Window* CreateFullScreenWindow();
-  static Window* CreateStandardWindow(int width, int height);
-  static Window* CreateChildWindow(int x, int y, int width, int height, GLFWwindow* parent,
-    const std::string& name="Child", bool decorated=true);
+  // deferred
+  std::vector<CALLBACK_FN> _deferred;
+
+};
+
+// fonts
+ImFont* Window::GetFont(size_t size, size_t index) 
+{ 
+  if(size == FONT_SMALL)
+    return FONTS_SMALL[index];
+  else if(size == FONT_MEDIUM)
+    return FONTS_MEDIUM[index];
+  else
+    return FONTS_LARGE[index];
 };
 
 JVR_NAMESPACE_CLOSE_SCOPE

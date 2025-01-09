@@ -8,9 +8,13 @@
 
 #include "../ui/style.h"
 #include "../ui/explorer.h"
-#include "../app/application.h"
+#include "../ui/popup.h"
+#include "../app/model.h"
+#include "../app/commands.h"
+#include "../app/callbacks.h"
 #include "../app/notice.h"
 #include "../app/window.h"
+#include "../app/registry.h"
 #include "../app/view.h"
 
 
@@ -27,10 +31,9 @@ ImGuiWindowFlags ExplorerUI::_flags =
 
 ImGuiTreeNodeFlags ExplorerUI::_treeFlags =
   ImGuiTreeNodeFlags_OpenOnArrow |
-  ImGuiTreeNodeFlags_OpenOnDoubleClick |
   ImGuiTreeNodeFlags_SpanAvailWidth;
 
-static void ExploreLayerTree(pxr::SdfLayerTreeHandle tree, pxr::PcpNodeRef node) {
+static void ExploreLayerTree(SdfLayerTreeHandle tree, PcpNodeRef node) {
   if (!tree)
     return;
   auto obj = tree->GetLayer()->GetObjectAtPath(node.GetPath());
@@ -41,7 +44,6 @@ static void ExploreLayerTree(pxr::SdfLayerTreeHandle tree, pxr::PcpNodeRef node)
     format += obj->GetPath().GetString();
     if (ImGui::MenuItem(format.c_str())) {
       //ExecuteAfterDraw<EditorInspectLayerLocation>(tree->GetLayer(), obj->GetPath());
-      std::cout << "INSPECT LAYER LOCATION : " << obj->GetPath() << std::endl;
     }
   }
   for (auto subTree : tree->GetChildTrees()) {
@@ -49,13 +51,13 @@ static void ExploreLayerTree(pxr::SdfLayerTreeHandle tree, pxr::PcpNodeRef node)
   }
 }
 
-static void ExploreComposition(pxr::PcpNodeRef root) {
+static void ExploreComposition(PcpNodeRef root) {
   auto tree = root.GetLayerStack()->GetLayerTree();
   ExploreLayerTree(tree, root);
   TF_FOR_ALL(childNode, root.GetChildrenRange()) { ExploreComposition(*childNode); }
 }
 
-static void DrawUsdPrimEditMenuItems(const pxr::UsdPrim& prim) {
+static void DrawUsdPrimEditMenuItems(const UsdPrim& prim) {
   if (ImGui::MenuItem("Toggle active")) {
     const bool active = !prim.IsActive();
     //ExecuteAfterDraw(&UsdPrim::SetActive, prim, active);
@@ -85,9 +87,8 @@ static void DrawUsdPrimEditMenuItems(const pxr::UsdPrim& prim) {
 // constructor
 ExplorerUI::ExplorerUI(View* parent) 
   : BaseUI(parent, UIType::EXPLORER)
-  , _counter(0)
+  , _drag(false)
 {
-  _parent->SetDirty();
 }
 
 // destructor
@@ -95,21 +96,6 @@ ExplorerUI::~ExplorerUI()
 {
 }
 
-/*
-void 
-ExplorerUI::OnSceneChangedNotice(const SceneChangedNotice& n)
-{
-  Update();
-}
-
-void
-ExplorerUI::OnSelectionChangedNotice(const SelectionChangedNotice& n)
-{
-  Select();
-}
-*/
-
-/*
 void 
 ExplorerUI::Init()
 {
@@ -117,33 +103,32 @@ ExplorerUI::Init()
   _parent->SetDirty();
   _initialized = true;
 }
-*/
+
+ExplorerUI::Item*
+ExplorerUI::_GetItemUnderMouse(const GfVec2f &relative)
+{
+  const ImGuiStyle& style = ImGui::GetStyle();
+  size_t lineHeight = ImGui::GetTextLineHeight() + style.FramePadding.y * 2 + style.ItemInnerSpacing.y;
+  int index = (_scroll[1] + relative[1]) / lineHeight - 1;
+
+  if(index >= 0 && index < _items.size())
+    return &_items[index]; 
+
+  return NULL;
+}
+
 
 void 
 ExplorerUI::MouseButton(int button, int action, int mods)
 {
-  double x, y;
-  glfwGetCursorPos(_parent->GetWindow()->GetGlfwWindow(), &x, &y);
-  if (x > GetX() + (GetWidth() - 50)) return;
-
-  Application* app = GetApplication();
-  if (button == GLFW_MOUSE_BUTTON_LEFT) {
-    if (action == GLFW_RELEASE) {
-      if (app->GetWorkStage()->GetPrimAtPath(_current).IsValid()) {
-        if (mods & GLFW_MOD_CONTROL) {
-          app->ToggleSelection({ _current });
-        }
-        else {
-          app->SetSelection({ _current });
-        }
-      }
-    }
-  }
 }
 
 void 
 ExplorerUI::MouseMove(int x, int y)
 {
+  if(_drag) {
+    _GetItemUnderMouse(GfVec2f(x - GetX(), y - GetY()));
+  }
 }
 
 void
@@ -151,8 +136,9 @@ ExplorerUI::Keyboard(int key, int scancode, int action, int mods)
 {
 }
 
+
 void
-ExplorerUI::DrawItemBackground(ImDrawList* drawList,
+ExplorerUI::_DrawItemBackground(ImDrawList* drawList,
   bool selected, bool& flip)
 {
   const ImGuiStyle& style = ImGui::GetStyle();
@@ -181,14 +167,14 @@ ExplorerUI::DrawItemBackground(ImDrawList* drawList,
 }
 
 void
-ExplorerUI::DrawBackground()
+ExplorerUI::_DrawBackground()
 {
   ImDrawList* drawList = ImGui::GetBackgroundDrawList();
   const auto& style = ImGui::GetStyle();
-  const float scrollOffsetH = ImGui::GetScrollX();
-  const float scrollOffsetV = ImGui::GetScrollY();
-  pxr::GfVec2f clipRectMin(GetX(), GetY());
-  pxr::GfVec2f clipRectMax(GetX() + GetWidth(), GetY() + GetHeight());
+  _scroll[0] = ImGui::GetScrollX();
+  _scroll[1] = ImGui::GetScrollY();
+  GfVec2f clipRectMin(GetX(), GetY());
+  GfVec2f clipRectMax(GetX() + GetWidth(), GetY() + GetHeight());
 
   if (ImGui::GetScrollMaxX() > 0)
   {
@@ -203,11 +189,11 @@ ExplorerUI::DrawBackground()
   ImGui::SetCursorPos(
     ImVec2(
       clipRectMin[0],
-      clipRectMin[1] - scrollOffsetV + ImGui::GetTextLineHeight() + style.FramePadding[1] * 2));
+      clipRectMin[1] - _scroll[1] + ImGui::GetTextLineHeight() + style.FramePadding[1] * 2));
   //ImGui::PopFont();
   //ImGui::PushFont(GetWindow()->GetRegularFont(1));
   for (auto& item : _items) {
-    DrawItemBackground(drawList, item.selected, flip);
+    _DrawItemBackground(drawList, item.selected, flip);
     flip = !flip;
   }
   //ImGui::PopFont();
@@ -215,7 +201,7 @@ ExplorerUI::DrawBackground()
 }
 
 void 
-ExplorerUI::DrawType(const pxr::UsdPrim& prim, bool selected)
+ExplorerUI::_DrawType(const UsdPrim& prim, bool selected)
 {
   ImGui::Text("%s", prim.GetTypeName().GetText());
   if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
@@ -224,7 +210,7 @@ ExplorerUI::DrawType(const pxr::UsdPrim& prim, bool selected)
   ImGui::NextColumn();
 }
 
-static void _PushCurrentPath(const pxr::SdfPath& path, pxr::SdfPathVector& paths)
+static void _PushCurrentPath(const SdfPath& path, SdfPathVector& paths)
 {
   if (path.IsEmpty())return;
   for (auto& _path : paths) {
@@ -234,63 +220,48 @@ static void _PushCurrentPath(const pxr::SdfPath& path, pxr::SdfPathVector& paths
 }
 
 void
-ExplorerUI::DrawVisibility(const pxr::UsdPrim& prim, bool visible, bool selected)
-{
-  const ImGuiStyle& style = ImGui::GetStyle();
-  
-  ImGui::PushStyleColor(ImGuiCol_Button, TRANSPARENT_COLOR);
-  ImGui::PushStyleColor(ImGuiCol_ButtonHovered, TRANSPARENT_COLOR);
-  ImGui::PushStyleColor(ImGuiCol_ButtonActive, TRANSPARENT_COLOR);
-  
+ExplorerUI::_DrawVisibility(const UsdPrim& prim, bool visible, bool selected)
+{  
   const char* visibleIcon = ICON_FA_EYE;
   const char* invisibleIcon = ICON_FA_EYE_SLASH;
 
-  Application* app = GetApplication();
   if (ImGui::Button(visible ? visibleIcon : invisibleIcon)) {
     _current = prim.GetPath();
-    pxr::SdfPathVector paths = app->GetSelection()->GetSelectedPrims();
+    SdfPathVector paths = _model->GetSelection()->GetSelectedPaths();
     _PushCurrentPath(_current, paths);
     ADD_COMMAND(ShowHideCommand, paths, ShowHideCommand::TOGGLE);
   }
 
   ImGui::NextColumn();
-  ImGui::PopStyleColor(3);
 }
 
 void
-ExplorerUI::DrawActive(const pxr::UsdPrim& prim, bool selected)
+ExplorerUI::_DrawActive(const UsdPrim& prim, bool active, bool selected)
 {
-  const ImGuiStyle& style = ImGui::GetStyle();
+  const char* activeIcon = ICON_FA_TOGGLE_ON;
+  const char* inactiveIcon = ICON_FA_TOGGLE_OFF;
 
-  ImGui::PushStyleColor(ImGuiCol_Button, TRANSPARENT_COLOR);
-  ImGui::PushStyleColor(ImGuiCol_ButtonHovered, TRANSPARENT_COLOR);
-  ImGui::PushStyleColor(ImGuiCol_ButtonActive, TRANSPARENT_COLOR);
-
-  const char* activeIcon = ICON_FA_RIGHT_TO_BRACKET;
-  const char* inactiveIcon = ICON_FA_PAUSE;
-
-  Application* app = GetApplication();
-  Selection* selection = app->GetSelection();
+  Selection* selection = _model->GetSelection();
   
- 
-  if (ImGui::Button(selected ? activeIcon : inactiveIcon)) {
+  if (ImGui::Button(active ? activeIcon : inactiveIcon)) {
     _current = prim.GetPath();
-    pxr::SdfPathVector paths = selection->GetSelectedPrims();
+    SdfPathVector paths = selection->GetSelectedPaths();
     _PushCurrentPath(_current, paths);
-    ADD_COMMAND(ActivateCommand, paths, ActivateCommand::TOGGLE);
+    ADD_COMMAND(ActivatePrimCommand, paths, ActivatePrimCommand::TOGGLE);
   }
 
   ImGui::NextColumn();
-  ImGui::PopStyleColor(3);
 }
 
-static ImVec4 PrimDefaultColor(227.f/255.f, 227.f/255.f, 227.f/255.f, 1.0);
+static ImVec4 PrimDefaultColor(0.85,0.85,0.85, 1.0);
+static ImVec4 PrimSelectedColor(0.15, 0.15, 0.15, 1.0);
 static ImVec4 PrimInactiveColor(0.4, 0.4, 0.4, 1.0);
 static ImVec4 PrimInstanceColor(135.f/255.f, 206.f/255.f, 250.f/255.f, 1.0);
 static ImVec4 PrimPrototypeColor(118.f/255.f, 136.f/255.f, 217.f/255.f, 1.0);
 static ImVec4 PrimHasCompositionColor(222.f/255.f, 158.f/255.f, 46.f/255.f, 1.0);
 
-static ImVec4 GetPrimColor(const pxr::UsdPrim& prim) {
+static ImVec4 GetPrimColor(const UsdPrim& prim) {
+
   if (!prim.IsActive() || !prim.IsLoaded()) {
     return PrimInactiveColor;
   }
@@ -309,14 +280,43 @@ static ImVec4 GetPrimColor(const pxr::UsdPrim& prim) {
   return PrimDefaultColor;
 }
 
+/*
+
+  double x, y;
+  glfwGetCursorPos(_parent->GetWindow()->GetGlfwWindow(), &x, &y);
+  if (x > GetX() + (GetWidth() - 50)) return;
+
+  if (button == GLFW_MOUSE_BUTTON_LEFT) {
+    if (action == GLFW_PRESS) {
+      ExplorerUI::Item* item = _GetItemUnderMouse(GfVec2f(x - GetX(), y - GetY()));
+      if (!item) return;
+
+      _current = item->path;
+      if (_model->GetStage()->GetPrimAtPath(_current).IsValid()) {
+        if (mods & GLFW_MOD_CONTROL) {
+          _model->ToggleSelection({ _current });
+        }
+        else {
+          _model->SetSelection({ _current });
+        }
+      }
+      _drag = true;
+      _dragItems = _model->GetSelection()->GetSelectedPaths();
+    } else if(action == GLFW_RELEASE) {
+      _drag = false; 
+    }
+  }
+  
+  */
+
 /// Recursive function to draw a prim and its descendants
 void 
-ExplorerUI::DrawPrim(const pxr::UsdPrim& prim, Selection* selection) 
+ExplorerUI::_DrawPrim(const UsdPrim& prim, Selection* selection) 
 {
   ImGuiTreeNodeFlags flags = _treeFlags;
   
   const auto& children = prim.GetFilteredChildren(
-    pxr::UsdTraverseInstanceProxies(pxr::UsdPrimAllPrimsPredicate));
+    UsdTraverseInstanceProxies(UsdPrimAllPrimsPredicate));
 
   if (children.empty()) {
     flags |= ImGuiTreeNodeFlags_Leaf;
@@ -326,71 +326,98 @@ ExplorerUI::DrawPrim(const pxr::UsdPrim& prim, Selection* selection)
     flags |= ImGuiTreeNodeFlags_Selected;
   }
 
-  ImGui::PushStyleColor(ImGuiCol_Text, GetPrimColor(prim));
+  ImGui::PushStyleColor(ImGuiCol_Text, selected ? PrimSelectedColor : GetPrimColor(prim));
   const bool unfolded = ImGui::TreeNodeEx(prim.GetName().GetText(), flags);
-  if (ImGui::IsItemClicked()) {
+  if(ImGui::IsItemClicked() && ImGui::IsMouseDoubleClicked(0)) {
+    InputPopupUI* popup = new InputPopupUI(GetX() + ImGui::GetCursorPosX(), 
+      GetY() + ImGui::GetCursorPosY(), GetWidth(), 24,
+      std::bind(&Callbacks::RenamePrim, _model, _current, std::placeholders::_1));
+
+    ADD_DEFERRED_COMMAND(UIGenericCommand, std::bind(&WindowRegistry::SetPopup, popup));
+  }
+  else if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
     _current = prim.GetPath();
+
+    ImGuiIO& io = ImGui::GetIO();
+
+    if (_model->GetStage()->GetPrimAtPath(_current).IsValid()) {
+      if (io.KeysDown[GLFW_KEY_LEFT_CONTROL] || io.KeysDown[GLFW_KEY_RIGHT_CONTROL]) {
+        _model->ToggleSelection({ _current });
+      }
+      else {
+        _model->SetSelection({ _current });
+      }
+    }
   }
 
-  if (ImGui::IsItemToggledOpen())_parent->SetFlag(View::DISCARDMOUSEBUTTON);
-  ImGui::PopStyleColor();
+  if (ImGui::IsItemToggledOpen())
+    _parent->SetFlag(View::DISCARDMOUSEBUTTON);
+
   ImGui::NextColumn();
 
-  DrawType(prim, selected);
+  _DrawType(prim, selected);
   
-  pxr::UsdGeomImageable imageable(prim);
+  UsdGeomImageable imageable(prim);
   if (imageable) {
-    pxr::TfToken visibility;
-    imageable.GetVisibilityAttr().Get<pxr::TfToken>(&visibility);
-    const bool visible = (visibility != pxr::UsdGeomTokens->invisible);
-    DrawVisibility(prim, visible, selected);
+    TfToken visibility;
+    imageable.GetVisibilityAttr().Get<TfToken>(&visibility);
+    const bool visible = (visibility != UsdGeomTokens->invisible);
+    _DrawVisibility(prim, visible, selected);
   } else {
     ImGui::NextColumn();
   }
 
-  DrawActive(prim, selected);
+  _DrawActive(prim, prim.IsActive(), selected);
 
   _items.push_back({ prim.GetPath(), _mapping++, selected });
 
+  ImGui::PopStyleColor();
+
   if (unfolded) {
-    if (prim.IsActive()) {
+    if (prim.IsValid() && prim.IsActive()) {
       for (const auto& child : children) {
-        DrawPrim(child, selection);
+        _DrawPrim(child, selection);
       }
     }
     ImGui::TreePop();
   }
+
+  
 }
 
 bool 
 ExplorerUI::Draw()
 {
   /// Draw the hierarchy of the stage
-  Application* app = GetApplication();
-  Selection* selection = app->GetSelection();
-  pxr::UsdStageRefPtr stage = app->GetWorkStage();
+  Selection* selection = _model->GetSelection();
+  UsdStageRefPtr stage = _model->GetStage();
   const ImGuiStyle& style = ImGui::GetStyle();
   if (!stage) return false;
 
-  const pxr::GfVec2f min(GetX(), GetY());
-  const pxr::GfVec2f size(GetWidth(), GetHeight());
-  ImGui::Begin(_name.c_str(), NULL, _flags);
-  ImGui::SetWindowPos(min);
-  ImGui::SetWindowSize(size);
+  const GfVec2f min(GetX(), GetY());
+  const GfVec2f size(GetWidth(), GetHeight());
 
+  ImGui::SetNextWindowPos(min);
+  ImGui::SetNextWindowSize(size);
+
+  ImGui::Begin(_name.c_str(), NULL, _flags);
+
+  // setup transparent background
+  ImGui::PushStyleColor(ImGuiCol_Header, TRANSPARENT_COLOR);
+  ImGui::PushStyleColor(ImGuiCol_HeaderHovered, TRANSPARENT_COLOR);
+  ImGui::PushStyleColor(ImGuiCol_HeaderActive, TRANSPARENT_COLOR);
+  ImGui::PushStyleColor(ImGuiCol_Button, TRANSPARENT_COLOR);
+  ImGui::PushStyleColor(ImGuiCol_ButtonHovered, TRANSPARENT_COLOR);
+  ImGui::PushStyleColor(ImGuiCol_ButtonActive, TRANSPARENT_COLOR);
+  ImGui::PushStyleColor(ImGuiCol_BorderShadow, TRANSPARENT_COLOR);
+  
   _items.clear();
   _mapping = 0;
 
   ImDrawList* backgroundList = ImGui::GetBackgroundDrawList();
   backgroundList->AddRectFilled(min, min + size, ImColor(style.Colors[ImGuiCol_WindowBg]));
 
-  const pxr::UsdPrim root = stage->GetPseudoRoot();
-  pxr::SdfLayerHandle layer = stage->GetSessionLayer();
-
-  // setup transparent background
-  ImGui::PushStyleColor(ImGuiCol_Header, TRANSPARENT_COLOR);
-  ImGui::PushStyleColor(ImGuiCol_HeaderHovered, TRANSPARENT_COLOR);
-  ImGui::PushStyleColor(ImGuiCol_HeaderActive, TRANSPARENT_COLOR);
+  const UsdPrim root = stage->GetPseudoRoot();
 
   // setup columns
   ImGui::Columns(4);
@@ -411,7 +438,6 @@ ExplorerUI::Draw()
   ImGui::NextColumn();
   //ImGui::PopFont();
 
-  //ImGui::SetCursorPos(pxr::GfVec2f(0.f, EXPLORER_LINE_HEIGHT));
   /*
   bool unfolded = 
     ImGui::TreeNodeEx(stage->GetRootLayer()->GetDisplayName().c_str(), _treeFlags);*/
@@ -425,16 +451,20 @@ ExplorerUI::Draw()
     // TODO HighlightSelectedPaths();
   }
   */
+
   //ImGui::PushFont(GetWindow()->GetRegularFont(1));
   const auto& children = root.GetFilteredChildren(
-    pxr::UsdTraverseInstanceProxies(pxr::UsdPrimAllPrimsPredicate));
+    UsdTraverseInstanceProxies(UsdPrimAllPrimsPredicate));
+  
   for (const auto& child : children) {
-    DrawPrim(child, selection);
+    _DrawPrim(child, selection);
   }
+  ImGui::PopStyleColor(7);
+
   //ImGui::PopFont();
-  DrawBackground();
+  _DrawBackground();
   //ImGui::TreePop();
-  ImGui::PopStyleColor(3);
+
   ImGui::End();
 
   return
@@ -443,5 +473,14 @@ ExplorerUI::Draw()
     ImGui::IsAnyItemFocused() ||
     ImGui::IsAnyMouseDown();
 }
+
+void 
+ExplorerUI::OnSelectionChangedNotice(const SelectionChangedNotice& n)
+{
+  Selection* selection = _model->GetSelection();
+
+  std::cout << "Explorer Recieved Selection Change Event!!" << std::endl;
+}
+
 
 JVR_NAMESPACE_CLOSE_SCOPE

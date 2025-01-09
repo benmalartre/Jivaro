@@ -2,91 +2,45 @@
 //----------------------------------------------
 #include "../geometry/points.h"
 #include "../geometry/utils.h"
+#include "../geometry/voxels.h"
+
 #include <pxr/base/gf/ray.h>
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-Points::~Points()
+Points::Points(const GfMatrix4d& m)
+  : Deformable(Geometry::POINT, m)
 {
-};
-
-Points::Points()
-  : Geometry(Geometry::POINT)
-{
-  _initialized = false;
-  _numPoints = 0;
 }
 
-Points::Points(const Points* other, bool normalize)
-  : Geometry(other, Geometry::POINT, normalize)
+Points::Points(const UsdPrim& prim, const GfMatrix4d& world)
+  : Deformable(prim, world)
 {
-  _initialized = true;
-  _numPoints = other->_numPoints;
-
-  _normals = other->_normals;
-
-  _radius.resize(_numPoints);
-  memcpy(&_radius[0], &other->_radius[0], _numPoints * sizeof(float));
 }
 
-Points::Points(const pxr::UsdGeomPoints& points)
-  : Geometry(Geometry::POINT)
+Geometry::DirtyState 
+Points::_Sync(const GfMatrix4d& matrix, const UsdTimeCode& time)
 {
-
-  pxr::UsdAttribute pointsAttr = points.GetPointsAttr();
-  pointsAttr.Get(&_points, pxr::UsdTimeCode::Default());
-  _numPoints = _points.size();
-
-  pxr::UsdAttribute normalsAttr = points.GetNormalsAttr();
-  if (normalsAttr.IsDefined() && normalsAttr.HasAuthoredValue())
-    normalsAttr.Get(&_normals, pxr::UsdTimeCode::Default());
-
-  pxr::UsdAttribute widthsAttr = points.GetWidthsAttr();
-  if (widthsAttr.IsDefined() && widthsAttr.HasAuthoredValue())
-    widthsAttr.Get(&_radius, pxr::UsdTimeCode::Default());
+  if(_prim.IsValid() && _prim.IsA<UsdGeomPoints>())
+  {
+    _previous = _positions;
+    UsdGeomPoints usdPoints(_prim);
+    const size_t nbPositions = _positions.size();
+    usdPoints.GetPointsAttr().Get(&_positions, time);
+  }
+  return Geometry::DirtyState::DEFORM;
 }
 
-void Points::SetDisplayColor(GeomInterpolation interp, 
-  const pxr::VtArray<pxr::GfVec3f>& colors) 
+void 
+Points::_Inject(const GfMatrix4d& parent,
+    const UsdTimeCode& time)
 {
-  _colorsInterpolation = interp;
-  _colors = colors;
-}
-
-
-void Points::Init(
-  const pxr::VtArray<pxr::GfVec3f>& positions, 
-  const pxr::VtArray<float>& radius)
-{
-  _radius = radius;
-  _points = positions;
-  _normals = positions;
-  _numPoints = _points.size();
-}
-
-void Points::Update(const pxr::VtArray<pxr::GfVec3f>& positions)
-{
-  _points = positions;
-}
-
-void Points::Update(const pxr::VtArray<float>& radius)
-{
-  _radius = radius;
-}
-
-void Points::Update(const pxr::VtArray<pxr::GfVec3f>& positions,
-  const pxr::VtArray<float>& radius)
-{
-  _points = positions;
-  _radius = radius;
-}
-
-Point Points::Get(uint32_t index)
-{
-  if(index < _points.size())
-    return {index, index < _radius.size() ? _radius[index] : 1.f};   
-  else
-    return {INVALID_POINT_ID, 1.f}; 
+  if(_prim.IsA<UsdGeomPoints>()) {
+    UsdGeomPoints usdPoints(_prim);
+    usdPoints.CreatePointsAttr().Set(GetPositions(), time);
+    usdPoints.CreateWidthsAttr().Set(GetWidths(), time);
+    usdPoints.SetWidthsInterpolation(UsdGeomTokens->varying);
+  }
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE
