@@ -172,8 +172,8 @@ Body* Solver::CreateBody(Geometry* geom, const GfMatrix4d& matrix,
   if(attach)
     CreateConstraints(body, Constraint::ATTACH, 10000.f, 0.25f);
 
-  //if(_showPoints)UpdatePoints();
-  //else ClearPoints();
+  //if(_showPoints)UpdatePointsDisplay();
+  //else ClearPointsDisplay();
 
   return body;
 }
@@ -278,7 +278,7 @@ void Solver::PinPoints(Body* body, Geometry* target, VtArray<int>& elements)
   //CreatePinConstraints()
 }
 
-void Solver::UpdatePoints()
+void Solver::UpdatePointsDisplay()
 {
   size_t numParticles = _particles.GetNumParticles();
   
@@ -316,7 +316,7 @@ void Solver::ClearPoints()
   }
 }
 
-void Solver::UpdateCurves()
+void Solver::UpdateConstraintsDisplay()
 {
   size_t numConstraints = _constraints.size();
 
@@ -346,7 +346,7 @@ void Solver::UpdateCurves()
   _scene->MarkPrimDirty(_curvesId, HdChangeTracker::AllDirty);
 }
 
-void Solver::ClearCurves()
+void Solver::ClearConstraintsDisplay()
 {
   if(_curves->GetNumCurves()) {
     _curves->RemoveAllCurves();
@@ -522,10 +522,10 @@ void Solver::Update(UsdStageRefPtr& stage, float time)
     Step(stage, time);
   }
 
-  if(_showPoints)UpdatePoints();
+  if(_showPoints)UpdatePointsDisplay();
   else ClearPoints();
-  if(_showConstraints)UpdateCurves();
-  else ClearCurves();
+  if(_showConstraints)UpdateConstraintsDisplay();
+  else ClearConstraintsDisplay();
   UpdateGeometries();
 
 }
@@ -583,7 +583,7 @@ void Solver::Reset(UsdStageRefPtr& stage)
   for(auto& collision: _collisions)
     collision->Reset();
 
-  UpdateCurves();
+  UpdateConstraintsDisplay();
 }
 
 void Solver::Step(UsdStageRefPtr& stage, float time)

@@ -78,8 +78,8 @@ public:
   void AddConstraint(Constraint* constraint);
   Constraint* GetConstraint(size_t idx) { return _constraints[idx]; };
   void GetConstraintsByType(short type, std::vector<Constraint*>& results);
-  void UpdateCurves();
-  void ClearCurves();
+  void UpdateConstraintsDisplay();
+  void ClearConstraintsDisplay();
 
   // contacts
   void AddContact(Constraint* contact) { _contacts.push_back(contact); };
@@ -99,8 +99,8 @@ public:
   void AttachPoints(Body* body, VtArray<int>& elements);
   void PinPoints(Body* body, Geometry* target, VtArray<int>& elements);
 
-  void UpdatePoints();
-  void ClearPoints();
+  void UpdatePointsDisplay();
+  void ClearPointsDisplay();
   void WeightBoundaries(Body* body);
   Points* GetPoints(){return _points;};
   SdfPath GetPointsId(){return _pointsId;};
