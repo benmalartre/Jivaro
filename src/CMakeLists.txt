@@ -75,16 +75,6 @@ add_executable(${TARGET}
   #exec/node.cpp 
   #exec/network.cpp 
 
-  #embree/oiio.cpp
-  #embree/jpeg.cpp
-  #embree/utils.cpp
-  #embree/sphere.cpp
-  #embree/mesh.cpp
-  #embree/subdiv.cpp
-  #embree/instance.cpp
-  #embree/context.cpp
-  #embree/device.cpp
-
   geometry/utils.cpp
   geometry/matrix.cpp
   geometry/rbf.cpp

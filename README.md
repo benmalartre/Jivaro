@@ -3,6 +3,8 @@
 This is where I experiment with OpenUsd and software development.
 The basic idea is to add an execution system inside a Hydra 2.0 Scene Index.
 
+What you see in the gif below is NOT a usd file read but an actual simulation with particles interacting with the environment.
+
 
 ![UI preview of Jivaro](NGlfc5s1.gif)
 
