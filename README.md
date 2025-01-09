@@ -6,7 +6,17 @@ The basic idea is to add an execution system inside a Hydra 2.0 Scene Index.
 What you see in the gif below is NOT a usd file read but an actual simulation with particles interacting with the environment.
 
 
-![UI preview of Jivaro](NGlfc5s1.gif)
+![UI preview of Jivaro 1](NGlfc5s1.gif)
+
+![UI preview of Jivaro 2](1C3Tsa1W.gif)
+
+![UI preview of Jivaro 3](09c9751i.gif)
+
+![UI preview of Jivaro 4](frEI1ERm.gif)
+
+![UI preview of Jivaro 5](Qp39YGzu.gif)
+
+![UI preview of Jivaro 6](wVP3H2oN.gif)
 
 Jivaro is develloped and tested on Windows (Windows 10 Pro) and on MacBookPro M1 (MacOs Monterey 12.3.1)
 
