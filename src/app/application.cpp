@@ -37,6 +37,7 @@ Application::Application()
 Application::~Application()
 {
   delete _index;
+  delete _model;
 };
 
 
@@ -80,9 +81,6 @@ Application::Init(unsigned width, unsigned height, bool fullscreen)
   _index->SetStage(_model->GetStage());
 
 }
-
-
-
 
 void
 Application::Term()
