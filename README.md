@@ -40,3 +40,16 @@ on MacOS, before launching the app (and waiting for better solution) you have to
 2. export PXR_PLUGINPATH_NAME=path_to_jivaro_install/lib/usd
 
 
+# Open sources projects
+https://github.com/PixarAnimationStudios/OpenUSD
+https://github.com/glfw/glfw
+https://github.com/ocornut/imgui
+
+# References (codes and papers)
+https://github.com/ahmidou
+https://github.com/cpichard
+https://github.com/janbender
+https://github.com/matthias-research
+https://github.com/mmacklin
+https://github.com/raph080
+https://github.com/yuki-koyama
