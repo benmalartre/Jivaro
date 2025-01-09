@@ -1134,28 +1134,6 @@ DisplayCallback(GLFWwindow* window)
     macMoved = true;
   }
 #endif
-  /*
-  double dt1 = embree::getSeconds()-t0;
-  avg_frame_time.add(dt1);
-
-  if (print_frame_rate)
-  {
-    std::ostringstream stream;
-    stream.setf(std::ios::fixed, std::ios::floatfield);
-    stream.precision(2);
-    stream << "render: ";
-    stream << 1.0f/dt0 << " fps, ";
-    stream << dt0*1000.0f << " ms, ";
-#if defined(RAY_STATS)
-    stream << mrayps << " Mray/s, ";
-#endif
-    stream << "display: ";
-    stream << 1.0f/dt1 << " fps, ";
-    stream << dt1*1000.0f << " ms, ";
-    stream << width << "x" << height << " pixels";
-    std::cout << stream.str() << std::endl;
-  } 
-  */
 }
 
 void 

@@ -1,6 +1,8 @@
 # Jivaro
 
-This is where i experiment with usd and software devellopment
+This is where I experiment with OpenUsd and software development.
+The basic idea is to add an execution system inside a Hydra 2.0 Scene Index.
+
 
 ![UI preview of Jivaro](NGlfc5s1.gif)
 
