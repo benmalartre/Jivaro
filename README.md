@@ -1,4 +1,5 @@
 # Jivaro
+Experimental OpenUSD based standalone application using glfw3 and imgui
 
 This is where i experiment with usd and software devellopment
 
