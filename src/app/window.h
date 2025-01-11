@@ -177,45 +177,51 @@ public:
   static Window* GetUserData(GLFWwindow* window);
 
 private:
+  // datas
   bool                  _idle;
   std::string           _name;
   GLFWwindow*           _window;
+  Index*                _index;
   bool                  _shared;
-  View*                 _mainView;
-  View*                 _activeView;
-  View*                 _hoveredView;
-  View*                 _activeLeaf;
-  SplitterUI*           _splitter;
-  bool                  _dragSplitter;
-  std::vector<View*>    _views;
-  std::vector<View*>    _leaves;
-  ImGuiContext*         _context;
-  Tool                  _tool;
-
-  // view datas
-  bool                  _fullscreen;
-  int                   _mouseMode;
-  int                   _activeTool;
-  int                   _lastActiveTool;
   int                   _width;
   int                   _height;
   int                   _mouseX;
   int                   _mouseY;
   unsigned*             _pixels;
+
+
+  // state
+  bool                  _dragSplitter;
+  bool                  _fullscreen;
+  int                   _mouseMode;
   bool                  _valid;
   int                   _layout;
   bool                  _needUpdateLayout;
-  Index*                _index;
 
-  // version number
+  // views
+  View*                 _mainView;
+  View*                 _activeView;
+  View*                 _hoveredView;
+  View*                 _activeLeaf;
+  std::vector<View*>    _views;
+  std::vector<View*>    _leaves;
+  
+
+  // tool
+  Tool                  _tool;
+  int                   _activeTool;
+  int                   _lastActiveTool;
+
+  // opengl
   int                   _iOpenGLMajor;
   int                   _iOpenGLMinor;
   int                   _iOpenGLRevision;
-
-  // opengl
   GLuint                _vao;
+  GLuint                _fbo;
+  GLuint                _tex;
 
   // imgui
+  ImGuiContext*         _context;
   ImGuiIO*              _io;
   bool                  _debounce;
   uint64_t              _lastRepeatT;
@@ -224,12 +230,8 @@ private:
   float                 _fontSize;
 
   // ui
-  GLuint                _fbo;
-  GLuint                _tex;
+  SplitterUI*           _splitter;
   UITypeCounter         _uic;
-
-  // deferred
-  std::vector<CALLBACK_FN> _deferred;
 
 };
 
