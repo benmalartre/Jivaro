@@ -5,9 +5,9 @@
 // https://prideout.net/blog/old/blog/index.html@p=54.html
 // 
 //
-#include "pxr/usdImaging/usdNprImaging/mesh.h"
-#include "pxr/usdImaging/usdNprImaging/utils.h"
-#include "pxr/usdImaging/usdNprImaging/stroke.h"
+#include "mesh.h"
+#include "utils.h"
+#include "stroke.h"
 #include <iostream>
 
 PXR_NAMESPACE_OPEN_SCOPE

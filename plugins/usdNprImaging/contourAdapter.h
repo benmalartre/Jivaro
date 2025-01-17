@@ -32,9 +32,9 @@
 #include "pxr/usd/usdGeom/xformCache.h"
 #include "pxr/usdImaging/usdImaging/primAdapter.h"
 #include "pxr/usdImaging/usdImaging/gprimAdapter.h"
-#include "pxr/usdImaging/usdNprImaging/api.h"
-#include "pxr/usdImaging/usdNprImaging/mesh.h"
-#include "pxr/usdImaging/usdNprImaging/stroke.h"
+#include "api.h"
+#include "mesh.h"
+#include "stroke.h"
 #include <mutex>
 
 PXR_NAMESPACE_OPEN_SCOPE

@@ -1,4 +1,4 @@
-set(PXR_PREFIX pxr/usdImaging)
+#set(PXR_PREFIX pxr/usdImaging)
 set(PXR_PACKAGE usdNprImaging)
 
 usd_library(usdNprImaging

@@ -308,7 +308,7 @@ void Solver::UpdatePointsDisplay()
   }
 }
 
-void Solver::ClearPoints()
+void Solver::ClearPointsDisplay()
 {
   if(_points->GetNumPoints()) {
     _points->RemoveAllPoints();
@@ -523,7 +523,7 @@ void Solver::Update(UsdStageRefPtr& stage, float time)
   }
 
   if(_showPoints)UpdatePointsDisplay();
-  else ClearPoints();
+  else ClearPointsDisplay();
   if(_showConstraints)UpdateConstraintsDisplay();
   else ClearConstraintsDisplay();
   UpdateGeometries();

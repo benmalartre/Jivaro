@@ -25,7 +25,7 @@
 #define PXR_USD_IMAGING_USD_NPR_IMAGING_TOKENS_H
 
 #include "pxr/pxr.h"
-#include "pxr/usdImaging/usdNprImaging/api.h"
+#include "api.h"
 #include "pxr/base/tf/staticTokens.h"
 
 PXR_NAMESPACE_OPEN_SCOPE

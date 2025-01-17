@@ -1,8 +1,8 @@
 //
 // Copyright 2020 benmalartre
 //
-#include "pxr/usdImaging/usdNprImaging/stroke.h"
-#include "pxr/usdImaging/usdNprImaging/mesh.h"
+#include "stroke.h"
+#include "mesh.h"
 #include <iostream>
 
 PXR_NAMESPACE_OPEN_SCOPE

@@ -1,5 +1,5 @@
 #include "pxr/imaging/garch/glApi.h"
-#include "pxr/usdImaging/usdNprImaging/utils.h"
+#include "utils.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 
