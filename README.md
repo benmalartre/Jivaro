@@ -15,6 +15,7 @@ The basic idea is to add an execution system inside a Hydra 2.0 Scene Index.
 
 ![UI preview of Jivaro 5](images/Qp39YGzu.gif)
 
+![UI preview of Jivaro 6](images/G0PV9FDY.gif)
 
 
 Jivaro is develloped and tested on Windows (Windows 10 Pro) and on MacBookPro M1 (MacOs Monterey 12.3.1)

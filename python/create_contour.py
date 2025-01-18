@@ -14,8 +14,6 @@ viewpoint = contour.GetContourViewPointRel()
 viewpoint.SetTargets([camera.GetPrim().GetPath()])
 
 surfaces = contour.GetContourSurfacesRel()
-print(surfaces)
-
 meshes = [prim.GetPath() for prim in stage.TraverseAll() if prim.GetTypeName() == "Mesh"]
 surfaces.SetTargets(meshes)
 

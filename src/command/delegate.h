@@ -1,6 +1,3 @@
-//
-// Copyright 2022 benmalartre
-//
 #ifndef UNDOSTATEDELEGATE_H
 #define UNDOSTATEDELEGATE_H
 

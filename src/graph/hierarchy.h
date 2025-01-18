@@ -17,8 +17,8 @@ class HierarchyNode : public Graph::Node {
     HierarchyNode(UsdPrim& prim, HierarchyNode* parent = NULL);
     ~HierarchyNode() {};
 
-    Graph::Port* GetParentPort() { return &_ports[0]; };
-    Graph::Port* GetChildrenPort() { return &_ports[1]; };
+    Graph::Port* GetParentPort() { return &_ports[_ports.size() - 2]; };
+    Graph::Port* GetChildrenPort() { return &_ports[_ports.size() - 1]; };
 
     void AddChild(HierarchyNode* child){_children.push_back(child);};
 

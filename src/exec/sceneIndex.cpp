@@ -47,7 +47,7 @@ ExecSceneIndex::~ExecSceneIndex()
 HdSceneIndexPrim
 _GetPointsSceneIndexPrim(Points* points) 
 {
- HdSceneIndexPrim prim = HdSceneIndexPrim(
+  HdSceneIndexPrim prim = HdSceneIndexPrim(
     {HdPrimTypeTokens->points,
       HdRetainedContainerDataSource::New(
         HdPrimvarsSchemaTokens->primvars,
@@ -59,9 +59,9 @@ _GetPointsSceneIndexPrim(Points* points)
                   points->GetPositions()))
               .SetInterpolation(
                 HdPrimvarSchema::BuildInterpolationDataSource(
-                  HdPrimvarSchemaTokens->varying))
+                  HdPrimvarSchemaTokens->vertex))
               .SetRole(HdPrimvarSchema::BuildRoleDataSource(
-                HdPrimvarSchemaTokens->color))
+                HdPrimvarSchemaTokens->point))
               .Build(),
           HdPrimvarsSchemaTokens->widths,
           HdPrimvarSchema::Builder()
@@ -100,57 +100,106 @@ _GetPointsSceneIndexPrim(Points* points)
 
 
 HdSceneIndexPrim
-_GetCurveSceneIndexPrim(Curve* curve) 
+_GetBasisCurvesSceneIndexPrim(Curve* curve) 
 {
- HdSceneIndexPrim prim = HdSceneIndexPrim(
+  HdDataSourceBaseHandle bcs =
+    HdBasisCurvesSchema::Builder()
+      .SetTopology(
+        HdBasisCurvesTopologySchema::Builder()
+          .SetCurveVertexCounts(
+            HdRetainedTypedSampledDataSource<VtIntArray>::New(
+              curve->GetCvCounts()))
+          .SetCurveIndices(
+            HdRetainedTypedSampledDataSource<VtIntArray>::New(
+              VtIntArray()))
+          .SetBasis(
+            HdRetainedTypedSampledDataSource<TfToken>::New(
+              HdTokens->bezier))
+          .SetType(
+            HdRetainedTypedSampledDataSource<TfToken>::New(
+              HdTokens->linear))
+          .SetWrap(
+            HdRetainedTypedSampledDataSource<TfToken>::New(
+            HdTokens->segmented))
+          .Build())
+      .Build();
+
+    
+    //const _Primvars &primvars = curve.primvars;
+    std::vector<TfToken> primvarNames;
+    primvarNames.reserve(1);
+    std::vector<HdDataSourceBaseHandle> primvarDataSources;
+    primvarDataSources.reserve(1);
+
+    // points
+    primvarNames.push_back(HdTokens->points);
+    primvarDataSources.push_back(
+      HdPrimvarSchema::Builder()
+        .SetPrimvarValue(
+          HdRetainedTypedSampledDataSource<VtVec3fArray>::New(
+            curve->GetPositions()))
+        .SetInterpolation(
+          HdPrimvarSchema::BuildInterpolationDataSource(
+            HdPrimvarSchemaTokens->vertex))
+        .SetRole(HdPrimvarSchema::BuildRoleDataSource(
+          HdPrimvarSchemaTokens->point))
+        .Build());
+
+    HdDataSourceBaseHandle primvarsDs =
+      HdRetainedContainerDataSource::New(1, primvarNames.data(),
+                                      primvarDataSources.data());
+
+    return HdSceneIndexPrim(
+      { HdPrimTypeTokens->basisCurves,
+        HdRetainedContainerDataSource::New(
+            HdBasisCurvesSchemaTokens->basisCurves,
+            bcs,
+            HdPrimvarsSchemaTokens->primvars,
+            primvarsDs)});
+  /*
+  HdDataSourceBaseHandle basisCurvesSrc =
+    HdBasisCurvesSchema::Builder()
+      .SetTopology(
+        HdBasisCurvesTopologySchema::Builder()
+        .SetCurveVertexCounts(
+          HdRetainedTypedSampledDataSource<VtIntArray>::New(
+            curve->GetCvCounts()))
+        .SetCurveIndices(
+          HdRetainedTypedSampledDataSource<VtIntArray>::New(
+            curveIndices))
+        .SetBasis(
+          HdRetainedTypedSampledDataSource<TfToken>::New(
+            HdTokens->bezier))
+        .SetType(
+          HdRetainedTypedSampledDataSource<TfToken>::New(
+            HdTokens->linear))
+        .SetWrap(
+          HdRetainedTypedSampledDataSource<TfToken>::New(
+            HdTokens->segmented))
+        .Build()
+      ).Build();
+
+  HdSceneIndexPrim prim = HdSceneIndexPrim(
     {HdPrimTypeTokens->basisCurves,
-      HdRetainedContainerDataSource::New(
-        HdPrimvarsSchemaTokens->primvars,
-          HdRetainedContainerDataSource::New(
-            HdTokens->points,
-            HdPrimvarSchema::Builder()
-              .SetPrimvarValue(
-                HdRetainedTypedSampledDataSource<VtVec3fArray>::New(
-                  curve->GetPositions()))
-              .SetInterpolation(
-                HdPrimvarSchema::BuildInterpolationDataSource(
-                  HdPrimvarSchemaTokens->varying))
-              .SetRole(HdPrimvarSchema::BuildRoleDataSource(
-                HdPrimvarSchemaTokens->color))
-              .Build(),
-          HdPrimvarsSchemaTokens->widths,
+     HdRetainedContainerDataSource::New(
+      HdBasisCurvesSchemaTokens->topology,
+      basisCurvesSrc,
+      HdPrimvarsSchemaTokens->primvars,
+        HdRetainedContainerDataSource::New(
+          HdTokens->points,
           HdPrimvarSchema::Builder()
             .SetPrimvarValue(
-              HdRetainedTypedSampledDataSource<VtFloatArray>::New(
-                curve->GetWidths()))
-            .SetInterpolation(
-              HdPrimvarSchema::BuildInterpolationDataSource(
-                HdPrimvarSchemaTokens->varying))
-            .Build())/*,
-          HdTokens->displayColor,
-          HdPrimvarSchema::Builder()
-            .SetPrimvarValue(_PointDataSource::New(colors))
+              HdRetainedTypedSampledDataSource<VtVec3fArray>::New(
+                curve->GetPositions()))
             .SetInterpolation(
               HdPrimvarSchema::BuildInterpolationDataSource(
                 HdPrimvarSchemaTokens->vertex))
             .SetRole(HdPrimvarSchema::BuildRoleDataSource(
-              HdPrimvarSchemaTokens->color))
-            .Build()),
-        HdPurposeSchemaTokens->purpose,
-        HdPurposeSchema::Builder()
-          .SetPurpose(
-            _TokenDataSource::New(HdRenderTagTokens->geometry))
-          .Build(),
-        HdVisibilitySchemaTokens->visibility,
-        HdVisibilitySchema::Builder()
-          .SetVisibility(_BoolDataSource::New(true))
-          .Build(),
-        HdXformSchemaTokens->xform,
-        HdXformSchema::Builder()
-          .SetMatrix(_MatrixDataSource::New(GfMatrix4d(1)))
-          .SetResetXformStack(_BoolDataSource::New(false))
-          .Build()*/)});
+              HdPrimvarSchemaTokens->point))
+            .Build()))});
+
   return prim;
+  */
 }
 
 void ExecSceneIndex::SetExec(Execution* exec)
@@ -187,8 +236,14 @@ void ExecSceneIndex::SetExec(Execution* exec)
 
       case Geometry::CURVE:
         std::cout << "exec populate curve : " << path << std::endl;
+        std::cout << "curve is input : " << geometry->IsInput() << std::endl;
         if(path.IsEmpty()) continue;
-        indexPrim = _GetInputSceneIndex()->GetPrim(path);
+        if(!geometry->IsInput()) {
+          indexPrim = _GetBasisCurvesSceneIndexPrim((Curve*)geometry);
+        } else {
+          indexPrim = _GetInputSceneIndex()->GetPrim(path);
+        }
+        
         _SendPrimsAdded({{path, HdPrimTypeTokens->basisCurves}});
         break;
 
@@ -272,6 +327,9 @@ HdSceneIndexPrim ExecSceneIndex::GetPrim(const SdfPath &primPath) const
             return _GetPointsSceneIndexPrim((Points*)prim->geom); 
           }
           case Geometry::CURVE:
+          {
+            return _GetBasisCurvesSceneIndexPrim((Curve*)prim->geom); 
+          }
           case Geometry::MESH:
           {
             HdSceneIndexPrim siPrim = _GetInputSceneIndex()->GetPrim(primPath);
@@ -328,8 +386,6 @@ HdSceneIndexPrim ExecSceneIndex::GetPrim(const SdfPath &primPath) const
                       .Build())),
                 siPrim.dataSource);
             return siPrim;
-          
-
           }
         }
       }

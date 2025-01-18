@@ -43,8 +43,8 @@ HierarchyGraph::HierarchyNode::HierarchyNode(UsdPrim& prim,
 
 void HierarchyGraph::HierarchyNode::_PopulatePorts()
 {
-  _ports.push_back(Graph::Port(this, Graph::Port::OUTPUT | Graph::Port::VERTICAL, ParentPortToken));
   _ports.push_back(Graph::Port(this, Graph::Port::INPUT | Graph::Port::VERTICAL, ChildrenPortToken));
+  _ports.push_back(Graph::Port(this, Graph::Port::OUTPUT | Graph::Port::VERTICAL, ParentPortToken));
 }
 
 void

@@ -27,7 +27,7 @@ TestHair::_InitControls(UsdStageRefPtr& stage)
   UsdPrim rootPrim = stage->GetDefaultPrim();
 
   UsdPrim controlPrim = stage->DefinePrim(rootPrim.GetPath().AppendChild(TfToken("Controls")));
-  controlPrim.CreateAttribute(TfToken("Density"), SdfValueTypeNames->Int).Set(100);
+  controlPrim.CreateAttribute(TfToken("Density"), SdfValueTypeNames->Int).Set(10);
   controlPrim.CreateAttribute(TfToken("Radius"), SdfValueTypeNames->Float).Set(0.1f);
   controlPrim.CreateAttribute(TfToken("Length"), SdfValueTypeNames->Float).Set(4.f);
   controlPrim.CreateAttribute(TfToken("Scale"), SdfValueTypeNames->Float).Set(1.f);
