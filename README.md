@@ -55,6 +55,8 @@ https://github.com/cpichard
 
 https://github.com/janbender
 
+https://github.com/LumaPictures
+
 https://github.com/matiascodesal
 
 https://github.com/matthias-research
@@ -65,4 +67,3 @@ https://github.com/raph080
 
 https://github.com/yuki-koyama
 
-https://github.com/LumaPictures
