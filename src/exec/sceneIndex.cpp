@@ -156,50 +156,6 @@ _GetBasisCurvesSceneIndexPrim(Curve* curve)
             bcs,
             HdPrimvarsSchemaTokens->primvars,
             primvarsDs)});
-  /*
-  HdDataSourceBaseHandle basisCurvesSrc =
-    HdBasisCurvesSchema::Builder()
-      .SetTopology(
-        HdBasisCurvesTopologySchema::Builder()
-        .SetCurveVertexCounts(
-          HdRetainedTypedSampledDataSource<VtIntArray>::New(
-            curve->GetCvCounts()))
-        .SetCurveIndices(
-          HdRetainedTypedSampledDataSource<VtIntArray>::New(
-            curveIndices))
-        .SetBasis(
-          HdRetainedTypedSampledDataSource<TfToken>::New(
-            HdTokens->bezier))
-        .SetType(
-          HdRetainedTypedSampledDataSource<TfToken>::New(
-            HdTokens->linear))
-        .SetWrap(
-          HdRetainedTypedSampledDataSource<TfToken>::New(
-            HdTokens->segmented))
-        .Build()
-      ).Build();
-
-  HdSceneIndexPrim prim = HdSceneIndexPrim(
-    {HdPrimTypeTokens->basisCurves,
-     HdRetainedContainerDataSource::New(
-      HdBasisCurvesSchemaTokens->topology,
-      basisCurvesSrc,
-      HdPrimvarsSchemaTokens->primvars,
-        HdRetainedContainerDataSource::New(
-          HdTokens->points,
-          HdPrimvarSchema::Builder()
-            .SetPrimvarValue(
-              HdRetainedTypedSampledDataSource<VtVec3fArray>::New(
-                curve->GetPositions()))
-            .SetInterpolation(
-              HdPrimvarSchema::BuildInterpolationDataSource(
-                HdPrimvarSchemaTokens->vertex))
-            .SetRole(HdPrimvarSchema::BuildRoleDataSource(
-              HdPrimvarSchemaTokens->point))
-            .Build()))});
-
-  return prim;
-  */
 }
 
 void ExecSceneIndex::SetExec(Execution* exec)
@@ -236,7 +192,6 @@ void ExecSceneIndex::SetExec(Execution* exec)
 
       case Geometry::CURVE:
         std::cout << "exec populate curve : " << path << std::endl;
-        std::cout << "curve is input : " << geometry->IsInput() << std::endl;
         if(path.IsEmpty()) continue;
         if(!geometry->IsInput()) {
           indexPrim = _GetBasisCurvesSceneIndexPrim((Curve*)geometry);
@@ -410,10 +365,6 @@ SdfPathVector ExecSceneIndex::GetChildPrimPaths(
       }
       paths.push_back(_gridPath);
     }
-    std::cout << "ROOT CHILD PRIM PATHS : ";
-    for(auto& path: paths)
-      std::cout << path << ",";
-    std::cout << std::endl;
     return paths;
   }
 
